@@ -1,0 +1,450 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.05276",
+  "title": "SpikingBrain: Spiking Brain-inspired Large Models",
+  "published": "2025-09-05T17:34:00Z",
+  "url": "https://arxiv.org/abs/2509.05276",
+  "authors": [
+   "Yuqi Pan",
+   "Yupeng Feng",
+   "Jinghao Zhuang",
+   "Siyu Ding",
+   "Han Xu",
+   "Zehao Liu",
+   "Bohan Sun",
+   "Yuhong Chou",
+   "Xuerui Qiu",
+   "Anlin Deng",
+   "Anjie Hu",
+   "Shurong Wang",
+   "Peng Zhou",
+   "Man Yao",
+   "Jibin Wu",
+   "Jian Yang",
+   "Guoliang Sun",
+   "Bo Xu",
+   "Guoqi Li"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "年度旗舰类脑脉冲大模型工作:7B/76B 规模、国产算力集群全流程训练,直接回答脉冲大模型规模化可行性问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "确认问题定位(Transformer 效率瓶颈与非 NVIDIA 平台训练)与三项核心贡献。"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "relevant-core",
+    "purpose": "确认贡献清单:混合线性架构、自适应阈值脉冲、高效转换管线、MetaX 大规模训练。"
+   },
+   {
+    "locator": "2.1.3 Spiking Neuron Modeling",
+    "role": "method-or-design",
+    "purpose": "理解神经元建模选择:HH vs LIF,自适应阈值 IF 神经元设计动机。"
+   },
+   {
+    "locator": "2.2 Integrated Model Architectures",
+    "role": "method-or-design",
+    "purpose": "理解 7B(层间混合)与 76B(层内混合 MoE)两种架构。"
+   },
+   {
+    "locator": "3.3.1 Step 1: Adaptive Threshold Spiking",
+    "role": "method-or-design",
+    "purpose": "理解单步整数脉冲计数生成与直通估计训练。"
+   },
+   {
+    "locator": "3.3.2 Step 2: Spike Coding",
+    "role": "method-or-design",
+    "purpose": "理解二值/三值/按位三种脉冲编码格式及其时空权衡。"
+   },
+   {
+    "locator": "5.1 Downstream Performance",
+    "role": "results-or-analysis",
+    "purpose": "核查下游性能:7B 恢复基座~90%,76B 接近基座。"
+   },
+   {
+    "locator": "5.2 Long-context Efficiency",
+    "role": "results-or-analysis",
+    "purpose": "核查长上下文效率:1M token 实测 26.5×,4M 估计>100×。"
+   },
+   {
+    "locator": "5.3 CPU-side Inference",
+    "role": "results-or-analysis",
+    "purpose": "核查 CPU 端推理:256k 序列 15.39× 加速。"
+   },
+   {
+    "locator": "5.4 Performance on the MetaX Cluster",
+    "role": "results-or-analysis",
+    "purpose": "核查国产算力训练效率与稳定性:MFU 23.4%,两周稳定训练。"
+   },
+   {
+    "locator": "5.5 Analysis of Spiking Scheme",
+    "role": "results-or-analysis",
+    "purpose": "核查脉冲+INT8 联合:69.15% 稀疏度,~2% 平均精度损失。"
+   },
+   {
+    "locator": "6 Discussion of Negative Results and Practical Challenges",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述负面结果与工程挑战。"
+   },
+   {
+    "locator": "7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者总结的两大优势与边界。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "4.1-4.3 Implementation on the MetaX Cluster",
+    "reason": "分布式工程细节,与综述主张关联弱,仅取结论性数字。"
+   },
+   {
+    "locator": "Appendix A/B/C",
+    "reason": "附录细节复核未逐项展开;主文表格已覆盖综述所需定量主张。"
+   }
+  ]
+ },
+ "research_question": "脉冲大模型能否在非 NVIDIA 国产算力上规模化训练,并以类脑机制获得实质效率收益?",
+ "contributions": [
+  "发布 SpikingBrain-7B(纯线性,层间 LA+SWA 1:1 混合)与 SpikingBrain-76B-A12B(层内混合线性 MoE)两个类脑脉冲大模型,由 Qwen2.5-7B-base 经转换式持续预训练得到",
+  "提出自适应阈值脉冲神经元(IF + 软复位 + 与膜电位相关的动态阈值),将激活转为整数脉冲计数,支持二值/三值/按位三种脉冲编码",
+  "在数百卡 MetaX C550 国产集群上完成全流程(数据→分布式训练→vLLM 推理适配),并开源 7B 代码"
+ ],
+ "method": {
+  "summary": "以开源 Transformer 检查点为起点,通过注意力图分析将二次注意力转换为稀疏滑窗+低秩线性注意力,FFN 经 MoE upcycling 扩容;激活经自适应阈值脉冲神经元转为整数脉冲计数,推理时展开为稀疏脉冲序列以支持事件驱动累加;配合定制训练框架/算子库/并行策略在 MetaX 集群上完成 150B/160B token 持续预训练、128k 长上下文扩展与 SFT。",
+  "assumptions": [
+   "线性注意力的压缩记忆态与生物记忆机制类比成立,且可在 LLM 规模保留建模能力",
+   "转换式训练(少于从头训练 2% 的算力)足以恢复基座大部分能力",
+   "脉冲稀疏性与 INT8 权重量化联合后精度损失可控"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "150B/160B tokens CPT 语料",
+   "128 text samples 量化校准集"
+  ],
+  "tasks": [
+   "MMLU/CMMLU/C-Eval/ARC-C/HellaSwag 下游评测",
+   "LongBench 长上下文",
+   "128k-4M token 长序列推理"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "7B 与 76B-A12B 两个模型;数百卡 MetaX C550;两周以上连续训练"
+ },
+ "evaluation": {
+  "design": "与同规模开源基线(Falcon-Mamba/Mistral/Zamba/Llama3.1/Llama2-70B/Mixtral/Gemma2/Qwen2.5)在 OpenCompass 统一框架下对比;效率在 H100 与 MetaX C550 上实测",
+  "baselines": [
+   "Qwen2.5-7B-base",
+   "Mistral-7B",
+   "Llama3.1-8B",
+   "Llama2-70B",
+   "Mixtral-8x7B",
+   "Gemma2-27B",
+   "Jamba-52B-A12B",
+   "Falcon-Mamba-7B",
+   "Zamba-v1"
+  ],
+  "metrics": [
+   "MMLU",
+   "CMMLU",
+   "C-Eval",
+   "ARC-C",
+   "HellaSwag",
+   "TTFT",
+   "TGS 吞吐",
+   "MFU",
+   "sparsity 稀疏度",
+   "精度损失"
+  ],
+  "ablations": [
+   "自适应阈值超参数效应(A.8)",
+   "相同转换数据预算下注意力对比(B.1)",
+   "混合注意力/MoE/脉冲编码孤立影响(B.2)",
+   "CPU 推理(A.6)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "SpikingBrain-7B 线性模型在下游基准上恢复基座模型约 90% 性能,达到 Mistral-7B/Llama3.1-8B 水平",
+   "scope": "MMLU 65.84 vs Qwen2.5 74.21;CMMLU 71.58 vs 81.73",
+   "locator": "Section 5.1, Table 1"
+  },
+  {
+   "finding": "SpikingBrain-76B-A12B 以更少激活参数达到或超过 Llama2-70B/Mixtral-8x7B,接近基座水平",
+   "scope": "MMLU 73.58 vs Llama2-70B 69.57、Mixtral 71.23、Qwen2.5-7B 75.31",
+   "locator": "Section 5.1, Table 2"
+  },
+  {
+   "finding": "1M token 输入下 TTFT 实测 26.5× 加速;4M token 按拟合曲线保守估计超过 100×",
+   "scope": "H100 多卡序列并行,10 次平均;基线 Qwen2.5 全注意力在 4M 因资源无法实测",
+   "locator": "Section 5.2, Figure 7, Table 7"
+  },
+  {
+   "finding": "1B 压缩模型 CPU 推理在 64k/128k/256k 分别取得 4.04×/7.52×/15.39× 解码加速",
+   "scope": "Intel i5-12600KF,llama.cpp 后端",
+   "locator": "Section 5.3, Figure 7"
+  },
+  {
+   "finding": "脉冲激活编码+INT8 权重联合部署后平均性能下降约 2%,稀疏度达 69.15%",
+   "scope": "两模型在常识推理/MMLU/CMMLU 上,128 样本校准",
+   "locator": "Section 5.5, Table 3"
+  },
+  {
+   "finding": "MetaX C550 集群 MFU 23.4%,与 A800 同配置 25.8% 相当;训练连续运行超两周无中断",
+   "scope": "8 路 DP+4 路 PP,全局 batch 512",
+   "locator": "Section 5.4"
+  },
+  {
+   "finding": "作者自述负面结果:拼接短文本的长上下文训练收益有限;纯线性 7B 相对基座存在结构性性能差距;8k SFT 上下文截断推理链;MetaX 旧版软件栈限制算子优化",
+   "scope": "全文第 6 节",
+   "locator": "Section 6"
+  },
+  {
+   "finding": "脉冲方案激活稀疏度 69.15%(摘要与图 1 报告),定位为低功耗操作基础",
+   "scope": "脉冲编码后激活",
+   "locator": "Abstract; Figure 1 caption"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "纯线性 7B 模型因注意力结构大幅修改,与 Qwen2.5 基座仍有性能差距",
+    "locator": "Section 5.1"
+   },
+   {
+    "limitation": "拼接式长上下文训练数据对极限上下文性能提升有限,依赖原生长文本数据",
+    "locator": "Section 6 Long-context data construction"
+   },
+   {
+    "limitation": "8k 推理 SFT 上下文截断长思维链,需 32k 才能完整保留推理轨迹",
+    "locator": "Section 6 Context length in reasoning SFT"
+   },
+   {
+    "limitation": "MetaX 平台软件栈不兼容迫使用旧版 PyTorch/Triton,内核设计保守,性能低于完全优化实现",
+    "locator": "Section 6 Software adaptation"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "4M token 的 >100× 加速为拟合外推而非直接实测,且比较对象是无法在 4M 评测的 Qwen2.5 全注意力基线;长上下文效率主张的外推部分应弱读",
+    "basis": "Section 5.2 明示 'conservatively estimate'"
+   },
+   {
+    "boundary": "69.15% 稀疏度的能耗收益是脉冲表示层面的推断,论文未在真实神经形态硬件上测量端到端功耗",
+    "basis": "Section 5.5 只报告精度维持,能耗为'low-power operation'定性表述"
+   },
+   {
+    "boundary": "转换式训练依赖强基座(Qwen2.5),其'类脑'成分主要是线性注意力+脉冲编码的工程组合,生物合理性论证为类比层面",
+    "basis": "Section 1 设计哲学段"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于'从强开源基座转换出的混合线性+脉冲编码大模型'这一特定路线;不能外推为任意从头训练 SNN 均可达到同等水平,也不能把 GPU 上的稀疏度数字等同于神经形态芯片上的实测能耗节省。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "全流程端到端验证(训练→长上下文→SFT→CPU/GPU 推理)",
+   "统一 OpenCompass 评测框架与同规模多元基线",
+   "公开负面结果与工程挑战,透明度高",
+   "代码与模型开源可复现"
+  ],
+  "design_risks": [
+   "4M 加速为外推估计",
+   "能耗主张缺少硬件实测",
+   "基线中多数非 Qwen 系模型中文数据有限,CMMLU/C-Eval 对比有利于本模型"
+  ],
+  "baseline_fairness": "英文基准(MMLU/ARC/HellaSwag)对比基本公平;中文基准上多数基线训练中文数据少,优势部分来自数据而非架构",
+  "metric_validity": "用 MFU/TGS/TTFT/稀疏度组合刻画效率较完整;但'brain-inspired'程度无独立度量",
+  "reproducibility": "7B 代码开源(GitHub BICLab/SpikingBrain-7B),76B 训练依赖 MetaX 集群,第三方难以完全复现",
+  "external_validity": "验证限于语言建模与长上下文;未覆盖多模态、Agent、具身等更广任务面"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.05276-C01",
+   "claim": "SpikingBrain 是首个在非 NVIDIA(国产 MetaX)平台上大规模训练类脑大模型的公开工作,在数百卡集群上实现 76B 参数规模的稳定训练,为脉冲大模型的算力自主路线提供了端到端工程验证。",
+   "stance": "support",
+   "relation": "支持\"脉冲大模型已进入十亿至百亿参数规模并可在国产算力上工程化落地\"的年度进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言明确声明首个非 NVIDIA 平台大规模类脑 LLM 训练并达到 76B 稳定训练。",
+   "locator": "1 Introduction",
+   "source_context": "This work represents, to our knowledge, the first large-scale training of brain-inspired LLMs on a non-NVIDIA platform, achieving stable training at 76B parameters.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "训练规模与平台",
+    "value_or_direction": "76B 参数稳定训练",
+    "comparator": "non-NVIDIA 平台 (MetaX C550 集群)",
+    "task_or_sample": "数百卡全流程训练",
+    "locator": "1 Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句直接支撑\"首个非 NVIDIA 平台 76B 稳定训练\";集群规模与两周稳定性另见 5.4 节(1558 TGS、MFU 23.4% vs A800 25.8%)。"
+   }
+  },
+  {
+   "card_id": "2509.05276-C02",
+   "claim": "经转换式持续预训练(150B/160B token,少于从头训练 2% 算力)后,SpikingBrain-7B 在下游基准恢复基座约 90% 性能(MMLU 65.84 vs Qwen2.5 的 74.21),76B 混合 MoE 模型基本闭合差距(MMLU 73.58,超过 Llama2-70B 的 69.57 与 Mixtral-8x7B 的 71.23)。",
+   "stance": "support",
+   "relation": "支持\"线性/混合线性类脑架构可在 LLM 规模以极低算力转换获得可用性能\"的进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节正文与表 1/表 2 给出两模型与基线的完整对比,明确 ~90% 恢复与差距基本闭合。",
+   "locator": "5.1 Downstream Performance",
+   "source_context": "As shown in Table 1 , our SpikingBrain-7B linear model recovers nearly 90% of the base model’s performance across benchmarks, reaching a level comparable to advanced Transformer models such as Mistral-7B and Llama3-8B.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MMLU/CMMLU/C-Eval 等下游基准",
+    "value_or_direction": "7B: MMLU 65.84, CMMLU 71.58, C-Eval 69.80;76B: MMLU 73.58, CMMLU 78.83",
+    "comparator": "Qwen2.5-7B (MMLU 74.21)、Llama2-70B (69.57)、Mixtral-8x7B (71.23)",
+    "task_or_sample": "OpenCompass 统一评测,浮点模型",
+    "locator": "5.1 Downstream Performance"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 5.1 节原句;表 1/表 2 数字(65.84/74.21/73.58/69.57/71.23 等)均在 5.1 节表面文本中核对一致;中文基准上多数基线中文语料有限的公平性注意已记录于 critical_appraisal。"
+   }
+  },
+  {
+   "card_id": "2509.05276-C03",
+   "claim": "长上下文推理:1M token 输入下 TTFT 相对全注意力基线实测加速 26.5×(H100,10 次平均);4M token 为按拟合曲线的保守外推估计 >100×,基线在该长度因资源限制无法实测。",
+   "stance": "support",
+   "relation": "支持\"类脑线性架构带来数量级长序列效率收益\"主张;外推部分需弱读。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节报告实测 26.5× 与明确标注的估计值 >100×。",
+   "locator": "5.2 Long-context Efficiency",
+   "source_context": "at an input length of 1M tokens, the SpikingBrain-7B model achieves a 26.5× speedup in TTFT (Time to First Token) compared with the Qwen2.5 baseline using full attention and all-to-all communication.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "TTFT 加速比",
+    "value_or_direction": "26.5× 实测 (1M);>100× 保守外推 (4M)",
+    "comparator": "Qwen2.5 全注意力 + all-to-all 基线",
+    "task_or_sample": "H100 多卡序列并行,10 次平均",
+    "locator": "5.2 Long-context Efficiency"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "实测与外推在原文中被明确区分(\"Based on the fitted scaling curve, we conservatively estimate a speedup of over 100×\"),卡片措辞保留该区分。"
+   }
+  },
+  {
+   "card_id": "2509.05276-C04",
+   "claim": "CPU 端部署:1B 压缩 SpikingBrain 线性模型经 llama.cpp 量化部署,在 64k/128k/256k 序列长度分别取得 4.04×/7.52×/15.39× 解码加速,且吞吐随输出长度保持恒定。",
+   "stance": "support",
+   "relation": "支持\"类脑线性+脉冲表示可延伸至资源受限端侧部署\"的主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.3 节报告三级序列长度的 CPU 加速比与恒定开销特性。",
+   "locator": "5.3 CPU-side Inference",
+   "source_context": "Overall, SpikingBrain-1B achieves speedups of 4.04×, 7.52×, and 15.39× at sequence lengths of 64k, 128k, and 256k, respectively.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "CPU 解码加速比",
+    "value_or_direction": "4.04× (64k) / 7.52× (128k) / 15.39× (256k)",
+    "comparator": "Llama3.2-1B 基线",
+    "task_or_sample": "Intel i5-12600KF,llama.cpp 后端,1k 输入",
+    "locator": "5.3 CPU-side Inference"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三个加速比与硬件设置均为 5.3 节原文;基线为 Llama3.2-1B 的表述也在该节核对一致。"
+   }
+  },
+  {
+   "card_id": "2509.05276-C05",
+   "claim": "国产算力训练效率:MetaX C550 集群上 SpikingBrain-7B 训练达到 1558 TGS 与 23.4% MFU(8 路 DP+4 路 PP),与同配置 NVIDIA A800 的 25.8% 相当;训练连续运行超两周无中断。",
+   "stance": "support",
+   "relation": "支持\"国产平台可支撑类脑大模型长周期稳定训练\"的工程进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.4 节报告 TGS/MFU 数字、A800 对比与两周稳定性监控结论。",
+   "locator": "5.4 Performance on the MetaX Cluster",
+   "source_context": "we achieve a TGS (Token Per Second) of 1558 and an MFU (Model FLOPs Utilization) of 23.4% (8-way DP, 4-way PP, PP micro-batch size 2, global batch size 512), reflecting high computational efficiency and effective resource utilization. This result is comparable to the measured MFU of 25.8% on an NVIDIA A800 80GB GPU cluster under the same parallel configuration, despite the use of older software versions on MetaX due to compatibility constraints.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MFU / TGS",
+    "value_or_direction": "MFU 23.4% (C550) vs 25.8% (A800);TGS 1558",
+    "comparator": "NVIDIA A800 80GB 同并行配置",
+    "task_or_sample": "SpikingBrain-7B 训练",
+    "locator": "5.4 Performance on the MetaX Cluster"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两处 MFU 数字与 TGS 为 5.4 节连续原文;两周无中断表述(\"The training session remains uninterrupted for more than two weeks\")亦在该节。"
+   }
+  },
+  {
+   "card_id": "2509.05276-C06",
+   "claim": "脉冲激活编码+INT8 权重联合部署后,在常识推理/MMLU/CMMLU 上平均性能下降约 2%(表 3 实测 1-3% 量级,如 7B 平均 0.6998→0.6875),精度近保持。",
+   "stance": "conditional",
+   "relation": "条件性支持\"脉冲稀疏表示可在精度近保持下落地\"的主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.5 节正文与表 3 给出脉冲方案前后完整数字。",
+   "locator": "5.5 Analysis of Spiking Scheme",
+   "source_context": "evaluations on commonsense reasoning, MMLU, and CMMLU benchmarks indicate that the average performance drop under this scheme is limited to approximately 2% for both SpikingBrain-7B and SpikingBrain-76B, confirming its effectiveness in preserving accuracy.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均性能下降(脉冲+INT8 联合)",
+    "value_or_direction": "约 -2%(7B Avg 0.6998→0.6875;76B 0.7304→0.7133)",
+    "comparator": "部署前浮点模型自身",
+    "task_or_sample": "常识推理 + MMLU + CMMLU,128 样本校准",
+    "locator": "5.5 Analysis of Spiking Scheme"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文与表 3 数字(0.6998/0.6875/0.7304/0.7133)均在 5.5 节表面核对一致。"
+   }
+  },
+  {
+   "card_id": "2509.05276-C08",
+   "claim": "作者自述边界:拼接短文本构造的长上下文训练数据对极限上下文性能提升有限,原生长文本数据是缩小与基座差距的关键;该负面结果限定了转换式路线的长上下文能力来源。",
+   "stance": "limit",
+   "relation": "限定\"转换式脉冲大模型长上下文能力\"的强解读。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 6 节负面结果讨论首条。",
+   "locator": "6 Discussion of Negative Results and Practical Challenges",
+   "source_context": "Training on concatenated short texts, as described in Section 3.4 , rather than native long-context data, resulted in limited improvements in long-context performance. This suggests that downstream performance at extreme context lengths depends strongly on both the quantity and quality of long-context training data.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "为第 6 节连续原文;纯线性 7B 结构性差距、8k SFT 截断、MetaX 软件栈限制等其余负面结果同样记录于笔记 limitations。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "BICLab(中科院自动化所李国齐团队)与沐曦 MetaX 合作;对外发布名'瞬悉 1.0'(2025-09-08)。三值/按位脉冲编码引用 Xu et al. 2026a/b(团队前期工作)。该文是 2025-2026 脉冲大模型规模化叙事的锚点工作。"
+}

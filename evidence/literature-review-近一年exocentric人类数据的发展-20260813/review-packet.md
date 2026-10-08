@@ -1,0 +1,436 @@
+# Review Packet: 近一年exocentric人类数据的发展
+
+## Scope
+
+- Topic: 近一年exocentric人类数据的发展
+- Time range: 2025-08-13..2026-08-13
+- Review style: `survey`
+- Knowledge IDs: `EA-DATA`, `EA-MODEL`, `EA-XEMBODIMENT`, `EA-SENSOR`
+- Evidence events: 126
+- Topic cards: 3
+- Registered source IDs available: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`
+
+## Orchestration Contract
+
+- Main path: review mode -> planner -> candidate registry -> coverage/saturation -> complete HTML/PDF recovery -> paper reader -> review packet -> writer.
+- Use `$embodied-ai-query-planner` for topic mapping and query planning.
+- Use `$embodied-ai-literature-hub` for multi-round retrieval and complete HTML/text-layer-PDF recovery.
+- Use `$embodied-ai-paper-reader` for deep reading, critical appraisal, claim verification, and evidence projection.
+- This review packet is not a replacement for either upstream Skill.
+
+## Evidence Core
+
+- Accepted events: 126
+- Stance labels: `conditional`, `gap`, `limit`, `support`
+- Confidence labels: `citation-supported`, `direct`
+- Trace IDs: `EA-EXO-DEV-2026-0001`, `EA-EXO-DEV-2026-0002`, `EA-EXO-DEV-2026-0003`, `EA-EXO-DEV-2026-0004`, `EA-EXO-DEV-2026-0005`, `EA-EXO-DEV-2026-0006`, `EA-EXO-DEV-2026-0012`, `EA-EXO-DEV-2026-0013`, `EA-EXO-DEV-2026-0014`, `EA-EXO-DEV-2026-0015`, `EA-EXO-DEV-2026-0016`, `EA-EXO-DEV-2026-0017`
+- Registered sources: `S-EMBODIED-DATA-FRAMEWORK`, `S-LOGISTICS-HUB-SURVEY`, `S-EA-QUESTIONS`, `S-ERR-COMPARE`, `S-PROJECT-CONTEXT`
+
+## Evidence Sufficiency
+
+- Evidence sufficiency: preliminary
+- Review mode: scoping
+- Paper-level sources: 26 / 15 floor (not a cap)
+- Coverage and saturation gate: blocked
+- Formal outputs are blocked until the paper floor and every coverage/saturation check pass.
+- Unresolved checks: candidate_floor, full_text_floor, accepted_paper_floor, saturation
+
+## Source Tiers
+
+- No fallback source-tier records provided.
+
+## Topic Card Context
+
+- `EA-DATA` 数据采集与数据质量: 数据采集不是单纯堆轨迹，而是硬件、同步、标定、动作语义、元数据、采集员反馈和质量审计组成的工程体系。数据质量不是样本的全局静态属性，而是相对目标任务和目标策略的效用；数据污染则是来源、时间、任务、模型版本和评测边界的关系失真，治理必须贯穿采集、训练、生成和闭环评测。无目标机器人本体阶段可用 L0-L3 数据金字塔积累语义、可重定向轨迹、仿真覆盖和失败库，但最终仍需少量目标机器人数据校准可执行性。对视觉—触觉—力觉数据，同时间戳帧只是最低层记录，真正的训练单元还应保留 approach、contact、slip、release、recovery 等事件链，并记录传感器/硬件 ID、时钟、标定和换件历史。所有异构数据都应声明可信监督字段，以动作条件状态变化和真实闭环收益验收；规模化触觉数据不自动等于跨硬件通用性或...
+  - VR 遥操作主要采动作意图和视觉闭环，力反馈采集额外覆盖接触隐变量。
+  - 触觉/力反馈对开放空间抓放不是总必要，但对插入、柔顺贴合、易碎物和滑移控制很重要。
+  - 国内难复制 UMI/Ego/DROID 的核心难点是数据工程体系，而不是单个硬件原型。
+  - 实验室数据适合原子技能和受控因果分析，自然场景数据决定跨场景和长尾泛化。
+  - 少量轨迹阶段应先保证受控一致性，再有计划地引入关键变量多样性。
+- `EA-MODEL` 模型与预训练: 机器人统一模型短中期更可能是“共享骨干 + 任务/本体适配器 + 连续动作专家”，而不是一个模型直接控制所有机器人。“反应式 VLA 已死”只对不显式检验动作后果的狭义策略成立；跨 run 证据更支持 VLA 语义/动作先验、动作条件世界模型、本体适配器与底层控制器组成的融合栈。近期突破不只是生成更长视频，而是把未来压缩成低频逻辑步骤、稀疏视觉子目标或结构化状态，并验证它与真实动作同步；BadWAM 说明“想象合理、动作错误”足以让系统失效。ACT/RoboTwin 证据进一步表明，动作块预测长度、实际执行长度和重规划频率是三个不同接口；多任务动作表示、执行时机与跨块场景状态应分账优化。世界模型应先承担训练期教师、离线排序等低权限任务，再逐级争取在线规划权。Loco-manipulation 与多模态证据还表...
+  - VLA/RT-X/Octo/OpenVLA/π0 等说明视觉-语言-动作统一建模有迁移潜力。
+  - Unified Scaling 的挑战在于数据、本体、动作空间、奖励和评估都不统一。
+  - Benchmark 好成绩不等于真实世界鲁棒性，真实部署会遇到分布偏移和闭环误差累积。
+  - 场景微调不理想时，可能是数据、动作接口、控制器、标定和失败恢复共同问题。
+  - 预训练评估应做 ablation：从零训练、只用目标数据、预训练 + 微调、不同预训练来源。
+- `EA-XEMBODIMENT` 跨本体与数据迁移: 跨本体迁移的核心不是复制姿态、控制命令或传感器 token，而是保留任务相关的状态变化与接触功能。人手数据映射到灵巧手或夹爪时，应优先抽象抓取意图、对象轨迹、接触区域和 affordance。语言/视觉语义、对象状态变化和粗运动先验较易共享；局部接触载荷、传感器频率、硬件标定和控制接口更依赖目标平台。更稳健的路线是共享 Cartesian/object state delta 或接触目标，再由机器人和传感器特定 adapter、少量目标硬件数据与真实闭环校准落地。
+  - 灵巧手可保留指尖轨迹、掌心 pose、关键关节和接触关系，再做优化或学习式映射。
+  - 双指夹爪应抽象抓取点、夹爪宽度、接近方向和物体接触区域。
+  - 错误映射会让策略学到机器人不可执行或接触不稳定的动作。
+  - 跨本体中间表征可包括物体轨迹、末端 6D pose、接触 patch、力闭合、skill token、latent action。
+  - 动力学与触觉差异在真实接触任务中比运动学差异更容易造成长期失败。
+
+## Stance Distribution
+
+| Stance | Meaning | Events |
+|---|---|---|
+| `support` | 支持 | 75 |
+| `conditional` | 条件成立 | 13 |
+| `limit` | 限制/负面 | 30 |
+| `gap` | 缺口 | 8 |
+
+## Accepted Paper Inventory
+
+| Paper | Published | Stances | Events |
+|---|---|---|---|
+| 2505.11709: EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video | unknown-date | conditional, limit, support | EA-EXO-DEV-2026-0024; EA-EXO-DEV-2026-0025; EA-EXO-DEV-2026-0026; EA-EXO-DEV-2026-0027; EA-EXO-DEV-2026-0028; EA-EXO-DEV-2026-0029; EA-EXO-DEV-2026-0030; EA-EXO-DEV-2026-0031; EA-EXO-DEV-2026-0032; EA-EXO-DEV-2026-0033; EA-EXO-DEV-2026-0034; EA-EXO-DEV-2026-0035; EA-EXO-DEV-2026-0036 |
+| 2509.01657: Data Retrieval with Importance Weights for Few-Shot Imitation Learning | 2025-09-01 | support | EA-DQ-YEAR-READ-0008 |
+| 2509.21986: Developing Vision-Language-Action Model from Egocentric Videos | 2025-09-26T07:09:33Z | limit | EA-EGO-2026-0004 |
+| 2510.21571: VITRA: Scalable VLA Model Pretraining with Real-Life Human Activity Videos | unknown-date | limit, support | EA-EXO-DEV-2026-0037; EA-EXO-DEV-2026-0038; EA-EXO-DEV-2026-0039; EA-EXO-DEV-2026-0040; EA-EXO-DEV-2026-0041; EA-EXO-DEV-2026-0042; EA-EXO-DEV-2026-0043; EA-EXO-DEV-2026-0044; EA-EXO-DEV-2026-0045; EA-EXO-DEV-2026-0046; EA-EXO-DEV-2026-0047; EA-EXO-DEV-2026-0048 |
+| 2512.08269: EgoX: Egocentric Video Generation from a Single Exocentric Video | unknown-date | conditional, limit, support | EA-EXO-EGO-2026-0001; EA-EXO-EGO-2026-0002; EA-EXO-EGO-2026-0003; EA-EXO-EGO-2026-0004; EA-EXO-EGO-2026-0005 |
+| 2602.06949: DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos | unknown-date | conditional, gap, limit, support | EA-EXO-DEV-2026-0001; EA-EXO-DEV-2026-0002; EA-EXO-DEV-2026-0003; EA-EXO-DEV-2026-0004; EA-EXO-DEV-2026-0005; EA-EXO-DEV-2026-0006; EA-EXO-DEV-2026-0007; EA-EXO-DEV-2026-0008; EA-EXO-DEV-2026-0009; EA-EXO-DEV-2026-0010; EA-EXO-DEV-2026-0011; EA-EXO-DEV-2026-0012 |
+| 2602.09013: Dexterous Manipulation Policies from RGB Human Videos via 3D Hand-Object Trajectory Reconstruction | 2026-02-09T18:56:02Z | limit | EA-EGO-2026-0005 |
+| 2602.10105: DexImit: Learning Bimanual Dexterous Manipulation from Monocular Human Videos | unknown-date | conditional, gap, limit, support | EA-EXO-DEV-2026-0078; EA-EXO-DEV-2026-0079; EA-EXO-DEV-2026-0080; EA-EXO-DEV-2026-0081; EA-EXO-DEV-2026-0082; EA-EXO-DEV-2026-0083; EA-EXO-DEV-2026-0084; EA-EXO-DEV-2026-0085; EA-EXO-DEV-2026-0086; EA-EXO-DEV-2026-0087; EA-EXO-DEV-2026-0088; EA-EXO-DEV-2026-0089 |
+| 2602.13197: Imitating What Works: Simulation-Filtered Modular Policy Learning from Human Videos | 2026-02-13 | conditional | EA-DQ-YEAR-READ-0003 |
+| 2602.16710: EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data | 2026-02-18T18:59:05Z | conditional, limit, support | EA-EGO-2026-0007; EA-EGO-2026-0008; EA-EGO-2026-0009 |
+| 2604.23570: EgoLive: A Large-Scale Egocentric Dataset from Real-World Human Tasks | unknown-date | conditional, gap, limit, support | EA-EXO-DEV-2026-0013; EA-EXO-DEV-2026-0014; EA-EXO-DEV-2026-0015; EA-EXO-DEV-2026-0016; EA-EXO-DEV-2026-0017; EA-EXO-DEV-2026-0018; EA-EXO-DEV-2026-0019; EA-EXO-DEV-2026-0020; EA-EXO-DEV-2026-0021; EA-EXO-DEV-2026-0022; EA-EXO-DEV-2026-0023 |
+| 2605.06747: HumanNet: Human-centric Video Dataset for Robot Learning | unknown-date | gap, limit, support | EA-EXO-EGO-2026-0015; EA-EXO-EGO-2026-0016; EA-EXO-EGO-2026-0017; EA-EXO-EGO-2026-0018; EA-EXO-EGO-2026-0019 |
+| 2605.20373: SUGAR: A Scalable Human-Video-Driven Generalizable Humanoid Loco-Manipulation Learning Framework | 2026-05-19T18:24:05Z | limit | EA-EGO-2026-0012 |
+| 2605.24934: HumanEgo: Zero-Shot Robot Learning from Minutes of Human Egocentric Videos | 2026-05-24T08:26:41Z | limit | EA-EGO-2026-0015 |
+| 2605.26349: Closing the Loop in Teleoperation: Episode-Level Data Quality Assessment and Feedback for High-Quality Demonstration Co... | 2026-05-25 | support | EA-ALIGN-READ-0012 |
+| 2606.03476: Human2Humanoid: Physics-Aware Cross-Morphology Motion Retargeting for Humanoid Robots | unknown-date | gap, limit, support | EA-EXO-DEV-2026-0060; EA-EXO-DEV-2026-0061; EA-EXO-DEV-2026-0062; EA-EXO-DEV-2026-0063; EA-EXO-DEV-2026-0064; EA-EXO-DEV-2026-0065; EA-EXO-DEV-2026-0066; EA-EXO-DEV-2026-0067 |
+| 2606.04811: Dream.exe: Can Video Generation Models Dream Executable Robot Manipulation? | unknown-date | gap, limit, support | EA-EXO-DEV-2026-0068; EA-EXO-DEV-2026-0069; EA-EXO-DEV-2026-0070; EA-EXO-DEV-2026-0071; EA-EXO-DEV-2026-0072; EA-EXO-DEV-2026-0073; EA-EXO-DEV-2026-0074; EA-EXO-DEV-2026-0075; EA-EXO-DEV-2026-0076; EA-EXO-DEV-2026-0077 |
+| 2606.06194: ActiveMimic: Egocentric Video Pretraining with Active Perception | 2026-06-04T14:01:01Z | conditional, limit | EA-EGO-2026-0016; EA-EGO-2026-0017 |
+| 2606.16253: SPARC: Spatially Adaptive Rate Control for Vision-Language-Action Models | 2026-06-15T03:38:29Z | support | EA-PRETRAIN-DATA-2026-0003 |
+| 2606.17200: ACE-Ego-0: Unifying Egocentric Human and Robotic Data for VLA Pretraining | 2026-06-15T18:40:18Z | conditional, support | EA-PRETRAIN-DATA-2026-0001; EA-PRETRAIN-DATA-2026-0002 |
+| 2606.24049: SPACE: Enabling Learning from Cross-Robot Data Toward Generalist Policies | 2026-06-23 | limit | EA-ALIGN-READ-0001 |
+| 2606.28133: Translation as a Bridging Action: Transferring Manipulation Skills from Humans to Robots | unknown-date | limit, support | EA-EXO-DEV-2026-0049; EA-EXO-DEV-2026-0050; EA-EXO-DEV-2026-0051; EA-EXO-DEV-2026-0052; EA-EXO-DEV-2026-0053; EA-EXO-DEV-2026-0054; EA-EXO-DEV-2026-0055; EA-EXO-DEV-2026-0056; EA-EXO-DEV-2026-0057; EA-EXO-DEV-2026-0058; EA-EXO-DEV-2026-0059 |
+| 2607.03828: ObjRetarget: An Object-Aware Motion Retargeting Framework with Anthropomorphic Arm Constraints and Polyhedral Hand Mode... | 2026-07-04T11:31:23Z | limit | EA-EGO-2026-0019 |
+| 2607.06442: SIEVE: Structure-Aware Data Selection for Imitation Learning with VLA Models | 2026-07-07 | limit | EA-DQ-YEAR-READ-0015 |
+| 2608.02580: Ego2Robot: Scalable Robot Data Synthesis from Egocentric Human Data | unknown-date | conditional, limit, support | EA-EXO-EGO-2026-0006; EA-EXO-EGO-2026-0007; EA-EXO-EGO-2026-0008; EA-EXO-EGO-2026-0009; EA-EXO-EGO-2026-0010 |
+| 2608.04196: SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation | unknown-date | conditional, gap, limit, support | EA-EXO-EGO-2026-0011; EA-EXO-EGO-2026-0012; EA-EXO-EGO-2026-0013; EA-EXO-EGO-2026-0014 |
+
+## Claim Map
+
+| Event | Topic | Stance | Confidence | Claim | Evidence | Authors | Paper |
+|---|---|---|---|---|---|---|---|
+| EA-EXO-DEV-2026-0001 | unknown-topic | `support` | `direct` | DreamDojo-HV是迄今为止最大的自我中心人类视频数据集，包含44K小时视频序列，在规模和多样性上超越先前世界模型训练所用数据集数个数量级，涵盖约96个以上新技能和2000个以上新场景 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0002 | unknown-topic | `support` | `direct` | 尽管存在具身差异（embodiment gap），人类视频可用于世界模型预训练，因为交互过程中的底层物理规律在人类和机器人之间基本一致，能够实现有效的知识迁移 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0003 | unknown-topic | `support` | `direct` | 连续潜在动作（continuous latent actions）作为统一代理动作，能够在自监督方式下从帧间提取语义有意义的动作信息，有效解决大规模无标签视频的动作标签稀缺问题，并支持跨具身迁移 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0004 | unknown-topic | `support` | `direct` | 数据消融实验表明，增加人类数据集的多样性（从In-lab到In-lab+EgoDex再到加入DreamDojo-HV）可持续提升OOD场景和反事实动作的物理建模质量与动作可控性 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0005 | unknown-topic | `support` | `direct` | 潜在动作条件的仿真质量与理想设置（使用额外设备获取的真实动作标签）表现相当，且在可扩展性方面最优，是大规模无标注视频预训练的可行方案 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0006 | unknown-topic | `support` | `direct` | EgoDex数据集（829小时自我中心视频）被纳入DreamDojo的数据套件中以丰富物体多样性，与In-lab数据和DreamDojo-HV以1:2:10的采样比例共同用于预训练 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0012 | unknown-topic | `support` | `direct` | 蒸馏后的人预训练知识得以保留，预训练模型蒸馏后在所有四个评估数据集上均显著优于未预训练的模型，表明人类视频预训练的泛化优势在实时推理后仍然有效 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0013 | unknown-topic | `support` | `direct` | EgoLive是迄今为止最大的开源标注自我中心数据集，专注于真实世界任务导向的人类日常操作活动，在数据规模、质量和多样性上超越现有自我中心数据集 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0014 | unknown-topic | `support` | `direct` | EgoLive采用定制头戴设备JoyEgoCam实现类人立体视觉（宽FOV），以60 FPS和2160x2160分辨率采集立体RGB视频，并集成200Hz IMU，在数据采集质量上领先现有自我中心数据集 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0015 | unknown-topic | `support` | `direct` | 所有数据均在无约束的真实世界场景中采集，涵盖家庭服务、零售、药房等实际工作场景，提供了显著优于实验室环境的场景多样性和生态有效性 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0016 | unknown-topic | `support` | `direct` | EgoLive提供全面的跨模态标注，包括6-DoF运动追踪、细粒度语义分割、3D场景重建（深度图）、子任务分割和语言描述，通过自动化标注流程生成，适合自我中心感知、操作定位和人机迁移任务 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0017 | unknown-topic | `support` | `citation-supported` | 自我中心视频采集相比遥操作和UMI具有可扩展性优势：简单硬件设置（单头戴摄像头）支持跨不同环境和用户的大规模数据采集，设备成本低，且不限制自然人手形态 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0018 | unknown-topic | `support` | `direct` | 与EgoDex相比，EgoLive的2D关键点标注更为准确，EgoDex存在不可忽视的标注误差和空间错位；EgoLive在语义覆盖范围和长尾分布上均优于EgoDex和Xperience-10M |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0019 | unknown-topic | `support` | `direct` | EgoLive通过双目视觉实现毫米级深度重建精度，在典型人类操作距离（约1米以内）平均误差约3-5mm，并通过立体优化实现一致的3D手部关键点位置，解决了深度漂移问题 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0022 | unknown-topic | `support` | `citation-supported` | 人类自我中心数据可支持从操作能力学习到全身控制的扩展，包括类人全身控制、主动视觉与操作协调、全身移动操作等，表明自我中心数据不仅限于手部操作学习 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0024 | unknown-topic | `support` | `direct` | EgoDex是迄今为止最大和最多样化的灵巧人类操作数据集，包含829小时、30FPS的自我中心视频和338K条任务演示，覆盖194种桌面操作任务，总计9000万帧 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0025 | unknown-topic | `support` | `direct` | 自我中心人类视频是被动可扩展的数据源，类似于互联网上的文本和图像，不同于遥操作需要主动数据采集；在可穿戴设备可能普及的未来，从此类数据中有效学习至关重要 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0026 | unknown-topic | `support` | `direct` | EgoDex使用Apple Vision Pro在录制时采集原生3D手部和手指追踪数据，利用多摄像头和设备端SLAM精确追踪每只手每个关节的姿态，相比事后用HaMeR等网络处理互联网视频具有显著精度优势 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0027 | unknown-topic | `support` | `direct` | EgoDex的数据集行为多样性远超简单拾取放置，涵盖拧瓶盖、翻书页、插充电器、系鞋带、发牌等高度灵巧操作，且动词分布比DROID等现有数据集更宽，多数动词有100条以上演示 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0028 | unknown-topic | `support` | `direct` | 实验表明模型性能随数据规模增加而提升（在log尺度上呈改善趋势），验证了大规模自我中心数据集收集的必要性，呼应了'苦涩教训'中数据规模驱动性能的核心观点 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0031 | unknown-topic | `support` | `direct` | 视觉目标条件（visual goal-conditioning）显著提升轨迹预测性能，平均距离降低22%、终点距离降低53%，表明视觉锚点可有效缓解自然人手运动的多模态问题 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0033 | unknown-topic | `support` | `direct` | 中等规模模型（200M参数）已足够当前数据规模，500M参数模型未带来性能提升；这表明当前瓶颈在数据规模而非模型容量，进一步支持大规模数据收集的优先性 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0034 | unknown-topic | `support` | `direct` | EgoDex将人类手作为通用具身（common embodiment），不同于遥操作等方法采集的数据仅与特定机器人硬件兼容，这为跨平台迁移提供了基础 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0036 | unknown-topic | `support` | `direct` | EgoDex设计了可逆任务、免重置任务和重置任务三种类型，其中可逆和免重置任务通过消除耗时的环境重置提高了数据采集效率，这是大规模被动数据收集的实用设计 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0037 | unknown-topic | `support` | `direct` | 本文提出了一种将非结构化的真实生活自我中心视角人类手部活动视频转化为与现有机器人V-L-A训练数据完全对齐的数据格式的方法，无需任何人工标注。该方法通过全自动的整体人类活动分析框架，从任意人类手部视频中生成原子级别的手部活动片段及其语言描述，每个片段附带逐帧3D手部运动和相机运动数据。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0038 | unknown-topic | `support` | `direct` | 利用Ego4D、Epic-Kitchen、EgoExo4D和Something-Something-V2等自我中心视角视频数据集的原始视频，构建了包含约100万片段和2600万帧的Hand V-L-A训练数据集，覆盖烹饪、清洁、建筑、修理、手工和绘画等真实生活活动，在物体类别、技能类型和环境多样性方面远超现有机器人数据的覆盖范围。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0039 | unknown-topic | `support` | `direct` | 3D运动标注阶段采用单目3D相机和手部姿态追踪方法，结合深度视觉SLAM、深度估计和手部重建技术，输出包括相机视场角、逐帧相机位姿和逐帧手部姿态（基于6D腕部位姿和完整关节角度）的度量空间3D运动数据。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0040 | unknown-topic | `support` | `direct` | 原子动作分割阶段基于3D空间中手部运动速度的极小值检测来实现，这是一种简单但出人意料有效的方法。该方法无需额外的模型推理或预标注文本标签，特别适合手部活动视频的大规模可扩展分割。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0041 | unknown-topic | `support` | `direct` | 指令标注阶段利用GPT-4.1对每个视频片段进行动作描述，通过在每个采样帧上叠加手部轨迹可视化来提高标注准确性。实验证明提供原子级别的视频片段进行标注比固定长度分割更有效，叠加手部轨迹对确保正确标注也很重要。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0042 | unknown-topic | `support` | `direct` | 预训练后的VLA模型在完全未见的真实世界环境中展现出强大的零样本手部动作预测能力，这是先前任何方法都未达到的性能水平。在少量真实机器人动作数据上微调后，任务成功率和对新物体的泛化能力显著提升（Seen场景平均成功率71.0%，Unseen场景平均成功率64.6%）。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0043 | unknown-topic | `support` | `direct` | 实验显示了模型任务性能相对于预训练数据规模的清晰缩放行为，表明随着预训练数据量的增加，任务性能持续提升。即使在10K片段的子集上，数据多样性已超过其他现有VLA数据集。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0044 | unknown-topic | `support` | `direct` | 本文方法与先前利用人类视频训练机器人操作模型的研究有本质区别：利用自我中心视角视频学习视觉和语言表示的方法未探索VLA模型的动作预训练；使用潜在动作的方法不提供显式的3D动作标签；并发的使用3D手部动作标签的工作主要使用受控环境中脚本化的实验室采集数据。本文方法是首个利用大规模非结构化视频且无需人工标注进行VLA模型预训练的工作。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0045 | unknown-topic | `support` | `direct` | 在微调阶段，将人手动作空间视为机器人手部动作空间的超集，通过简单的关节映射策略将机器人手的每个关节映射到拓扑上最接近的人手关节。不进行直接的姿态转移（如遥操作中所做的），微调可以帮助缓解动作空间差异。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0046 | unknown-topic | `support` | `direct` | 与使用原始人类标注构建VLA片段相比，本文方法表现更优，因为原始标注通常不符合所需的任务粒度或缺少精确的动作起止时间，文本和动作之间的时间或粒度不匹配会削弱指令跟随能力。使用人类标注训练会导致明显的性能下降。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0048 | unknown-topic | `support` | `direct` | 将人手视为灵巧机器人末端执行器，实现与真实机器人V-L-A数据的两种对齐：1）任务对齐——对原子级人类动作序列进行有意义的分割和过滤；2）标签对齐——恢复度量空间的3D手部运动以提供密集动作标签，并生成精确的语言指令标签。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0049 | unknown-topic | `support` | `direct` | 本文提出了一种基于手腕平移的桥接动作表示（bridging action representation），作为人类和机器人共享的动作空间。由于人类手腕旋转估计存在噪声且人类手指与平行夹爪的接触模式根本不同，从人类数据中学习包含旋转的动作信号是次优的，仅学习手腕平移更为有效。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0050 | unknown-topic | `support` | `direct` | 桥接动作定义为在初始头部相机坐标系下的相对手腕平移。该表示具有三个优势：1）在共享观察视角下物理上有意义；2）对噪声旋转估计具有鲁棒性；3）在构造上是与具体形态无关的（embodiment-agnostic）。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0051 | unknown-topic | `support` | `direct` | 设计了交错动作令牌（interleaved action tokens）表示来处理不同数据源中可能缺失的动作组件。通过在注意力层中掩蔽缺失的动作组件，可以处理来自不同形态的动作。共享的桥接信号应被6DoF动作令牌注意到，从而在注意力模式本身中实现从人类到机器人的显式操作知识转移。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0052 | unknown-topic | `support` | `direct` | 采用三阶段训练策略：第一阶段在大规模人类动作数据（约600小时）上仅用桥接信号预训练；第二阶段人机协同训练，使用通用抓放机器人数据（72小时）和任务特定人类动作；第三阶段少样本机器人后训练（每任务10条轨迹）。大规模人类预训练显著提升了下游任务性能。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0053 | unknown-topic | `support` | `direct` | 实验证明桥接动作在将人类操作知识转移到机器人方面远比使用含噪声的6DoF人类动作有效。与6DoF人类动作协同训练会导致噪声和扭曲的行为，而使用桥接动作协同训练则产生更稳定的行为（总体成功率22.50% vs 12.50%）。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0054 | unknown-topic | `support` | `direct` | 在人类-机器人协同训练中，随机在机器人数据上添加或替换桥接动作作为6DoF末端执行器动作的预测目标是实现操作技能转移的关键。移除该桥接训练目标会导致所有任务组的性能大幅下降，总体成功率从38.33%降至12.50%。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0055 | unknown-topic | `support` | `direct` | 仅使用非可执行的手腕平移动作进行人类预训练，仍能显著提升后续少样本机器人后训练的数据效率。预训练模型在少样本后训练中的总体成功率达到55.00%，而无预训练仅为35.83%，表明预训练知识可有效迁移到可执行机器人动作空间。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0056 | unknown-topic | `support` | `direct` | 损失层面的对齐分析表明，尽管人类预训练仅监督非可执行的手腕平移动作，但在协同训练中它同时降低了6DoF末端执行器动作和夹爪动作的训练损失，说明优化桥接信号与可执行动作共享相似的目标景观，解释了为何仅平移预训练能迁移到完整机器人动作空间。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0057 | unknown-topic | `support` | `direct` | 上界分析表明，当移除人机差距（将任务特定机器人演示视为人类动作数据），桥接表示本身能实现更强的技能转移（总体成功率55.83% vs 38.33%），证实桥接表示是有效的技能转移媒介，且随着视觉差距和动作噪声减小，转移效率会提升。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0059 | unknown-topic | `support` | `direct` | 人类动作数据是廉价、丰富且多样的，是扩展机器人学习最有前途的资源之一。借助无机器人设置，人类操作数据的收集可以以更低成本和几乎在任何地方进行。自我中心视角人类数据在环境和技能多样性方面被认为是最可扩展、最经济的方式。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0060 | unknown-topic | `support` | `direct` | 本文提出了Human2Humanoid，一个无监督运动重定向框架，可在无配对数据的情况下将人类运动迁移到人形机器人行为。该方法采用CycleGAN架构结合骨骼感知图卷积网络来捕获拓扑相关的运动特征，在Unitree G1人形机器人上实现了88.5%的平均追踪成功率。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0061 | unknown-topic | `support` | `direct` | 引入形态不变末端执行器一致性损失（Morphology-Invariant End-Effector Consistency Loss），通过对齐相对于各形态T-pose归一化的末端执行器轨迹来保持跨形态的运动语义，而非直接匹配绝对坐标。这解决了人类和人形机器人在肢体长度和比例上的显著差异导致的语义崩塌问题。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0062 | unknown-topic | `support` | `direct` | 引入物理感知可行性约束（Physics-Aware Feasibility Constraints），包括足部接触约束、足部高度约束和关节限位约束，在训练过程中显式地鼓励再现源运动的接触模式，抑制足部滑动、身体悬浮和地面穿透等物理不可行伪影，提高真实机器人的可部署性。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0063 | unknown-topic | `support` | `direct` | 实验结果表明Human2Humanoid在下游可控性和物理可行性两方面均优于现有方法（PHC、GMR、Unitree Retarget）。在相同追踪策略下，Human2Humanoid取得了最低的平均追踪误差（0.12）和最高的平均成功率（88.5%），同时平均地面穿透深度最低（0.05cm）。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0064 | unknown-topic | `support` | `direct` | 消融实验证实物理感知训练目标对整体性能有重要贡献。移除形态不变末端执行器一致性损失会降低追踪成功率（从92.8%降至85.7%）并增加追踪误差；移除接触和高度约束会增加足部滑动和地面穿透，表明物理感知目标主要改善接触相关的可行性。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0065 | unknown-topic | `support` | `direct` | 基于优化的重定向方法（PHC、GMR）在困难运动上仍可能产生灾难性伪影。PHC在运动接近关节限位时求解器可能切换到不同的局部解分支导致不可追踪的关节“弹跳”；GMR的部分序列需要非平凡的逐片段参数调优以避免明显抖动。本文方法可以减少这些灾难性情况。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0068 | unknown-topic | `support` | `direct` | Dream.exe是首个以物理可执行性为核心评估标准的视频生成模型基准，将仿真器中的任务成功率作为主要判据而非仅依赖感知质量评分。该框架通过视频到执行管道，将生成视频中的运动转换为机器人轨迹并在物理仿真器中执行，提供了纯视觉指标无法提供的接地信号。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0070 | unknown-topic | `support` | `direct` | 多个视频生成模型在没有机器人特定监督的情况下实现了可测量的执行成功率，表明从互联网规模数据训练的生成先验确实编码了有意义的物理知识和运动信息。这支持了将视频生成模型用作世界模型和行为先验的假设。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0072 | unknown-topic | `support` | `direct` | 通用模型如Wan 2.7和Kling 3.0在多个末端执行器轨迹指标上匹敌或超越CosmosPolicy，表明大规模通用视频预训练可以在生成合适机器人轨迹方面媲美机器人专用训练。这暗示互联网规模视频数据中蕴含的可迁移运动知识可能被低估。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0076 | unknown-topic | `support` | `direct` | Dream.exe任务集基于RoboCasa365的101个手工精选片段构建。并非所有片段都适合评估视频生成模型——杂乱视角遮挡末端执行器运动、模糊物体身份使轨迹评估定义不清、某些任务需要基座导航而当前提取管道不支持。每个候选片段都经过相机适用性、物体可见性、轨迹清晰度和语义明确性的审查，并单独调整相机视角以最大化物体和末端执行器的可见性。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0077 | unknown-topic | `support` | `direct` | Dream.exe采用三级难度分类法来探测生成视频中物理复杂性的不同方面：Level 1为单物体原子操作（要求几何一致的末端执行器运动和正确的抓取-释放时序），Level 2为多物体交互（要求正确表示物体间空间关系和操作事件的顺序依赖），Level 3为多阶段复合任务（测试长时域物理连贯性和子目标排序）。该分类法为评估视频生成模型的物理理解能力提供了结构化... |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0079 | unknown-topic | `support` | `direct` | DexImit是一个自动化框架，能在无需任何额外信息（无深度、无相机内参）的情况下，将单目人类操作视频转换为物理上合理的机器人数据。通过四阶段管道实现：4D手-物交互重建（近度量尺度）、子任务分解与双手调度、基于力闭合约束的结构化动作生成、全面数据增强以支持零样本真实世界部署。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0084 | unknown-topic | `support` | `direct` | DexImit通过全面的数据增强（物体位姿和尺度随机化、相机位姿随机化、视觉观测噪声模拟）实现零样本真实世界部署。在四个元任务（单手放置苹果、独立双手放置土豆和辣椒、双手抓取锅、协作双手倒水）上均达到持续较高的零样本成功率，验证了重建数据的物理合理性和增强管道的有效性。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0087 | unknown-topic | `support` | `direct` | DexImit从任意视角拍摄的单目人类视频中重建手-物轨迹，映射到具有近度量尺度的共享世界坐标系，无需额外深度或相机信息。在100个短时域任务上评估，结合SpatialTracker v2深度估计和FoundationPose++ 6D位姿估计的方案达到最高的82%对象轨迹重建成功率。Trace-Anything因追踪倾向于低估物体运动而导致成功率仅38%。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0089 | unknown-topic | `support` | `direct` | DexImit的Action-Centric Scheduling算法支持任意时域长度、任意双手并发或异步程度、以及从单手操作到协作双手操作到完全并发双手操作的任意动作组合，通过优先队列和子动作类型（pregrasp、motion、grasp、release）实现无冲突的复杂子任务调度。这使得DexImit能处理超长时域任务如制作饮料（倒入三种饮料、摇晃混... |  | unlisted | 2602.10105 |
+| EA-EXO-EGO-2026-0001 | unknown-topic | `support` | `direct` | 第三人称(exocentric)视频可转化为第一人称(egocentric)视角,为机器人和AR/VR领域的模仿、推理和交互提供关键的第一人称感知能力 |  | unlisted | 2512.08269 |
+| EA-EXO-EGO-2026-0002 | unknown-topic | `support` | `direct` | exocentric视频的latent特征为egocentric视频生成提供更广泛的场景上下文,弥补ego先验渲染中缺失的场景信息 |  | unlisted | 2512.08269 |
+| EA-EXO-EGO-2026-0003 | unknown-topic | `support` | `direct` | 利用预训练大规模视频扩散模型的时空知识,通过轻量LoRA适配即可从单个exocentric视频生成高质量egocentric视频,并对未见场景具有强泛化能力 |  | unlisted | 2512.08269 |
+| EA-EXO-EGO-2026-0006 | unknown-topic | `support` | `direct` | egocentric人类视频提供可大规模采集的替代数据源,相比机器人遥操作可在多样化物体、环境和任务变体中大规模收集手部交互数据 |  | unlisted | 2608.02580 |
+| EA-EXO-EGO-2026-0007 | unknown-topic | `support` | `direct` | 在ego2robot合成数据与机器人数据上联合预训练,持续提升OOD泛化性能,增益在视觉外观、具身形态和语义扰动下最为显著,表明ego数据主要提升不变性和跨分布鲁棒性 |  | unlisted | 2608.02580 |
+| EA-EXO-EGO-2026-0009 | unknown-topic | `support` | `direct` | 在15种形态的Ego2R数据基础上加入原始ego视频数据,性能从33.5%跃升至37.3%,原始ego数据有效充当第16种'形态',通过略微不同的视觉外观和动作分布进一步丰富预训练多样性 |  | unlisted | 2608.02580 |
+| EA-EXO-EGO-2026-0012 | unknown-topic | `support` | `direct` | Egocentric视频预训练为VLA提供跨本体知识（cross-embodiment knowledge），完全丢弃人类数据会浪费预训练获得的跨本体知识和对真实世界部署的泛化能力。这间接支持了人类视频数据（包括潜在的第三视角数据）对ego预训练的价值。 |  | unlisted | 2608.04196 |
+| EA-EXO-EGO-2026-0015 | unknown-topic | `support` | `direct` | 第三视角视频与第一视角视频互补：第一视角保留动作执行视角，暴露接触动力学、手-物体关系、时间意图和运动决策的视觉后果；第三视角补充全身运动、姿态、交互上下文、周围智能体和场景级动态，使这些信息更易观察。 |  | unlisted | 2605.06747 |
+| EA-EXO-EGO-2026-0016 | unknown-topic | `support` | `direct` | HumanNet将视角多样性作为四大设计原则之一——第一视角和第三视角来源均被保留并显式索引，使模型能学习互补的执行者中心和观察者中心线索。数据管线在采集阶段就将第一视角和第三视角材料分流处理。 |  | unlisted | 2605.06747 |
+| EA-EXO-EGO-2026-0017 | unknown-topic | `support` | `direct` | 结合第一和第三视角支持运动感知表示学习：第三视角视频对全身运动、移动、姿态和多人动态特别有价值，第一视角对双手、接触和执行者中心意图特别有价值。两者结合支持对齐外观、语言和运动的表示，而非将视频视为独立帧序列。 |  | unlisted | 2605.06747 |
+| EA-EXO-DEV-2026-0007 | unknown-topic | `conditional` | `direct` | 单纯依赖无动作视频进行被动预测虽能转移部分物理知识，但无法充分学习因果关系，导致在适配目标机器人时交互性不足；引入潜在动作可显著缩小与真实动作标签的差距 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0023 | unknown-topic | `conditional` | `citation-supported` | 人机迁移（human-to-robot transfer）需要解决具身差异问题，现有方法通过图像分布对齐、可微重定向和语义对齐动作空间等方式减少差异，但仍是开放挑战 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0032 | unknown-topic | `conditional` | `direct` | 预测精度随预测时域增加而下降（从1秒到3秒），因为模型需要在更高维度（48维灵巧动作）上预测更远的未来；encoder-decoder架构在小幅优势上优于decoder-only |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0035 | unknown-topic | `conditional` | `citation-supported` | 桥接人类与机器人之间具身差异的方法包括：1)与小规模机器人数据集联合训练；2)大规模人类数据预训练后小规模机器人数据微调；3)在人类数据上训练视觉编码器以提升下游模仿学习效率；4)从人-物交互轨迹学习操作先验后用RL或IL微调 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0085 | unknown-topic | `conditional` | `direct` | 尺度增强对真实世界策略成功至关重要，移除后成功率显著下降。这是因为虽然重建轨迹接近度量尺度，但灵巧操作需要精确的空间感知，在训练中暴露于度量一致的尺度分布对稳健的真实世界执行至关重要。然而，如果在尺度增强后为每个缩放实例重新生成抓取和动作，性能会急剧退化甚至低于无尺度增强的设置，因为不同尺度下合成的动作不一致，引入了冲突的监督信号，阻碍模仿学习。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0088 | unknown-topic | `conditional` | `direct` | 除了互联网人类视频，视频生成模型（如Wan2.2和Veo3）可作为可扩展的人类操作视频来源。对于低复杂度任务，Veo3因更强的时序一致性和语言遵循能力，实现了高数据可用率，在单步和两步操作上保持稳健。但生成视频和随意拍摄的网络视频在任务复杂度和时域长度增加时可用性均显著下降。 |  | unlisted | 2602.10105 |
+| EA-EXO-EGO-2026-0005 | unknown-topic | `conditional` | `direct` | EgoX框架需要egocentric相机位姿作为输入,在野外场景中需手动确定相机外参,这限制了从exocentric视频全自动生成ego数据的能力 |  | unlisted | 2512.08269 |
+| EA-EXO-EGO-2026-0008 | unknown-topic | `conditional` | `direct` | 当评估相机视角更接近egocentric视角时(如EBench的高位相机),ego数据预训练的增益被放大:3:1比例在EBench上达到最佳(51.7%,较robot-only提升12.1%),表明视角匹配度影响预训练效果 |  | unlisted | 2608.02580 |
+| EA-EXO-EGO-2026-0013 | unknown-topic | `conditional` | `direct` | SiMDex重新挖掘预训练所用的同一egocentric语料库进行任务感知的后训练选择，使大规模ego采集'两次获益'（广度和精度）。然而该方法仅限于egocentric数据，未探索第三视角数据是否能增强挖掘的相似性信号。 |  | unlisted | 2608.04196 |
+| EA-EXO-DEV-2026-0008 | unknown-topic | `limit` | `direct` | 模型在模拟不常见动作（如拍打、快速挥手）时仍存在不足，且在策略评估中绝对成功率常高于真实情况，表明其在精确生成细微失败方面存在局限性 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0011 | unknown-topic | `limit` | `direct` | HaMeR等现成模型虽可大规模提取手部姿态，但无法表示手部以外的动作（如手臂运动和行走），且在严重遮挡和相机运动时难以推断手部位置，限制了从人类视频到机器人的知识迁移效果 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0021 | unknown-topic | `limit` | `direct` | EgoLive的标注流程依赖HaMeR、ORB-SLAM3、SAM2、FoundationStereo等模型的组合，虽实现了自动化但标注质量受限于这些模型的预测精度，尤其在严重动态遮挡下3D手部重建精度可能下降 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0029 | unknown-topic | `limit` | `direct` | EgoDex的场景多样性有限，仅限于桌面环境，场景与行为的笛卡尔积不是本工作重点；作者建议通过图像到图像生成模型等现代数据增强方法引入场景多样性 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0030 | unknown-topic | `limit` | `direct` | 灵巧标注（3D手部姿态）在严重遮挡（如折叠毛巾）或高速运动时不准确，因为这些标注本身是模型预测而非真值，标注质量受限于ARKit预测网络的精度 |  | unlisted | 2505.11709 |
+| EA-EXO-DEV-2026-0047 | unknown-topic | `limit` | `direct` | 当前3D重建算法的局限性导致构建的预训练数据仍存在一些不准确性。此外，当前的数据构建和模型训练主要针对短时程、原子操作技能，扩展到更高层次任务结构以学习长时程规划和推理能力是重要的未来方向。当前机器人实验主要关注单手操作任务。 |  | unlisted | 2510.21571 |
+| EA-EXO-DEV-2026-0058 | unknown-topic | `limit` | `direct` | 丢弃旋转监督限制了需要精细旋转调整任务的迁移效果。失败案例主要集中在需要精确末端执行器配置的接触密集型操作上（如“将吸管插入杯中”和“打开抽屉”），策略常表现出明确的任务意图但在关键步骤失败。机器人在协同训练后也难以抓取薄物体。 |  | unlisted | 2606.28133 |
+| EA-EXO-DEV-2026-0067 | unknown-topic | `limit` | `direct` | 当前框架未来需要推广到具有实质拓扑差异的非人形机器人，并与下游全身控制策略进行端到端耦合以进一步提高复杂交互场景中的真实机器人鲁棒性。这表明当前方法在非人形形态和复杂接触交互方面仍存在局限性。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0069 | unknown-topic | `limit` | `direct` | 视觉质量是执行能力的不可靠预测指标。物理合理性（与物理正确性最相关的维度）与任务成功率几乎不相关。LTX 2.3在物理合理性上排名第一但在SR-B上倒数第一，而Veo 3.1在任务依从性上领先却仅达到Level-1成功率。视觉上较弱的模型如SeedDance 2.0和Kling 3.0反而取得了最强的任务级结果。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0073 | unknown-topic | `limit` | `direct` | 深度估计是视频到执行管道中的主要瓶颈。使用仿真器真值深度替换估计深度后任务成功率大幅提升（Rollout Video w/ GT Depth的SR-B接近1.0），表明深度估计中的小的时间不一致误差在3D提升后会被放大，导致TCP位置不准确、接触时序错误，最终降低执行成功率。该瓶颈对所有通用生成器影响一致，确保了比较的公平性。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0074 | unknown-topic | `limit` | `direct` | 生成视频仅以像素级外观变化的形式隐式编码运动，缺乏3D几何、接触力或夹爪状态的显式表示。视频到执行管道需通过单目深度估计和已知相机参数将2D末端执行器运动提升为世界坐标系3D轨迹，并从交互上下文推断夹爪时序，再转换为机器人控制器可跟随的结构化动作流。这一从视频到物理执行的桥接是非平凡的。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0075 | unknown-topic | `limit` | `direct` | 长时域多阶段任务（Level 3）暴露了当前模型的极限。仅Kling 3.0在Level 3实现了非零任务成功率（6.2% SR-B），大多数生成模型在多阶段复合任务上成功率为零。然而非零的子目标分数表明模型在多步任务中仍有部分进展。这表明当前视频生成模型在长时域物理连贯性和子目标排序方面存在根本性不足。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0080 | unknown-topic | `limit` | `direct` | 将人手作为异构本体直接用于预训练的方法存在根本限制，因为视觉观测和动作空间的差异严重约束了跨本体学习。另一类方法从视频重建3D关键点流或物体轨迹再复现操作，虽消除了本体差异，但大多依赖绝对深度信息，或需要严格的重建精度以避免RL训练失败，从根本上限制了可扩展性。现有方法在快速运动、遮挡或复杂交互等挑战性场景中仍然力不从心。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0081 | unknown-topic | `limit` | `direct` | 输入视频质量直接决定生成数据的可用性。随意拍摄的网络人类视频在简单任务上能提供高质量数据，但由于次优相机视角和频繁遮挡，随任务复杂度和时域长度增加，重建成功率大幅下降。由知情操作员有意拍摄的视频（最小化遮挡、精心选择视角、稳定物体可见性）显著提高重建质量，在简单任务上实现近完整数据可用性，在挑战性长时域任务上仍保持相当的成功率。手动修正后，长时域和精细任务... |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0082 | unknown-topic | `limit` | `direct` | 由于单目视频中严重遮挡和有限的可观测性，DexImit目前无法处理灵巧手内操作（in-hand manipulation），管道中也没有为此类场景设计专门机制。这是单目视频重建在高度遮挡场景下的根本性观测限制。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0083 | unknown-topic | `limit` | `direct` | 由于管道通过多个模块顺序执行生成数据，错误可能沿管道传播，偶尔导致生成的数据不可用。对于短时域任务，DexImit能可靠生成准确的双手操作数据；但对于长输入视频，有时需要人工干预来保持准确性，如修正VLM子任务分解或纠正重建伪影。对100个失败案例的分析显示失败可归因于管道中多个不同模块。 |  | unlisted | 2602.10105 |
+| EA-EXO-DEV-2026-0086 | unknown-topic | `limit` | `direct` | DexImit目前无法处理软体或铰接物体，因为3D生成阶段主要依赖SAM3D，假设物体几何为刚体。这一限制可能通过集成更先进的几何重建或生成建模方法来缓解。此外，框架也不支持移动操作场景，扩展需要显式建模本体运动和环境动态。 |  | unlisted | 2602.10105 |
+| EA-EXO-EGO-2026-0004 | unknown-topic | `limit` | `direct` | 此前的exo-to-ego方法需要额外ego输入或多视角exo视频:EgoExo-Gen需要第一帧ego图像,Exo2Ego-V需要四个同步exocentric摄像机视角,限制了从第三视角视频采集ego数据的实用性 |  | unlisted | 2512.08269 |
+| EA-EXO-EGO-2026-0010 | unknown-topic | `limit` | `direct` | 视觉对齐依赖inpainting和深度感知合成,在严重遮挡或复杂光照下可能产生伪影;retargeting将手部姿态映射到平行夹爪会丢失精细手指关节信息,限制了ego数据转化为训练数据的质量 |  | unlisted | 2608.02580 |
+| EA-EXO-EGO-2026-0014 | unknown-topic | `limit` | `direct` | SiMDex的收益根本上取决于人类数据池的覆盖度——当池中缺乏与目标技能相似的高质量演示时，检索无信号可利用，甚至可能在机器人数据充足时注入方差。该限制暗示第三视角数据可能通过提供互补的运动模式来弥补ego数据池的覆盖盲区。 |  | unlisted | 2608.04196 |
+| EA-EXO-EGO-2026-0019 | unknown-topic | `limit` | `direct` | HumanNet承认开放世界人类视频存在视角不平衡（viewpoint imbalance）问题：大规模数据可能制造普遍性的幻觉，而实际上对特定地理区域、相机视角、体型、日常活动等存在显著偏倚。同时指出人类行为不等于机器人行为，存在本体差距。 |  | unlisted | 2605.06747 |
+| EA-EXO-DEV-2026-0009 | unknown-topic | `gap` | `direct` | 模型不能自然支持多视角仿真，而这对最先进的策略（如GR00T N1.5）至关重要，当前架构存在多视角扩展的缺口 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0010 | unknown-topic | `gap` | `direct` | 预训练阶段使用固定空文本提示作为条件，未利用数据集中已有的任务文本标注，表明文本条件在人类视频预训练阶段未被充分利用 |  | unlisted | 2602.06949 |
+| EA-EXO-DEV-2026-0020 | unknown-topic | `gap` | `direct` | 现有自我中心数据集可分为通用型、操作专用型和部署规模型三类，反映了语义广度、交互保真度和真实世界覆盖的不同设计优先级；多数操作专用型数据集仍局限于家庭、实验室或桌面环境，缺乏真实服务工作流的长时序覆盖 |  | unlisted | 2604.23570 |
+| EA-EXO-DEV-2026-0066 | unknown-topic | `gap` | `direct` | 传统监督学习方法严重依赖配对的人机运动数据，这些数据难以获取且难以跨不同形态扩展。无配对重定向方法基于对抗或循环一致性目标，主要关注视觉合理性而非可执行的关节空间轨迹、稳定的地面接触或机器人特定的运动学可行性，直接应用于人形机器人是不现实的。 |  | unlisted | 2606.03476 |
+| EA-EXO-DEV-2026-0071 | unknown-topic | `gap` | `direct` | 机器人专用策略模型（CosmosPolicy）并未始终优于通用生成器。尽管CosmosPolicy直接输出机器人动作而通用生成器需通过间接的视频到轨迹路径，通用生成器在多样化任务和相机视角上泛化能力更强，其任务级SR-B与CosmosPolicy相当甚至超越。这揭示了机器人专用训练在泛化性方面的不足。 |  | unlisted | 2606.04811 |
+| EA-EXO-DEV-2026-0078 | unknown-topic | `gap` | `direct` | 数据稀缺从根本上限制了双手灵巧操作的泛化能力，由于遥操作困难和硬件成本高，大规模双手灵巧操作数据集的采集比简单夹爪显著更具挑战性。人类操作视频作为操作知识的直接载体，在更大规模上 readily 可用且覆盖更广泛的任务类别，但人手与机器人灵巧手之间的巨大本体差异使得从人类视频直接预训练极具挑战性。 |  | unlisted | 2602.10105 |
+| EA-EXO-EGO-2026-0011 | unknown-topic | `gap` | `direct` | SiMDex仅在Related Works中将Ego-Exo4D作为'rich foundation'提及，但实际人类数据池完全来自EgoDex（纯egocentric视频），未使用任何第三视角数据来辅助ego数据的选择或预训练。论文未探索第三视角视频能否增强egocentric数据挖掘的效果。 |  | unlisted | 2608.04196 |
+| EA-EXO-EGO-2026-0018 | unknown-topic | `gap` | `direct` | HumanNet的VLA后训练验证实验仅使用1000小时egocentric视频作为预训练源（对比100小时真实机器人数据和20000小时基线），未测试加入第三视角视频是否改善预训练效果。第三视角对ego预训练的增量贡献未被实验验证。 |  | unlisted | 2605.06747 |
+| EA-DQ-YEAR-READ-0008 | EA-DATA | `support` | `direct` | 少样本部署场景下，外部大规模数据的“质量”主要取决于对目标任务分布的相关性；只按最近邻相似度检索会受噪声和先验数据分布偏差影响。 | IWR 将 retrieval-based imitation learning 的常用最近邻规则解释为目标数据分布 KDE 的极限，指出其高方差、易受噪声影响且不考虑 prior data distribution；方法用目标/先验分布概率比进行 importance-weighted retrieval，并在仿真和 Bridge 真实评估中改善现有检索方法。 (Abstract (full-text section)) | amber-xie; rahul-chand; dorsa-sadigh; et al. | 2509.01657 |
+| EA-EGO-2026-0007 | EA-DATA | `support` | `direct` | 在 EgoScale 的测量区间内，egocentric human action pretraining 确有规模收益：1K 到 20K 小时使真实机器人平均任务完成度从 0.30 升到 0.71。 | 五个数据规模的同架构实验报告单调提升，并限制结论不外推到测量区间之外。 (3.3 Policy Performance Scales with Pretraining Data Size) | ruijie-zheng; dantong-niu; yuqi-xie; et al. | 2602.16710 |
+| EA-PRETRAIN-DATA-2026-0003 | EA-DATA | `support` | `direct` | 多相机 VLA 不应把码率在机位和画面区域间均分；应优先保留对当前动作有用的视图和区域。 | 论文指出不同机位和图像区域对控制的价值不均匀，SPARC 通过时序 mask 自适应分配比特。 (1 Introduction and 3 Method) | sangyun-chung; mincheol-shin; jihyun-kim; et al. | 2606.16253 |
+| EA-PRETRAIN-DATA-2026-0002 | EA-DATA | `support` | `direct` | 任务匹配的人类 egocentric 视频能补齐少量机器人示范的动作覆盖空洞，但收益是在对齐与质量加权管线中实现的。 | 419 条人类视频的工作空间覆盖是 34 条机器人示范的 4.8 倍，联合微调将 10 试验成功率从 10% 提高到 40%。 (5.3 Human Data for Augmented Fine-Tuning, Figure 6) | hao-li; ganlong-zhao; yufei-liu; et al. | 2606.17200 |
+| EA-DQ-YEAR-READ-0003 | EA-DATA | `conditional` | `direct` | 人类视频能扩大机器人学习数据来源，但其质量取决于机器人可执行性和任务兼容性；仿真过滤可把不可达、估计错误或 grasp 不兼容的轨迹排除或标注出来。 | PSI 将人类演示转换为 6DoF object pose trajectories 后在仿真中执行，用于过滤不适合机器人学习的数据；不适合原因包括 pose estimation errors 和机器人 physically unachievable trajectories，并生成 grasp suitability labels 以学习 task-oriented grasping。 (3.3 Trajectory and Gr... | albert-j-zhai; kuo-hao-zeng; jiasen-lu; et al. | 2602.13197 |
+| EA-EGO-2026-0008 | EA-DATA | `conditional` | `direct` | 大规模 human pretraining 仍需少量精确 aligned human-robot mid-training 才能最好地落到可执行控制；规模和本体对齐是互补条件。 | 四类 checkpoint 的消融中，pretrain+midtrain 最好；human pretraining 提供结构，mid-training 负责控制锚定。 (3.2 Large-Scale Human Pretraining Is Key to Strong Dexterous Manipulation Policy Performance) | ruijie-zheng; dantong-niu; yuqi-xie; et al. | 2602.16710 |
+| EA-EGO-2026-0017 | EA-DATA | `conditional` | `direct` | 自动 RGB-only ego 标签存在明显 fidelity ceiling：严格阈值下左右 wrist pose recovery 仅约 66% 和 62%，规模化以噪声为代价。 | HOT3D ground truth 上的 10% sample 验证给出 head/wrist 三类严格阈值 recovery rate。 (4.3 Egocentric Video Yields Effective Pretraining Labels) | xingyao-lin; guojin-zhong; tianyi-lu; et al. | 2606.06194 |
+| EA-PRETRAIN-DATA-2026-0001 | EA-DATA | `conditional` | `direct` | 异构来源应扩大，但在联合预训练前必须将空间坐标、本体形态、物理时间和标签可靠性显式对齐或条件化；否则会降低动作学习性能。 | 三项组件消融均降低 RoboCasa 成功率，其中去掉人类伪动作可靠性加权的降幅最大。 (5.2 Ablation Studies, Figure 5(b)) | hao-li; ganlong-zhao; yufei-liu; et al. | 2606.17200 |
+| EA-EGO-2026-0004 | EA-DATA | `limit` | `direct` | Ego-centric 轨迹构建存在规模—质量冲突：保留更多疑似背景/错误轨迹会显著降低真实机器人表现。 | BGTS=1.0 保留 86,427 episodes 但真实机器人分数低于 BGTS=0.7 的 45,157 episodes。 (IV-C Ablation Study) | tomoya-yoshida; shuhei-kurita; taichi-nishimura; et al. | 2509.21986 |
+| EA-EGO-2026-0005 | EA-DATA | `limit` | `direct` | 单目 RGB 人类视频恢复出的 hand-object 轨迹常不具物理可执行性；对象几何、手尺度/姿态误差会形成穿模、无效接触和抓取失败。 | 方法段明确说明重建运动正确时，机器人—对象交互仍可能因几何误差而无效。 (III-B Dexterous Grasp and Manipulation Learning) | hongyi-chen; tony-dong; tiancheng-wu; et al. | 2602.09013 |
+| EA-EGO-2026-0009 | EA-DATA | `limit` | `direct` | Ego-centric 数据的动作接口会决定训练成败：wrist-only 缺失手指/接触时序，小 fingertip 误差又会映射成不合理关节和接触丢失。 | 动作空间消融中 wrist-only 普遍较差，fingertip mapping 在 Cards/Bottle 等接触敏感任务不稳定。 (3.6 Hand Action Space Design for Human Pretraining) | ruijie-zheng; dantong-niu; yuqi-xie; et al. | 2602.16710 |
+| EA-EGO-2026-0012 | EA-DATA | `limit` | `direct` | 从人类视频恢复的 motion prior 会因遮挡、接触伪影和 retargeting 误差而物理不合理，不能直接当作 humanoid policy 的示范。 | 引言直接列出三类误差并说明它们使数据 unsuitable for direct policy learning。 (1 Introduction) | tianshu-wu; xiangqi-kong; yue-chen; et al. | 2605.20373 |
+| EA-EGO-2026-0015 | EA-DATA | `limit` | `direct` | HumanEgo 的高成功率依赖强 hand/object tracking 前端；单目绝对深度、动态遮挡、模块级联误差和亚厘米接触精度仍是未解决困难。 | 作者在 limitation 段逐项列出 stereo hand tracking、occlusion-robust tracking、cascading failures 和 1 cm plateau。 (5 Conclusion) | zhi-wang; botao-he; kelin-yu; et al. | 2605.24934 |
+| EA-EGO-2026-0016 | EA-DATA | `limit` | `direct` | Ego-centric wrist trajectory 与相机自运动天然耦合；若不统一参考系，动作监督会把 camera rotation/translation 错算为 hand motion。 | 方法段明确说明 current-frame wrist pose 与 first-frame camera path 的坐标差异会混合两类位移。 (3 Method) | xingyao-lin; guojin-zhong; tianyi-lu; et al. | 2606.06194 |
+| EA-EGO-2026-0019 | EA-DATA | `limit` | `direct` | Ego-human motion 的 pose/joint 对齐只能保证自由空间几何相似；不显式建模 hand-object contact，就难以保持持续接触、物体交换和多阶段操作。 | 相关工作和引言都指出现有方法多假设 object-free/weak-contact，忽略手臂与手的不同功能。 (II-B Human-to-Robot Motion Retargeting) | yuanchuan-lai; qing-gao; ziyan-liang; et al. | 2607.03828 |
+| EA-DQ-YEAR-READ-0015 | EA-DATA | `limit` | `direct` | SIEVE 按可复用原语组合和转换接口分配选择预算，再优先保留各组合模式中稳定、中心的轨迹；论文报告其用 50% 示教和 50% 训练步数可优于全量训练。 | 引言的贡献列表同时说明了结构暴露、学习友好轨迹选择和半量数据超过全量训练的结果。 (Introduction) | changti-wu; bin-yu; zhaolong-shen; et al. | 2607.06442 |
+| EA-ALIGN-READ-0012 | EA-MODEL | `support` | `direct` | DQAF 不用成功/失败二值标签代替数据质量，而是联合子任务进度、动作平滑度、停顿和运动学极限生成 episode 级评估与给操作者的纠正反馈。 | 摘要明确列出了质量信号、结构化评估和可执行的自然语言反馈。 (Abstract (full-text section)) | gokul-narayanan; yash-shahapurkar; melih-erdogan; et al. | 2605.26349 |
+| EA-ALIGN-READ-0001 | EA-MODEL | `limit` | `direct` | A recorded robot action is not a universal supervision signal: the same command can produce different motions across controllers, embodiments, hardware units, and deployment-time... | SPACE predicts Cartesian state deltas as a shared end-effector-space representation and uses an action adapter to convert them into robot-specific control commands, improving cross-robot and dynamics-shift robustness. (... | haeone-lee | 2606.24049 |
+
+## Author Stance Events
+
+| Event | Authors | Institutions | Stance | Claim |
+|---|---|---|---|---|
+| EA-EXO-DEV-2026-0001 | unlisted | unlisted | `support` | DreamDojo-HV是迄今为止最大的自我中心人类视频数据集，包含44K小时视频序列，在规模和多样性上超越先前世界模型训练所用数据集数个数量级，涵盖约96个以上新技能和2000个以上新场景 |
+| EA-EXO-DEV-2026-0002 | unlisted | unlisted | `support` | 尽管存在具身差异（embodiment gap），人类视频可用于世界模型预训练，因为交互过程中的底层物理规律在人类和机器人之间基本一致，能够实现有效的知识迁移 |
+| EA-EXO-DEV-2026-0003 | unlisted | unlisted | `support` | 连续潜在动作（continuous latent actions）作为统一代理动作，能够在自监督方式下从帧间提取语义有意义的动作信息，有效解决大规模无标签视频的动作标签稀缺问题，并支持跨具身迁移 |
+| EA-EXO-DEV-2026-0004 | unlisted | unlisted | `support` | 数据消融实验表明，增加人类数据集的多样性（从In-lab到In-lab+EgoDex再到加入DreamDojo-HV）可持续提升OOD场景和反事实动作的物理建模质量与动作可控性 |
+| EA-EXO-DEV-2026-0005 | unlisted | unlisted | `support` | 潜在动作条件的仿真质量与理想设置（使用额外设备获取的真实动作标签）表现相当，且在可扩展性方面最优，是大规模无标注视频预训练的可行方案 |
+| EA-EXO-DEV-2026-0006 | unlisted | unlisted | `support` | EgoDex数据集（829小时自我中心视频）被纳入DreamDojo的数据套件中以丰富物体多样性，与In-lab数据和DreamDojo-HV以1:2:10的采样比例共同用于预训练 |
+| EA-EXO-DEV-2026-0012 | unlisted | unlisted | `support` | 蒸馏后的人预训练知识得以保留，预训练模型蒸馏后在所有四个评估数据集上均显著优于未预训练的模型，表明人类视频预训练的泛化优势在实时推理后仍然有效 |
+| EA-EXO-DEV-2026-0013 | unlisted | unlisted | `support` | EgoLive是迄今为止最大的开源标注自我中心数据集，专注于真实世界任务导向的人类日常操作活动，在数据规模、质量和多样性上超越现有自我中心数据集 |
+| EA-EXO-DEV-2026-0014 | unlisted | unlisted | `support` | EgoLive采用定制头戴设备JoyEgoCam实现类人立体视觉（宽FOV），以60 FPS和2160x2160分辨率采集立体RGB视频，并集成200Hz IMU，在数据采集质量上领先现有自我中心数据集 |
+| EA-EXO-DEV-2026-0015 | unlisted | unlisted | `support` | 所有数据均在无约束的真实世界场景中采集，涵盖家庭服务、零售、药房等实际工作场景，提供了显著优于实验室环境的场景多样性和生态有效性 |
+| EA-EXO-DEV-2026-0016 | unlisted | unlisted | `support` | EgoLive提供全面的跨模态标注，包括6-DoF运动追踪、细粒度语义分割、3D场景重建（深度图）、子任务分割和语言描述，通过自动化标注流程生成，适合自我中心感知、操作定位和人机迁移任务 |
+| EA-EXO-DEV-2026-0017 | unlisted | unlisted | `support` | 自我中心视频采集相比遥操作和UMI具有可扩展性优势：简单硬件设置（单头戴摄像头）支持跨不同环境和用户的大规模数据采集，设备成本低，且不限制自然人手形态 |
+| EA-EXO-DEV-2026-0018 | unlisted | unlisted | `support` | 与EgoDex相比，EgoLive的2D关键点标注更为准确，EgoDex存在不可忽视的标注误差和空间错位；EgoLive在语义覆盖范围和长尾分布上均优于EgoDex和Xperience-10M |
+| EA-EXO-DEV-2026-0019 | unlisted | unlisted | `support` | EgoLive通过双目视觉实现毫米级深度重建精度，在典型人类操作距离（约1米以内）平均误差约3-5mm，并通过立体优化实现一致的3D手部关键点位置，解决了深度漂移问题 |
+| EA-EXO-DEV-2026-0022 | unlisted | unlisted | `support` | 人类自我中心数据可支持从操作能力学习到全身控制的扩展，包括类人全身控制、主动视觉与操作协调、全身移动操作等，表明自我中心数据不仅限于手部操作学习 |
+| EA-EXO-DEV-2026-0024 | unlisted | unlisted | `support` | EgoDex是迄今为止最大和最多样化的灵巧人类操作数据集，包含829小时、30FPS的自我中心视频和338K条任务演示，覆盖194种桌面操作任务，总计9000万帧 |
+| EA-EXO-DEV-2026-0025 | unlisted | unlisted | `support` | 自我中心人类视频是被动可扩展的数据源，类似于互联网上的文本和图像，不同于遥操作需要主动数据采集；在可穿戴设备可能普及的未来，从此类数据中有效学习至关重要 |
+| EA-EXO-DEV-2026-0026 | unlisted | unlisted | `support` | EgoDex使用Apple Vision Pro在录制时采集原生3D手部和手指追踪数据，利用多摄像头和设备端SLAM精确追踪每只手每个关节的姿态，相比事后用HaMeR等网络处理互联网视频具有显著精度优势 |
+| EA-EXO-DEV-2026-0027 | unlisted | unlisted | `support` | EgoDex的数据集行为多样性远超简单拾取放置，涵盖拧瓶盖、翻书页、插充电器、系鞋带、发牌等高度灵巧操作，且动词分布比DROID等现有数据集更宽，多数动词有100条以上演示 |
+| EA-EXO-DEV-2026-0028 | unlisted | unlisted | `support` | 实验表明模型性能随数据规模增加而提升（在log尺度上呈改善趋势），验证了大规模自我中心数据集收集的必要性，呼应了'苦涩教训'中数据规模驱动性能的核心观点 |
+| EA-EXO-DEV-2026-0031 | unlisted | unlisted | `support` | 视觉目标条件（visual goal-conditioning）显著提升轨迹预测性能，平均距离降低22%、终点距离降低53%，表明视觉锚点可有效缓解自然人手运动的多模态问题 |
+| EA-EXO-DEV-2026-0033 | unlisted | unlisted | `support` | 中等规模模型（200M参数）已足够当前数据规模，500M参数模型未带来性能提升；这表明当前瓶颈在数据规模而非模型容量，进一步支持大规模数据收集的优先性 |
+| EA-EXO-DEV-2026-0034 | unlisted | unlisted | `support` | EgoDex将人类手作为通用具身（common embodiment），不同于遥操作等方法采集的数据仅与特定机器人硬件兼容，这为跨平台迁移提供了基础 |
+| EA-EXO-DEV-2026-0036 | unlisted | unlisted | `support` | EgoDex设计了可逆任务、免重置任务和重置任务三种类型，其中可逆和免重置任务通过消除耗时的环境重置提高了数据采集效率，这是大规模被动数据收集的实用设计 |
+| EA-EXO-DEV-2026-0037 | unlisted | unlisted | `support` | 本文提出了一种将非结构化的真实生活自我中心视角人类手部活动视频转化为与现有机器人V-L-A训练数据完全对齐的数据格式的方法，无需任何人工标注。该方法通过全自动的整体人类活动分析框架，从任意人类手部视频中生成原子级别的手部活动片段及其语言描述，每个片段附带逐帧3D手部运动和相机运动数据。 |
+| EA-EXO-DEV-2026-0038 | unlisted | unlisted | `support` | 利用Ego4D、Epic-Kitchen、EgoExo4D和Something-Something-V2等自我中心视角视频数据集的原始视频，构建了包含约100万片段和2600万帧的Hand V-L-A训练数据集，覆盖烹饪、清洁、建筑、修理、手工和绘画等真实生活活动，在物体类别、技能类型和环境多样性方面远超现有机器人数... |
+| EA-EXO-DEV-2026-0039 | unlisted | unlisted | `support` | 3D运动标注阶段采用单目3D相机和手部姿态追踪方法，结合深度视觉SLAM、深度估计和手部重建技术，输出包括相机视场角、逐帧相机位姿和逐帧手部姿态（基于6D腕部位姿和完整关节角度）的度量空间3D运动数据。 |
+| EA-EXO-DEV-2026-0040 | unlisted | unlisted | `support` | 原子动作分割阶段基于3D空间中手部运动速度的极小值检测来实现，这是一种简单但出人意料有效的方法。该方法无需额外的模型推理或预标注文本标签，特别适合手部活动视频的大规模可扩展分割。 |
+| EA-EXO-DEV-2026-0041 | unlisted | unlisted | `support` | 指令标注阶段利用GPT-4.1对每个视频片段进行动作描述，通过在每个采样帧上叠加手部轨迹可视化来提高标注准确性。实验证明提供原子级别的视频片段进行标注比固定长度分割更有效，叠加手部轨迹对确保正确标注也很重要。 |
+| EA-EXO-DEV-2026-0042 | unlisted | unlisted | `support` | 预训练后的VLA模型在完全未见的真实世界环境中展现出强大的零样本手部动作预测能力，这是先前任何方法都未达到的性能水平。在少量真实机器人动作数据上微调后，任务成功率和对新物体的泛化能力显著提升（Seen场景平均成功率71.0%，Unseen场景平均成功率64.6%）。 |
+| EA-EXO-DEV-2026-0043 | unlisted | unlisted | `support` | 实验显示了模型任务性能相对于预训练数据规模的清晰缩放行为，表明随着预训练数据量的增加，任务性能持续提升。即使在10K片段的子集上，数据多样性已超过其他现有VLA数据集。 |
+| EA-EXO-DEV-2026-0044 | unlisted | unlisted | `support` | 本文方法与先前利用人类视频训练机器人操作模型的研究有本质区别：利用自我中心视角视频学习视觉和语言表示的方法未探索VLA模型的动作预训练；使用潜在动作的方法不提供显式的3D动作标签；并发的使用3D手部动作标签的工作主要使用受控环境中脚本化的实验室采集数据。本文方法是首个利用大规模非结构化视频且无需人工标注进行VLA模型... |
+| EA-EXO-DEV-2026-0045 | unlisted | unlisted | `support` | 在微调阶段，将人手动作空间视为机器人手部动作空间的超集，通过简单的关节映射策略将机器人手的每个关节映射到拓扑上最接近的人手关节。不进行直接的姿态转移（如遥操作中所做的），微调可以帮助缓解动作空间差异。 |
+| EA-EXO-DEV-2026-0046 | unlisted | unlisted | `support` | 与使用原始人类标注构建VLA片段相比，本文方法表现更优，因为原始标注通常不符合所需的任务粒度或缺少精确的动作起止时间，文本和动作之间的时间或粒度不匹配会削弱指令跟随能力。使用人类标注训练会导致明显的性能下降。 |
+| EA-EXO-DEV-2026-0048 | unlisted | unlisted | `support` | 将人手视为灵巧机器人末端执行器，实现与真实机器人V-L-A数据的两种对齐：1）任务对齐——对原子级人类动作序列进行有意义的分割和过滤；2）标签对齐——恢复度量空间的3D手部运动以提供密集动作标签，并生成精确的语言指令标签。 |
+| EA-EXO-DEV-2026-0049 | unlisted | unlisted | `support` | 本文提出了一种基于手腕平移的桥接动作表示（bridging action representation），作为人类和机器人共享的动作空间。由于人类手腕旋转估计存在噪声且人类手指与平行夹爪的接触模式根本不同，从人类数据中学习包含旋转的动作信号是次优的，仅学习手腕平移更为有效。 |
+| EA-EXO-DEV-2026-0050 | unlisted | unlisted | `support` | 桥接动作定义为在初始头部相机坐标系下的相对手腕平移。该表示具有三个优势：1）在共享观察视角下物理上有意义；2）对噪声旋转估计具有鲁棒性；3）在构造上是与具体形态无关的（embodiment-agnostic）。 |
+| EA-EXO-DEV-2026-0051 | unlisted | unlisted | `support` | 设计了交错动作令牌（interleaved action tokens）表示来处理不同数据源中可能缺失的动作组件。通过在注意力层中掩蔽缺失的动作组件，可以处理来自不同形态的动作。共享的桥接信号应被6DoF动作令牌注意到，从而在注意力模式本身中实现从人类到机器人的显式操作知识转移。 |
+| EA-EXO-DEV-2026-0052 | unlisted | unlisted | `support` | 采用三阶段训练策略：第一阶段在大规模人类动作数据（约600小时）上仅用桥接信号预训练；第二阶段人机协同训练，使用通用抓放机器人数据（72小时）和任务特定人类动作；第三阶段少样本机器人后训练（每任务10条轨迹）。大规模人类预训练显著提升了下游任务性能。 |
+| EA-EXO-DEV-2026-0053 | unlisted | unlisted | `support` | 实验证明桥接动作在将人类操作知识转移到机器人方面远比使用含噪声的6DoF人类动作有效。与6DoF人类动作协同训练会导致噪声和扭曲的行为，而使用桥接动作协同训练则产生更稳定的行为（总体成功率22.50% vs 12.50%）。 |
+| EA-EXO-DEV-2026-0054 | unlisted | unlisted | `support` | 在人类-机器人协同训练中，随机在机器人数据上添加或替换桥接动作作为6DoF末端执行器动作的预测目标是实现操作技能转移的关键。移除该桥接训练目标会导致所有任务组的性能大幅下降，总体成功率从38.33%降至12.50%。 |
+| EA-EXO-DEV-2026-0055 | unlisted | unlisted | `support` | 仅使用非可执行的手腕平移动作进行人类预训练，仍能显著提升后续少样本机器人后训练的数据效率。预训练模型在少样本后训练中的总体成功率达到55.00%，而无预训练仅为35.83%，表明预训练知识可有效迁移到可执行机器人动作空间。 |
+| EA-EXO-DEV-2026-0056 | unlisted | unlisted | `support` | 损失层面的对齐分析表明，尽管人类预训练仅监督非可执行的手腕平移动作，但在协同训练中它同时降低了6DoF末端执行器动作和夹爪动作的训练损失，说明优化桥接信号与可执行动作共享相似的目标景观，解释了为何仅平移预训练能迁移到完整机器人动作空间。 |
+| EA-EXO-DEV-2026-0057 | unlisted | unlisted | `support` | 上界分析表明，当移除人机差距（将任务特定机器人演示视为人类动作数据），桥接表示本身能实现更强的技能转移（总体成功率55.83% vs 38.33%），证实桥接表示是有效的技能转移媒介，且随着视觉差距和动作噪声减小，转移效率会提升。 |
+| EA-EXO-DEV-2026-0059 | unlisted | unlisted | `support` | 人类动作数据是廉价、丰富且多样的，是扩展机器人学习最有前途的资源之一。借助无机器人设置，人类操作数据的收集可以以更低成本和几乎在任何地方进行。自我中心视角人类数据在环境和技能多样性方面被认为是最可扩展、最经济的方式。 |
+| EA-EXO-DEV-2026-0060 | unlisted | unlisted | `support` | 本文提出了Human2Humanoid，一个无监督运动重定向框架，可在无配对数据的情况下将人类运动迁移到人形机器人行为。该方法采用CycleGAN架构结合骨骼感知图卷积网络来捕获拓扑相关的运动特征，在Unitree G1人形机器人上实现了88.5%的平均追踪成功率。 |
+| EA-EXO-DEV-2026-0061 | unlisted | unlisted | `support` | 引入形态不变末端执行器一致性损失（Morphology-Invariant End-Effector Consistency Loss），通过对齐相对于各形态T-pose归一化的末端执行器轨迹来保持跨形态的运动语义，而非直接匹配绝对坐标。这解决了人类和人形机器人在肢体长度和比例上的显著差异导致的语义崩塌问题。 |
+| EA-EXO-DEV-2026-0062 | unlisted | unlisted | `support` | 引入物理感知可行性约束（Physics-Aware Feasibility Constraints），包括足部接触约束、足部高度约束和关节限位约束，在训练过程中显式地鼓励再现源运动的接触模式，抑制足部滑动、身体悬浮和地面穿透等物理不可行伪影，提高真实机器人的可部署性。 |
+| EA-EXO-DEV-2026-0063 | unlisted | unlisted | `support` | 实验结果表明Human2Humanoid在下游可控性和物理可行性两方面均优于现有方法（PHC、GMR、Unitree Retarget）。在相同追踪策略下，Human2Humanoid取得了最低的平均追踪误差（0.12）和最高的平均成功率（88.5%），同时平均地面穿透深度最低（0.05cm）。 |
+| EA-EXO-DEV-2026-0064 | unlisted | unlisted | `support` | 消融实验证实物理感知训练目标对整体性能有重要贡献。移除形态不变末端执行器一致性损失会降低追踪成功率（从92.8%降至85.7%）并增加追踪误差；移除接触和高度约束会增加足部滑动和地面穿透，表明物理感知目标主要改善接触相关的可行性。 |
+| EA-EXO-DEV-2026-0065 | unlisted | unlisted | `support` | 基于优化的重定向方法（PHC、GMR）在困难运动上仍可能产生灾难性伪影。PHC在运动接近关节限位时求解器可能切换到不同的局部解分支导致不可追踪的关节“弹跳”；GMR的部分序列需要非平凡的逐片段参数调优以避免明显抖动。本文方法可以减少这些灾难性情况。 |
+| EA-EXO-DEV-2026-0068 | unlisted | unlisted | `support` | Dream.exe是首个以物理可执行性为核心评估标准的视频生成模型基准，将仿真器中的任务成功率作为主要判据而非仅依赖感知质量评分。该框架通过视频到执行管道，将生成视频中的运动转换为机器人轨迹并在物理仿真器中执行，提供了纯视觉指标无法提供的接地信号。 |
+| EA-EXO-DEV-2026-0070 | unlisted | unlisted | `support` | 多个视频生成模型在没有机器人特定监督的情况下实现了可测量的执行成功率，表明从互联网规模数据训练的生成先验确实编码了有意义的物理知识和运动信息。这支持了将视频生成模型用作世界模型和行为先验的假设。 |
+| EA-EXO-DEV-2026-0072 | unlisted | unlisted | `support` | 通用模型如Wan 2.7和Kling 3.0在多个末端执行器轨迹指标上匹敌或超越CosmosPolicy，表明大规模通用视频预训练可以在生成合适机器人轨迹方面媲美机器人专用训练。这暗示互联网规模视频数据中蕴含的可迁移运动知识可能被低估。 |
+| EA-EXO-DEV-2026-0076 | unlisted | unlisted | `support` | Dream.exe任务集基于RoboCasa365的101个手工精选片段构建。并非所有片段都适合评估视频生成模型——杂乱视角遮挡末端执行器运动、模糊物体身份使轨迹评估定义不清、某些任务需要基座导航而当前提取管道不支持。每个候选片段都经过相机适用性、物体可见性、轨迹清晰度和语义明确性的审查，并单独调整相机视角以最大化物... |
+| EA-EXO-DEV-2026-0077 | unlisted | unlisted | `support` | Dream.exe采用三级难度分类法来探测生成视频中物理复杂性的不同方面：Level 1为单物体原子操作（要求几何一致的末端执行器运动和正确的抓取-释放时序），Level 2为多物体交互（要求正确表示物体间空间关系和操作事件的顺序依赖），Level 3为多阶段复合任务（测试长时域物理连贯性和子目标排序）。该分类法为评... |
+| EA-EXO-DEV-2026-0079 | unlisted | unlisted | `support` | DexImit是一个自动化框架，能在无需任何额外信息（无深度、无相机内参）的情况下，将单目人类操作视频转换为物理上合理的机器人数据。通过四阶段管道实现：4D手-物交互重建（近度量尺度）、子任务分解与双手调度、基于力闭合约束的结构化动作生成、全面数据增强以支持零样本真实世界部署。 |
+| EA-EXO-DEV-2026-0084 | unlisted | unlisted | `support` | DexImit通过全面的数据增强（物体位姿和尺度随机化、相机位姿随机化、视觉观测噪声模拟）实现零样本真实世界部署。在四个元任务（单手放置苹果、独立双手放置土豆和辣椒、双手抓取锅、协作双手倒水）上均达到持续较高的零样本成功率，验证了重建数据的物理合理性和增强管道的有效性。 |
+| EA-EXO-DEV-2026-0087 | unlisted | unlisted | `support` | DexImit从任意视角拍摄的单目人类视频中重建手-物轨迹，映射到具有近度量尺度的共享世界坐标系，无需额外深度或相机信息。在100个短时域任务上评估，结合SpatialTracker v2深度估计和FoundationPose++ 6D位姿估计的方案达到最高的82%对象轨迹重建成功率。Trace-Anything因追... |
+| EA-EXO-DEV-2026-0089 | unlisted | unlisted | `support` | DexImit的Action-Centric Scheduling算法支持任意时域长度、任意双手并发或异步程度、以及从单手操作到协作双手操作到完全并发双手操作的任意动作组合，通过优先队列和子动作类型（pregrasp、motion、grasp、release）实现无冲突的复杂子任务调度。这使得DexImit能处理超长... |
+| EA-EXO-EGO-2026-0001 | unlisted | unlisted | `support` | 第三人称(exocentric)视频可转化为第一人称(egocentric)视角,为机器人和AR/VR领域的模仿、推理和交互提供关键的第一人称感知能力 |
+| EA-EXO-EGO-2026-0002 | unlisted | unlisted | `support` | exocentric视频的latent特征为egocentric视频生成提供更广泛的场景上下文,弥补ego先验渲染中缺失的场景信息 |
+| EA-EXO-EGO-2026-0003 | unlisted | unlisted | `support` | 利用预训练大规模视频扩散模型的时空知识,通过轻量LoRA适配即可从单个exocentric视频生成高质量egocentric视频,并对未见场景具有强泛化能力 |
+| EA-EXO-EGO-2026-0006 | unlisted | unlisted | `support` | egocentric人类视频提供可大规模采集的替代数据源,相比机器人遥操作可在多样化物体、环境和任务变体中大规模收集手部交互数据 |
+| EA-EXO-EGO-2026-0007 | unlisted | unlisted | `support` | 在ego2robot合成数据与机器人数据上联合预训练,持续提升OOD泛化性能,增益在视觉外观、具身形态和语义扰动下最为显著,表明ego数据主要提升不变性和跨分布鲁棒性 |
+| EA-EXO-EGO-2026-0009 | unlisted | unlisted | `support` | 在15种形态的Ego2R数据基础上加入原始ego视频数据,性能从33.5%跃升至37.3%,原始ego数据有效充当第16种'形态',通过略微不同的视觉外观和动作分布进一步丰富预训练多样性 |
+| EA-EXO-EGO-2026-0012 | unlisted | unlisted | `support` | Egocentric视频预训练为VLA提供跨本体知识（cross-embodiment knowledge），完全丢弃人类数据会浪费预训练获得的跨本体知识和对真实世界部署的泛化能力。这间接支持了人类视频数据（包括潜在的第三视角数据）对ego预训练的价值。 |
+| EA-EXO-EGO-2026-0015 | unlisted | unlisted | `support` | 第三视角视频与第一视角视频互补：第一视角保留动作执行视角，暴露接触动力学、手-物体关系、时间意图和运动决策的视觉后果；第三视角补充全身运动、姿态、交互上下文、周围智能体和场景级动态，使这些信息更易观察。 |
+| EA-EXO-EGO-2026-0016 | unlisted | unlisted | `support` | HumanNet将视角多样性作为四大设计原则之一——第一视角和第三视角来源均被保留并显式索引，使模型能学习互补的执行者中心和观察者中心线索。数据管线在采集阶段就将第一视角和第三视角材料分流处理。 |
+| EA-EXO-EGO-2026-0017 | unlisted | unlisted | `support` | 结合第一和第三视角支持运动感知表示学习：第三视角视频对全身运动、移动、姿态和多人动态特别有价值，第一视角对双手、接触和执行者中心意图特别有价值。两者结合支持对齐外观、语言和运动的表示，而非将视频视为独立帧序列。 |
+| EA-EXO-DEV-2026-0007 | unlisted | unlisted | `conditional` | 单纯依赖无动作视频进行被动预测虽能转移部分物理知识，但无法充分学习因果关系，导致在适配目标机器人时交互性不足；引入潜在动作可显著缩小与真实动作标签的差距 |
+| EA-EXO-DEV-2026-0023 | unlisted | unlisted | `conditional` | 人机迁移（human-to-robot transfer）需要解决具身差异问题，现有方法通过图像分布对齐、可微重定向和语义对齐动作空间等方式减少差异，但仍是开放挑战 |
+| EA-EXO-DEV-2026-0032 | unlisted | unlisted | `conditional` | 预测精度随预测时域增加而下降（从1秒到3秒），因为模型需要在更高维度（48维灵巧动作）上预测更远的未来；encoder-decoder架构在小幅优势上优于decoder-only |
+| EA-EXO-DEV-2026-0035 | unlisted | unlisted | `conditional` | 桥接人类与机器人之间具身差异的方法包括：1)与小规模机器人数据集联合训练；2)大规模人类数据预训练后小规模机器人数据微调；3)在人类数据上训练视觉编码器以提升下游模仿学习效率；4)从人-物交互轨迹学习操作先验后用RL或IL微调 |
+| EA-EXO-DEV-2026-0085 | unlisted | unlisted | `conditional` | 尺度增强对真实世界策略成功至关重要，移除后成功率显著下降。这是因为虽然重建轨迹接近度量尺度，但灵巧操作需要精确的空间感知，在训练中暴露于度量一致的尺度分布对稳健的真实世界执行至关重要。然而，如果在尺度增强后为每个缩放实例重新生成抓取和动作，性能会急剧退化甚至低于无尺度增强的设置，因为不同尺度下合成的动作不一致，引入了... |
+| EA-EXO-DEV-2026-0088 | unlisted | unlisted | `conditional` | 除了互联网人类视频，视频生成模型（如Wan2.2和Veo3）可作为可扩展的人类操作视频来源。对于低复杂度任务，Veo3因更强的时序一致性和语言遵循能力，实现了高数据可用率，在单步和两步操作上保持稳健。但生成视频和随意拍摄的网络视频在任务复杂度和时域长度增加时可用性均显著下降。 |
+| EA-EXO-EGO-2026-0005 | unlisted | unlisted | `conditional` | EgoX框架需要egocentric相机位姿作为输入,在野外场景中需手动确定相机外参,这限制了从exocentric视频全自动生成ego数据的能力 |
+| EA-EXO-EGO-2026-0008 | unlisted | unlisted | `conditional` | 当评估相机视角更接近egocentric视角时(如EBench的高位相机),ego数据预训练的增益被放大:3:1比例在EBench上达到最佳(51.7%,较robot-only提升12.1%),表明视角匹配度影响预训练效果 |
+| EA-EXO-EGO-2026-0013 | unlisted | unlisted | `conditional` | SiMDex重新挖掘预训练所用的同一egocentric语料库进行任务感知的后训练选择，使大规模ego采集'两次获益'（广度和精度）。然而该方法仅限于egocentric数据，未探索第三视角数据是否能增强挖掘的相似性信号。 |
+| EA-EXO-DEV-2026-0008 | unlisted | unlisted | `limit` | 模型在模拟不常见动作（如拍打、快速挥手）时仍存在不足，且在策略评估中绝对成功率常高于真实情况，表明其在精确生成细微失败方面存在局限性 |
+| EA-EXO-DEV-2026-0011 | unlisted | unlisted | `limit` | HaMeR等现成模型虽可大规模提取手部姿态，但无法表示手部以外的动作（如手臂运动和行走），且在严重遮挡和相机运动时难以推断手部位置，限制了从人类视频到机器人的知识迁移效果 |
+| EA-EXO-DEV-2026-0021 | unlisted | unlisted | `limit` | EgoLive的标注流程依赖HaMeR、ORB-SLAM3、SAM2、FoundationStereo等模型的组合，虽实现了自动化但标注质量受限于这些模型的预测精度，尤其在严重动态遮挡下3D手部重建精度可能下降 |
+| EA-EXO-DEV-2026-0029 | unlisted | unlisted | `limit` | EgoDex的场景多样性有限，仅限于桌面环境，场景与行为的笛卡尔积不是本工作重点；作者建议通过图像到图像生成模型等现代数据增强方法引入场景多样性 |
+| EA-EXO-DEV-2026-0030 | unlisted | unlisted | `limit` | 灵巧标注（3D手部姿态）在严重遮挡（如折叠毛巾）或高速运动时不准确，因为这些标注本身是模型预测而非真值，标注质量受限于ARKit预测网络的精度 |
+| EA-EXO-DEV-2026-0047 | unlisted | unlisted | `limit` | 当前3D重建算法的局限性导致构建的预训练数据仍存在一些不准确性。此外，当前的数据构建和模型训练主要针对短时程、原子操作技能，扩展到更高层次任务结构以学习长时程规划和推理能力是重要的未来方向。当前机器人实验主要关注单手操作任务。 |
+| EA-EXO-DEV-2026-0058 | unlisted | unlisted | `limit` | 丢弃旋转监督限制了需要精细旋转调整任务的迁移效果。失败案例主要集中在需要精确末端执行器配置的接触密集型操作上（如“将吸管插入杯中”和“打开抽屉”），策略常表现出明确的任务意图但在关键步骤失败。机器人在协同训练后也难以抓取薄物体。 |
+| EA-EXO-DEV-2026-0067 | unlisted | unlisted | `limit` | 当前框架未来需要推广到具有实质拓扑差异的非人形机器人，并与下游全身控制策略进行端到端耦合以进一步提高复杂交互场景中的真实机器人鲁棒性。这表明当前方法在非人形形态和复杂接触交互方面仍存在局限性。 |
+| EA-EXO-DEV-2026-0069 | unlisted | unlisted | `limit` | 视觉质量是执行能力的不可靠预测指标。物理合理性（与物理正确性最相关的维度）与任务成功率几乎不相关。LTX 2.3在物理合理性上排名第一但在SR-B上倒数第一，而Veo 3.1在任务依从性上领先却仅达到Level-1成功率。视觉上较弱的模型如SeedDance 2.0和Kling 3.0反而取得了最强的任务级结果。 |
+| EA-EXO-DEV-2026-0073 | unlisted | unlisted | `limit` | 深度估计是视频到执行管道中的主要瓶颈。使用仿真器真值深度替换估计深度后任务成功率大幅提升（Rollout Video w/ GT Depth的SR-B接近1.0），表明深度估计中的小的时间不一致误差在3D提升后会被放大，导致TCP位置不准确、接触时序错误，最终降低执行成功率。该瓶颈对所有通用生成器影响一致，确保了比较... |
+| EA-EXO-DEV-2026-0074 | unlisted | unlisted | `limit` | 生成视频仅以像素级外观变化的形式隐式编码运动，缺乏3D几何、接触力或夹爪状态的显式表示。视频到执行管道需通过单目深度估计和已知相机参数将2D末端执行器运动提升为世界坐标系3D轨迹，并从交互上下文推断夹爪时序，再转换为机器人控制器可跟随的结构化动作流。这一从视频到物理执行的桥接是非平凡的。 |
+| EA-EXO-DEV-2026-0075 | unlisted | unlisted | `limit` | 长时域多阶段任务（Level 3）暴露了当前模型的极限。仅Kling 3.0在Level 3实现了非零任务成功率（6.2% SR-B），大多数生成模型在多阶段复合任务上成功率为零。然而非零的子目标分数表明模型在多步任务中仍有部分进展。这表明当前视频生成模型在长时域物理连贯性和子目标排序方面存在根本性不足。 |
+| EA-EXO-DEV-2026-0080 | unlisted | unlisted | `limit` | 将人手作为异构本体直接用于预训练的方法存在根本限制，因为视觉观测和动作空间的差异严重约束了跨本体学习。另一类方法从视频重建3D关键点流或物体轨迹再复现操作，虽消除了本体差异，但大多依赖绝对深度信息，或需要严格的重建精度以避免RL训练失败，从根本上限制了可扩展性。现有方法在快速运动、遮挡或复杂交互等挑战性场景中仍然力不... |
+| EA-EXO-DEV-2026-0081 | unlisted | unlisted | `limit` | 输入视频质量直接决定生成数据的可用性。随意拍摄的网络人类视频在简单任务上能提供高质量数据，但由于次优相机视角和频繁遮挡，随任务复杂度和时域长度增加，重建成功率大幅下降。由知情操作员有意拍摄的视频（最小化遮挡、精心选择视角、稳定物体可见性）显著提高重建质量，在简单任务上实现近完整数据可用性，在挑战性长时域任务上仍保持相... |
+| EA-EXO-DEV-2026-0082 | unlisted | unlisted | `limit` | 由于单目视频中严重遮挡和有限的可观测性，DexImit目前无法处理灵巧手内操作（in-hand manipulation），管道中也没有为此类场景设计专门机制。这是单目视频重建在高度遮挡场景下的根本性观测限制。 |
+| EA-EXO-DEV-2026-0083 | unlisted | unlisted | `limit` | 由于管道通过多个模块顺序执行生成数据，错误可能沿管道传播，偶尔导致生成的数据不可用。对于短时域任务，DexImit能可靠生成准确的双手操作数据；但对于长输入视频，有时需要人工干预来保持准确性，如修正VLM子任务分解或纠正重建伪影。对100个失败案例的分析显示失败可归因于管道中多个不同模块。 |
+| EA-EXO-DEV-2026-0086 | unlisted | unlisted | `limit` | DexImit目前无法处理软体或铰接物体，因为3D生成阶段主要依赖SAM3D，假设物体几何为刚体。这一限制可能通过集成更先进的几何重建或生成建模方法来缓解。此外，框架也不支持移动操作场景，扩展需要显式建模本体运动和环境动态。 |
+| EA-EXO-EGO-2026-0004 | unlisted | unlisted | `limit` | 此前的exo-to-ego方法需要额外ego输入或多视角exo视频:EgoExo-Gen需要第一帧ego图像,Exo2Ego-V需要四个同步exocentric摄像机视角,限制了从第三视角视频采集ego数据的实用性 |
+| EA-EXO-EGO-2026-0010 | unlisted | unlisted | `limit` | 视觉对齐依赖inpainting和深度感知合成,在严重遮挡或复杂光照下可能产生伪影;retargeting将手部姿态映射到平行夹爪会丢失精细手指关节信息,限制了ego数据转化为训练数据的质量 |
+| EA-EXO-EGO-2026-0014 | unlisted | unlisted | `limit` | SiMDex的收益根本上取决于人类数据池的覆盖度——当池中缺乏与目标技能相似的高质量演示时，检索无信号可利用，甚至可能在机器人数据充足时注入方差。该限制暗示第三视角数据可能通过提供互补的运动模式来弥补ego数据池的覆盖盲区。 |
+| EA-EXO-EGO-2026-0019 | unlisted | unlisted | `limit` | HumanNet承认开放世界人类视频存在视角不平衡（viewpoint imbalance）问题：大规模数据可能制造普遍性的幻觉，而实际上对特定地理区域、相机视角、体型、日常活动等存在显著偏倚。同时指出人类行为不等于机器人行为，存在本体差距。 |
+| EA-EXO-DEV-2026-0009 | unlisted | unlisted | `gap` | 模型不能自然支持多视角仿真，而这对最先进的策略（如GR00T N1.5）至关重要，当前架构存在多视角扩展的缺口 |
+| EA-EXO-DEV-2026-0010 | unlisted | unlisted | `gap` | 预训练阶段使用固定空文本提示作为条件，未利用数据集中已有的任务文本标注，表明文本条件在人类视频预训练阶段未被充分利用 |
+| EA-EXO-DEV-2026-0020 | unlisted | unlisted | `gap` | 现有自我中心数据集可分为通用型、操作专用型和部署规模型三类，反映了语义广度、交互保真度和真实世界覆盖的不同设计优先级；多数操作专用型数据集仍局限于家庭、实验室或桌面环境，缺乏真实服务工作流的长时序覆盖 |
+| EA-EXO-DEV-2026-0066 | unlisted | unlisted | `gap` | 传统监督学习方法严重依赖配对的人机运动数据，这些数据难以获取且难以跨不同形态扩展。无配对重定向方法基于对抗或循环一致性目标，主要关注视觉合理性而非可执行的关节空间轨迹、稳定的地面接触或机器人特定的运动学可行性，直接应用于人形机器人是不现实的。 |
+| EA-EXO-DEV-2026-0071 | unlisted | unlisted | `gap` | 机器人专用策略模型（CosmosPolicy）并未始终优于通用生成器。尽管CosmosPolicy直接输出机器人动作而通用生成器需通过间接的视频到轨迹路径，通用生成器在多样化任务和相机视角上泛化能力更强，其任务级SR-B与CosmosPolicy相当甚至超越。这揭示了机器人专用训练在泛化性方面的不足。 |
+| EA-EXO-DEV-2026-0078 | unlisted | unlisted | `gap` | 数据稀缺从根本上限制了双手灵巧操作的泛化能力，由于遥操作困难和硬件成本高，大规模双手灵巧操作数据集的采集比简单夹爪显著更具挑战性。人类操作视频作为操作知识的直接载体，在更大规模上 readily 可用且覆盖更广泛的任务类别，但人手与机器人灵巧手之间的巨大本体差异使得从人类视频直接预训练极具挑战性。 |
+| EA-EXO-EGO-2026-0011 | unlisted | unlisted | `gap` | SiMDex仅在Related Works中将Ego-Exo4D作为'rich foundation'提及，但实际人类数据池完全来自EgoDex（纯egocentric视频），未使用任何第三视角数据来辅助ego数据的选择或预训练。论文未探索第三视角视频能否增强egocentric数据挖掘的效果。 |
+| EA-EXO-EGO-2026-0018 | unlisted | unlisted | `gap` | HumanNet的VLA后训练验证实验仅使用1000小时egocentric视频作为预训练源（对比100小时真实机器人数据和20000小时基线），未测试加入第三视角视频是否改善预训练效果。第三视角对ego预训练的增量贡献未被实验验证。 |
+| EA-DQ-YEAR-READ-0008 | amber-xie; rahul-chand; dorsa-sadigh; et al. | unlisted | `support` | 少样本部署场景下，外部大规模数据的“质量”主要取决于对目标任务分布的相关性；只按最近邻相似度检索会受噪声和先验数据分布偏差影响。 |
+| EA-EGO-2026-0007 | ruijie-zheng; dantong-niu; yuqi-xie; et al. | unlisted | `support` | 在 EgoScale 的测量区间内，egocentric human action pretraining 确有规模收益：1K 到 20K 小时使真实机器人平均任务完成度从 0.30 升到 0.71。 |
+| EA-PRETRAIN-DATA-2026-0003 | sangyun-chung; mincheol-shin; jihyun-kim; et al. | unlisted | `support` | 多相机 VLA 不应把码率在机位和画面区域间均分；应优先保留对当前动作有用的视图和区域。 |
+| EA-PRETRAIN-DATA-2026-0002 | hao-li; ganlong-zhao; yufei-liu; et al. | unlisted | `support` | 任务匹配的人类 egocentric 视频能补齐少量机器人示范的动作覆盖空洞，但收益是在对齐与质量加权管线中实现的。 |
+| EA-DQ-YEAR-READ-0003 | albert-j-zhai; kuo-hao-zeng; jiasen-lu; et al. | unlisted | `conditional` | 人类视频能扩大机器人学习数据来源，但其质量取决于机器人可执行性和任务兼容性；仿真过滤可把不可达、估计错误或 grasp 不兼容的轨迹排除或标注出来。 |
+| EA-EGO-2026-0008 | ruijie-zheng; dantong-niu; yuqi-xie; et al. | unlisted | `conditional` | 大规模 human pretraining 仍需少量精确 aligned human-robot mid-training 才能最好地落到可执行控制；规模和本体对齐是互补条件。 |
+| EA-EGO-2026-0017 | xingyao-lin; guojin-zhong; tianyi-lu; et al. | unlisted | `conditional` | 自动 RGB-only ego 标签存在明显 fidelity ceiling：严格阈值下左右 wrist pose recovery 仅约 66% 和 62%，规模化以噪声为代价。 |
+| EA-PRETRAIN-DATA-2026-0001 | hao-li; ganlong-zhao; yufei-liu; et al. | unlisted | `conditional` | 异构来源应扩大，但在联合预训练前必须将空间坐标、本体形态、物理时间和标签可靠性显式对齐或条件化；否则会降低动作学习性能。 |
+| EA-EGO-2026-0004 | tomoya-yoshida; shuhei-kurita; taichi-nishimura; et al. | unlisted | `limit` | Ego-centric 轨迹构建存在规模—质量冲突：保留更多疑似背景/错误轨迹会显著降低真实机器人表现。 |
+| EA-EGO-2026-0005 | hongyi-chen; tony-dong; tiancheng-wu; et al. | unlisted | `limit` | 单目 RGB 人类视频恢复出的 hand-object 轨迹常不具物理可执行性；对象几何、手尺度/姿态误差会形成穿模、无效接触和抓取失败。 |
+| EA-EGO-2026-0009 | ruijie-zheng; dantong-niu; yuqi-xie; et al. | unlisted | `limit` | Ego-centric 数据的动作接口会决定训练成败：wrist-only 缺失手指/接触时序，小 fingertip 误差又会映射成不合理关节和接触丢失。 |
+| EA-EGO-2026-0012 | tianshu-wu; xiangqi-kong; yue-chen; et al. | unlisted | `limit` | 从人类视频恢复的 motion prior 会因遮挡、接触伪影和 retargeting 误差而物理不合理，不能直接当作 humanoid policy 的示范。 |
+| EA-EGO-2026-0015 | zhi-wang; botao-he; kelin-yu; et al. | unlisted | `limit` | HumanEgo 的高成功率依赖强 hand/object tracking 前端；单目绝对深度、动态遮挡、模块级联误差和亚厘米接触精度仍是未解决困难。 |
+| EA-EGO-2026-0016 | xingyao-lin; guojin-zhong; tianyi-lu; et al. | unlisted | `limit` | Ego-centric wrist trajectory 与相机自运动天然耦合；若不统一参考系，动作监督会把 camera rotation/translation 错算为 hand motion。 |
+| EA-EGO-2026-0019 | yuanchuan-lai; qing-gao; ziyan-liang; et al. | unlisted | `limit` | Ego-human motion 的 pose/joint 对齐只能保证自由空间几何相似；不显式建模 hand-object contact，就难以保持持续接触、物体交换和多阶段操作。 |
+| EA-DQ-YEAR-READ-0015 | changti-wu; bin-yu; zhaolong-shen; et al. | unlisted | `limit` | SIEVE 按可复用原语组合和转换接口分配选择预算，再优先保留各组合模式中稳定、中心的轨迹；论文报告其用 50% 示教和 50% 训练步数可优于全量训练。 |
+| EA-ALIGN-READ-0012 | gokul-narayanan; yash-shahapurkar; melih-erdogan; et al. | unlisted | `support` | DQAF 不用成功/失败二值标签代替数据质量，而是联合子任务进度、动作平滑度、停顿和运动学极限生成 episode 级评估与给操作者的纠正反馈。 |
+| EA-ALIGN-READ-0001 | haeone-lee | unlisted | `limit` | A recorded robot action is not a universal supervision signal: the same command can produce different motions across controllers, embodiments, hardware units,... |
+
+## Synthesis Slots
+
+### 共识/正向证据
+- `EA-EXO-DEV-2026-0001`: DreamDojo-HV是迄今为止最大的自我中心人类视频数据集，包含44K小时视频序列，在规模和多样性上超越先前世界模型训练所用数据集数个数量级，涵盖约96个以上新技能和2000个以上新场景
+- `EA-EXO-DEV-2026-0002`: 尽管存在具身差异（embodiment gap），人类视频可用于世界模型预训练，因为交互过程中的底层物理规律在人类和机器人之间基本一致，能够实现有效的知识迁移
+- `EA-EXO-DEV-2026-0003`: 连续潜在动作（continuous latent actions）作为统一代理动作，能够在自监督方式下从帧间提取语义有意义的动作信息，有效解决大规模无标签视频的动作标签稀缺问题，并支持跨具身迁移
+- `EA-EXO-DEV-2026-0004`: 数据消融实验表明，增加人类数据集的多样性（从In-lab到In-lab+EgoDex再到加入DreamDojo-HV）可持续提升OOD场景和反事实动作的物理建模质量与动作可控性
+- `EA-EXO-DEV-2026-0005`: 潜在动作条件的仿真质量与理想设置（使用额外设备获取的真实动作标签）表现相当，且在可扩展性方面最优，是大规模无标注视频预训练的可行方案
+- `EA-EXO-DEV-2026-0006`: EgoDex数据集（829小时自我中心视频）被纳入DreamDojo的数据套件中以丰富物体多样性，与In-lab数据和DreamDojo-HV以1:2:10的采样比例共同用于预训练
+- `EA-EXO-DEV-2026-0012`: 蒸馏后的人预训练知识得以保留，预训练模型蒸馏后在所有四个评估数据集上均显著优于未预训练的模型，表明人类视频预训练的泛化优势在实时推理后仍然有效
+- `EA-EXO-DEV-2026-0013`: EgoLive是迄今为止最大的开源标注自我中心数据集，专注于真实世界任务导向的人类日常操作活动，在数据规模、质量和多样性上超越现有自我中心数据集
+### 条件成立
+- `EA-EXO-DEV-2026-0007`: 单纯依赖无动作视频进行被动预测虽能转移部分物理知识，但无法充分学习因果关系，导致在适配目标机器人时交互性不足；引入潜在动作可显著缩小与真实动作标签的差距
+- `EA-EXO-DEV-2026-0023`: 人机迁移（human-to-robot transfer）需要解决具身差异问题，现有方法通过图像分布对齐、可微重定向和语义对齐动作空间等方式减少差异，但仍是开放挑战
+- `EA-EXO-DEV-2026-0032`: 预测精度随预测时域增加而下降（从1秒到3秒），因为模型需要在更高维度（48维灵巧动作）上预测更远的未来；encoder-decoder架构在小幅优势上优于decoder-only
+- `EA-EXO-DEV-2026-0035`: 桥接人类与机器人之间具身差异的方法包括：1)与小规模机器人数据集联合训练；2)大规模人类数据预训练后小规模机器人数据微调；3)在人类数据上训练视觉编码器以提升下游模仿学习效率；4)从人-物交互轨迹学习操作先验后用RL或IL微调
+- `EA-EXO-DEV-2026-0085`: 尺度增强对真实世界策略成功至关重要，移除后成功率显著下降。这是因为虽然重建轨迹接近度量尺度，但灵巧操作需要精确的空间感知，在训练中暴露于度量一致的尺度分布对稳健的真实世界执行至关重要。然而，如果在尺度增强后为每个缩放实例重新生成抓取和动作，性能会急剧退化甚至低于无尺度增强的设置，因为不同尺度下合成的动作不一致，引入了冲突的监督信号，阻碍模仿学习。
+- `EA-EXO-DEV-2026-0088`: 除了互联网人类视频，视频生成模型（如Wan2.2和Veo3）可作为可扩展的人类操作视频来源。对于低复杂度任务，Veo3因更强的时序一致性和语言遵循能力，实现了高数据可用率，在单步和两步操作上保持稳健。但生成视频和随意拍摄的网络视频在任务复杂度和时域长度增加时可用性均显著下降。
+- `EA-EXO-EGO-2026-0005`: EgoX框架需要egocentric相机位姿作为输入,在野外场景中需手动确定相机外参,这限制了从exocentric视频全自动生成ego数据的能力
+- `EA-EXO-EGO-2026-0008`: 当评估相机视角更接近egocentric视角时(如EBench的高位相机),ego数据预训练的增益被放大:3:1比例在EBench上达到最佳(51.7%,较robot-only提升12.1%),表明视角匹配度影响预训练效果
+### 限制与失败模式
+- `EA-EXO-DEV-2026-0008`: 模型在模拟不常见动作（如拍打、快速挥手）时仍存在不足，且在策略评估中绝对成功率常高于真实情况，表明其在精确生成细微失败方面存在局限性
+- `EA-EXO-DEV-2026-0011`: HaMeR等现成模型虽可大规模提取手部姿态，但无法表示手部以外的动作（如手臂运动和行走），且在严重遮挡和相机运动时难以推断手部位置，限制了从人类视频到机器人的知识迁移效果
+- `EA-EXO-DEV-2026-0021`: EgoLive的标注流程依赖HaMeR、ORB-SLAM3、SAM2、FoundationStereo等模型的组合，虽实现了自动化但标注质量受限于这些模型的预测精度，尤其在严重动态遮挡下3D手部重建精度可能下降
+- `EA-EXO-DEV-2026-0029`: EgoDex的场景多样性有限，仅限于桌面环境，场景与行为的笛卡尔积不是本工作重点；作者建议通过图像到图像生成模型等现代数据增强方法引入场景多样性
+- `EA-EXO-DEV-2026-0030`: 灵巧标注（3D手部姿态）在严重遮挡（如折叠毛巾）或高速运动时不准确，因为这些标注本身是模型预测而非真值，标注质量受限于ARKit预测网络的精度
+- `EA-EXO-DEV-2026-0047`: 当前3D重建算法的局限性导致构建的预训练数据仍存在一些不准确性。此外，当前的数据构建和模型训练主要针对短时程、原子操作技能，扩展到更高层次任务结构以学习长时程规划和推理能力是重要的未来方向。当前机器人实验主要关注单手操作任务。
+- `EA-EXO-DEV-2026-0058`: 丢弃旋转监督限制了需要精细旋转调整任务的迁移效果。失败案例主要集中在需要精确末端执行器配置的接触密集型操作上（如“将吸管插入杯中”和“打开抽屉”），策略常表现出明确的任务意图但在关键步骤失败。机器人在协同训练后也难以抓取薄物体。
+- `EA-EXO-DEV-2026-0067`: 当前框架未来需要推广到具有实质拓扑差异的非人形机器人，并与下游全身控制策略进行端到端耦合以进一步提高复杂交互场景中的真实机器人鲁棒性。这表明当前方法在非人形形态和复杂接触交互方面仍存在局限性。
+### 开放问题
+- `EA-EXO-DEV-2026-0009`: 模型不能自然支持多视角仿真，而这对最先进的策略（如GR00T N1.5）至关重要，当前架构存在多视角扩展的缺口
+- `EA-EXO-DEV-2026-0010`: 预训练阶段使用固定空文本提示作为条件，未利用数据集中已有的任务文本标注，表明文本条件在人类视频预训练阶段未被充分利用
+- `EA-EXO-DEV-2026-0020`: 现有自我中心数据集可分为通用型、操作专用型和部署规模型三类，反映了语义广度、交互保真度和真实世界覆盖的不同设计优先级；多数操作专用型数据集仍局限于家庭、实验室或桌面环境，缺乏真实服务工作流的长时序覆盖
+- `EA-EXO-DEV-2026-0066`: 传统监督学习方法严重依赖配对的人机运动数据，这些数据难以获取且难以跨不同形态扩展。无配对重定向方法基于对抗或循环一致性目标，主要关注视觉合理性而非可执行的关节空间轨迹、稳定的地面接触或机器人特定的运动学可行性，直接应用于人形机器人是不现实的。
+- `EA-EXO-DEV-2026-0071`: 机器人专用策略模型（CosmosPolicy）并未始终优于通用生成器。尽管CosmosPolicy直接输出机器人动作而通用生成器需通过间接的视频到轨迹路径，通用生成器在多样化任务和相机视角上泛化能力更强，其任务级SR-B与CosmosPolicy相当甚至超越。这揭示了机器人专用训练在泛化性方面的不足。
+- `EA-EXO-DEV-2026-0078`: 数据稀缺从根本上限制了双手灵巧操作的泛化能力，由于遥操作困难和硬件成本高，大规模双手灵巧操作数据集的采集比简单夹爪显著更具挑战性。人类操作视频作为操作知识的直接载体，在更大规模上 readily 可用且覆盖更广泛的任务类别，但人手与机器人灵巧手之间的巨大本体差异使得从人类视频直接预训练极具挑战性。
+- `EA-EXO-EGO-2026-0011`: SiMDex仅在Related Works中将Ego-Exo4D作为'rich foundation'提及，但实际人类数据池完全来自EgoDex（纯egocentric视频），未使用任何第三视角数据来辅助ego数据的选择或预训练。论文未探索第三视角视频能否增强egocentric数据挖掘的效果。
+- `EA-EXO-EGO-2026-0018`: HumanNet的VLA后训练验证实验仅使用1000小时egocentric视频作为预训练源（对比100小时真实机器人数据和20000小时基线），未测试加入第三视角视频是否改善预训练效果。第三视角对ego预训练的增量贡献未被实验验证。
+
+## Source Gaps
+
+- No immediate source gaps detected from loaded packet inputs.
+
+## Style Menu
+
+- Evidence sufficiency: preliminary
+- Paper-level sources: 26 / 15 floor (not a cap)
+- Recommended default: preliminary-packet
+- Core claims:
+  - `EA-EXO-DEV-2026-0001` DreamDojo-HV是迄今为止最大的自我中心人类视频数据集，包含44K小时视频序列，在规模和多样性上超越先前世界模型训练所用数据集数个数量级，涵盖约96个以上新技能和2000个以上新场景
+  - `EA-EXO-DEV-2026-0002` 尽管存在具身差异（embodiment gap），人类视频可用于世界模型预训练，因为交互过程中的底层物理规律在人类和机器人之间基本一致，能够实现有效的知识迁移
+  - `EA-EXO-DEV-2026-0003` 连续潜在动作（continuous latent actions）作为统一代理动作，能够在自监督方式下从帧间提取语义有意义的动作信息，有效解决大规模无标签视频的动作标签稀缺问题，并支持跨具身迁移
+- Scientific memo preview: 《近一年exocentric人类数据的发展》研究备忘录: evidence scope, claim map, disagreements, and gaps.
+- Expert explainer preview: TL;DR: 近一年exocentric人类数据的发展 的关键不在单点结论，而在证据条件和误区拆解。
+- KOL thread preview: 近一年exocentric人类数据的发展: 先看证据边界，再谈一个可传播的反常识洞察。
+
+## Draft Outline
+
+1. 研究边界与证据范围
+2. 概念与问题结构
+3. 主要共识
+4. 条件、限制与分歧
+5. 未解决问题
+6. 对后续研究/项目的启发
+
+## Traceability Checklist
+
+- Cite event IDs for paper-specific claims.
+- Cite stable source IDs for topic-card background.
+- Mark cross-event synthesis as `inference` with a short reason.
+- Do not cite candidate-only papers as accepted evidence.
+- Open raw sources before using exact wording.

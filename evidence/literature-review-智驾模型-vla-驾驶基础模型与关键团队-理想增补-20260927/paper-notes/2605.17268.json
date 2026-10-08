@@ -1,0 +1,187 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.17268",
+    "title": "Is VLA Reasoning Faithful? Probing Safety of Chain-of-Causation in Autonomous Driving Models",
+    "published": "2026-05-17",
+    "url": "https://arxiv.org/abs/2605.17268",
+    "versioned_id": "2605.17268v2",
+    "authors": [
+      "Nicanor Mayumu",
+      "Xiaoheng Deng",
+      "Patrick Mukala"
+    ]
+  },
+  "review": {
+    "question": "文字理由与场景、轨迹是否一致？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "文字理由与场景、轨迹是否一致？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3.1 Formal Definition of Reasoning Faithfulness; 3.2 Why Counterfactual Testing Over Gradient Attribution?; 4.2 Phase 2A: Entity and Action Fidelity; 4.3 Phase 2B: Reasoning-Action Consistency; 4.4 Phase 2C: Causal Perturbation",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "5.1 Baseline Characterization; 5.2 Reasoning Fidelity; 5.3 Reasoning-Action Consistency; 5.4 Causal Perturbation",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "6 Conclusion; 7.1 Model and Dataset; 8 What’s next",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "文字理由与场景、轨迹是否一致？",
+  "contributions": [
+    "对 Alpamayo-R1-10B 做关键词实体核验、动力学动作谓词及视觉扰动，分析说明—动作一致性。"
+  ],
+  "method": {
+    "summary": "对 Alpamayo-R1-10B 做关键词实体核验、动力学动作谓词及视觉扰动，分析说明—动作一致性。",
+    "assumptions": [
+      "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "PhysicalAI-AV"
+    ],
+    "tasks": [
+      "文字理由与场景、轨迹是否一致？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "100 段片段各三次推理；自动障碍物标签、关键词核验、前视模糊与遮挡。",
+    "baselines": [
+      "对同模型输入干预有价值；缺少跨模型、闭环及人工大样本复核。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "100 段片段各三次推理；自动障碍物标签、关键词核验、前视模糊与遮挡。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "该审计发现 Alpamayo-R1 样本中存在声明减速或停车而轨迹继续的说明—动作不一致。",
+      "scope": "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。",
+      "locator": "5.3 Reasoning-Action Consistency (Phase 2B)"
+    },
+    {
+      "finding": "该审计使用确定性关键词抽取，作者承认它会漏掉同义表达。",
+      "scope": "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。",
+      "locator": "7.1 Model and Dataset"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "单模型与有限片段，关键词抽取可能漏同义表达，跨模型验证尚待进行。",
+        "locator": "7.1 Model and Dataset"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。",
+        "basis": "100 段片段各三次推理；自动障碍物标签、关键词核验、前视模糊与遮挡。"
+      }
+    ]
+  },
+  "transfer_boundary": "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "100 段片段各三次推理；自动障碍物标签、关键词核验、前视模糊与遮挡。"
+    ],
+    "design_risks": [
+      "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。"
+    ],
+    "baseline_fairness": "对同模型输入干预有价值；缺少跨模型、闭环及人工大样本复核。",
+    "metric_validity": "验证类型与指标限定为：100 段片段各三次推理；自动障碍物标签、关键词核验、前视模糊与遮挡。",
+    "reproducibility": "协议说明较清楚，未复跑；只接纳其观察，不接纳理论和 safety guarantee 的过强外推。",
+    "external_validity": "单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.17268-C01",
+      "claim": "该审计发现 Alpamayo-R1 样本中存在声明减速或停车而轨迹继续的说明—动作不一致。",
+      "stance": "limit",
+      "relation": "文字理由与场景、轨迹是否一致？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "只采纳实验观察，不将它当作所有 VLA 或量产系统的失败率。",
+      "locator": "5.3 Reasoning-Action Consistency (Phase 2B)",
+      "source_context": "claimed deceleration/stop with continuing trajectory",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "只采纳实验观察，不将它当作所有 VLA 或量产系统的失败率。 适用边界：单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。"
+      }
+    },
+    {
+      "card_id": "2605.17268-C02",
+      "claim": "该审计使用确定性关键词抽取，作者承认它会漏掉同义表达。",
+      "stance": "limit",
+      "relation": "文字理由与场景、轨迹是否一致？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "方法局限使其精确百分比不宜脱离阈值和标注协议使用。",
+      "locator": "7.1 Model and Dataset",
+      "source_context": "may miss paraphrased mentions",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "方法局限使其精确百分比不宜脱离阈值和标注协议使用。 适用边界：单模型小样本且阈值/关键词敏感；一致性相关不是推理因果忠实性的充分证明，更不是道路事故率。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "Is VLA Reasoning Faithful?",
+    "core": false,
+    "stack": {}
+  }
+}

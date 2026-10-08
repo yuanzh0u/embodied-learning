@@ -1,0 +1,594 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.12993",
+  "title": "X-Lens: Real-Time Metric Depth Estimation with Heterogeneous Cameras",
+  "published": "2026-07",
+  "url": "https://arxiv.org/abs/2607.12993",
+  "authors": [
+   "Heng Zhou",
+   "Shuhong Liu",
+   "Yonghao He",
+   "Bohao Zhang",
+   "Fa Fu",
+   "Chenhui Hou",
+   "Xianbao Hou",
+   "Lijun Han",
+   "Cong Yang",
+   "Wei Sui"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接回答综述问题的应用方式与效果维度：提出原生处理鱼眼+针孔异构多相机 rig 的实时度量深度模型（具身平台环视/混合相机的核心感知组件），覆盖具身系统多相机动机、射线空间统一相机表示、跨视图几何先验注入、大规模异构数据集（OmniScene）、真实环视基准（OmniOcc）与视觉-动作模型下游初探，并明确给出标定依赖与 sim-to-real 局限。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction (page 2)",
+    "role": "problem",
+    "purpose": "确立问题：具身系统多相机为常态（工作区+腕戴相机、驾驶环视 rig、窄/宽 FoV 分工）；针孔中心的深度/3D 基础模型在混合鱼眼-针孔 rig 下失效（异构射线分布、跨视图对应与度量尺度对齐困难）；全景路线改变原生几何且欠用共视线索；现有几何基础模型算力过大难以边缘实时。"
+   },
+   {
+    "locator": "2 Related Works (pages 3-4)",
+    "role": "relevant-core",
+    "purpose": "定位单目深度基础模型、宽 FoV 深度（全景投影 vs 直接广角处理）与前馈几何模型（DUSt3R/MASt3R→VGGT/π³/MapAnything/DepthAnything3）三线谱系；X-Lens 差异点是原生异构多视图输入+紧凑感知导向（只输出深度/置信/尺度）。"
+   },
+   {
+    "locator": "3 Method (pages 4-8)",
+    "role": "method-or-design",
+    "purpose": "精读通用反投影映射相机表示（式 1）、分解深度输出三元组（式 2）、多视图校准 token（inject-attend-drop + 视图局部掩码 + 仅鱼眼注入）、Jacobian 畸变偏置（式 3-5）、FishRoPE 位置编码与 Scale Attention 置信引导池化（式 6）、三阶段训练策略与分解多任务损失（式 7-8）。"
+   },
+   {
+    "locator": "4 The OmniScene Dataset (pages 8-9)",
+    "role": "data-or-setting",
+    "purpose": "数据集构建：标定六相机 rig（4 鱼眼 KB 180° 环视 + 前后 2 针孔）、103 场景/564 序列/约 266K 帧/超 1.7M 图像、占用感知约束轨迹采样、稠密 z-depth 真值与跨视图一致性质检、场景不相交划分。"
+   },
+   {
+    "locator": "5 Experiments (pages 9-14)",
+    "role": "results-or-analysis",
+    "purpose": "实现细节（14 个训练数据集、三阶段超参、64×H100）；同构鱼眼（Table 1）、同构针孔（Table 2）、异构六视图（Table 3）主结果与定性对比（Fig.5-7）；基线设定说明（单目 any-camera 方法逐视图独立应用）。"
+   },
+   {
+    "locator": "6 Ablation Study + 7 Conclusion and Limitations (pages 14-15)",
+    "role": "conclusion-or-limitations",
+    "purpose": "训练阶段（Stage-1/2/3-only、frozen）与几何模块（Jacobian 偏置）消融（Table 4，Fig.8-9 偏置幅度可视化）；结论与作者自述局限（严格依赖真值标定、合成内参覆盖有界、极端 FOV 鱼眼存在 sim-to-real gap）。"
+   },
+   {
+    "locator": "Appendix A-D (pages 20-23)",
+    "role": "appendix-or-supplement",
+    "purpose": "视觉-动作（VA）模型集成管线（token 路由而非点云）与 RoboTwin2 Scan-Object 案例研究（Table 5）；辅助相机头消融（Table 6）与 Stage-3 针孔回放消融（Table 7）；OmniOcc 真实室内环视基准构建（4 立体对+LiDAR 投影监督）；评测协议与数据划分（91/12 场景、KITTI360 seq 0、ScanNet++ 10 held-out 场景）。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "如何让一个足够轻量（边缘可实时）的前馈模型从标定已知的鱼眼+针孔异构多相机 rig 原生估计度量深度——不经过全景拼接或矫正、不预测完整几何（位姿/点图/内参），同时保持三种相机设置（同构鱼眼/同构针孔/异构混合）的竞争力并为下游视觉-动作模型提供几何增益？",
+ "contributions": [
+  "紧凑异构相机度量深度模型：0.04B 参数前馈模型原生支持任意数量标定鱼眼+针孔视图（无需全景拼接），通用射线空间相机表示 + 多视图校准 token + Jacobian 畸变偏置，最高 41 FPS。",
+  "分解输出设计：预测归一化深度 + 自校准置信图 + 单一全局度量尺度三元组，把绝对尺度隔离到一维通路，避免辅助重建目标带来的计算与优化复杂度。",
+  "三阶段渐进训练范式：针孔预训练（token/偏置禁用）→ 冻结主干仅训校准 token 的鱼眼适配 → 激活 Jacobian 偏置的异构联合训练（含纯针孔数据回放），隔离镜头适配与联合优化以减少干扰。",
+  "OmniScene 大规模合成异构数据集（103 场景/564 序列/约 266K 六视图帧/超 1.7M 图像，4 鱼眼 180° KB + 2 针孔）与 OmniOcc 真实室内环视评测基准（25 场景，4 立体对 RGB + LiDAR 投影监督）。",
+  "具身下游初探：X-Lens 作为视觉编码器接入 VO-DPP 视觉-动作框架，RoboTwin2 Scan-Object (Easy) 任务成功率 72%，超过 DINOv3-Large（55%）与 VGGT（67%）。"
+ ],
+ "method": {
+  "summary": "X-Lens 是 0.04B 参数的紧凑前馈多视图度量深度模型（DINOv2 ViT 主干 + DPT 深度头 + 尺度回归 MLP，交替帧内层/跨视图层）。相机被抽象为通用反投影映射 G(p; ξ, τ)：把像素映射为单位射线、吸收逐相机标定与相机类型指示符，网络内所有几何推理在射线空间进行，无闭式投影模型的相机用表格化径向轮廓实现，从而同一架构直接混合 pinhole/鱼眼/360° 输入。两个核心模块：(1) 多视图校准 token——按层与相机类型索引的可学习张量（每层 16 个），逐层'注入-参与注意力-丢弃'，跨视图层内注意力掩码保持视图局部、不向全局度量融合添加相机类型信号，仅对鱼眼视图注入、零初始化；(2) Jacobian 畸变偏置——从逐 patch 射线与反投影 Jacobian（有限差分）构造 9 维相对描述符（射线点积、log 范数差、射线位移、Jacobian 相关），经逐头 MLP 转为 Softmax 前加性偏置注入跨视图注意力，使注意力偏向射线几何兼容的 patch 对。位置编码用 FishRoPE 射线域旋转编码；尺度回归用 Scale Attention（丢弃置信最低 25% 像素后置信度加权池化）规避鱼眼周边径向压缩低可靠区。输出三元组 (归一化 z-深度, 置信图, 全局尺度标量)，度量深度=尺度×归一化深度，标定与位姿先验全部放在输入侧。训练三阶段：Stage 1 在 13 个针孔数据集训练全模型（150K 步，64×H100，token/偏置禁用）；Stage 2 冻结主干与 DPT 仅训校准 token（OmniScene 鱼眼子集，10K 步，4 视图 504×798）；Stage 3 激活 Jacobian 偏置在异构+纯针孔混合数据联合微调（50K 步，视图 6-8 随机，位姿条件 0.7 概率随机激活）。损失为分解多任务目标：置信加权尺度不变深度损失（λ_conf=1.0 防塌缩）+ 尺度不变梯度项 + MoGe 多尺度局部一致性项（0.5）+ 尺度 L1（1.0）+ 掩码项（0.2）。",
+  "assumptions": [
+   "部署时 rig 内外参标定已知且精确——模型把标定当几何输入，不在线预测相机参数（作者自述局限）。",
+   "鱼眼与针孔的几何失配可分解为'视图局部镜头校正（token）+ 跨视图射线几何先验（Jacobian 偏置）'两层，无需修改主干即可弥合。",
+   "全局单一度量尺度假设：一个 rig 一个尺度标量，所有视图共享同一绝对尺度。",
+   "合成训练数据（OmniScene）的内参变化范围覆盖部署域镜头——对训练分布外的极端 FOV 鱼眼存在 sim-to-real gap（作者承认）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "训练 Stage 1（13 个针孔数据集）：BlendedMVS、Mapillary Planet-Scale Depth、ScanNet++ v2、Spring、TartanAirV2-WB、UnrealStereo4K、Aria Synthetic Environments、DL3DV、Dynamic Replica、MegaDepth、MVS-Synth、ParallelDomain-4D、SAIL-VOS 3D",
+   "训练 Stage 2：OmniScene 鱼眼子集；训练 Stage 3：Stage-1 针孔数据 + OmniScene 六相机异构数据 + KITTI360",
+   "评测：KITTI360（真实户外鱼眼，单目/双目，seq 0 测试其余训练）；OmniScene-Single/Quad/Full（合成，12 个 held-out 场景 23 序列 10,420 帧）；ETH3D（真实针孔，仅评测）；ScanNet++ v2（10 个 held-out 场景）；OmniOcc（真实室内环视，25 场景，仅评测，LiDAR 投影稀疏监督）；RoboTwin2 Scan-Object（仿真操作任务）"
+  ],
+  "tasks": [
+   "多视图度量深度估计（同构鱼眼/同构针孔/异构鱼眼+针孔混合三种设置）",
+   "全局度量尺度回归（Scale AbsRel 单独评测）",
+   "下游视觉-动作策略学习（作为视觉编码器，RoboTwin2 仿真操作任务成功率）"
+  ],
+  "embodiments": [
+   "环视多相机平台：车载驾驶 rig（KITTI360 鱼眼）、室内环视 rig（OmniOcc：4 立体对 + LiDAR）",
+   "六相机异构 rig（OmniScene 采集平台：4×180° Kannala-Brandt 鱼眼环视 + 前后针孔）",
+   "机器人操作平台（RoboTwin2 仿真双臂，VA 策略学习）"
+  ],
+  "sample_or_scale": "模型 0.04B 参数（对比基线 0.03B-1.38B）；训练 150K+10K+50K 步（64×H100）；评测 FPS（H100 单卡）：41（单目 KITTI360）/39（2 视图针孔）/26（6 视图 OmniOcc）/24（4 鱼眼）/22（6 视图异构）；OmniScene 103 场景/564 序列/约 266K 帧/超 1.7M 图像；主表对比 9 个基线方法。"
+ },
+ "evaluation": {
+  "design": "三档相机设置分离评测（同构鱼眼 Table 1 / 同构针孔 Table 2 / 异构混合 Table 3）+ 训练阶段与几何模块消融（Table 4）+ 两个设计选择消融（辅助相机头 Table 6、Stage-3 针孔回放 Table 7）+ 下游 VA 任务案例研究（Table 5）；全部基准采用场景不相交 train/test 划分（OmniScene 91/12 场景、ScanNet++ 10 个 held-out 场景 ID 公开、KITTI360 seq 0 测试）；FPS 统一在单张 H100 上测量。",
+  "baselines": [
+   "鱼眼/异构设置：UniDepthv2（S/L）、Metric3Dv2（S/Giant）、DepthAnyCamera、UniDAC、MapAnything（1.23B，提供内外参）",
+   "针孔设置：VGGT（1.26B）、VGGT-Omega（1.14B）、DepthAnything3（S/Giant）、MapAnything",
+   "下游 VA：DINOv3-Base/Large（2D 语义编码器）、VGGT（几何编码器），统一 VO-DPP 策略框架",
+   "单目 any-camera 方法（DepthAnyCamera/UniDAC）在多视图设置下逐视图独立应用，不做跨视图融合（作者明确说明）"
+  ],
+  "metrics": [
+   "Scale AbsRel（全局尺度误差，单独报告）",
+   "AbsRel、RMSE、δ1、τ1.03（3% 相对误差像素占比）",
+   "参数量、FPS（H100 单卡）",
+   "下游任务成功率 TSR（%）"
+  ],
+  "ablations": [
+   "训练阶段：Stage-1 only / Stage-2 only / Stage-3 frozen / 完整三阶段（Table 4，异构/鱼眼/针孔三设置）",
+   "几何模块：w/o Jacobian Distortion Bias（Table 4，三设置全退化）",
+   "辅助相机头：加内外参+射线图联合预测反而伤深度（Table 6，OmniOcc Scale AbsRel 0.0692→0.1816）",
+   "Stage-3 纯针孔回放：去掉后 OmniOcc 针孔大幅退化（0.0670→0.2061）而异构/鱼眼基本不变（Table 7）",
+   "偏置幅度可视化：鱼眼高畸变边界区修正大、针孔平滑均匀（Fig.9）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "异构混合 rig 是最大收益点：OmniScene-Full（4 鱼眼+2 针孔）上 Scale AbsRel 0.1181/AbsRel 0.1021/RMSE 1.5993/δ1 0.8982，全部指标最佳；对比 MapAnything 1.23B Scale AbsRel 降 68.1%、参数少 96.7%、快 4 倍以上（22 vs 5 FPS）；对比 AbsRel 最强基线 UniDAC 0.36B 降低 25.4%、参数少 88.9%。",
+   "scope": "OmniScene-Full 合成六视图异构（12 held-out 场景）",
+   "locator": "page 13, Table 3 and Section 5.2"
+  },
+  {
+   "finding": "纯针孔训练无法处理鱼眼（第三份独立数据点）：Stage-1 only 在异构设置 AbsRel 0.7563，逐阶段改善（Stage-2 only 0.3952、Stage-3 frozen 0.2333）至完整模型 0.1021；去掉 Jacobian 偏置在全部相机设置退化（异构 AbsRel 0.1912、针孔 OmniOcc Scale AbsRel 0.5631 vs 完整 0.0670）。",
+   "scope": "Table 4 消融（异构/鱼眼/针孔三设置）",
+   "locator": "page 15, Table 4"
+  },
+  {
+   "finding": "鱼眼周边是结构性低可靠区：周边区域径向压缩、几何不确定性更大，Scale Attention 需丢弃置信最低 25% 像素做尺度池化；Fig.9 偏置可视化显示鱼眼高畸变边界区需要更大幅度修正、针孔修正平滑均匀——鱼眼图像呈'中心可靠、周边难'结构。",
+   "scope": "尺度回归机制与偏置可视化",
+   "locator": "page 7, Section 3.2; page 14, Figure 9"
+  },
+  {
+   "finding": "针孔同构设置是条件性权衡而非全面领先：0.04B 参数下 ETH3D/OmniOcc 最佳 Scale AbsRel、39/26 FPS、比 DA3-Giant 少 97.1% 参数，但 ETH3D AbsRel 0.0445 落后 MapAnything 0.0228/DA3-Giant 0.0113，OmniOcc AbsRel 0.0656 落后 MapAnything 0.0553——稠密深度精度不敌大型重建模型。",
+   "scope": "ETH3D/ScanNet++V2/OmniOcc 针孔多视图",
+   "locator": "page 12, Table 2 and Section 5.1"
+  },
+  {
+   "finding": "具身下游初步证据：X-Lens 视觉表征接入 VO-DPP 策略框架，RoboTwin2 Scan-Object (Easy) 任务成功率 72% > VGGT 67% > DINOv3-Large 55% > DINOv3-Base 50%（同 300 epoch、lr 1e-5）——几何感知编码器对 2D 语义编码器的下游优势，但仅为单任务初步案例研究。",
+   "scope": "RoboTwin2 仿真操作任务",
+   "locator": "page 21, Table 5"
+  },
+  {
+   "finding": "两条设计反面证据：(1) 加辅助相机头联合预测内外参+射线图反而伤深度（OmniOcc Scale AbsRel 0.0692→0.1816），支持标定留在输入侧；(2) Stage-3 去掉纯针孔回放则 OmniOcc 针孔 Scale AbsRel 0.0670→0.2061 大幅退化而异构/鱼眼基本不变，回放以近零代价恢复多视图针孔能力。",
+   "scope": "辅助相机头与针孔回放消融",
+   "locator": "pages 21-22, Tables 6-7"
+  },
+  {
+   "finding": "鱼眼双视图跨视图增益：KITTI360 用两个时序分离帧输入比单目进一步降低 Scale AbsRel 12.9%、RMSE 3.6%，说明跨视图约束提供单目之外的几何证据；单目 KITTI360 上 0.04B 模型取得最佳 Scale AbsRel/AbsRel/RMSE 且 41 FPS。",
+   "scope": "真实户外鱼眼（KITTI360 单目/双目）",
+   "locator": "page 11, Table 1 and Section 5.1"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "严格依赖真值标定：模型动态接受任意内外参作为几何输入，但缺乏在线联合预测这些相机配置的能力。",
+    "locator": "page 15, Section 7 Limitations"
+   },
+   {
+    "limitation": "合成训练数据只覆盖有界的相机内参变化范围；遇到偏离训练分布的极端 FOV 未见鱼眼镜头模型时存在明显 sim-to-real gap，性能轻微退化。未来工作：扩大真实数据与内参多样性、增加时序聚合、探索作为世界模型/SLAM/机器人 loco-manipulation 的几何先验。",
+    "locator": "page 15, Section 7 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "异构（鱼眼+针孔混合）设置的定量结论全部落在自建合成 OmniScene-Full 上；真实世界定量评测仅覆盖纯针孔（OmniOcc，4 立体对 RGB+LiDAR）与纯鱼眼（KITTI360），不存在真实世界混合 rig 的定量基准——'异构收益 −25.4% AbsRel'向真实混合 rig 的外推缺直接定量证据（Fig.6/10/11 仅有定性混合 rig 结果）。",
+    "basis": "page 22 附录 D 评测协议枚举（鱼眼与异构评测只用 OmniScene 测试场景与 KITTI360）+ 附录 C OmniOcc 硬件构成（立体对 RGB，无鱼眼）；Table 1-5 无真实异构基准。"
+   },
+   {
+    "boundary": "具身下游证据仅为单一仿真任务（RoboTwin2 Scan-Object Easy）的初步案例研究：无真实机器人、无导航/loco-manipulation 闭环、无多任务覆盖；对照基线 VO-DPP 算法当时未公开，结果难以独立复现。",
+    "basis": "page 20-21 附录 A（'preliminary case study'、'VO-DPP remains unreleased to the public'）与 Table 5 单任务设置。"
+   },
+   {
+    "boundary": "KITTI360 同时用于 Stage-3 训练与鱼眼评测（seq 0 测试、其余序列训练，沿用 DAC/UniDAC 协议），同域数据可能抬高鱼眼设置的数字；真实鱼眼结论主要建立在该单一驾驶域上。",
+    "basis": "page 9 实现细节（Stage 3 含 KITTI360）与 page 22 附录 D 划分协议。"
+   },
+   {
+    "boundary": "全局单一尺度标量假设所有视图共享一个度量尺度，对存在标定漂移、时间同步误差或滚动快门时变因素的真实 rig 的鲁棒性未讨论；z-depth 口径（非欧氏距离）与部分鱼眼数据集的欧氏深度约定存在换算依赖。",
+    "basis": "page 5 式 2 附近 z-depth 定义与 m̂ 单标量设计；论文无标定噪声敏感性实验。"
+   },
+   {
+    "boundary": "单帧前馈、无时序聚合（作者列为 future work）；视频流场景的时序一致性、与 SLAM/世界模型的整合均未验证。",
+    "basis": "page 15 Limitations 未来工作陈述；全文无视频/时序实验。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限定于：标定已知的多相机 rig 度量深度估计；鱼眼镜头验证范围以 Kannala-Brandt 180° 环视（合成 OmniScene + 真实驾驶域 KITTI360）为主，对训练分布外极端 FOV 镜头作者自认存在 sim-to-real gap；异构混合与下游 VA 收益的证据分别来自自建合成基准与单一仿真操作任务；针孔同构设置收益限于尺度回归+轻量+速度而非稠密精度全面领先。不支持外推到：未标定/在线标定场景、真实世界混合 rig 定量性能、时序视频流、非 KB 投影超广角镜头、以及真实机器人导航/操作闭环。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三档相机设置（同构鱼眼/同构针孔/异构）分离评测，避免把异构收益与鱼眼-only 收益混淆。",
+   "精度与效率并列透明报告（参数量/FPS 每表必列，H100 单卡统一测量），0.04B vs 最大 1.38B 的对比口径公平。",
+   "消融覆盖训练阶段、几何模块、辅助目标、数据回放四个层面，且在三种相机设置上重复（Table 4），机制归因较扎实。",
+   "场景不相交划分 + held-out 场景 ID 公开（ScanNet++ 10 个场景哈希），评测协议沿用 DAC/UniDAC 便于横向对比。",
+   "对'模型该不该预测相机参数'给出正面反面证据（Table 6 辅助头有害），设计选择的因果链清晰。"
+  ],
+  "design_risks": [
+   "主异构基准 OmniScene-Full 为自建合成集，headline 收益（−25.4%/−68.1%）的证据等级受限；真实世界无混合 rig 定量对照。",
+   "单目 any-camera 基线（DepthAnyCamera/UniDAC）在多视图设置下逐视图独立应用、无跨视图融合，对比存在结构性不对称（作者已说明但未补融合版对照）。",
+   "KITTI360 训练/评测同域（seq 0 划分），真实鱼眼证据单一域。",
+   "下游 VA 案例研究单任务且对照基线 VO-DPP 未公开，72% vs 55% 的增益难以独立复现或归因（编码器差异 vs 训练动态）。",
+   "未与同类异构/宽 FoV 路线（如相机条件化的 Wid3R [26]、Fisheye3R 类基础模型适配路线）正面定量对比，'异构建模优于通用模型适配'未直接检验。"
+  ],
+  "baseline_fairness": "基线覆盖单目度量深度（UniDepthv2/Metric3Dv2）、any-camera（DepthAnyCamera/UniDAC）、前馈多视图几何（VGGT/VGGT-Ω/DepthAnything3/MapAnything）三类，参数量与是否输出全局尺度逐行标注（红叉标记无尺度方法），输入条件（MapAnything/DA3 提供内外参）说明清楚；但单目方法在多视图设置下的应用方式构成不对称比较，且缺少异构多视图专用 SOTA 与基础模型鱼眼适配路线的同表对比。",
+  "metric_validity": "Scale AbsRel 与 AbsRel/RMSE/δ1 解耦报告，与其分解输出设计自洽；τ1.03 提供严误差口径；z-depth 口径与 GT 一致性有说明；OmniOcc 用 LiDAR 投影稀疏监督（仅有效观测像素），作者如实声明非稠密真值；FPS 全部 H100 单卡，跨硬件论文比较需换算。整体口径符合领域惯例。",
+  "reproducibility": "高：代码与项目页公开（github.com/zhouhengamerica/XLens）；三阶段超参（步数/lr/分辨率采样/视图数采样/位姿条件概率）、14 个训练数据集清单、OmniScene 与 OmniOcc 划分协议（91/12 场景、seq 0、10 个 held-out 场景 ID）完整披露；OmniScene 数据集发布。",
+  "external_validity": "覆盖合成室内外 + 真实室内环视（OmniOcc，针孔）+ 真实户外驾驶鱼眼（KITTI360）+ 仿真操作（RoboTwin2）；但异构混合定量仅合成域、真实鱼眼仅驾驶域单数据集、下游仅仿真单任务；对 FoV>180°、非 KB 投影、低光/运动模糊、标定噪声等现场条件未测试。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.12993-C01",
+   "claim": "论文主张：现代具身系统普遍依赖多相机 3D 感知——机器人策略常用工作区相机+腕戴相机组合捕捉任务级上下文与局部操作细节，自动驾驶与导航系统用环视 rig 做大范围感知、占据推理与规划；此类系统常混合不同视点、分辨率与 FoV 的相机，其中窄/标准 FoV 针孔相机保留远处细节，宽 FoV 或鱼眼相机提供近场与周边覆盖。",
+   "stance": "support",
+   "relation": "应用方式命题：鱼眼/环视相机在具身平台（机器人操作、自动驾驶导航）的部署形态与传感器分工动机，为综述'哪些任务获益'提供平台侧背景。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言把'异构多相机 rig'定位为具身系统常态而非例外：鱼眼负责近场/周边、针孔负责远距细节的分工是异构深度问题的出发点；紧随其后指出针孔中心假设的现有深度/3D 基础模型在此设置下失效。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "In modern embodied systems, these requirements are commonly supported by multi-camera 3D perception. Multiple views\nexpand spatial coverage, reduce occlusion, and provide complementary geometric cues for scene understanding. Robot poli-\ncies commonly combine workspace and wrist-mounted cameras to capture both task-level context and local manipulation\ndetails [7, 29, 49], while autonomous driving and navigation systems use surround-view rigs for wide-area perception, oc-\ncupancy reasoning, and planning [68, 96]. Such systems often employ cameras with different viewpoints, resolutions, and\nfields of view. Narrow- or standard-FOV pinhole cameras preserve distant details, whereas wide-FOV or fisheye cameras\nprovide near-field and peripheral coverage.",
+   "evidence_type": "motivation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原文逐句对应 claim 的三个部分（机器人工作区+腕戴相机组合及用途、驾驶/导航环视 rig 及用途、窄/宽 FoV 相机分工）；claim 未引入原文没有的数值或外推。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C02",
+   "claim": "X-Lens 用通用反投影映射 G 替换针孔内参来抽象异构相机：G 把连续像素坐标映射为后投影单位射线，吸收逐相机标定（焦距、主点、畸变系数）与显式相机类型指示符 τ∈{pinhole, fisheye}；网络内所有下游几何推理在射线空间而非像素坐标空间进行；无闭式投影模型的相机用训练时采样的表格化径向轮廓实现 G，从而同一网络无需任何架构修改即可直接吸收 pinhole、鱼眼与 360° 相机的异构混合。",
+   "stance": "support",
+   "relation": "应用方式命题：'射线空间统一相机表示'是原生处理异构鱼眼+针孔输入、避免全景拼接/矫正前处理的代表性技术路径（EA-SENSOR：传感器几何对算法设计的影响）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "通用相机表示是 X-Lens 异构能力的根基：把相机差异全部归一化到射线空间，使下游模块（注意力偏置、位置编码、尺度池化）与具体投影模型解耦，这解释了为何同一模型可覆盖 pinhole/鱼眼/360° 混合而无需架构改动。",
+   "locator": "page 4, Section 3.1 Formulation and Design Principles",
+   "source_context": "To handle multi-\nview heterogeneous configurations, X-Lens abstracts cameras away from specific projection models and replaces the pinhole\nintrinsic with a generic unprojection map G. Each view s is formally specified as:\nr\ns,p \n= G(p; ξ\ns\n, τ\ns\n)R\ns\n, r\ns,p \n∈ S\n2\n, p ∈ [0, W ] × [0, H], (1)\nwhere G maps a continuous pixel coordinate p to a back-projected unit ray. It absorbs both the per-camera calibration\nξ\ns\n, including focal lengths, principal point, and distortion coefficients, and an explicit camera-type indicator τ\ns\n, with τ\ns \n∈\n{pinhole, fisheye}. R\ns \n∈ SO(3) denotes the rotation matrix in the rig frame.\nCrucially, all downstream geometric reasoning inside the network is conducted in the ray space {r\ns,p\n} rather than the pixel\ncoordinate space. For cameras without a closed-form projection model, we implement G using a tabulated radial profile sam-\npled during training. Consequently, G can be flexibly specified per dataset and per sensor modality. Without any architectural\nmodifications, the same network can directly ingest heterogeneous mixtures of pinhole, fisheye, and 360\n◦ \ncameras.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec 3.1 原文逐句覆盖 claim 各部分：反投影映射定义（式 1 及其后解释句）、吸收标定与相机类型指示符、射线空间 vs 像素坐标空间、表格化径向轮廓、无需架构修改吸收三类相机混合；未引入原文没有的表述。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C03",
+   "claim": "X-Lens 的多视图校准 token 机制：引入按 Transformer 层、相机类型、token 数、维度索引的可学习校准 token 张量，逐层执行'注入-参与注意力-丢弃'（inject-attend-drop）过程，切片注入每一层（含跨视图层）；跨视图层内注意力掩码使 token 只注意自己所在视图、不向全局度量融合添加相机类型信号；token 仅对鱼眼视图注入（针孔通路不变）且零初始化、从恒等起点渐进学习；与单目校准 token 前作 [15] 的区别在于 token 按层与相机类型特化、经掩码保持视图局部，把镜头校正限制在各视图内以保护异构设置依赖的跨视图度量融合。",
+   "stance": "support",
+   "relation": "应用方式命题：视图局部的轻量 token 适配是鱼眼特征校正的参数高效路径，且显式保护异构跨视图融合不被镜头信号污染——与全景/矫正路线并列的第三条鱼眼使能路径。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "该设计把'鱼眼镜头校正'与'跨视图度量融合'解耦：token 只在视图内吸收镜头畸变、不进入全局融合；仅鱼眼注入意味着针孔通路与性能不受适配影响——这是与 Fisheye3R（token 全局参与注意力）不同的工程取舍。",
+   "locator": "page 6, Section 3.2 Multi-View Calibration Tokens",
+   "source_context": "Heterogeneous inputs carry distinct per-lens distortion patterns. To keep these from being\nabsorbed indiscriminately by the shared visual tokens, we introduce a learnable calibration-token tensor Θ ∈ R\nN\nL\n×T ×K×C\nindexed by Transformer layer N\nL\n, camera type T , token count K, and dimension C. At each layer i, the type-specific slice\nΘ[i, τ\ns\n] is appended to view s’s token sequence, attends, and is then dropped before the next layer re-injects a fresh slice,\nforming an inject-attend-drop process. A slice is injected at every layer, including the cross-view layers. Within a cross-view\nlayer, an attention mask keeps each token view-local, so it attends only to its own view and adds no camera-type signal to\nthe global metric fusion. The drop serves a separate purpose: it prevents the tokens from persisting across layers. Tokens\nare injected only for fisheye views, leaving the pinhole pathway unchanged, and Θ is zero-initialized so that corrections are\nlearned gradually from an identity start.\nThis design differs from the monocular calibration tokens of [15], where a single token set is inserted once at the input and\naligns fisheye features to the perspective latent space through self- and cross-attention. Our tokens are instead layer- and\ncamera-type-specific, and although they enter the cross-view layers, the attention mask keeps them view-local. This confines\nlens correction to each individual view and protects the cross-view metric fusion that our heterogeneous setting relies on.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec 3.2 原文连续覆盖 claim 全部要素：Θ 张量按层/相机类型/token 数/维度索引、inject-attend-drop、每层注入含跨视图层、视图局部掩码且不加相机类型信号、仅鱼眼注入+零初始化、与 [15] 单目 token 的两点区别（层与相机类型特化、掩码视图局部以保护跨视图融合）。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C04",
+   "claim": "跨视图几何兼容通过 Jacobian 畸变偏置注入全局注意力：作者指出校准 token 提供视图局部镜头适配，而可靠的异构匹配还需跨视图几何兼容性，这在鱼眼-针孔跨视图交互中尤为重要——因非线性投影，视觉对应的区域可能占据差异极大的图像平面邻域；偏置作用于跨视图层的全部 patch token，从逐 patch 射线与反投影 Jacobian J=[∂r/∂u, ∂r/∂v]（patch 网格上有限差分估计）构造 9 维相对描述符（角一致性/射线点积、相对局部尺度/log 范数差、射线位移、Jacobian 相关），经轻量逐头 MLP 转为 Softmax 归一化前的加性偏置，促使跨视图注意力偏向 3D 射线几何与局部投影结构兼容的 patch 对，而非仅依赖畸变图像坐标中的外观相似性。",
+   "stance": "support",
+   "relation": "应用方式命题：把投影几何先验显式注入注意力是弥合鱼眼-针孔跨视图失配的核心机制，回答'异构相机如何建立跨视图特征对应'这一具身多相机感知的关键问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "机制要点是把'局部投影变化'量化为 Jacobian 并转为注意力偏置：外观相似的 patch 若射线几何不兼容将被降权；这是对'鱼眼-针孔对应难'的几何先验式解法，消融（C10）证明其在全部相机设置有效。",
+   "locator": "page 6, Section 3.2 Jacobian Distortion Bias",
+   "source_context": "Jacobian Distortion Bias Calibration tokens provide view-local adaptation for lens-specific distortions, whereas reliable\nheterogeneous matching also requires cross-view geometric compatibility. This is particularly important for fisheye–pinhole\ncross-view interactions, where visually corresponding regions can occupy very different image-plane neighborhoods due to\nnon-linear projection. We therefore introduce the Jacobian Distortion Bias in the cross-view attention layers L\ng \n. The bias is\napplied to all patch tokens and acts as a geometry-aware prior that modulates attention according to local ray orientation and\nprojection distortion.\nThe bias is computed from the ray field already available to the network. We reuse the per-pixel ray field {r\ns,p\n} from Eq. (1)\nand downsample it to the ViT patch grid to obtain a per-patch ray r ∈ S\n2\n, where r\ni \ndenotes the ray at patch i. Local projection\nbehavior is characterized by the unprojection Jacobian J ∈ R\n3×2 \n= [∂r/∂u, ∂r/∂v], estimated by finite differences on the\npatch grid. The scalar s = ∥J∥\nF \ncaptures local spatial expansion, while the full Jacobian retains anisotropic stretching and\norientation cues that are important near strongly distorted fisheye regions.\nFor patch tokens indexed by i and j, we form a relative descriptor ϕ\nij \n∈ R\n9\n:\nϕ\nij \n=\nh\nr\ni \n· r\nj \n, log ∥J\ni\n∥\nF \n− log ∥J\nj \n∥\nF \n, (r\ni \n− r\nj \n)\n⊤\n, vec(J\n⊤\ni \nJ\nj \n)\n⊤\ni\n⊤\n, (3)\nwhich combines angular consistency, relative local scale, ray displacement, and Jacobian correlation. A lightweight head-\nspecific MLP converts this descriptor into an additive bias for the k-th attention head:\nAttention\n(k)\n(Q, K, V) = Softmax\n\u0012 \nQ\n(k)\n(K\n(k)\n)\n⊤\n√\nd\nk\n+ B\n(k)\n\u0013\nV\n(k)\n, (4)\nB\n(k)\nij \n= MLP\n(k)\n(ϕ\nij \n), (5)\nwhere B\n(k) \nis added before Softmax normalization. This formulation encourages cross-view attention to favor patches with\ncompatible 3D ray geometry and local projection structure, rather than relying solely on appearance similarity in distorted\nimage coordinates.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec 3.2 原文逐句对应 claim：动机句（token 视图局部 vs 跨视图几何兼容、鱼眼-针孔交互中图像平面邻域差异）、偏置作用于全部 patch token、Jacobian 定义与有限差分、9 维描述符四成分（式 3 后的解释句）、逐头 MLP 加性偏置在 Softmax 前（式 4-5）、最终目的句；无外推。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C05",
+   "claim": "鱼眼视图的周边区域径向压缩、倾向携带更大几何不确定性，直接池化所有空间特征回归度量尺度会使预测偏向低可靠的畸变区域；为此 X-Lens 引入 Scale Attention 置信度引导池化：用预测置信图选取空间可靠区域，丢弃置信最低的 25% 像素，对剩余核心集做置信度加权池化来回归全局度量尺度，以降低对鱼眼边界伪影的敏感性。",
+   "stance": "support",
+   "relation": "局限+对策命题：定位鱼眼图像中'哪部分不可靠'（周边径向压缩区）并给出工程对策——鱼眼哪些区域受限的直接机制证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "该卡同时携带限制证据（鱼眼周边低可靠、会污染尺度回归）与方法证据（置信引导池化规避）；周边区低置信也解释了模型为何需要显式置信输出通道，与 Fig.9 偏置集中在鱼眼边界区（C11）互为印证。",
+   "locator": "page 7, Section 3.2 Geometric Rotary Position Embedding and Scale Attention",
+   "source_context": "In fisheye views, peripheral regions are radially compressed and tend to carry larger\ngeometric uncertainty. Directly pooling all spatial features to regress the metric scale ˆm can therefore bias the prediction\ntoward distorted regions with low reliability.\nFor robust metric scale estimation, we introduce Scale Attention, a confidence guided pooling mechanism that uses the\npredicted confidence map \nˆ\nC to select spatially reliable regions. The lowest confidence 25% of pixels are discarded, and\nconfidence weighted pooling is applied over the remaining core set",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec 3.2 原文连续陈述鱼眼周边径向压缩+不确定性更大、直接池化的偏差风险、Scale Attention 定义、丢弃最低置信 25% 与置信度加权池化、降低鱼眼边界伪影敏感性；claim 各部分均逐句对应。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C06",
+   "claim": "X-Lens 采用渐进三阶段训练：先用多视图针孔数据训练基础网络学习尺度感知几何表示（校准 token 与 Jacobian 偏置禁用）；再冻结主干、射线编码器与预测头，仅更新校准 token 做鱼眼适配，把径向压缩与非线性镜头效应限制在专用 token 通路、不覆写 Stage-1 学到的针孔表示；最后激活 Jacobian 畸变偏置，在鱼眼-针孔混合多视图数据与 Stage-1 纯针孔数据上联合微调，训练跨视图注意力在统一射线空间表示下调和异构图像平面畸变——该调度先隔离镜头适配再做联合训练，减少针孔先验与鱼眼畸变建模之间的干扰。",
+   "stance": "support",
+   "relation": "应用方式命题：'针孔预训练→鱼眼 token 适配→异构联合训练'的渐进课程是异构相机深度模型的可复用训练范式，为具身团队落地异构感知提供训练配方。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "三阶段的动机是防止鱼眼适配覆写针孔几何先验；Stage-3 混入纯针孔数据回放是因为 OmniScene 两个针孔视图几乎无重叠——附录 B.2 消融（Table 7）验证回放以近零异构/鱼眼代价恢复针孔性能。",
+   "locator": "page 7, Section 3.3 Multi-Stage Heterogeneous Training Strategy",
+   "source_context": "X-Lens is trained with a progressive three-stage pipeline that moves from homogeneous pinhole geometry to fisheye adap-\ntation and finally to heterogeneous multi-camera optimization. This schedule isolates lens-specific adaptation before joint\ntraining, reducing interference between pinhole priors and fisheye distortion modeling. The goal is to first obtain a stable\nmulti-view geometric backbone, then introduce fisheye-specific parameters under a controlled optimization regime, and only\nafterward expose the full model to mixed-camera interactions.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec 3.3 原文按 Stage 1/2/3 逐段对应 claim：针孔预训练（token/偏置禁用）、冻结主干仅训 token 且不覆写针孔表示、激活偏置联合微调含 Stage-1 纯针孔数据、统一射线空间调和异构畸变、调度动机句（隔离适配减少干扰）；无外推。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C07",
+   "claim": "为弥合多相机几何感知数据缺口，作者发布 OmniScene 大规模合成数据集：用标定六相机 rig（四鱼眼+两针孔）渲染，针对现有资源的两个缺口——多样宽 FoV 鱼眼数据稀缺、缺带稠密度量真值的同步异构基准；覆盖住宅、办公、商场、仓库、城市、科幻综合体与风格化时代室内等室内外场景（Kujiale 与 Unreal Engine 资产）；含 103 个复杂场景、564 条随机运动序列、约 266K 多视图帧（六相机 rig 超过 1.7M 张图像），每帧配稠密无噪声度量真值；四鱼眼相机围绕平台中心排列、重叠 FoV 捕捉水平环视上下文，遵循 Kannala-Brandt 投影模型、提供 180° FoV；前后两针孔相机补足远距细节；全部相机 504×798 同步渲染并提供 OpenCV 约定内外参，模型可直接使用标定几何而无需去畸变或手工校正。",
+   "stance": "support",
+   "relation": "应用方式命题：异构（鱼眼+针孔）多相机数据基础设施的构建方式与规模，回答综述'环视鱼眼 rig 的训练数据从哪来'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "OmniScene 是论文异构评测的支柱；其鱼眼设定（KB 模型、180° FoV）划定了方法验证过的投影空间，也是作者自述'极端 FOV 镜头存在 sim-to-real gap'（C14）的成因之一；真实异构 rig 定量评测的缺位由此数据集的合成性质引出（C15）。",
+   "locator": "page 8, Section 4 The OmniScene Dataset",
+   "source_context": "To bridge the gap in multi-camera geometric perception, we introduce OmniScene, a large-scale synthetic\ndataset for multi-view metric depth estimation with heterogeneous cameras. It is rendered with a calibrated six-camera\nrig containing four fisheye and two pinhole views. It targets two key limitations in existing resources: (i) the scarcity of\ndiverse wide-FOV fisheye data, and (ii) the lack of synchronized heterogeneous benchmarks with dense metric ground truth.\nUnlike driving-centric datasets limited to outdoor road scenes, OmniScene covers diverse indoor and outdoor environments,\nincluding residential spaces, commercial offices, shopping malls, industrial warehouses, urban scenes, sci-fi complexes, and\nstylized period interiors. The scenes are built from professionally authored Kujiale and Unreal Engine assets, providing\nphotorealistic appearance and rich geometry for learning cross-lens multi-camera representations.\nTo support these goals at scale, OmniScene contains 103 distinct complex scenes, 564 randomized motion sequences, and\napproximately 266K multi-view frames, corresponding to over 1.7M individual images across the six-camera rig. Each frame\nis paired with dense, noise-free metric ground truth, with an overview shown in Figure 4.\nHeterogeneous Camera Setup. Each sequence uses a rigid six-camera sensor suite designed for near-omnidirectional\ncoverage. Four fisheye cameras are arranged around the platform center with overlapping fields of view to capture horizontal\nsurround context. They follow the Kannala-Brandt projection model and provide a 180\n◦ \nfield of view. Two front- and rear-\nfacing pinhole cameras with standard perspective intrinsics complement the fisheye views by capturing long-range details.\nAll six cameras are rendered synchronously at 504 × 798 resolution and share a unified rig coordinate frame. We provide\nintrinsics and extrinsics for every camera and every frame under the standard OpenCV convention, allowing models to use\nthe calibrated geometry directly without unwarping or manual rectification.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "dataset scale: scenes / motion sequences / six-view frames / individual images; rig configuration",
+    "value_or_direction": "103 scenes; 564 sequences; ~266K frames; >1.7M images; rig = 4 fisheye (Kannala-Brandt, 180° FoV, horizontal surround) + 2 pinhole (front/back), 504×798 synchronized, OpenCV intrinsics/extrinsics",
+    "comparator": "existing driving-centric fisheye datasets (limited to outdoor road scenes, per authors)",
+    "task_or_sample": "heterogeneous multi-view metric depth training and held-out evaluation (12 test scenes)",
+    "locator": "page 8, Section 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec 4 原文连续给出两缺口、场景构成（含 Kujiale/Unreal 资产）、103/564/266K/1.7M 规模、四鱼眼 KB 180° 环视+前后针孔、504×798 同步渲染与 OpenCV 约定内外参、无需去畸变或手工校正；claim 各数字与设定逐句对应。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C08",
+   "claim": "同构鱼眼设置下 X-Lens（0.04B）保持强度量精度与最高速度：单目 KITTI360 上取得所有对比方法中最佳 Scale AbsRel（0.0955）、AbsRel（0.2110）、RMSE（4.1961）同时 41 FPS（基线 4-8 FPS）；用两个时序分离的 KITTI360 帧作输入时进一步超过单目变体，Scale AbsRel 再降 12.9%、RMSE 降 3.6%，说明跨视图约束提供了单目推理之外的几何证据；OmniScene-Single 上最佳 Scale AbsRel/AbsRel/RMSE；四视图 OmniScene-Quad 上在所有报告精度指标上一致超过 MapAnything（1.23B）、DepthAnyCamera、UniDAC 并保持 24 FPS，参数比 MapAnything 少 96.7%。",
+   "stance": "support",
+   "relation": "效果命题：鱼眼-only 度量深度的精度-效率收益量化（真实户外驾驶域 KITTI360 + 合成 OmniScene），回答'鱼眼输入的深度任务获益多少'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 显示加第二个时序帧的跨视图增益（KITTI360 −12.9% Scale AbsRel）；四鱼眼 24 FPS 接近实时；鱼眼设置对比的多为单目/通用相机模型，MapAnything 是唯一多视图基线且 Scale AbsRel 严重失准（OmniScene-Quad 1.0455）。",
+   "locator": "page 11, Table 1 and Section 5.1 Fisheye Cameras",
+   "source_context": "Table 1. Fisheye evaluation on monocular KITTI360 [37], monocular OmniScene-Single, and four-view OmniScene-Quad. FPS is reported\nat the native evaluation resolution of each dataset. The best result on each dataset is highlighted in bold.\nDataset Views Method Params Scale AbsRel ↓ AbsRel ↓ RMSE ↓ δ\n1 \n↑ τ\n1.03 \n↑ FPS ↑\nKITTI360 [37] 1\nUniDepthv2-Small [54] 0.03B 0.1597 0.2597 7.4067 0.6931 0.1803 7\nUniDepthv2-Large [54] 0.35B 0.1787 0.2718 8.0432 0.7091 0.1860 5\nMetric3Dv2-Small [19] 0.03B 0.2631 0.2690 6.4410 0.6132 0.1477 8\nMetric3Dv2-Giant [19] 1.38B 0.1598 0.2258 6.2469 0.6865 0.1434 4\nDepthAnyCamera [92] 0.06B 0.1453 0.2165 4.3103 0.6742 0.1307 8\nUniDAC [14] 0.36B 0.1176 0.2413 4.4671 0.6967 0.1251 6\nOurs 0.04B 0.0955 0.2110 4.1961 0.6959 0.1436 41\nKITTI360 [37] 2\nUniDepthv2-Small [54] 0.03B 0.1592 0.2595 7.4066 0.6942 0.1807 3\nUniDepthv2-Large [54] 0.35B 0.1781 0.2699 8.0433 0.7097 0.1868 2\nMetric3Dv2-Small [19] 0.03B 0.2633 0.2691 6.4408 0.6132 0.1435 4\nMetric3Dv2-Giant [19] 1.38B 0.1598 0.2257 6.2469 0.6866 0.1434 2\nDepthAnyCamera [92] 0.06B 0.1454 0.2163 4.3103 0.6743 0.1307 4\nUniDAC [14] 0.36B 0.1175 0.2413 4.4673 0.6968 0.1254 3\nOurs 0.04B 0.0832 0.2069 4.0433 0.7014 0.1557 41\nOmniScene-Single 1\nUniDepthv2-Small [54] 0.03B 0.3793 0.1341 4.3389 0.8771 0.2876 6\nUniDepthv2-Large [54] 0.35B 0.3263 0.1583 12.6289 0.9102 0.4775 5\nMetric3Dv2-Small [19] 0.03B 0.3607 0.2409 2.6357 0.6931 0.1698 6\nMetric3Dv2-Giant [19] 1.38B 0.2811 0.1352 2.2612 0.8453 0.3541 3\nDepthAnyCamera [92] 0.06B 0.2681 0.1963 2.8911 0.7950 0.2771 8\nUniDAC [14] 0.36B 0.2719 0.1869 2.8903 0.7693 0.2691 5\nOurs 0.04B 0.2287 0.1191 1.9801 0.8868 0.3357 34\nOmniScene-Quad 4\nMapAnything [28] 1.23B 1.0455 0.1918 2.1602 0.6827 0.1178 6\nDepthAnyCamera [92] 0.06B 0.2681 0.1963 2.8911 0.7950 0.2771 2\nUniDAC [14] 0.36B 0.2719 0.1869 2.8903 0.7693 0.2691 1\nOurs 0.04B 0.1268 0.1138 1.6481 0.8822 0.3328 24\nKITTI360 [37] is evaluated at 504 × 504 resolution, while OmniScene-Quad and OmniScene-Single are evaluated at 504 × 798 resolution.\n5.1. Homogeneous Cameras\nWe first evaluate whether X-Lens preserves strong metric-depth performance under homogeneous camera setups. These\nexperiments cover both fisheye and pinhole inputs and assess whether the model handles wide-FOV distortion efficiently\nwhile remaining competitive with large feed-forward geometry models under a much smaller parameter budget. We provide\nqualitative examples in Figure 6 to visualize depth sharpness and scale consistency on real fisheye-only and pinhole-only\ninputs.\nFisheye Cameras Table 1 reports fisheye-camera evaluation across monocular KITTI360 [37], two-view KITTI360 [37],\nOmniScene-Single, and OmniScene-Quad. On monocular KITTI360 [37], X-Lens achieves the best Scale AbsRel, AbsRel,\nand RMSE among all compared methods, while running at 41 FPS, substantially faster than baseline approaches. When\ntwo temporally separated KITTI360 [37] frames are used as input, X-Lens further improves over its single-view variant,\nlowering Scale AbsRel by 12.9% and RMSE by 3.6%, indicating that cross-view constraints provide useful geometric ev-\nidence beyond monocular inference. On OmniScene-Single, X-Lens obtains the best Scale AbsRel, AbsRel, and RMSE,\nand on OmniScene-Quad it consistently outperforms MapAnything [28], DepthAnyCamera [92], and UniDAC [14] across\nall reported accuracy metrics while maintaining 24 FPS. Compared with MapAnything [28] on OmniScene-Quad, X-Lens\nuses 96.7% fewer parameters.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "Scale AbsRel / AbsRel / RMSE / FPS / parameter count",
+    "value_or_direction": "mono KITTI360: best Scale AbsRel 0.0955, AbsRel 0.2110, RMSE 4.1961 at 41 FPS (baselines 4-8 FPS); 2-view vs 1-view: Scale AbsRel −12.9%, RMSE −3.6%; OmniScene-Quad: best on all accuracy metrics at 24 FPS with 96.7% fewer params than MapAnything 1.23B",
+    "comparator": "UniDepthv2-S/L, Metric3Dv2-S/Giant, DepthAnyCamera, UniDAC, MapAnything",
+    "task_or_sample": "fisheye metric depth on KITTI360 (mono & 2-view, real outdoor) and OmniScene-Single/Quad (synthetic, 12 held-out scenes)",
+    "locator": "page 11, Table 1 and Section 5.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 的 KITTI360 单目块（Ours 0.04B 0.0955 0.2110 4.1961 ... 41）与 OmniScene-Quad 块（MapAnything 1.23B 行 vs Ours 行）逐值核对；'最佳三指标/41 FPS/12.9%/3.6%/24 FPS/96.7% 少参数/全指标超三基线'均来自 Sec 5.1 原文与表内数值，方向与指标定义一致。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C09",
+   "claim": "异构六视图（4 鱼眼+2 针孔）OmniScene-Full 上 X-Lens 取得全部报告指标最佳：Scale AbsRel 0.1181、AbsRel 0.1021、RMSE 1.5993、δ1 0.8982、τ1.03 0.3724，22 FPS；对比 MapAnything 1.23B（0.3701/0.1746/2.1834/0.7357/0.1647，5 FPS）Scale AbsRel 降低 68.1%、参数少 96.7%、速度快四倍以上；对比 AbsRel 最强基线 UniDAC 0.36B（AbsRel 0.1368）AbsRel 降低 25.4%、参数少 88.9%（与摘要口径一致）。",
+   "stance": "support",
+   "relation": "效果命题：异构混合 rig 度量深度是本文最大收益点——'显式建模异构多视图深度'相对'通用重建模型+内外参输入'（MapAnything）与'单目 any-camera 逐视图'（DAC/UniDAC）两条替代路线的量化优势。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "25.4%/88.9% 由 Table 3 行直接可算（UniDAC AbsRel 0.1368→0.1021；参数 0.36B→0.04B），摘要同口径陈述；作者据此主张显式异构建模是混合 rig 实时度量感知的实用路径。注意该基准为自建合成集（见 C15 的外推边界）。",
+   "locator": "page 13, Table 3 and Section 5.2 Heterogeneous Cameras",
+   "source_context": "Table 3. Heterogeneous-camera evaluation OmniScene-Full with six input views (4 fisheye + 2 pinhole). FPS is measured at 504 × 798\nresolution. The best result is highlighted in bold.\nDataset Views Method Params Scale AbsRel ↓ AbsRel ↓ RMSE ↓ δ\n1 \n↑ τ\n1.03 \n↑ FPS ↑\nOmniScene-Full 6\nMapAnything [28] 1.23B 0.3701 0.1746 2.1834 0.7357 0.1647 5\nDepthAnyCamera [92] 0.06B 0.2571 0.2066 2.3981 0.7653 0.2411 1\nUniDAC [14] 0.36B 0.2506 0.1368 2.6125 0.8156 0.2511 1\nOurs 0.04B 0.1181 0.1021 1.5993 0.8982 0.3724 22\n5.2. Heterogeneous Cameras\nWe further evaluate X-Lens under the heterogeneous setting, where fisheye and pinhole cameras are jointly used as input.\nThis setting assesses whether a compact feed-forward model can fuse mixed camera views while preserving metric consis-\ntency. As shown in Table 3, X-Lens achieves the best performance on OmniScene-Full across all reported metrics, with the\nlowest AbsRel and RMSE. Compared with MapAnything [28], X-Lens lowers Scale AbsRel by 68.1%, uses 96.7% fewer pa-\nrameters, and runs more than four times faster.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "Scale AbsRel / AbsRel / RMSE / δ1 / τ1.03 / FPS / params",
+    "value_or_direction": "Ours 0.1181/0.1021/1.5993/0.8982/0.3724, 22 FPS, 0.04B — best on all metrics; vs MapAnything 1.23B: Scale AbsRel −68.1%, AbsRel −41.5%, >4× faster; vs strongest-AbsRel baseline UniDAC 0.36B: AbsRel −25.4% with 88.9% fewer params",
+    "comparator": "MapAnything 1.23B; DepthAnyCamera 0.06B; UniDAC 0.36B",
+    "task_or_sample": "six-view heterogeneous (4 fisheye + 2 pinhole) metric depth on OmniScene-Full (synthetic, 12 held-out scenes), 504×798",
+    "locator": "page 13, Table 3 and Section 5.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 3 三基线行与 Ours 行的 15 个数值逐值核对；68.1%/96.7%/四倍速来自 Sec 5.2 原文；25.4%（0.1368→0.1021）与 88.9%（0.36B→0.04B）由表内数值直接可算且与 page 1 摘要口径一致（'reducing AbsRel by 25.4% ... 88.9% fewer parameters'）。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C10",
+   "claim": "消融显示每个训练阶段与 Jacobian 偏置均必要：仅 Stage-1（纯针孔训练）在混合相机下表现差（异构 AbsRel 0.7563）——针孔-only 训练无法处理鱼眼畸变；仅 Stage-2 改善稠密深度但缺异构联合优化仍受限（0.3952）；Stage-3 冻结主干也次优（0.2333），说明共享表示必须适应混合相机几何；去掉 Jacobian 畸变偏置在全部评测相机设置退化（异构 AbsRel 0.1021→0.1912、Scale AbsRel 0.1181→0.1801；针孔 OmniOcc Scale AbsRel 0.0670→0.5631），证明偏置改善跨视图几何对齐并在异构与针孔数据混合训练时正则化泛化；完整模型（三阶段+校准 token+Jacobian 偏置）在三个设置的完整结果中取得最佳。",
+   "stance": "support",
+   "relation": "机制证据：'针孔预训练模型直接喂鱼眼会崩'与'射线几何先验偏置跨设置有效'两条可检验主张的量化支撑，是综述'为什么需要鱼眼专门处理'的核心消融数据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Stage-1-only 0.7563 为'针孔/透视中心模型对鱼眼的域差'提供第三个独立量化数据点（与 Fisheye3R 未适配基线退化一致）；w/o Jacobian bias 在纯针孔设置也大幅退化（0.5631）略反直觉，作者归因于偏置对混合训练的正则化作用而非纯几何 necessity。",
+   "locator": "page 15, Table 4 and Section 6 Ablation Study",
+   "source_context": "Table 4. Ablation of training stages and geometry modules. The heterogeneous setting uses OmniScene-Full with four fisheye and two\npinhole cameras. The fisheye-only setting uses fisheye cameras. The pinhole-only setting uses six-view OmniOcc.\nCameras Views Variant Scale AbsRel ↓ AbsRel ↓ RMSE ↓ δ\n1 \n↑ τ\n1.03 \n↑\nHeterogeneous 6\nStage-1 only 0.3026 0.7563 2.4716 0.4811 0.1156\nStage-2 only 0.3308 0.3952 2.2159 0.6264 0.1331\nStage-3 frozen 0.2886 0.2333 2.6006 0.7436 0.1743\nw/o Jacobian bias 0.1801 0.1912 2.5437 0.7812 0.2102\nOurs 0.1181 0.1021 1.5993 0.8982 0.3724\nFisheye 4\nStage-1 only 0.7325 0.2769 2.9182 0.6719 0.1711\nStage-2 only 0.2126 0.2083 2.5082 0.7560 0.1990\nStage-3 frozen 0.4018 0.2946 2.8792 0.6805 0.1436\nw/o Jacobian bias 0.1854 0.2115 2.8174 0.7717 0.1998\nOurs 0.1268 0.1138 1.6481 0.8822 0.3328\nPinhole 6\nStage-1 only 0.1052 0.0717 0.2801 0.9439 0.5433\nStage-2 only 0.1052 0.0717 0.2801 0.9439 0.5433\nStage-3 frozen 0.1916 0.0718 0.2774 0.9442 0.5025\nw/o Jacobian bias 0.5631 0.2844 0.8767 0.5332 0.0859\nOurs 0.0670 0.0656 0.2584 0.9494 0.5551\ntokens and Jacobian Distortion Bias.\nTable 4 shows that each stage contributes to robust metric depth. Stage-1 only performs poorly under mixed cameras,\nas pinhole-only training cannot handle fisheye distortion. Stage-2 only improves dense depth but remains limited without\nheterogeneous joint optimization. Stage-3 frozen also underperforms, indicating that the shared representation must adapt\nto mixed camera geometry. Removing the Jacobian Distortion Bias degrades results across the evaluated camera settings,\nshowing that the bias improves cross-view geometric alignment and also regularizes generalization when training mixes\nheterogeneous and pinhole data.",
+   "evidence_type": "ablation-result",
+   "quantitative": {
+    "metric": "AbsRel / Scale AbsRel across ablation variants (heterogeneous, fisheye, pinhole settings)",
+    "value_or_direction": "heterogeneous AbsRel: stage1-only 0.7563 → stage2-only 0.3952 → stage3-frozen 0.2333 → w/o Jacobian bias 0.1912 → full 0.1021; pinhole OmniOcc Scale AbsRel: w/o Jacobian 0.5631 vs full 0.0670; fisheye AbsRel: full 0.1138 best",
+    "comparator": "full three-stage model with calibration tokens + Jacobian Distortion Bias",
+    "task_or_sample": "OmniScene-Full (heterogeneous 6-view), OmniScene-Quad (4-view fisheye), OmniOcc (6-view pinhole)",
+    "locator": "page 15, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 4 三设置五行变体的全部数值逐值核对（heterogeneous 块 0.3026/0.7563... 至 Ours 0.1181/0.1021；pinhole 块 w/o Jacobian 0.5631 vs Ours 0.0670）；'针孔-only 训练无法处理鱼眼畸变''偏置改善跨视图几何对齐并正则化泛化''完整模型最佳'均为 Sec 6 原文表述。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C11",
+   "claim": "偏置修正幅度的可视化（Fig. 9）显示：鱼眼视图在高畸变边界区域需要更大幅度的修正，而针孔视图呈现更平滑、空间更均匀的修正——反映针孔近似线性投影不需要修正场的快速空间变化。",
+   "stance": "support",
+   "relation": "机制证据：畸变影响的空间分布——鱼眼畸变集中于边界区而非全局，为'周边区域是鱼眼可靠性瓶颈'（与 C05 的径向压缩/低置信证据呼应）提供可视化佐证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "与 Scale Attention 丢弃低置信周边像素（C05）互补：几何修正需求也集中在鱼眼边界；两条证据共同界定鱼眼图像'中心可靠、周边难'的结构，对综述'鱼眼哪些区域受限'给出跨论文一致答案。",
+   "locator": "page 14, Figure 9",
+   "source_context": "Figure 9. Visualization of the bias-correction magnitude from B in Equation (4). Fisheye views require larger corrections in highly\ndistorted boundary regions, while pinhole views show smoother and more spatially uniform corrections, reflecting their approximately\nlinear projection, which does not require rapid spatial changes in the correction field.",
+   "evidence_type": "qualitative-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Fig. 9 图注原文逐句对应 claim（鱼眼高畸变边界区修正大、针孔平滑均匀、近似线性投影不需快速空间变化）；page 15 Sec 6 有同义重述（'Fisheye views require stronger corrections near high-distortion boundary regions'），定性结论无量化外推。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C12",
+   "claim": "同构针孔设置下 X-Lens 的收益是条件性的：以 0.04B 参数直接预测全局尺度项，在 ETH3D 与 OmniOcc 上取得最佳 Scale AbsRel、ScanNet++V2 上具竞争力，参数比若干稠密深度指标上最强的针孔基线 DA3-Giant（1.36B）少 97.1%，速度大幅领先（两视图针孔 39 FPS、六视图 OmniOcc 26 FPS，多数大型前馈几何基线更快）；但作者承认大型几何基础模型在部分稠密深度指标上仍更强——Table 2 中 ETH3D AbsRel 0.0445 落后 MapAnything 0.0228 与 DA3-Giant 0.0113，OmniOcc AbsRel 0.0656 落后 MapAnything 0.0553，ScanNet++V2 的 AbsRel/RMSE/δ1 亦未领先（0.0549/0.1621/0.9626 vs MapAnything 0.0548/0.1542/0.9773）。",
+   "stance": "conditional",
+   "relation": "效果边界命题：X-Lens 的针孔收益限于尺度回归+轻量+速度三轴，稠密深度精度不敌大型重建模型——鱼眼/异构才是其真正获益区，为综述'哪些任务获益、哪些受限'提供同 paper 内的对照面。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "作者把该权衡明示为设计目标（解耦深度感知与完整重建以获得可实时部署的紧凑模型）；对综述的意义：紧凑异构模型不必在单相机设置全面领先，选型时应按'尺度+速度 vs 稠密精度'权衡。",
+   "locator": "page 12, Table 2 and Section 5.1 Pinhole Cameras",
+   "source_context": "Table 2. Multi-view pinhole evaluation on ETH3D [59], ScanNet++V2 [88], and OmniOcc six-view dataset. The best result on each dataset\nis highlighted in bold. A red cross indicates that the corresponding baseline does not explicitly predict a global scale term.\nDataset Views Method Params Scale AbsRel ↓ AbsRel ↓ RMSE ↓ δ\n1 \n↑ τ\n1.03 \n↑ FPS ↑\nETH3D [59] 2\nVGGT [70] 1.26B × 0.0184 0.4073 0.9974 0.8693 15\nVGGT-Omega [71] 1.14B × 0.0055 0.1465 0.9994 0.8693 12\nDA3-Small [38] 0.03B × 0.0454 0.7438 0.9501 0.5502 41\nDA3-Giant [38] 1.36B × 0.0113 0.2081 0.9989 0.9073 11\nMapAnything [28] 1.23B 0.1410 0.0228 0.3743 0.9992 0.7800 13\nOurs 0.04B 0.1217 0.0445 0.6991 0.9723 0.5552 39\nScanNet++V2 [88] 2\nVGGT [70] 1.26B × 0.0361 0.1393 0.9753 0.7282 15\nVGGT-Omega [71] 1.14B × 0.0332 0.1390 0.9756 0.7824 12\nDA3-Small [38] 0.03B × 0.0618 0.1754 0.9586 0.4606 41\nDA3-Giant [38] 1.36B × 0.0354 0.1348 0.9768 0.7379 11\nMapAnything [28] 1.23B 0.0462 0.0548 0.1542 0.9773 0.4523 13\nOurs 0.04B 0.0544 0.0549 0.1621 0.9626 0.5423 39\nOmniOcc 6\nVGGT [70] 1.26B × 0.0458 0.2031 0.9721 0.6717 9\nVGGT-Omega [71] 1.14B × 0.0482 0.2227 0.9703 0.6822 7\nDA3-Small [38] 0.03B × 0.0655 0.2736 0.9311 0.4937 29\nDA3-Giant [38] 1.36B × 0.0437 0.2272 0.9662 0.7302 6\nMapAnything [28] 1.23B 0.2050 0.0553 0.2305 0.9628 0.5851 8\nOurs 0.04B 0.0670 0.0656 0.2584 0.9494 0.5550 26\nOmega [71], DepthAnything3 [38], and MapAnything [28] often achieve strong dense-depth accuracy, but they rely on\nsubstantially larger parameter budgets and do not always provide an explicit global scale prediction. In contrast, X-Lens\nuses only 0.04B parameters and directly predicts the global scale term, achieving the best Scale AbsRel on ETH3D [59] and\nOmniOcc and competitive performance on ScanNet++V2 [88]. Relative to DA3-Giant [38], the strongest pinhole baseline\non several dense-depth metrics, X-Lens reduces the parameter count by 97.1%. Although large geometric foundation models\nremain strong on some dense metrics, X-Lens runs much faster than most large feed-forward geometry baselines, reaching\n39 FPS on two-view pinhole inputs and 26 FPS on six-view OmniOcc. These results support our design goal of decoupling\ndepth perception from full reconstruction to obtain a compact model suitable for real-time deployment.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "Scale AbsRel / AbsRel / RMSE / δ1 / FPS / params",
+    "value_or_direction": "best Scale AbsRel on ETH3D (0.1217) and OmniOcc (0.0670); 39 FPS (2-view) / 26 FPS (6-view); 97.1% fewer params than DA3-Giant 1.36B; but ETH3D AbsRel 0.0445 vs MapAnything 0.0228 / DA3-Giant 0.0113; OmniOcc AbsRel 0.0656 vs MapAnything 0.0553; ScanNet++ AbsRel/RMSE/δ1 0.0549/0.1621/0.9626 vs MapAnything 0.0548/0.1542/0.9773",
+    "comparator": "VGGT 1.26B, VGGT-Omega 1.14B, DA3-Small 0.03B, DA3-Giant 1.36B, MapAnything 1.23B",
+    "task_or_sample": "two-view pinhole depth on ETH3D and ScanNet++V2 (10 held-out scenes), six-view on OmniOcc (real indoor, LiDAR-projected supervision on valid pixels)",
+    "locator": "page 12, Table 2 and Section 5.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 2 三数据集各方法行逐值核对（ETH3D：Ours 0.1217/0.0445/0.6991/0.9723/0.5552/39；MapAnything 0.1410/0.0228/0.3743/0.9992/0.7800/13；DA3-Giant ×/0.0113/0.2081/0.9989/0.9073/11 等）；'最佳 Scale AbsRel/竞争力/97.1%/39/26 FPS/大模型部分稠密指标更强'均为 Sec 5.1 原文；落后数值由表行直接读出。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C13",
+   "claim": "具身下游初步证据：在 RoboTwin2 Scan-Object (Easy) 任务上，X-Lens 视觉表征结合 VO-DPP 策略框架的任务成功率（TSR）为 72%，超过 DINOv3-Base（50%）、DINOv3-Large（55%）与 VGGT（67%）——四种编码器在同一 VO-DPP 框架、相同训练配置（300 epoch、lr 1e-5）下的对照。",
+   "stance": "support",
+   "relation": "效果命题：几何感知编码器（含异构相机处理能力）对 2D 语义编码器的下游操作策略增益，是论文与具身智能最直接的连接点——'鱼眼/异构使能的感知如何转化为操作收益'的首个量化锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 A 说明集成方式：不喂刚体重建点云或显式深度图（量化误差+丢语义），而是直接路由灵活的自注意力 token，保留任务语义与空间先验；但作者自述为单任务初步案例研究（preliminary case study），且对照基线 VO-DPP 算法当时未公开发布，结论外推需谨慎。",
+   "locator": "page 21, Table 5 (Appendix A.2)",
+   "source_context": "Table 5. Preliminary case study of different visual representation algorithms combined with VO-DPP on RoboTwin2 Scan-Object (Easy)\ndownstream task success rate.\nVariant visual encoder epoch learning rate TSR(%)\nWith dinov3-base training 300 1e-5 50\nWith dinov3-large training 300 1e-5 55\nWith VGGT training 300 1e-5 67\nWith Ours training 300 1e-5 72",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "downstream task success rate (TSR, %)",
+    "value_or_direction": "X-Lens 72% > VGGT 67% > DINOv3-Large 55% > DINOv3-Base 50%",
+    "comparator": "DINOv3-Base/Large (2D semantic encoders) and VGGT (geometry encoder) under the identical VO-DPP policy framework",
+    "task_or_sample": "RoboTwin2 Scan-Object (Easy) simulated manipulation task; 300 epochs, learning rate 1e-5",
+    "locator": "page 21, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 5 四行（dinov3-base 50 / dinov3-large 55 / VGGT 67 / Ours 72，均 300 epoch、1e-5）逐值核对；表题 'Preliminary case study of different visual representation algorithms combined with VO-DPP on RoboTwin2 Scan-Object (Easy) downstream task success rate' 直接陈述对照设置；claim 未超出表内信息。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C14",
+   "claim": "作者自述局限：(1) X-Lens 动态接受任意内外参作为几何输入，但严格依赖真值标定、缺乏在线联合预测这些相机配置的能力；(2) 泛化方面，系统虽能跨多样相机设置泛化，但底层合成训练数据只覆盖有界的相机内参变化范围，遇到偏离训练分布的极端 FOV 未见鱼眼镜头模型时存在明显 sim-to-real gap、性能轻微退化；未来工作将扩大真实数据与内参多样性、增加时序聚合，并探索 X-Lens 作为世界模型、SLAM 与机器人 loco-manipulation 的几何先验。",
+   "stance": "limit",
+   "relation": "局限命题：标定依赖与合成-真实域差是该路线落地的两条硬边界，直接回答综述'哪些受限'——异构/鱼眼深度模型不能替代在线标定能力，极端 FOV 镜头超出验证范围。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "标定依赖与 Fisheye3R 的假设一致（两者都把内外参当输入而非输出），说明这是当前鱼眼适配/异构建模路线的共同前提而非 X-Lens 独有缺陷；极端 FOV sim-to-real gap 与训练构成（Stage-2/3 主要依赖合成 OmniScene）互为因果。",
+   "locator": "page 15, Section 7 Conclusion (Limitations)",
+   "source_context": "Limitations. X-Lens dynamically accepts arbitrary intrinsic and extrinsic parameters as geometric inputs; however, it\nstrictly relies on ground-truth calibration and lacks the capability to jointly predict these configurations online. Regarding\ngeneralization, while the system generalizes across diverse camera setups, the underlying synthetic training data inherently\ncovers a bounded range of camera intrinsic variations. Consequently, when encountering unseen fisheye lens models with\nextreme FOV configurations that deviate drastically from the training distribution, a noticeable sim-to-real gap remains, caus-\ning a slight degradation in performance. Future work will broaden real-data and intrinsic diversity, add temporal aggregation,\nand explore X-Lens as a geometric prior for world models, SLAM, and robotic loco-manipulation.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Limitations 段原文逐句对应 claim 两部分（严格依赖真值标定且不能在线联合预测；合成数据内参覆盖有界、极端 FOV 鱼眼存在明显 sim-to-real gap 轻微退化）及未来工作三方向；未附加原文没有的量化。"
+   }
+  },
+  {
+   "card_id": "2607.12993-C15",
+   "claim": "评测协议层面：论文定量评测中鱼眼与异构评测使用 OmniScene held-out 测试场景（OmniScene-Full/Quad/Single）与 KITTI360，针孔评测使用 ETH3D、ScanNet++ v2 与真实世界 OmniOcc 基准，而 OmniOcc 的硬件是四个立体相机对（共 8 个同步 RGB 视图）+ 共配准 LiDAR 的纯针孔环视设置——因此异构（鱼眼+针孔混合）设置的定量结果全部来自 OmniScene（作者自建合成数据集，见 Sec 4/C07），不存在真实世界混合鱼眼+针孔 rig 的定量评测基准；'异构收益'（如 AbsRel −25.4%）向真实世界混合 rig 的外推缺乏直接定量证据。",
+   "stance": "gap",
+   "relation": "证据缺口命题：真实异构 rig 定量评测缺位是综述'异构相机收益能否落地'结论外推时必须标注的边界，同时提示该方向的数据基础设施机会。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "该缺口由评测协议枚举直接推出：附录 D 明确鱼眼与异构评测只用 OmniScene 测试场景与 KITTI360、针孔评测用 ETH3D/ScanNet++/OmniOcc；附录 C 说明 OmniOcc 为立体对 RGB（针孔）硬件；全文表格（Table 1-5）无真实异构基准，Fig.6/10/11 的真实场景结果仅为定性。",
+   "locator": "page 22, Appendix C and D",
+   "source_context": "C. OmniOcc: Real-world Surround-view Benchmark\nTo assess our model’s robustness in real-world data, we curate OmniOcc, a real-world indoor dataset for multi-view geometric\nparsing. The hardware setup consists of four stereo camera pairs cam\n0\n–cam\n3\n, each providing a left and a right view for\n8 synchronized RGB views in total at 1280 × 1088 resolution, together with a co-registered LiDAR sensor, establishing\nomnidirectional coverage under a shared metric coordinate frame. OmniOcc spans 25 diverse indoor scenes across varying\narchitectural layouts (e.g., offices, hotel rooms, corridors, and elevator lobbies), with each scene stored as a synchronized\nkeyframe snapshot.\nOmniOcc is used only for evaluation and is never included in training. For the real-world multi-view depth benchmark, we\nuse six of the eight available views: the left and right images of the first three stereo pairs cam\n0\n, cam\n1\n, cam\n2\n, while the\nfourth pair cam\n3 \nis excluded. Per-view metric supervision is obtained by projecting the registered LiDAR point cloud onto\nthe corresponding camera plane and retaining only valid observed pixels after visibility and projection filtering. Therefore,\nwe describe the supervision as metric LiDAR-projected supervision on valid observed pixels rather than dense or pixel-\nperfect ground truth. This protocol accounts for the inherent sparsity of LiDAR projection as well as occlusion and visibility\nconstraints in real-world capture.\nFor reproducibility, we report OmniOcc statistics and preprocessing together with the benchmark results, including the total\nnumber of keyframes, the valid-pixel ratio after projection, the projection and occlusion filtering rules, and the synchroniza-\ntion and calibration procedure. All 25 scenes are used purely for evaluation, and all depth errors are computed only over valid\nLiDAR-observed pixels.\nD. Evaluation Protocol\nOmniScene split. OmniScene contains 103 scenes, 564 motion sequences, and approximately 266K synchronized six-view\nframes. We split it by scene so that the training and test sets share no scene: the training set has 91 scenes (541 sequences)\nand the test set has 12 held-out scenes (23 sequences, 10,420 frames). Following common practice, we additionally mon-\nitor training on a small validation subset of 62 sequences drawn from 44 training scenes; this subset is used only to track\nconvergence and select checkpoints and is not a held-out set, whereas the 12 test scenes are never seen during training.\nAll three OmniScene benchmarks—OmniScene-Full (six-view heterogeneous), OmniScene-Quad (four-view fisheye), and\nOmniScene-Single (monocular fisheye)—are evaluated on these 12 held-out test scenes.\nEvaluation benchmarks. Fisheye and heterogeneous evaluation use the held-out OmniScene test scenes (OmniScene-\nFull/Quad/Single) and KITTI360 [37]. Pinhole evaluation uses ETH3D [59], ScanNet++ v2 [88], and our real-world Om-\nniOcc benchmark Sec. C.",
+   "evidence_type": "absence-in-source",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "claim 是对 page 22 附录 C（OmniOcc 硬件=四立体对 RGB+LiDAR）与附录 D 评测协议段（鱼眼与异构评测用 OmniScene 测试场景与 KITTI360；针孔评测用 ETH3D/ScanNet++/OmniOcc）的枚举式推断；'OmniScene 为合成'由 Sec 4 原文（C07 的 direct 证据）支撑；'不存在真实混合 rig 定量基准'经全文表格穷举核对成立（Table 3/4 异构块均为 OmniScene-Full）。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Extending foundational monocular depth estimators to fisheye cameras with calibration tokens (ICCV 2025)",
+   "arxiv_id": "",
+   "reason": "校准 token 思想的单目前作 [15]；X-Lens 的多视图 token 设计与其显式区分（层/相机类型特化、视图局部掩码、仅鱼眼注入）。"
+  },
+  {
+   "title": "FishRoPE: Projective rotary position embeddings for omnidirectional visual perception",
+   "arxiv_id": "2604.10391",
+   "reason": "X-Lens 几何旋转位置编码的来源 [1]，射线域相对位置编码；该文亦在本 run 候选池中。"
+  },
+  {
+   "title": "MapAnything: Universal feed-forward metric 3D reconstruction",
+   "arxiv_id": "2509.13414",
+   "reason": "最强多视图基线 [28]；异构 OmniScene-Full 上被 X-Lens 以 96.7% 更少参数全面超越（Scale AbsRel −68.1%）。"
+  },
+  {
+   "title": "UniDAC: Universal metric depth estimation for any camera (CVPR 2026)",
+   "arxiv_id": "",
+   "reason": "any-camera 单目基线 [14]；异构 AbsRel 最强基线（0.1368），摘要 25.4% 改善口径的参照；评测协议沿用其 KITTI360 设定。"
+  },
+  {
+   "title": "Depth Any Camera: Zero-shot metric depth estimation from any camera",
+   "arxiv_id": "2501.02464",
+   "reason": "any-camera 基线 [92]；鱼眼/异构设置下的单目逐视图对照。"
+  },
+  {
+   "title": "VGGT: Visual Geometry Grounded Transformer",
+   "arxiv_id": "2503.11651",
+   "reason": "前馈几何基础模型代表 [70]；针孔基线与下游 VA 编码器对照（TSR 67%）。"
+  },
+  {
+   "title": "Depth Anything 3: Recovering the visual space from any views",
+   "arxiv_id": "2511.10647",
+   "reason": "掩码监督损失设计与最强针孔基线来源 [38]（DA3-Giant 1.36B，参数对比 97.1% 口径）。"
+  },
+  {
+   "title": "MoGe: Unlocking accurate monocular geometry estimation for open-domain images",
+   "arxiv_id": "2410.19115",
+   "reason": "多尺度局部几何一致性损失来源 [74]。"
+  },
+  {
+   "title": "KITTI-360: A novel dataset and benchmarks for urban scene understanding in 2D and 3D",
+   "arxiv_id": "",
+   "reason": "真实户外鱼眼评测集 [37]；Stage-3 训练亦使用（seq 0 测试、其余训练）。"
+  },
+  {
+   "title": "RoboTwin 2.0: A scalable data generator and benchmark with strong domain randomization",
+   "arxiv_id": "",
+   "reason": "下游 VA 案例研究的任务平台 [10]（Scan-Object Easy 任务）。"
+  }
+ ],
+ "notes": "机构：D-Robotics（地平线机器人）+ 东京大学 + 苏州大学，第一作者 Heng Zhou 与 Shuhong Liu 同等贡献，Wei Sui 项目负责；代码与项目页公开（github.com/zhouhengamerica/XLens），v2 更新于 2026-07-15。与同 run 论文的关系：(1) 与 Fisheye3R（2603.28896）构成同一问题的互补路线——Fisheye3R 冻结并适配会输出完整几何（位姿/深度/点图/FoV）的 3D 基础模型，X-Lens 从头训练只输出深度+置信+尺度的紧凑模型并显式建模异构跨视图几何；两者都继承校准 token 思想（X-Lens 引用的是单目前作 [15] 而非 Fisheye3R 本身，且工程取舍不同：Fisheye3R 的 token 全局参与注意力，X-Lens 用掩码把 token 限制在视图局部）。(2) Stage-1-only 消融（异构 AbsRel 0.7563）为'针孔/透视预训练模型直接喂鱼眼会崩'提供第三份独立量化数据点。(3) OmniScene（合成异构）与 OmniOcc（真实环视针孔）两个新基准是本 run 异构相机方向的重要数据基础设施证据；其评测协议沿 DAC/UniDAC 的 KITTI360 seq 0 设定，可与 any-camera 线论文横向对比。本文是综述'应用方式：异构 rig 原生建模 + 射线空间几何先验'路线的支柱证据，其 C15 缺口（真实异构定量评测缺位）应进入综述的局限小节。"
+}

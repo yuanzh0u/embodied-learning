@@ -1,0 +1,545 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.02257",
+  "title": "Learning Panorama-Aware VLA for Mobile Manipulation with Whole-Body Teleoperation",
+  "published": "2026-08",
+  "url": "https://arxiv.org/abs/2608.02257",
+  "authors": [
+   "Donglin Yang",
+   "Haoran Chen",
+   "Xingyu Chen",
+   "Lixing Liu",
+   "Manyi Li",
+   "Changhe Tu",
+   "Ke Xu",
+   "Xiaojian Ma",
+   "Si Liu"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是\"360° 全景相机（双目鱼眼→ERP）接入具身 VLA\"的正面核心证据：顶装全景与局部 RGB 互补传感、全景专用编码器+专家融合的应用方式、四任务闭环定量效果（SCR/SR 全面提升）、以及明确的任务依赖边界（短程任务 raw ERP 即足够、多阶段任务才显出专家价值）直接回答综述问题的三个子问。其消融（SigLIP vs MTPano、专家规模）为鱼眼/全景表征的模型层成本与数据瓶颈提供可定位证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, I Introduction",
+    "role": "problem",
+    "purpose": "确认双挑战定义：全身演示采集成本 + 局部相机 FoV 限制阻碍全局空间理解；全景观察动机与全景域差距声明。"
+   },
+   {
+    "locator": "page 2, II Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与现有遥操作/移动操作/多模态 VLA 的差异：现有方法从局部视图建模环境，本文用全景做 scene-wide 感知。"
+   },
+   {
+    "locator": "page 3, III-A Teleoperation System",
+    "role": "method-or-design",
+    "purpose": "精读 VR 稀疏人体运动→SMPL→GMR 重定向（虚拟 3-DoF 浮动底座+代价驱动模式切换）；传感套件（顶装 360° 全景 + 3 局部 RGB）。"
+   },
+   {
+    "locator": "page 3-4, III-B Data Collection Protocol and Dataset",
+    "role": "data-or-setting",
+    "purpose": "确认数据集规模（800 轨迹/5.5h/500K 帧/25Hz 同步多模态）与四任务分类学（任务相关区域不被局部相机同时覆盖）。"
+   },
+   {
+    "locator": "page 4-5, IV Panorama-Enhanced Mobile Manipulation",
+    "role": "method-or-design",
+    "purpose": "精读问题形式化（o_t={局部,全景,本体态}）、三专家 MoT 架构与 KV cache 融合、MTPano 全景编码管线（双目鱼眼→ERP→双分支特征→token）、flow matching 训练目标。"
+   },
+   {
+    "locator": "page 5, V-A Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "确认三个受控 π0.5 基线（局部/raw ERP/3×120° 透视拼接）、15 trials/任务协议、SR/SCR 指标定义与实现细节（Gemma-2B+SigLIP、冻结 LM 与 MTPano）。"
+   },
+   {
+    "locator": "page 6-7, V-B Real-World Experiments and V-C Ablation Studies",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table II 主结果、任务结构差异分析（Move Pen 持平/Wipe Table 多阶段崩溃/stacked pano 权衡）与两项消融（编码器选择、专家规模）。"
+   },
+   {
+    "locator": "page 7, VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录结论总结；汇集散落的作者限制（短程任务收益有限、数据规模约束专家容量、域差距动机）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 本文无附录或补充材料，page 8 为参考文献列表。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在移动双臂操作中同时解决（a）高质量全身演示的低成本采集——单 VR 接口经稀疏人体运动跟踪与 GMR 重定向统一控制底盘+双臂；（b）全局空间感知——把 360° 全景（双目鱼眼→ERP）作为 VLA 的有效模态，通过什么样的全景表征与融合架构，使策略在目标搜索、移动接近与多阶段操作中获得机器人中心的全局上下文。",
+ "contributions": [
+  "GMR 全身遥操作系统：单个 VR 设备（头显+双手柄+三身体追踪器）采集稀疏人体运动，SMPL 重建后经 GMR 优化统一生成底盘（建模为 3-DoF 平面虚拟浮动底座）与双臂命令，含代价驱动的底盘模式切换（自旋/阿克曼/斜向）。",
+  "5.5 小时真实移动操作数据集：800 轨迹（4 任务 × 200）、约 500K 同步帧；360° 全景（顶装双目鱼眼→ERP）与局部 RGB（前视+双腕）、本体态、全身动作时间同步录制。",
+  "PanoVLA：基于 π0.5 的三专家 MoT 策略——MTPano 全景编码器（分割+深度双分支）+ 100M 全景专家经 KV cache 融合 + flow matching 动作专家，把机器人中心全局上下文注入动作生成。",
+  "四任务闭环真机评估与受控消融：PanoVLA 平均 SCR 91.3%/SR 73.4%（局部视角基线 58.6%/30.0%）；全景表示方式消融（raw ERP vs 3×120° 透视拼接 vs MTPano+专家）与专家规模扫描。"
+ ],
+ "method": {
+  "summary": "传感侧：顶装 360° 全景相机（Insta X5，双目鱼眼）经球面重投影光栅化为 ERP 图像，与 1 前视 + 2 腕装局部 RGB 互补。策略侧：三专家 MoT（在 π0.5 双专家骨干的 VLM 与动作专家之间插入全景专家）；VLM 专家（Gemma-2B 语言骨干 + SigLIP 局部视觉编码）编码局部视图/指令/本体态产出 KV cache；全景编码器 MTPano 提取 ERP 的语义+几何双分支密集特征，经自适应平均池化+MLP 适配为固定数 token；全景专家对全景 token 做与 VLM cache 的联合自注意力生成全景 cache；动作专家基于拼接 cache [C_vlm; C_pano] 用条件 flow matching 预测 32 步连续动作块（17 维全身动作：14 维双臂+夹爪、3 维底盘速度，相对当前本体态、1/99 分位归一化）。训练冻结语言模型与预训练 MTPano、微调其余模块；每任务用对应 200 条演示独立微调（30K 步 AdamW，lr 5e-5，4×A100，bfloat16）；闭环推理部署在单张 RTX 4090。数据采集侧：VR 稀疏人体运动→SMPL→GMR 优化（手位置/姿态对齐+底座位姿耦合+正则项），虚拟 3-DoF 浮动底座使底座位姿参与末端对齐目标、按代价切换执行模式。",
+  "assumptions": [
+   "全景观察与局部观察互补：全局空间上下文（目标搜索/移动接近/多阶段跟踪）主要来自全景，精细操作线索主要来自局部视图。",
+   "ERP 表示 + 全景专用编码器（MTPano）能缓解非透视畸变与预训练编码器的域差距（相对通用透视编码器 SigLIP）。",
+   "顶装全景相机与底盘固连即可提供机器人中心观察；底盘运动下 ERP 全景仍连续覆盖周围环境。",
+   "虚拟 3-DoF 浮动底座 + 代价驱动模式切换能把自然人体运动映射为轮式底盘的可行运动（自旋/阿克曼/斜向）。",
+   "任务级独立微调（每任务 200 轨迹）足以训练任务条件化策略；本文不做跨任务/零样本泛化主张。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采集 PanoVLA 数据集：4 任务 × 200 轨迹 = 800 条遥操作轨迹，约 5.5 小时，约 500K 同步帧（25 Hz，每轨迹 20-30 s）；模态含局部 RGB（前视+双腕）、360° 全景（顶装相机→ERP 存储）、本体态（双臂关节+夹爪状态+底盘位姿）、17 维全身动作"
+  ],
+  "tasks": [
+   "Move Pen：把笔放入笔筒（目标在前/左/右）",
+   "Move Block：把积木运到前区（目标在左/右/双侧）",
+   "Open Curtain：打开两侧窗帘（左/右顺序交互）",
+   "Wipe Table：沿长桌擦拭两处污渍后归还抹布（多阶段大工作区）"
+  ],
+  "embodiments": [
+   "轮式双臂平台：RANGER MINI 3 移动底盘（3-DoF 平面运动：自旋/阿克曼转向/斜向平移）+ 两台 6-DoF Agilex PIPER 臂 + 平行夹爪；传感：顶装 Insta X5 360° 全景相机 + 1 前视 + 2 腕装 RGB"
+  ],
+  "sample_or_scale": "每任务 200 条演示用于微调；评估每方法每任务 15 次闭环真机试验（无种子/方差报告）；训练 30K 步、4×A100；推理单张 RTX 4090。"
+ },
+ "evaluation": {
+  "design": "受控基线对比：同一 π0.5 骨干与同一训练数据/优化设置下，仅变化全景观测的表示与接入方式（无全景 / raw ERP 附加图像 / 3×120° 透视重投影拼接 / MTPano 编码+全景专家融合）；任务分解为多阶段支持细粒度失败分析（Fig. 4 stage-wise 曲线）；指标 SR（试验级二值）与 SCR（阶段完成率均值）。消融：全景专家规模 50M-300M、全景编码器 SigLIP vs MTPano（均在 Move Pen 上、15 trials/变体）。",
+  "baselines": [
+   "π0.5（仅局部视角：SigLIP 编码局部相机视图 + 指令 + 本体态）",
+   "π0.5 w/ Pano（ERP 全景作为附加图像直接进同一 SigLIP 编码器，无专用全景分支）",
+   "π0.5 w/ Stacked Pano（全景重投影为 3 个偏航 120° 间隔透视图拼接成复合图，作为附加视觉输入）",
+   "均为自设受控基线（同骨干同数据），无外部移动操作方法（MoManipVLA/SG-VLA/AC-DiT 等）对比"
+  ],
+  "metrics": [
+   "stage completion rate（SCR，阶段完成率均值）",
+   "end-to-end success rate（SR，试验级二值成功率）"
+  ],
+  "ablations": [
+   "全景编码器选择（SigLIP vs MTPano，同 100M 专家）",
+   "全景专家参数量（50M/100M/200M/300M）",
+   "任务级 stage-wise 分析（Wipe Table 四阶段，Fig. 4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "全景上下文大幅提升移动操作闭环性能：PanoVLA 平均 SCR 91.3%/SR 73.4%，局部视角 π0.5 仅 58.6%/30.0%（SR +43.4pp）。",
+   "scope": "真机定量结果（四任务平均）",
+   "locator": "page 6, Table II"
+  },
+  {
+   "finding": "收益随任务结构变化：跨侧搬运的 Move Block 收益最大（SR 20.0%→93.3%）；短程单目标的 Move Pen 上 raw ERP 附加图像基线即与 PanoVLA 持平（86.7%）。",
+   "scope": "真机任务级分析",
+   "locator": "page 6, Table II; page 7, Section V-B"
+  },
+  {
+   "finding": "多阶段状态跟踪是全景专家的获益场景：Wipe Table 上 raw panorama 最后阶段仅 26.7% 完成（SR 20.0%），PanoVLA 73.3%/46.7%。",
+   "scope": "真机 stage-wise 分析",
+   "locator": "page 7, Section V-B and Fig. 4"
+  },
+  {
+   "finding": "全景表示方式影响增益：MTPano 编码 95.6%/86.7% vs SigLIP 75.6%/40.0%；透视重投影拼接利于操作密集阶段（Wipe Table SR 40.0% vs 20.0%）但其余任务低于 raw ERP（平均 SCR 70.4% vs 80.8%）。",
+   "scope": "真机消融与基线对比",
+   "locator": "page 7, Table III; page 6, Table II"
+  },
+  {
+   "finding": "全景专家规模存在数据约束下的甜点：100M 最优（95.6%/86.7%），>100M 在约 5.5h 数据下无一致闭环增益（300M 降至 91.1%/73.3%）。",
+   "scope": "真机消融",
+   "locator": "page 7, Table III"
+  },
+  {
+   "finding": "全景域差距是核心动机与设计依据：非透视畸变使常规预训练视觉编码器特征退化，直接套用标准表征语义保留不足。",
+   "scope": "作者动机声明",
+   "locator": "page 1, Section I"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "短程单目标任务上显式全景建模收益有限：Move Pen 上 raw ERP 附加图像基线与 PanoVLA 持平，作者承认等距柱状全景已提供足够空间信息、边际收益减小。",
+    "locator": "page 6-7, Section V-B"
+   },
+   {
+    "limitation": "有限微调数据下全景专家超过 100M 参数不带来一致闭环改进（作者自述 scaling beyond 100M does not lead to consistent closed-loop improvements given the limited fine-tuning data）。",
+    "locator": "page 7, Section V-C"
+   },
+   {
+    "limitation": "全景图像非透视畸变与常规预训练编码器存在显著域差距，直接套用标准视觉表征导致特征退化与语义保留不足（模型层接入成本）。",
+    "locator": "page 1, Section I"
+   },
+   {
+    "limitation": "透视重投影路线的局限：透视裁剪可能削弱跨视角连续性，导致 stacked pano 在多数任务上低于 raw ERP（表示方式权衡）。",
+    "locator": "page 7, Section V-B"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无种子/方差/显著性报告：每任务仅 15 次试验，部分关键差距（Wipe Table SR 46.7% vs 40.0%、Open Curtain SCR 88.3% vs 73.3%）可能落入小样本波动，方法间细粒度排序的统计置信度不明。",
+    "basis": "page 5 评估协议（15 trials/task）与 page 6 Tab. II / page 7 Tab. III 均为单值百分比，全文无 error bar/多次运行/seed 报告"
+   },
+   {
+    "boundary": "泛化范围窄：单一轮式双臂平台、单一结构化室内场景（笔筒/积木/窗帘/长桌）、每任务独立微调（同任务 200 演示）；无跨任务、跨场景、零样本或数据规模外推实验，全景对开放世界泛化的贡献未验证。",
+    "basis": "page 3-5 实验设置与 page 6 Training Configuration（independently fine-tune a policy using the corresponding task-specific demonstrations）"
+   },
+   {
+    "boundary": "全景相机为顶装消费级 360° 相机（Insta X5）：分辨率、帧率与 ERP 去畸变质量对精细操作的适配性未讨论；全景特征经自适应平均池化压缩为固定数量 token，池化造成的信息损失未量化。",
+    "basis": "page 3 Fig. 1 相机标注（Insta X5 360 Camera）与 page 5 token adapter 段（adaptive average pooling 压缩到 fixed spatial resolution）"
+   },
+   {
+    "boundary": "基线均为自设 π0.5 变体：未与任何外部移动操作方法（MoManipVLA、SG-VLA、AC-DiT 等被引相关工作）实验对比，也未做\"同预算增加局部相机数量/增加演示量\"对照，全景路线相对其他全局感知方案的优越性未被检验。",
+    "basis": "page 2 相关工作讨论（[27][30][31]）+ page 5 基线列表仅含三个自设变体"
+   },
+   {
+    "boundary": "推理成本未报告：MTPano 编码 + 100M 全景专家相对纯 π0.5 的额外延迟与算力开销未量化，仅说明闭环跑在单张 RTX 4090 上；全景收益的成本边界未知。",
+    "basis": "page 6 Implementation Details 仅给训练配置与部署 GPU 型号，全文无延迟/吞吐数字"
+   }
+  ]
+ },
+ "transfer_boundary": "适用范围：轮式双臂移动操作平台，顶装 360° 全景（双目鱼眼→ERP）+ 局部 RGB 互补传感，π0.5 系 VLA 骨干 + 全景专用编码器（MTPano）与全景专家 KV cache 融合，任务级微调（每任务约 200 轨迹/5.5h 量级数据），目标在局部视野外、跨侧交互、多阶段状态跟踪的室内结构化任务。不适用/未验证：短程单目标桌面任务（raw ERP 即够）、固定基座纯桌面操作、跨任务/跨场景/零样本泛化、非 ERP 全景表示（鱼眼原生策略输入）、单臂或腿式平台、开放环境多样性、推理成本敏感部署（无延迟报告），以及每任务 15 trials 以外的统计置信度。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "受控基线设计出色：同一 π0.5 骨干、同数据同优化设置下仅变化全景的表示与接入方式（无/raw ERP/透视拼接/专用编码+专家），能干净归因\"全景怎么接入\"的贡献。",
+   "指标面向长程任务：SR 与 SCR 分离端到端成功与阶段完成，配合任务分解与 Fig. 4 stage-wise 分析支持细粒度失败定位（发现 raw panorama 的末端阶段崩溃）。",
+   "数据-模型-评估闭环完整：遥操作系统直接产出时间同步的全景+局部多模态演示，支撑全景策略训练与闭环真机验证，工程链路自洽。",
+   "消融覆盖两个关键设计轴（全景编码器选择、专家规模），且给出归因分析而非只报数字。"
+  ],
+  "design_risks": [
+   "每任务 15 trials 且无方差/种子：小差距（如 stacked vs raw pano 的 40.0% vs 20.0% 在 15 次试验下）统计置信度有限，主结论的大差距（73.4% vs 30.0%）更稳健但未量化不确定性。",
+   "基线均为自设变体：无外部移动操作 VLA 对比、无\"同预算加局部相机/加数据\"对照，全景路线的相对优越性与成本效率未检验。",
+   "任务级独立微调掩盖泛化问题：全景收益是否随任务难度、数据规模、目标分布变化未系统研究（仅单一 5.5h 数据规模）。",
+   "消融仅在 Move Pen 一个任务上做（作者声明 all ablation studies on the Move Pen task），编码器/专家规模结论对多阶段任务的迁移性未知。"
+  ],
+  "baseline_fairness": "基线公平性良好：三个基线与 PanoVLA 共享 π0.5 骨干、同任务同演示同优化设置，仅变化全景接入方式，干净回答表示/融合问题；主要缺陷是无外部方法横向对比，且缺少\"同等预算下增加局部相机或演示量\"这一最直接的成本对照。",
+  "metric_validity": "SR/SCR 与部署直接相关；SCR 提供阶段级失败定位（本文的关键发现之一即靠它发现 raw panorama 末端阶段崩溃）。但 SCR 依赖作者自定义的阶段划分粒度，且全部为单值百分比、无方差，细粒度比较的解释力受限。",
+  "reproducibility": "硬件（RANGER MINI 3 + 2×PIPER + Insta X5）、模型组成（Gemma-2B、SigLIP、MTPano、100M 专家）、训练配置（30K 步、AdamW、lr 5e-5、4×A100 bf16、batch 64）与评估协议（15 trials、无人工重置）报告完整；但提取文本中未见代码/数据集发布声明，GMR 权重（λ_pos/λ_rot/λ_base/λ_reg）与 MTPano 特征层选择细节未给出，复现依赖 MTPano 原文。",
+  "external_validity": "结论限定于：轮式双臂平台、结构化室内场景、4 任务任务级微调、顶装全景+ERP 表示。全景收益呈任务依赖（短程任务有限、多阶段大工作区显著），对跨平台、开放环境、零样本设置均未验证；全景专家容量的数据约束结论基于单一数据规模。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.02257-C01",
+   "claim": "该移动双臂平台的视觉传感套件由一台顶装 360° 全景相机与三台局部 RGB 相机（一台前视 + 两台腕装）组成；平台为轮式双臂构型（RANGER MINI 3 移动底盘 + 两台 6-DoF Agilex PIPER 臂 + 平行夹爪），底盘支持自旋、阿克曼转向与斜向平移三种模式。",
+   "stance": "support",
+   "relation": "支持命题：360° 全景/环视相机作为移动操作机器人的顶装全局传感器，与局部 RGB（前视/腕装）互补构成\"全局+局部\"双层次视觉输入。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Robot embodiment 段给出传感配置：顶装 360° 全景相机负责周围环境观察，三台局部 RGB 覆盖机器人前方场景与末端操作区。图 1（page 3）将全景相机标注为 Insta X5 360 Camera、局部相机标注为 3 × RGB Camera。",
+   "locator": "page 3, Section III-A, Robot embodiment",
+   "source_context": "As shown on the right side of Fig. 1, the robot is a wheeled bimanual platform comprising a RANGER MINI 3 mobile base, two 6-DoF Agilex PIPER arms, and parallel grippers. Its visual sensing suite consists of a top-mounted 360-degree panoramic camera and three local RGB cameras: one front-facing camera and two wrist- mounted cameras.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Robot embodiment 段逐字给出 wheeled bimanual platform、RANGER MINI 3 mobile base、two 6-DoF Agilex PIPER arms、top-mounted 360-degree panoramic camera、three local RGB cameras（one front-facing + two wrist- mounted）与三种底盘模式（见同段后续句，已核对）；相机型号 Insta X5 360 Camera 逐字出现在 page 3 图 1 文字中（已核对）；claim 仅复述该配置，未附加性能断言。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C02",
+   "claim": "作者论证局部观察的根本局限：前视与腕装相机虽提供高分辨率操作线索，但视场天然受限；在长程移动操作任务中，底盘平移与旋转叠加机械臂自遮挡，会频繁导致目标物体、地标或目标区域从局部视野中消失——这是引入全景观测的核心动机。",
+   "stance": "limit",
+   "relation": "限定命题：局部（窄视场）相机观察在移动操作长程任务中的结构性局限——目标离开视野，纯局部视角策略因此易失败。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言第二个挑战段：conventional local observations 受限视场 + 基座运动与自遮挡使目标频繁离开局部视野；作者据此主张用全景成像提供环境全向观察。",
+   "locator": "page 1, Section I, Introduction (second challenge)",
+   "source_context": "The second challenge lies in achieving robust visual perception during robot motion. Conventional local obser- vations, such as front-facing and wrist-mounted cameras, provide high-resolution manipulation cues but are inherently constrained by limited fields of view. In long-horizon mobile manipulation tasks, base translation and rotation, together with self-occlusion from the robot arms, can frequently cause target objects, landmarks, or goal regions to disappear from these local views.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言第二挑战段逐字给出 front-facing and wrist-mounted cameras、inherently constrained by limited fields of view、base translation and rotation, together with self-occlusion from the robot arms、cause target objects, landmarks, or goal regions to disappear from these local views；claim 仅复述该动机论证，无性能数字。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C03",
+   "claim": "全景图像具有独特的非透视畸变，与常规预训练视觉编码器形成显著域差距：直接套用标准视觉表征往往导致特征质量退化与语义信息保留不足——这促使作者开发专门的 panorama-aware 表征与融合架构，把全景观测与多模态输入整合并显式建模机器人中心全局上下文。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼/全景（非透视畸变）图像不能直接喂给常规预训练视觉编码器——全景接入具身模型需要专门的表征设计，这是宽视角传感在具身智能落地的核心模型层成本。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言段：panoramic images exhibit distinctive non-perspective distortions，与 pretraining conventional visual encoders 的域差距使直接套用标准表征导致 degraded feature quality and limited preservation of semantic information，因此 motivating panorama-aware representation and fusion architecture。",
+   "locator": "page 1, Section I, Introduction",
+   "source_context": "Nevertheless, panoramic images exhibit distinctive non-perspective distortions, creating a significant domain gap using the pretraining conventional visual encoders. As a result, directly applying standard visual representations often leads to degraded feature quality and limited preservation of semantic information. This motivates us to develop a panorama-aware representation and fusion architecture that integrates panoramic observations with mul- timodal inputs and explicitly models robot-centric global context for action generation.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 逐字给出 distinctive non-perspective distortions、significant domain gap using the pretraining conventional visual encoders、degraded feature quality and limited preservation of semantic information 与 This motivates us to develop a panorama-aware representation and fusion architecture...；claim 各分句均逐点对应原文。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C04",
+   "claim": "四个评估任务刻意设计为任务相关区域不被局部相机同时覆盖：任务组合变化目标放置、双侧交互与空间范围——Move Pen 与 Move Block 改变目标相对机器人的方向，Open Curtain 需要与两侧顺序交互，Wipe Table 沿长桌延展操作后才归还抹布；因此需要跨视角空间推理与多阶段状态跟踪。",
+   "stance": "conditional",
+   "relation": "条件性命题：全景/环视观察的获益任务结构——目标在局部视野之外、跨侧交互、大工作区多阶段任务；这正是局部相机覆盖不了而全景补位的场景。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Task Taxonomy 段总结四任务的空间设置（Table I：Move Pen front/left/right、Move Block left/right/both sides、Open Curtain left/right、Wipe Table along a long table），并明确 task-relevant regions are not simultaneously covered by the local cameras。",
+   "locator": "page 4, Section III-B, Task Taxonomy",
+   "source_context": "The task suite varies target placement, bilateral interaction, and spatial extent: Move Pen and Move Block change the target direction relative to the robot, Open Curtain requires sequential interaction with both sides, and Wipe Table extends manipulation over a long table before returning the cloth. In these tasks, task- relevant regions are not simultaneously covered by the local cameras, creating a need for cross-view spatial reasoning and multi-stage state tracking.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Task Taxonomy 段逐字给出四个任务的方向/双侧/长桌设置与 In these tasks, task- relevant regions are not simultaneously covered by the local cameras, creating a need for cross-view spatial reasoning and multi-stage state tracking；任务空间设置（front/left/right 等）与 Table I（同页）一致（已核对）；claim 未超出该段与表。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C05",
+   "claim": "PanoVLA 数据集规模：四任务各采集 200 条遥操作轨迹共 800 条，总计约 5.5 小时、约 500k 同步帧（25 Hz，每条轨迹约 20-30 秒）；采集时全景相机、局部相机、本体态与全身动作以共享时间戳同步录制。",
+   "stance": "support",
+   "relation": "支持命题：360° 全景数据可以与局部视角/本体态/动作在同一遥操作流程中同步规模化采集（5.5h/500k 帧量级），全景+局部的多模态数据采集链路工程上可行。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Data Collection Protocol 段给出采集协议与规模数字；page 4（Data Modalities）进一步说明全景观察由顶装 360° 相机采集并转为 ERP 存储与局部/腕视图同步。",
+   "locator": "page 3, Section III-B, Data Collection Protocol and Dataset",
+   "source_context": "Using the teleoperation system above, we collect 200 demonstration trajectories for each of the four real-world mobile manipulation tasks, yielding 800 trajectories in to- tal. During each demonstration, the system synchronously records visual observations from all cameras, robot propri- oceptive states, and whole-body actions with shared times- tamps. The trajectories span approximately 5.5 hours in total. Each trajectory lasts about 20–30 seconds and is recorded at 25 Hz, yielding roughly 500k synchronized frames.",
+   "evidence_type": "dataset-statistic",
+   "quantitative": {
+    "metric": "dataset scale (episodes, hours, frames)",
+    "value_or_direction": "800 trajectories (4 tasks x 200 each), ~5.5 hours, ~500k synchronized frames, 25 Hz, 20-30 s per trajectory",
+    "comparator": "self-collected dataset statistics (descriptive, no baseline comparison)",
+    "task_or_sample": "four real-world mobile manipulation tasks, wheeled bimanual robot, VR teleoperation collection",
+    "locator": "page 3, Section III-B, Data Collection Protocol and Dataset"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 采集协议段逐字给出 200 demonstration trajectories for each of the four tasks、800 trajectories、synchronously records visual observations from all cameras, robot propri- oceptive states, and whole-body actions with shared times- tamps、approximately 5.5 hours、20–30 seconds、25 Hz、roughly 500k synchronized frames；claim 数字与同步声明均逐字来自该段。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C06",
+   "claim": "PanoVLA 把全景观测作为 VLA 的独立专家模态接入 π0.5 骨干：VLM 专家从局部观察、指令与本体态计算 KV cache；并行地全景编码器把全景观察编码为 token，全景专家在与 VLM cache 的联合自注意力中处理全景 token 并产出全景 cache；动作专家基于拼接 cache [C_vlm; C_pano] 预测动作块，从而同时利用局部观察的精细操作线索与全景观察的机器人中心全局上下文。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：全景/环视相机的模型接入方式——专用全景专家经 KV cache 融合注入 VLA 动作生成，而非把全景图当作普通附加图像。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Fusion 接口设计段给出 KV cache 融合机制；page 4 末句说明 PanoVLA instantiated from the dual-expert π0.5 backbone by inserting the panorama expert between its VLM and action experts（三专家 MoT）。",
+   "locator": "page 5, Section IV-B, PanoVLA (fusion interface)",
+   "source_context": "We adopt the transformer key–value (KV) cache as the fusion interface. For an L-layer expert, a cache is the layer-wise collection C = {(K ℓ , V ℓ )} L ℓ=1 generated from its context tokens and reused by subsequent tokens during attention. At time t, the VLM expert computes the VLM cache C vlm t from I loc t , l, and s t . In parallel, the panorama encoder encodes I pano t into tokens Z pano t . The panorama expert then performs joint self-attention with C vlm t while processing Z pano t , and produces panorama cache C pano t . The action expert subsequently predicts the action chunk based on the combined cache C t = [C vlm t ; C pano t ], where [·; ·] denotes concatenation along the cached-token dimension. This design enables the action expert to jointly leverage fine-grained manipulation cues from local observations and robot-centric global context from panoramic observations.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 融合接口段逐字给出 KV cache 定义、VLM cache 来自 I_loc/l/s、panorama expert performs joint self-attention with C_vlm while processing Z_pano、action expert 基于 combined cache C_t = [C_vlm; C_pano] 与 jointly leverage fine-grained manipulation cues from local observations and robot-centric global context from panoramic observations；三专家 MoT 实例化声明逐字位于 page 4 末（PanoVLA is instantiated from the dual-expert π0.5 backbone...，已核对）；claim 未超出两处证据。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C07",
+   "claim": "全景编码管线以双目鱼眼原始观察为输入：同步双目鱼眼视图先经球面重投影映射到公共观察球，并光栅化为等距柱状投影（ERP）图像，得到连续的机器人中心全景；再送入全景视觉编码器 MTPano（全景基础模型，密集场景解析），提取其分割与深度分支的中间特征作为语义与几何两组密集特征，按通道维拼接为统一密集全景表征；最后经自适应平均池化压缩到固定空间分辨率并用轻量 MLP 映射到全景专家隐维，产出与全景分辨率无关的固定数量全景 token。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：鱼眼全景传感进入 VLA 的具体处理链路——双目鱼眼→球面重投影→ERP→全景专用基础模型（语义+几何双分支）→池化 token 化，而非去畸变为普通透视图或直接用原始鱼眼图。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Panorama Encoder 段描述三阶段管线（球面投影、全景特征提取、token 适配）与 MTPano 双分支特征；token adapter 段说明池化+MLP 适配使 token 数与全景分辨率无关。",
+   "locator": "page 5, Section IV-B, Panorama Encoder",
+   "source_context": "Given synchronized dual- fisheye observations, we first apply spherical reprojection to map the two fisheye views onto a common viewing sphere and rasterize the spherical representation as an equirectan- gular projection (ERP) image, yielding a continuous, robot- centric panorama of the surroundings. This ERP image is then fed into a panoramic visual encoder E p . We instantiate E p with MTPano [35], a panoramic foundation model for dense scene parsing. Specifically, we extract intermediate features from its segmentation and depth branches, obtaining two dense features that capture semantic and geometric cues. These are then concatenated along the channel dimension to form a unified dense panoramic representation. To enable panoramic observations to be integrated into multimodal understanding, the fused feature map is fur- ther transformed into the token embedding space of the VLA backbone through a lightweight token adapter A ψ . Specifically, adaptive average pooling first compresses this dense representation into a fixed spatial resolution, producing a constant number of visual tokens independent of the panorama resolution, a lightweight multi-layer perceptron (MLP) layers then map each token into the hidden dimen- sion of the panorama expert, yielding the panorama token sequence.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Panorama Encoder 与 token adapter 段逐字给出 synchronized dual- fisheye observations、spherical reprojection、equirectan- gular projection (ERP) image、robot- centric panorama、MTPano [35], a panoramic foundation model for dense scene parsing、segmentation and depth branches、concatenated along the channel dimension、adaptive average pooling...fixed spatial resolution、a constant number of visual tokens independent of the panorama resolution 与 MLP 映射到 panorama expert hidden dimension；claim 各环节逐点对应原文。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C08",
+   "claim": "四任务闭环真机评估（每任务 15 次试验）中，PanoVLA 平均阶段完成率 SCR 91.3%、端到端成功率 SR 73.4%，显著超过仅用局部视角的 π0.5 基线（58.6%/30.0%）；分任务看 Move Block 收益最大（SR 20.0%→93.3%），Open Curtain 26.7%→66.7%，Wipe Table 26.7%→46.7%，Move Pen 46.7%→86.7%；raw ERP 附加图像基线平均 80.8%/56.7%，透视拼接基线 70.4%/38.3%。",
+   "stance": "support",
+   "relation": "支持命题（效果）：把 360° 全景上下文引入 VLA 显著提升移动操作闭环性能——平均 SR 提升 43.4 个百分点，且在全部四个任务上 SR 最高。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 汇报四方法在四任务上的 SCR/SR 与平均值；正文（page 6）总结 PanoVLA achieves the best average results 并归因 SCR 增益来自目标搜索、移动接近与物理操作等中间阶段。",
+   "locator": "page 6, Table II and Section V-B",
+   "source_context": "TABLE II REAL-WORLD CLOSED-LOOP EVALUATION. SCR DENOTES STAGE COMPLETION RATE AND SR DENOTES END-TO-END SUCCESS RATE; AVG. IS AVERAGED OVER THE FOUR TASKS, WITH 15 TRIALS PER TASK. THE BEST RESULTS ARE HIGHLIGHTED IN BOLD. Method Move Pen Move Block Open Curtain Wipe Table Avg. SCR SR SCR SR SCR SR SCR SR SCR SR π 0.5 71.1% 46.7% 35.0% 20.0% 61.7% 26.7% 66.7% 26.7% 58.6% 30.0% π 0.5 w/ Pano 95.6% 86.7% 80.0% 73.3% 73.3% 46.7% 74.4% 20.0% 80.8% 56.7% π 0.5 w/ Stacked Pano 82.2% 60.0% 70.0% 40.0% 56.7% 13.3% 72.8% 40.0% 70.4% 38.3% PanoVLA 95.6% 86.7% 96.7% 93.3% 88.3% 66.7% 84.4% 46.7% 91.3% 73.4%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "stage completion rate (SCR) and end-to-end success rate (SR)",
+    "value_or_direction": "Avg: PanoVLA 91.3% SCR / 73.4% SR vs local-view pi0.5 58.6% / 30.0%; per-task SR: Move Block 20.0% -> 93.3%, Open Curtain 26.7% -> 66.7%, Wipe Table 26.7% -> 46.7%, Move Pen 46.7% -> 86.7%; pi0.5 w/ Pano avg 80.8% / 56.7%, pi0.5 w/ Stacked Pano 70.4% / 38.3%",
+    "comparator": "pi0.5 (local views only) vs pi0.5 w/ Pano (raw ERP as extra SigLIP image) vs pi0.5 w/ Stacked Pano (3 perspective views) vs PanoVLA (MTPano + panorama expert)",
+    "task_or_sample": "four real-world mobile manipulation tasks (Move Pen, Move Block, Open Curtain, Wipe Table), 15 closed-loop real-robot trials per task per method",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Tab. II 逐格给出四方法 × 四任务的 SCR/SR 与 Avg 列（π0.5 58.6% 30.0%、w/ Pano 80.8% 56.7%、w/ Stacked Pano 70.4% 38.3%、PanoVLA 91.3% 73.4%，以及 Move Block 20.0%→93.3% 等分任务值）；表头注明 15 trials per task；claim 全部数字逐字来自该表，未附加解释性断言（归因句位于同页正文，已核对）。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C09",
+   "claim": "在以单目标定位与短程抓放为主的 Move Pen 任务上，把 ERP 全景直接作为附加图像输入的 π0.5 w/ Pano 基线与 PanoVLA 成绩持平（Tab. II：两者 SCR/SR 均为 95.6%/86.7%）；作者解释为等距柱状全景已给 π0.5 提供足够空间信息、显式全景建模的边际收益减小——PanoVLA 的优势在需要多阶段状态跟踪与长程空间一致性的任务上才变得明显。",
+   "stance": "conditional",
+   "relation": "条件性命题（哪些任务受限）：短视野、单目标、短程任务上专用全景建模的增量收益有限——\"把全景图当普通图像输入\"即可接近饱和，全景专家的价值集中于长程多阶段任务。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V-B 分析段：π0.5 w/ Pano matches PanoVLA on Move Pen，因 ERP 已提供充分空间信息；The PanoVLA advantage becomes more apparent in tasks that require multistage state tracking and long-range spatial consistency。持平的具体数值见 Tab. II（page 6）。",
+   "locator": "page 7, Section V-B (Move Pen analysis; sentence starts on page 6)",
+   "source_context": "The equirectangular panorama already pro- vides sufficient spatial information to π 0.5 , reducing the benefit of explicitly modeling panoramic information with panorama expert. The PanoVLA advantage becomes more apparent in tasks that require multistage state tracking - and long-range spatial consistency.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 开头逐字给出 The equirectangular panorama already pro- vides sufficient spatial information to π0.5, reducing the benefit of explicitly modeling panoramic information with panorama expert 与 The PanoVLA advantage becomes more apparent in tasks that require multistage state tracking - and long-range spatial consistency；\"matches PanoVLA on Move Pen\"与持平数值 95.6%/86.7% 逐字位于 page 6 末句与 Tab. II（已核对）；claim 未超出两处证据。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C10",
+   "claim": "在需要多阶段状态跟踪的 Wipe Table 任务上，raw panorama 基线（π0.5 w/ Pano）在最后\"归还抹布\"阶段仅 26.7% 的试验完成，导致 SCR 74.4% 但端到端 SR 仅 20.0%；PanoVLA 该阶段完成 73.3%、SR 46.7%——差距表明全景专家在跨操作阶段跟踪任务状态转换、保持全局空间一致性（可靠重新定位抹布并归位）上更有效。",
+   "stance": "conditional",
+   "relation": "条件性命题（哪些任务获益）：多阶段、大工作区、需要跨阶段状态跟踪与目标重定位的任务是专用全景建模获益最明显的场景——raw 全景输入在此类任务末端阶段崩溃。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 分析段结合 Fig. 4 的 stage-wise 曲线解释 raw panorama 基线在 Wipe Table 最后阶段的崩溃与 PanoVLA 的优势来源。",
+   "locator": "page 7, Section V-B and Fig. 4",
+   "source_context": "Although the raw panorama input baseline performs well on Move Pen, its Wipe Table profile in Fig. 4 drops at the final stage. It completes this stage in only 26.7% of trials, resulting in an SCR of 74.4% but an end-to-end SR of only 20.0%, whereas PanoVLA achieves 73.3% stage completion and 46.7% SR.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "final-stage completion rate, SCR, SR (Wipe Table)",
+    "value_or_direction": "raw-panorama baseline: final stage completed in 26.7% of trials, SCR 74.4%, SR 20.0%; PanoVLA: 73.3% stage completion, 46.7% SR",
+    "comparator": "pi0.5 w/ Pano (raw equirectangular panorama as extra image) vs PanoVLA (MTPano encoder + panorama expert)",
+    "task_or_sample": "Wipe Table task (pick up cloth, wipe two stains, return cloth; multi-stage), 15 closed-loop real-robot trials",
+    "locator": "page 7, Section V-B and Fig. 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 drops at the final stage、completes this stage in only 26.7% of trials、SCR of 74.4% but an end-to-end SR of only 20.0% 与 PanoVLA achieves 73.3% stage completion and 46.7% SR；后续句（This substantial gap suggests that the panorama expert more effectively tracks task state transitions...）逐字支持归因表述（已核对）；claim 数字与归因均未超出该段。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C11",
+   "claim": "把全景重投影为多个透视视图再拼接（stacked-panorama：3 个光学轴按偏航 120° 均匀间隔的透视图拼接为复合图，page 5 基线定义）是另一种折中：它部分缓解 ERP 与透视图像编码器的不匹配，在 Wipe Table 上 SR 40.0% 高于 raw panorama 的 20.0%（透视重投影有利于操作密集阶段）；但在其余任务上低于 raw panorama 基线（平均 SCR 70.4% vs 80.8%，Tab. II），作者归因于透视裁剪可能削弱有利于机器人中心理解的跨视角连续性。",
+   "stance": "limit",
+   "relation": "限定命题：全景→透视重投影不是无损的通用解——裁剪成透视图有利于精细操作阶段但损失跨视角连续性，全景表示方式之间存在任务依赖的权衡，不能简单说\"全景一律更优\"。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 分析段讨论 stacked-panorama 基线的不同折中：manipulation-heavy 阶段受益于透视重投影，其余任务上透视裁剪削弱 cross-view continuity。",
+   "locator": "page 7, Section V-B (stacked-panorama analysis)",
+   "source_context": "Reprojecting the panorama into perspective views intro- duces a different trade-off. The stacked-panorama baseline partially alleviates the mismatch between equirectangular panoramas and perspective-image encoders by decomposing the panorama into multiple perspective views. On Wipe Table, its observed SR is 40.0%, compared with 20.0% for raw panorama input, indicating that perspective reprojection can benefit manipulation-heavy stages. However, it under- performs the raw panorama baseline on the remaining tasks, suggesting that perspective crops may weaken the cross-view continuity that benefits robot-centric understanding.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "end-to-end success rate (SR) and average SCR",
+    "value_or_direction": "Wipe Table SR: stacked pano 40.0% vs raw pano 20.0%; average SCR: stacked 70.4% vs raw 80.8% (Tab. II, page 6)",
+    "comparator": "pi0.5 w/ Stacked Pano (3 perspective views 120 degrees apart, page 5) vs pi0.5 w/ Pano (raw ERP image)",
+    "task_or_sample": "four real-world mobile manipulation tasks, 15 closed-loop trials per task; Wipe Table focus",
+    "locator": "page 7, Section V-B; averages from page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 partially alleviates the mismatch between equirectangular pan- oramas and perspective-image encoders、On Wipe Table, its observed SR is 40.0%, compared with 20.0% for raw panorama input、perspective crops may weaken the cross-view continuity；120° 三透视图拼接定义逐字位于 page 5 基线段（The panorama is first re- projected into three perspective views whose optical axes are uniformly spaced by 120 ◦ in yaw，已核对）；平均 70.4%/80.8% 逐字来自 page 6 Tab. II（已核对）；claim 未超出三处证据。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C12",
+   "claim": "全景编码器选择对闭环性能影响显著：用基础 VLM 自带的视觉编码器 SigLIP（透视图像预训练）编码 ERP 全景仅得 75.6% SCR / 40.0% SR，用全景基础模型 MTPano 达 95.6% / 86.7%（Move Pen 消融，每变体 15 次闭环真机试验）；作者归因于 SigLIP 难以捕捉等距柱状观察的水平连续性与全局布局，而 MTPano 专为全景空间结构设计、为全景专家构建机器人中心空间上下文提供更有效线索。",
+   "stance": "support",
+   "relation": "支持命题：全景/鱼眼类非透视成像需要全景专用编码器（几何感知表征）才能在具身策略中兑现宽视角收益——直接用通用透视预训练编码器会损失大部分增益（SR 差 46.7 个百分点）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 消融：Panorama visual encoder 对比 SigLIP 与 MTPano（同为 100M 全景专家）；Tab. III 给出数值，正文给出归因分析。",
+   "locator": "page 7, Section V-C, Panorama visual encoder and Table III",
+   "source_context": "Using SigLIP yields only 75.6% SCR and 40.0% SR, substantially lower than the 95.6% and 86.7% achieved with MTPano. Because SigLIP is pretrained primarily on perspective images, it may be less effective at capturing the horizontal continuity and global layout of equirectangular observations. In contrast, MTPano is designed to model panorama-specific spatial structure, providing the panorama expert with more informa- tive cues for constructing robot-centric spatial context.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SCR and SR (Move Pen ablation, panorama encoder choice)",
+    "value_or_direction": "SigLIP panorama encoder: 75.6% SCR / 40.0% SR; MTPano: 95.6% SCR / 86.7% SR (20.0 pp SCR gap, 46.7 pp SR gap)",
+    "comparator": "PanoVLA w/ SigLIP encoder vs PanoVLA w/ MTPano encoder, both with 100M-parameter panorama expert",
+    "task_or_sample": "Move Pen task, 15 closed-loop real-robot trials per variant",
+    "locator": "page 7, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 Using SigLIP yields only 75.6% SCR and 40.0% SR, substantially lower than the 95.6% and 86.7% achieved with MTPano 与 SigLIP 预训练以透视图像为主、难以捕捉 horizontal continuity and global layout of equirectangular observations 的归因；Tab. III（同页）逐格给出 PanoVLA w/ SigLIP 100M 75.6% 40.0% 与 PanoVLA w/ MTPano 100M 95.6% 86.7%（已核对）；claim 数字与归因均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C13",
+   "claim": "全景专家容量在有限微调数据下存在甜点：50M 参数不足以捕捉跨视角依赖与目标方向线索（84.4% SCR / 60.0% SR）；100M 最优（95.6% / 86.7%）；超过 100M 不再带来一致的闭环改进（200M 93.3%/86.7%，300M 降至 91.1%/73.3%）；作者据此采用 100M 专家作为表征容量与数据高效微调之间的经验折中。",
+   "stance": "limit",
+   "relation": "限定命题：全景建模的容量收益受微调数据规模约束——在约 5.5 小时任务级数据下，更大的全景专家无一致增益甚至退化，全景路线的扩展性受数据瓶颈限制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C 消融：Panorama expert scale 在 50M/100M/200M/300M 上扫描（Tab. III），结论是 100M 为最优折中。",
+   "locator": "page 7, Section V-C, Panorama expert scale and Table III",
+   "source_context": "TABLE III EFFECT OF EXPERT SIZE AND PANORAMA ENCODER SELECTION. Variant Expert Size SCR SR Expert size PanoVLA w/ MTPano 50M 84.4% 60.0% PanoVLA w/ MTPano 100M 95.6% 86.7% PanoVLA w/ MTPano 200M 93.3% 86.7% PanoVLA w/ MTPano 300M 91.1% 73.3% Panorama encoder PanoVLA w/ SigLIP 100M 75.6% 40.0% PanoVLA w/ MTPano 100M 95.6% 86.7% Panorama expert scale. We investigate the impact of panorama expert capacity by varying the parameter count as shown in Table III. These results suggest that the 50M expert lacks sufficient capacity to capture cross-view dependencies and target-direction cues, while scaling beyond 100M param- eters does not lead to consistent closed-loop improvements given the limited fine-tuning data. We therefore adopt the 100M expert, providing a favorable empirical trade-off be- tween representational capacity and data-efficient fine-tuning effectiveness.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SCR and SR (Move Pen, panorama expert size sweep)",
+    "value_or_direction": "50M: 84.4% / 60.0%; 100M: 95.6% / 86.7%; 200M: 93.3% / 86.7%; 300M: 91.1% / 73.3%",
+    "comparator": "panorama expert parameter count 50M / 100M / 200M / 300M, all with MTPano encoder",
+    "task_or_sample": "Move Pen task, 15 closed-loop real-robot trials per variant",
+    "locator": "page 7, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Tab. III 逐格给出 50M/100M/200M/300M 四行 SCR/SR（84.4/60.0、95.6/86.7、93.3/86.7、91.1/73.3）；正文逐字给出 the 50M expert lacks sufficient capacity、scaling beyond 100M param- eters does not lead to consistent closed-loop improvements given the limited fine-tuning data 与 adopt the 100M expert 的折中声明；claim 数字与结论句均逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2608.02257-C14",
+   "claim": "评估协议为每方法每任务 15 次闭环真机试验、每试验单次不间断 rollout、失败阶段不做人工重置；全文（page 1-8）未报告试验种子、方差或显著性检验，各方法间的数字差距（如 Wipe Table SR 46.7% vs 40.0% vs 20.0%）在 15 次试验下的统计稳健性无法从报告数据判定。",
+   "stance": "gap",
+   "relation": "缺口命题：全景 VLA 的定量证据缺少统计不确定性报告——小样本单值成功率使细粒度方法间排序的置信度不明，限制结论外推的强度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Evaluation Protocol 段逐字给出 15 trials/task、single uninterrupted rollout、no manual resets；全文无种子/方差/显著性报告（已通读 page 1-8 提取文本核对）。",
+   "locator": "page 5, Section V-A, Evaluation Protocol and Metrics",
+   "source_context": "To enable fine-grained failure analysis, we decompose each task into multiple stages and evaluate each method with 15 closed- loop real-robot trials per task. Every trial is conducted as a single uninterrupted rollout, with all actions generated by the policy and no manual resets of failed stages.",
+   "evidence_type": "evaluation-protocol",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 评估协议段逐字给出 decom- pose each task into multiple stages and evaluate each method with 15 closed-loop real-robot trials per task、single uninterrupted rollout、no manual resets of failed stages；\"全文未报告种子/方差/显著性\"为对 page 1-8 提取文本的穷尽检索结论（已核对：Tab. II/III 与正文均为单值百分比，无 error bar/多次运行/seed 表述）；claim 前半逐字可溯、后半为已验证的缺失声明。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "pi0.5: a vision-language-action model with open-world generalization",
+   "arxiv_id": "2504.16054",
+   "reason": "PanoVLA 的骨干与全部三个基线的共同基础（引文 [3]），所有对比均在其双专家 MoT 上插入/变化全景接入方式。"
+  },
+  {
+   "title": "MTPano: Multi-task Panoramic Scene Understanding via Label-free Integration of Dense Prediction Priors",
+   "arxiv_id": "2602.05330",
+   "reason": "全景编码器的设计选择核心依赖（引文 [35]）：分割+深度双分支密集特征是 ERP 全景表征的关键，其相对 SigLIP 的 46.7pp SR 差距是本文最重要的消融证据。"
+  },
+  {
+   "title": "Retargeting Matters: General Motion Retargeting for Humanoid Motion Tracking",
+   "arxiv_id": "2510.02252",
+   "reason": "全身遥操作重定向框架（引文 [13]），数据采集系统的运动映射基础。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是\"360° 全景相机（双目鱼眼→ERP）接入 VLA\"的最直接证据。关键判断：(1) 应用方式——双目鱼眼→球面重投影→ERP→全景专用基础模型（MTPano 语义+几何双分支）→池化 token→专用全景专家 KV cache 融合进 π0.5，全景不作为普通图像输入；(2) 获益任务——目标在局部视野外/跨侧交互/多阶段状态跟踪的移动操作（Move Block SR 20.0→93.3%，Wipe Table 末端阶段 26.7→73.3 完成率）；(3) 受限任务——短程单目标任务 raw ERP 附加图像即与专用架构持平；(4) 硬边界——通用透视编码器编码 ERP 损失大部分增益（SigLIP 40.0% vs MTPano 86.7% SR）、全景专家容量受 5.5h 数据约束（>100M 无一致增益）、透视重投影有利操作阶段但损跨视角连续性；(5) 统计缺口——15 trials/任务、无方差报告。IEEE 会议格式 8 页，page 8 为参考文献。所有 source_context 均逐字取自提取页（page 1、3、4、5、6、7）。"
+}

@@ -1,0 +1,587 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.05740",
+  "title": "Multi-LVI-SAM: A Robust LiDAR-Visual-Inertial Odometry for Multiple Fisheye Cameras",
+  "published": "2025-09",
+  "url": "https://arxiv.org/abs/2509.05740",
+  "authors": [
+   "Xinyu Zhang",
+   "Kai Huang",
+   "Junqiao Zhao",
+   "Zihan Yuan",
+   "Tiantian Feng"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接回答综述问题的多鱼眼 LVIO 系统证据：(1) 应用方式——把多台鱼眼相机特征统一投影到归一化球面构成全景视觉特征模型，作为 LiDAR-视觉-惯性紧耦合因子图中的单一全局表示（page 1-3）；(2) 效果——三个公开数据集上量化对比与消融（无纹理楼梯/回廊序列基线全灭而本文完成、外参补偿使 Stairs RMSE 降 40.6%、单相机在 walk-01 完全失效而四相机融合完成）；(3) 局限——剧烈姿态变化下 LiDAR 子系统退化、玻璃墙干扰深度关联、暗环境鲁棒性不足、四相机计算开销 2.15 倍，且作者明确指出鱼眼外围严重畸变会使现成单目 LVIO 的视觉-LiDAR 融合错位。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and I. Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：单目 VIO/LVIO 的窄 FoV 两类失效（快速视点变化感知不足、无纹理/重复场景跟踪失败）、纯视觉多相机系统暗环境失效，以及本文多鱼眼+LiDAR+IMU 融合与全景视觉特征模型、外参补偿两项方法主张。"
+   },
+   {
+    "locator": "page 2, II. Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理多相机视觉里程计（PAN-SLAM、MCOV-SLAM、MCVO、PIW-SLAM、MCVIO、BAMF-SLAM、MAVIS、RMSC-VIO）与 LVIO（LVI-SAM、FAST-LIVO2、R3Live 等）两条相关工作线，确认本文定位：既有 LVIO 多为单目、既有视觉多相机系统多独立估计各相机位姿。"
+   },
+   {
+    "locator": "page 2-5, III. LiDAR-Visual-Inertial Odometry Based on Multi-Fisheye Camera",
+    "role": "method-or-design",
+    "purpose": "精读系统设计：双子系统架构（VIO 基于 VINS-Mono、LIO 基于 LIO-SAM、iSAM2 因子图）；全景视觉特征模型的球面投影与外参变换；外参补偿的共面几何推导（法向量 n1/n2、交线向量 m、角度 α/γ、深度残差）；LiDAR 深度关联（2-D KD 树+遮挡深度模糊检查）；DBoW2+BRIEF 跨相机回环检测。"
+   },
+   {
+    "locator": "page 5, IV. Experiment 开头与 Table I",
+    "role": "data-or-setting",
+    "purpose": "核对传感器配置：Newer College（Ouster OS0-128、Alphasense 相机 720×540@30Hz、BMI085@200Hz）、M2DGR（Velodyne VLP-32C、FLIR 1280×1024@15Hz、Handsfree A9@150Hz）；测试平台 Intel i7-9800X。"
+   },
+   {
+    "locator": "page 5-7, IV. Experiment (A. Newer College, B. M2DGR, C. Ablation, D. Run Time)",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table II（Newer College 8 序列 ATE RMSE 与各基线 fail 记录）、Table III（M2DGR 7 序列）、Table IV（单相机/LIO/有无补偿消融，含 Hilti'2022 4 序列）、Table V（单相机 vs 四相机运行时）及各序列失效机制归因。"
+   },
+   {
+    "locator": "page 8, V. Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自认未来工作与限制：相邻相机重叠观测区未利用、暗环境鲁棒性待提升。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8-9, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（LVI-SAM、VINS-Mono、LIO-SAM、全景 LiDAR-视觉里程计、Newer College 数据集）条目。"
+   }
+  ]
+ },
+ "research_question": "如何将多台鱼眼相机与 LiDAR、IMU 紧耦合融合以实现高精度鲁棒的状态估计——具体而言，如何用单一全景视觉特征模型统一多相机观测（避免逐相机冗余处理），并修复鱼眼相机帧与全景模型帧错位（相机中心与球心平移偏移）导致的三角化不一致？",
+ "contributions": [
+  "Multi-LVI-SAM：紧耦合多传感器融合框架（沿用 LVI-SAM 双子系统结构），集成多台鱼眼相机+LiDAR+IMU，缓解单目相机 FoV 限制，扩展环境感知。",
+  "全景视觉特征模型：把各鱼眼相机视觉特征经外参变换投影到以全景模型中心为球心的归一化球面，作为统一全局几何优化框架整合多视角约束，支撑无缝回环与全局位姿优化，同时简化系统设计。",
+  "外参补偿方法：基于严格几何推导（共面性与法向量几何）修正鱼眼相机中心与全景球心平移偏移导致的三角化误差。",
+  "三个公开数据集（Newer College、M2DGR、Hilti'2022）上的系统评估：精度与鲁棒性优于现有 LVIO 系统，并附单相机/无相机/有无补偿消融与运行时分析。"
+ ],
+ "method": {
+  "summary": "双子系统紧耦合架构（沿用 LVI-SAM 结构）：VIO 子系统基于 VINS-Mono（Shi-Tomasi 特征提取+KLT 光流跟踪），把多鱼眼相机观测统一到全景视觉特征模型——各相机特征点 uc 经第 i 台相机相对全景模型的外参 (Ri, ti) 投影到半径 r 的归一化球面得到 us，模型作为单一全局几何优化框架整合多视角约束；LiDAR 点云配准生成稀疏深度图，经 2-D KD 树在球面上为视觉特征关联深度（累积多帧点云，最大深度差超阈值判为不可靠深度以规避遮挡深度模糊）；DBoW2+BRIEF 描述子跨相机融合做回环检测候选并交 LIO 校验。针对相机中心与球心平移偏移导致球心三角化得到错误点 P′ 的问题，提出外参补偿：利用 C1、S1、u1 共面性构造平面法向量 n1、n2，交线方向 m = n1×n2，由角度 α（S1u1 与 C1u1 夹角）与 γ（S1P′ 与 PP′ 夹角）导出深度残差 λPP′ = λP′·sin(α)/sin(α+γ)，从而修正 P = P′ + λPP′·m；多视角三角化由各帧 (Ci, Si, ui) 平面法向量堆叠线性方程求解。LIO 子系统基于 LIO-SAM（边缘/平面特征、scan-to-map 匹配、滑动窗口特征图）；IMU 预积分、视觉、LiDAR、回环四类约束进入 iSAM2 因子图实时求解。",
+  "assumptions": [
+   "各鱼眼相机相对全景模型的外参 (Ri, ti) 已标定且足够准确（补偿方法本身不估计外参，依赖已知几何）。",
+   "LiDAR 点云配准可提供可靠的稀疏深度以关联视觉特征（视觉子系统依赖 LiDAR 深度初始化与增强）。",
+   "鱼眼相机间的 FoV 布局（如 4 相机）足以构成全景覆盖，且重叠区深度点归属单台 FoV 最匹配的相机即可。",
+   "相机中心与球心的平移偏移是全景模型三角化误差的主导来源，可由闭式几何补偿修正。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Newer College Dataset：手持多相机 LiDAR 惯性采集，室内外序列含无纹理墙面、快速视点变化、剧烈运动（8 条测试序列）",
+   "M2DGR Dataset：地面机器人平台，含室内、室外与长轨迹序列（7 条测试序列）",
+   "Hilti'2022 Dataset：手持设备采集的建筑工地、画廊、展厅、地下室等场景（4 条消融序列）"
+  ],
+  "tasks": [
+   "里程计/SLAM 轨迹估计（绝对轨迹误差 RMSE 评测）",
+   "消融：4 种单相机配置、去相机（纯 LIO）、有/无外参补偿",
+   "运行时分析：单相机 vs 四相机平均每帧处理时间"
+  ],
+  "embodiments": [
+   "手持多传感器 rig（Newer College、Hilti'2022）",
+   "地面机器人平台（M2DGR）"
+  ],
+  "sample_or_scale": "3 个公开数据集共 19 条序列（Newer College 8、M2DGR 7、Hilti'2022 4）；对比 4 个开源 SOTA 基线 + 自家 LIO/单相机消融；Intel i7-9800X CPU 桌面平台，C++ 实现。"
+ },
+ "evaluation": {
+  "design": "两个主数据集（Newer College、M2DGR）上与开源 SOTA 对比 ATE RMSE；第三数据集（Hilti'2022）专用于消融；消融覆盖（1）单相机（camera-left/right/midleft/midright 四种）、（2）禁用全部相机（LIO）、（3）有/无外参补偿；运行时分析对比单相机与四相机配置的平均每帧处理时间。",
+  "baselines": [
+   "FAST-LIO2（LiDAR-惯性）",
+   "LVI-SAM (w/ loop)（LiDAR-视觉-惯性，单目）",
+   "FAST-LIVO2（LiDAR-视觉-惯性，单目）",
+   "R2Live（M2DGR 上的对比基线）",
+   "Ours-LIO（自家 LiDAR-惯性子系统消融）"
+  ],
+  "metrics": [
+   "绝对轨迹平移误差 RMSE（米）",
+   "平均每帧图像处理时间（毫秒）"
+  ],
+  "ablations": [
+   "单相机 vs 四相机全景融合（Table IV：Quad-Hard/Stairs/Cloister/walk-01 等序列）",
+   "无相机（纯 LIO）vs 完整系统（Table IV：多个序列 LIO fail 或明显劣化）",
+   "有/无外参补偿（Table IV：Stairs 0.759511→0.451100，Hilti'2022 各序列一致增益）",
+   "运行时：单相机 45.56 ms vs 四相机 98.04 ms（平均，Table V）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Newer College 上 FAST-LIO2 与 FAST-LIVO2 在 Stairs 序列均定位失效（FAST-LIO2 窄空间点云退化发散；FAST-LIVO2 受单目 FoV 与特征提取能力限制，低纹理楼梯面无法获得足够视觉约束），LVI-SAM 全部 8 条序列失效；本文多相机协同观测维持稳定跟踪，Stairs RMSE 0.451100 m（w/ loop）。",
+   "scope": "Newer College Dataset 8 条序列，ATE RMSE 对比",
+   "locator": "page 5-6, Section IV-A and Table II"
+  },
+  {
+   "finding": "剧烈姿态变化/剧烈晃动序列（Hard 系列）本文 LiDAR 子系统显著退化，视觉子系统因依赖 LiDAR 深度而连带受损：Math-Hard 本文 w/loop 0.88219 m 劣于 FAST-LIO2 的 0.067132 m 与自身无回环的 0.089415 m；Quad-Hard 0.089189 m 劣于 FAST-LIVO2 的 0.070212 m；作者归因含点到线关联约束弱于 FAST-LIO2 的点到面关联。",
+   "scope": "Newer College Hard 系列序列",
+   "locator": "page 5-6, Section IV-A and Table II"
+  },
+  {
+   "finding": "M2DGR room-01/02 上 FAST-LIVO2、R2Live、LVI-SAM 全部失效，本文分别 0.135218/0.127308 m；作者归因动态物体（行人）破坏特征连续性使单目/单相机系统难以维持帧间匹配，以及单目尺度不确定性误差持续累积导致系统发散；多相机多视角观测可滤除动态干扰特征。",
+   "scope": "M2DGR Dataset 7 条序列",
+   "locator": "page 6, Section IV-B and Table III"
+  },
+  {
+   "finding": "外参补偿量化有效：Newer College Stairs 序列补偿后 RMSE 由 0.759511 降至 0.451100（降低 40.6%）；Hilti'2022 四序列补偿一致优于无补偿（Construction Upper Level 3：0.171185→0.165085；Basement 2：0.187401→0.166250；Attic to Upper Gallery 2：0.917128→0.655462；Corridor Lower Gallery 2：0.689255→0.517772）。",
+   "scope": "Newer College + Hilti'2022 消融（Table IV）",
+   "locator": "page 6-7, Section IV-C and Table IV"
+  },
+  {
+   "finding": "单相机配置脆弱、多相机互补：M2DGR walk-01 仅靠 mid-right 相机时里程计完全失效（Table IV 该行 fail）；Hilti'2022 无任何单相机配置通过全部测试（Construction Upper Level 3 四种单相机全部 fail，四相机+补偿全配置 0.165085 m 完成）；Newer College Stairs 单相机 0.468999-0.676187 vs 全配置 0.451100。",
+   "scope": "M2DGR + Hilti'2022 + Newer College 单相机消融（Table IV）",
+   "locator": "page 6-7, Section IV-C and Table IV"
+  },
+  {
+   "finding": "计算开销：四相机配置平均每帧处理时间是单相机的 2.15 倍（平均 98.042750 ms vs 45.555879 ms；Newer College 111.345361 ms、M2DGR 128.731194 ms、Hilti'2022 54.051696 ms），作者称全景特征模型与多相机特征融合机制使相机数增至四倍仅带来 2.15 倍开销。",
+   "scope": "三个数据集运行时统计（Table V），Intel i7-9800X CPU",
+   "locator": "page 7, Section IV-D and Table V"
+  },
+  {
+   "finding": "作者指出单目 LVIO 直接用于鱼眼数据的双重受损机制：LVI-SAM 后端归一化平面无法利用数据集中鱼眼相机宽 FoV；鱼眼图像外围区域严重畸变常导致视觉-LiDAR 数据融合时与点云错位——LVI-SAM 在 Newer College 全部 8 条序列失效。",
+   "scope": "LVI-SAM 基线失效分析",
+   "locator": "page 6, Section IV-A"
+  },
+  {
+   "finding": "环境受限证据：M2DGR hall-05/door-02 大面积玻璃墙干扰 LiDAR 点云深度进而损害视觉特征深度关联与精度（hall-05 本文仍达 0.992787 m）；Hilti'2022 强户外曝光与楼梯间极暗条件对视觉方法构成重大挑战；作者将相机间重叠观测区利用与暗环境鲁棒性列为未来工作。",
+   "scope": "玻璃幕墙、强曝光、暗光环境",
+   "locator": "page 6-8, Sections IV-B, IV-C, V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "剧烈姿态变化或剧烈设备晃动（Hard 系列）下本文 LiDAR 子系统性能显著退化，视觉子系统因依赖 LiDAR 点云深度而连带受损，整体精度下降；点到线数据关联的约束弱于 FAST-LIO2 的点到面关联。",
+    "locator": "page 5-6, Section IV-A"
+   },
+   {
+    "limitation": "M2DGR hall-05、door-02 序列中大面积玻璃墙干扰 LiDAR 点云深度信息，进而影响视觉特征深度关联、降低系统精度。",
+    "locator": "page 6, Section IV-B"
+   },
+   {
+    "limitation": "强户外曝光与楼梯间极暗条件对视觉方法构成重大挑战；作者将相邻相机重叠观测区的利用与系统在暗环境中的鲁棒性提升列为未来工作。",
+    "locator": "page 7, Section IV-C; page 8, Section V"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "实时性未在嵌入式/车载平台验证，且 30Hz 数据率下四相机处理超出实时预算：Newer College 相机为 30Hz（Table I），四相机平均每帧 111.345361 ms（Table V）> 33ms 帧预算；论文仅在 Intel i7-9800X 桌面 CPU 上统计耗时，未报告实际处理帧率或任何资源受限平台结果。",
+    "basis": "page 5 Table I（Alphasense 30Hz）；page 7 Table V（111.345361 ms/帧）；全文无实时帧率声明与嵌入式平台实验。"
+   },
+   {
+    "boundary": "对比中缺少多相机/全景 SLAM 基线：相关工作中列举的 PAN-SLAM、MCOV-SLAM、BAMF-SLAM、MAVIS 等多相机视觉系统均未进入实验对比，所有对比基线（FAST-LIO2、LVI-SAM、FAST-LIVO2、R2Live）均为单目或 LiDAR 主导系统——多鱼眼优势仅在'多相机 LVIO vs 单目 LVIO/LIO'维度上成立。",
+    "basis": "page 2 Section II 列举的多相机系统未出现在 page 5 IV 的基线列表中。"
+   },
+   {
+    "boundary": "Math-Hard 回环异常未解释：Table II 中本文 w/loop 0.88219 远差于 w/o loop 0.089415（回环反而劣化结果），正文未讨论该不一致，提示回环分支在该序列存在未诊断的失效模式。",
+    "basis": "page 6 Table II 数字与 page 5-6 正文叙述比对，无该异常的任何讨论。"
+   },
+   {
+    "boundary": "依赖既有公开数据集 rig 而非自建鱼眼 rig：相机数量固定为数据集给定的 4 台，未报告鱼眼相机具体 FoV、畸变模型或全景球半径 r 的取值；外参补偿假设 (Ri, ti) 已知，未做外参标定误差敏感性分析；对相机数量扩展（>4）的可扩展性未验证。",
+    "basis": "page 5 Table I 传感器表仅给型号/分辨率/帧率；page 3 III-B.1 公式含外参与半径 r 但无标定协议与误差分析；全部实验仅 4 相机配置。"
+   },
+   {
+    "boundary": "单次运行、无方差/多次重复报告：所有 RMSE 为单次运行值，表格中基线的 fail 条目未给出配置细节与失败判据，统计稳健性未知。",
+    "basis": "page 5-7 Tables II-IV 均为单值或 fail 标记，无多次运行或置信区间。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用边界：配备 LiDAR+IMU+多鱼眼相机（本实验为 4 台）的手持 rig 或地面机器人平台，在校园/室内/建筑工地等环境的状态估计；轨迹精度量级 0.07-1.0 m RMSE；要求各相机相对全景模型的外参已知且 LiDAR 可提供稀疏深度。获益任务/场景：无纹理与几何重复环境（楼梯、回廊——单目基线失效处）、含动态行人的室内房间、LiDAR 平面约束不足的建筑工地与楼梯间（多相机视觉约束补足 LiDAR 失效）。受限任务/场景：剧烈姿态变化/晃动（LiDAR 子系统退化连带视觉）、大面积玻璃墙（LiDAR 深度被干扰）、强曝光与极暗环境（视觉退化）、相机帧率高于处理吞吐的实时部署（四相机 98-129 ms/帧仅验证于桌面 CPU）。对具身智能的直接接口：多鱼眼环视 rig 的定位/里程计层——以球面统一表示换取宽 FoV 鲁棒性，代价是相机-球心偏移需显式补偿、计算开销约 2.15 倍（4 相机）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "消融设计较完整：单相机×4、去相机（LIO）、有无补偿三个维度覆盖，且在第三个数据集（Hilti'2022）上专门验证，隔离了'多相机融合'与'外参补偿'两个机制的贡献。",
+   "失效机制归因具体：对 Stairs（点云退化+单目 FoV）、room-01/02（动态物体+单目尺度）、hall-05（玻璃墙）均给出因果链条而非仅报数字。",
+   "运行时分析给出单相机 vs 四相机的直接量化对比（2.15 倍），支撑全景模型计算效率主张。",
+   "三个数据集覆盖手持与地面机器人两种平台、室内外多种挑战场景。"
+  ],
+  "design_risks": [
+   "对比基线全部为单目 LVIO/LIO 系统，无多相机视觉 SLAM 或全景系统基线，'优于现有多相机 LVIO 系统'的摘要主张仅由单目基线对比间接支撑。",
+   "单次运行无方差报告；'fail' 条目无失败判据与配置细节，跨基线可比性存疑。",
+   "Math-Hard 回环劣化（0.88219 vs 0.089415）未讨论，提示存在未诊断失效模式。",
+   "LiDAR 深度关联阈值（最大深度差判断）等关键超参数未报告数值。",
+   "未验证相机数量扩展性与外参标定误差敏感性。"
+  ],
+  "baseline_fairness": "四个基线均为开源 SOTA 且在同一台 Intel i7-9800X 上测试，条件一致；但 LVI-SAM/FAST-LIVO2 为单目透视模型设计，作者也指出其在鱼眼数据上的模型不匹配（归一化平面+外围畸变错位）——即基线处于架构劣势而非纯实现劣势，对比结果应读作'多鱼眼全景模型 vs 单目模型在该数据上的表现'而非同架构消融。",
+  "metric_validity": "ATE RMSE 为 SLAM 领域标准部署相关指标；每帧处理时间是工程部署相关指标，但缺少端到端帧率与延迟报告；无建图质量指标（系统含建图能力但未评估）。",
+  "reproducibility": "基于 VINS-Mono、LIO-SAM、iSAM2 等开源组件构建，数据集公开，传感器参数有表；但未见代码开源声明，全景球半径、深度关联阈值等实现细节未给出，复现门槛中等偏高。",
+  "external_validity": "结论限定于 4 相机 rig、LiDAR+IMU 齐备、桌面 CPU 平台与所测环境类型；对无 LiDAR 平台（视觉子系统依赖 LiDAR 深度）、其它相机数量/布局、嵌入式实时部署、以及相机外参标定误差的鲁棒性均未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.05740-C01",
+   "claim": "Multi-LVI-SAM 的核心应用方式是把多台鱼眼相机的视觉特征统一投影到以全景模型中心为球心的归一化球面上，构成单一全景视觉特征模型：该模型作为全局几何优化框架整合多视角约束、支撑无缝回环与全局位姿优化，同时降低系统复杂度（避免逐相机冗余处理）。",
+   "stance": "support",
+   "relation": "支持命题：多鱼眼/环视相机在具身定位系统中的代表性应用方式——以球面统一表示替代逐相机独立处理，在 LiDAR-视觉-惯性紧耦合因子图中作为单一视觉通道。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言说明为避免独立融合每个鱼眼视角带来的显著计算开销，构建全景视觉特征模型统一多相机观测：各相机特征投影到归一化球面（球心即全景模型中心），模型作为全局几何优化框架整合多视角约束。",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "Visual features from each camera are projected onto a normalized sphere, where the center of the sphere is the center of the panoramic model. This model serves as a global geometric optimization framework that consolidates multi-view constraints, enabling seamless loop closure and global pose optimization while reducing system complexity.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言逐字给出 projected onto a normalized sphere、center of the sphere is the center of the panoramic model、global geometric optimization framework、consolidates multi-view constraints、seamless loop closure and global pose optimization、reducing system complexity；'避免逐相机冗余处理'由同段前文 avoiding redundant handling of individual cameras（摘要与 III-B.1 均出现，已核对）支撑；claim 未附加论文未做的量化断言。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C02",
+   "claim": "作者把多相机（鱼眼）方案的动机锚定在单目 LVIO 的窄视场上：既有 LVIO 系统多用单目相机，FoV 受限导致两类限制——快速视点变化时环境感知不足、无纹理或重复场景特征跟踪失败。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼/多相机宽 FoV 在具身智能定位任务中的核心价值主张——宽 FoV 直接针对单目系统的快速视点变化感知与无纹理场景跟踪两类失效模式。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言指出 VINS-Mono/OpenVINS、LIO-SAM/FAST-LIO2 各自受限于单传感器弱点后，明确单目 LVIO 的两类 FoV 限制；后文以 Stairs（低纹理楼梯）等实验验证该动机。",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "However, most existing LVIO systems utilize monocular cameras, which have limited FoV, leading to two major limitations: (1) inadequate environmental perception during rapid viewpoint",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言逐字给出 most existing LVIO systems utilize monocular cameras, which have limited FoV, leading to two major limitations: (1) inadequate environmental perception during rapid viewpoint；'(2) feature tracking failure in texture-less or repetitive scenes' 因作者脚注插排在文本流中间（page 1 脚注 1-3 后接续 changes, and (2)...，已核对同页续句），claim 的两类限制概括与原文一致，引文止于脚注前保证逐字连续。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C03",
+   "claim": "全景统一表示引入鱼眼多相机系统特有的三角化代价：鱼眼相机中心与全景球心不重合的平移偏移使基于球心的三角化得到错误 3D 点估计、导致状态估计退化；作者为此提出基于严格几何推导的外参补偿方法，以改善视角间特征一致性并显著降低三角化与优化误差。",
+   "stance": "limit",
+   "relation": "限定命题：把多鱼眼观测统一到单一球面表示虽简化系统设计，但相机中心与球心的平移偏移是必须显式补偿的误差源——全景化不是免费的，三角化一致性依赖外参补偿。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言指出全景模型三角化因相机中心与球心偏移而不准确，外参补偿方法改善视角间特征一致性、显著降低三角化与优化误差；III-B.2 给出共面几何推导（法向量、交线向量、深度残差修正）。",
+   "locator": "page 1, Section I Introduction; page 3-4, Section III-B.2",
+   "source_context": "Due to the offset between the fisheye camera center and the center of the panoramic model, triangulation based on the panoramic model can lead to inaccurate 3D point estimates. To address this problem, we introduce an extrinsic com- pensation method based on rigorous geometric deduction. This method improves inter-view feature consistency and significantly reduces triangulation and optimization errors, resulting in more accurate long-term pose estimation.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言逐字给出 offset between the fisheye camera center and the center of the panoramic model、triangulation based on the panoramic model can lead to inaccurate 3D point estimates、extrinsic com- pensation method based on rigorous geometric deduction、improves inter-view feature consistency and significantly reduces triangulation and optimization errors（com- pensation 为 PDF 文本层换行连字符，按原样保留）；claim 是作者问题-方法陈述的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C04",
+   "claim": "在无纹理与几何重复环境（Newer College Stairs）中多鱼眼配置获益显著：FAST-LIO2 因窄空间点云退化发散、FAST-LIVO2 因单目视场与特征提取能力限制无法在低纹理楼梯面获得足够视觉约束，两者均定位失效；本文通过多相机协同观测在几何重复、纹理稀缺的楼梯间维持稳定特征跟踪与位姿估计，Stairs RMSE 0.451100 m（w/ loop）。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 多相机观测是无纹理/几何重复场景定位任务的获益来源——单目系统因 FoV 与纹理双重约束失效处，多视角冗余观测维持约束供给。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-A 给出 Stairs 场景失效机制归因与本文方法对比结论；Table II 给出 Stairs 序列各方法 RMSE（FAST-LIO2/FAST-LIVO2/LVI-SAM 均 fail，本文 w/loop 0.451100、w/o loop 0.701162、Ours-LIO 3.032322）。",
+   "locator": "page 5-6, Section IV-A and Table II",
+   "source_context": "In the challenging Stairs scenario, both FAST-LIO2 and FAST-LIVO2 experience localization failures: FAST-LIO2 diverges due to point cloud degradation in narrow spaces, while FAST-LIVO2 is limited by the field of view and feature extraction capability of a monocular camera, unable to obtain sufficient visual constraints on low-texture stair surfaces. In contrast, the proposed method, through the collaborative observation of the multi-camera system, maintains stable feature tracking and pose estimation even in geometrically repetitive and texture-scarce environments like stairwells.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "absolute translational error RMSE (m), Stairs sequence",
+    "value_or_direction": "Ours (w/ loop) 0.451100; Ours (w/o loop) 0.701162; Ours-LIO 3.032322; FAST-LIO2 / FAST-LIVO2 / LVI-SAM all fail",
+    "comparator": "FAST-LIO2, FAST-LIVO2, LVI-SAM, Ours-LIO vs full multi-fisheye system",
+    "task_or_sample": "Newer College Dataset Stairs sequence (Table II, page 6)",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section IV-A 逐字给出两基线失效机制与本文多相机协同维持稳定跟踪的结论；0.451100/0.701162/3.032322 与三个 fail 出自 page 6 Table II 'Stairs fail 3.032322 fail fail 0.701162 0.451100'（已核对）；claim 未超出 Stairs 序列及其归因范围。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C05",
+   "claim": "Newer College 整体格局是条件性的：运动较平滑序列（Quad-Easy 0.068595、Math-Easy 0.080021、Cloister 0.080777 等）本文定位精度与稳定性最优，Cloister 显著优于 FAST-LIVO2（0.080777 vs 0.277620）；但剧烈运动序列本文回退（Quad-Hard 0.089189 劣于 FAST-LIVO2 0.070212，Math-Hard w/loop 0.88219 劣于 FAST-LIO2 0.067132），Ours-LIO 在 6/8 序列 fail。",
+   "stance": "conditional",
+   "relation": "回答'哪些任务获益、哪些受限'：多鱼眼 LVIO 的精度优势以运动平稳性为条件——平滑视点变化下多相机富观测占优，剧烈姿态变化下 LiDAR 子系统退化使其劣于纯 LiDAR-惯性基线。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 汇总 Newer College 8 序列 6 种配置的 ATE RMSE：本文 w/loop 在 Quad-Easy/Math-Easy/Math-Medium/Undermine-Hard/Stairs/Cloister 最优或并列最优，Quad-Hard/Math-Hard 劣于最优基线；LVI-SAM 全部 8 序列 fail，Ours-LIO 仅 Quad-Easy 完成。",
+   "locator": "page 6, Table II",
+   "source_context": "Sequence FAST-LIO2 Ours-LIO FAST-LIVO2 LVI-SAM (w/ loop) Multi-LVI-SAM (w/o loop) Ours (w/ loop) Quad-Easy 0.070734 0.072749 0.070027 fail 0.071064 0.068595 Quad-Hard 0.080453 fail 0.070212 fail 0.089902 0.089189 Math-Easy 0.111047 0.080668 0.131684 fail 0.080243 0.080021 Math-Medium 0.118592 fail 0.128942 fail 0.110313 0.107045 Math-Hard 0.067132 fail 0.103742 fail 0.089415 0.88219 Undermine-Hard 0.057463 fail 0.149832 fail 0.077561 0.077231 Stairs fail 3.032322 fail fail 0.701162 0.451100 Cloister 0.092785 fail 0.277620 fail 0.081100 0.080777",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "absolute translational error RMSE (m) across 8 Newer College sequences",
+    "value_or_direction": "Ours (w/ loop): Quad-Easy 0.068595, Cloister 0.080777 best-in-row; but Quad-Hard 0.089189 vs FAST-LIVO2 0.070212, Math-Hard 0.88219 vs FAST-LIO2 0.067132; LVI-SAM fails all 8 sequences; Ours-LIO fails 6 of 8",
+    "comparator": "FAST-LIO2 / Ours-LIO / FAST-LIVO2 / LVI-SAM (w/ loop) / Multi-LVI-SAM (w/o loop) / Ours (w/ loop)",
+    "task_or_sample": "Newer College Dataset, 8 sequences (Table II, page 6)",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 为 page 6 Table II 全表逐字（表头+8 行数据），claim 中每个数字（0.068595/0.080777/0.277620/0.089189/0.070212/0.88219/0.067132/0.089415）与 fail 分布均直接出自该表；'LVI-SAM 全 8 序列 fail'由表中 LVI-SAM 列全 fail 汇总，'Ours-LIO 6/8 fail'由该列 fail 计数（Quad-Easy 0.072749、Math-Easy 0.080668 为唯二完成）直接计数可得。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C06",
+   "claim": "作者自认剧烈运动局限：快速姿态变化或剧烈设备晃动（Hard 系列）序列中，本文 LiDAR 子系统性能显著退化；由于视觉子系统依赖 LiDAR 点云提供深度信息，整体系统精度受连带影响——多鱼眼视觉无法独立弥补 LiDAR 退化。",
+   "stance": "limit",
+   "relation": "限定命题：多鱼眼视觉约束对 LiDAR 退化场景的补足是有条件的——本系统中视觉特征的深度关联依赖 LiDAR 点云，LiDAR 子系统在剧烈运动下退化时视觉通道被连带削弱（Table II Math-Hard 0.88219 即此机制的量化体现）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section IV-A 指出 Hard 系列中 LiDAR 子系统退化且视觉子系统因依赖 LiDAR 深度而受影响；后文补充 FAST-LIO2（同为 FAST-LIVO2 的 LIO 子系统）基于平面特征的点到面关联比本文 LIO 的点到线关联提供更有效约束。",
+   "locator": "page 5-6, Section IV-A",
+   "source_context": "However, in sequences with rapid orientation changes or severe device shaking (Hard series), the performance of our LiDAR subsystem degrades considerably. Since the visual subsystem relies on accurate LiDAR point clouds",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section IV-A 逐字给出 rapid orientation changes or severe device shaking (Hard series)、performance of our LiDAR subsystem degrades considerably、visual subsystem relies on accurate LiDAR point clouds（跨页续句 to provide depth information for visual feature points, this adversely affects the overall system accuracy 已在 page 6 核对，引文止于页边界）；点到线 vs 点到面的补充归因出自 page 6 'point-to-plane data association provides more effective constraints for pose estimation than the point-to-line data association of the LIO subsystem of the proposed method'（已核对）。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C07",
+   "claim": "在含动态物体的室内场景（M2DGR room-01/02）中多鱼眼配置获益：FAST-LIVO2、R2Live、LVI-SAM 均失效，本文分别取得 0.135218/0.127308 m RMSE；作者归因于动态物体破坏视觉特征连续性使单目/单相机系统难以维持帧间匹配、单目尺度不确定性导致误差持续累积发散，而多视角观测可滤除动态干扰特征并增强跟踪冗余。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 多视角观测对动态物体场景的定位任务是获益项——多视角冗余可过滤动态干扰特征，这是环视多相机相对单目的结构性优势。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-B 报告 M2DGR room-01/02 上 FAST-LIVO2 与 R2Live 轨迹大幅漂移、LVI-SAM fail，本文 w/loop 0.135218/0.127308 m；归因动态物体+单目尺度不确定性；多相机多视角观测滤除干扰特征。",
+   "locator": "page 6, Section IV-B and Table III",
+   "source_context": "the presence of dynamic objects (such as moving pedestri- ans) in the scene disrupts the continuity of visual features, making it difficult for monocular or single-camera systems to maintain stable inter-frame feature matching. Second, during prolonged operation, the inherent scale uncertainty of monocular systems leads to continuously accumulating errors, ultimately causing the entire system to diverge.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "absolute translational error RMSE (m), M2DGR room-01/room-02",
+    "value_or_direction": "Ours (w/ loop) 0.135218 (room-01) and 0.127308 (room-02); FAST-LIVO2 / R2Live / LVI-SAM all fail on both",
+    "comparator": "FAST-LIO2, Ours-LIO, FAST-LIVO2, R2Live, LVI-SAM (w/ loop), Ours (w/o loop), Ours (w/ loop)",
+    "task_or_sample": "M2DGR Dataset room-01 and room-02 sequences (Table III, page 6)",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section IV-B 逐字给出动态物体破坏特征连续性与单目尺度不确定性两类归因（pedestri- ans 为文本层换行连字符，按原样保留）；0.135218/0.127308 与三个 fail 出自 page 6 Table III 'room-01 0.314317 0.135437 fail fail fail 0.138986 0.135218 room-02 0.314317l 0.127656 fail fail fail 0.134496 0.127308'（已核对，room-02 的 0.314317l 为原文笔误）；claim 未超出 room-01/02 对比范围。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C08",
+   "claim": "作者自认透明材质场景局限：M2DGR hall-05、door-02 序列中大面积玻璃墙干扰 LiDAR 点云深度信息，进而影响视觉特征的深度关联、降低系统精度——视觉特征深度依赖 LiDAR 的链路在玻璃幕墙环境受限（hall-05 本文 RMSE 仍达 0.992787 m）。",
+   "stance": "limit",
+   "relation": "限定命题：多鱼眼视觉约束依赖 LiDAR 深度关联的架构在玻璃幕墙等干扰 LiDAR 测距的环境中被削弱——环视多相机+LiDAR 方案在透明材质场景受限。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section IV-B 指出玻璃墙干扰 LiDAR 点云深度、影响深度关联并降低精度；Table III 中 hall-05 各方法 RMSE 均在 0.87-1.37 m 量级（本文 w/loop 0.992787 最优但绝对精度差），佐证该场景整体困难。",
+   "locator": "page 6, Section IV-B and Table III",
+   "source_context": "However, in the sequences such as hall-05 and door-02, the presence of large glass wall interferes with the depth information from LiDAR point clouds, which in turn affects the depth association of visual features and reduces the system’s accuracy.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "absolute translational error RMSE (m), M2DGR hall-05",
+    "value_or_direction": "Ours (w/ loop) 0.992787 m (best in row but meter-level); all methods 0.87-1.37 m range",
+    "comparator": "FAST-LIO2 1.177671, Ours-LIO 1.029866, FAST-LIVO2 0.870324, R2Live 1.371839",
+    "task_or_sample": "M2DGR Dataset hall-05 sequence with large glass walls (Table III, page 6)",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section IV-B 逐字给出 hall-05/door-02 玻璃墙干扰 LiDAR 深度、影响深度关联与精度的归因；hall-05 各值（1.177671/1.029866/0.870324/1.371839/fail/1.030859/0.992787）出自 page 6 Table III 对应行（已核对）；'最优但绝对精度差'为表格数字的直接读出。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C09",
+   "claim": "外参补偿的量化效果：Newer College Stairs 序列因 LiDAR 点云特征退化而更依赖视觉特征三角化深度，补偿前精度因多相机中心与全景模型中心偏移而显著恶化，补偿后 RMSE 由 0.759511 降至 0.451100（降低 40.6%）；Hilti'2022 全部 4 序列补偿一致优于无补偿。",
+   "stance": "support",
+   "relation": "支持命题：全景统一表示的三角化代价可由几何外参补偿系统性修复——多鱼眼系统球面化的工程代价有明确的量化补偿路径（LiDAR 退化场景收益最大）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C 以 Stairs 为例说明补偿机制并给出 40.6% RMSE 降幅；Table IV 给出有/无补偿在 Newer College、M2DGR、Hilti'2022 各序列的完整对比，补偿侧全部占优。",
+   "locator": "page 6-7, Section IV-C and Table IV",
+   "source_context": "Taking the Newer College Stairs sequence as an example, because the degradation of LiDAR point cloud features increases the need for accurate triangulation results of visual features to provide accurate depth, the accuracy significantly dete- riorates due to the offset between the multi-camera center and the panoramic model center. After implementing our compensation mechanism, the RMSE is reduced by 40.6%, fully validating the effectiveness of the proposed method.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE (m) with vs without extrinsic compensation",
+    "value_or_direction": "Stairs 0.759511 -> 0.451100 (40.6% reduction); Hilti'2022: Construction Upper Level 3 0.171185 -> 0.165085, Basement 2 0.187401 -> 0.166250, Attic to Upper Gallery 2 0.917128 -> 0.655462, Corridor Lower Gallery 2 0.689255 -> 0.517772",
+    "comparator": "Ours (w/o compensation) vs Ours (w/ compensation), Table IV",
+    "task_or_sample": "Newer College Stairs + 4 Hilti'2022 sequences (Table IV, page 6)",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Section IV-C 逐字给出 40.6% RMSE 降幅与补偿机制叙述（dete- riorates 为文本层换行连字符，按原样保留）；0.759511/0.451100 出自 page 6 Table IV Stairs 行 '0.759511 0.451100'，Hilti 四组数字出自同表 Hilti'2022 分块（0.171185/0.165085、0.187401/0.166250、0.917128/0.655462、0.689255/0.517772，已核对）。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C10",
+   "claim": "单鱼眼相机配置在复杂动态场景下完全失效而多相机融合恢复稳定：M2DGR walk-01（动态车辆、行人与密集植被挑战特征跟踪）中仅靠 mid-right 相机时里程计系统完全失效，四相机融合利用互补视角补偿单相机跟踪失败，显著增强整体鲁棒性（全配置 0.076371 m，四种单相机中 midright fail、其余 0.076557-0.076897 m）。",
+   "stance": "support",
+   "relation": "支持命题：环视多相机的核心鲁棒性机制是视角冗余——单相机在遮挡/动态干扰下失效时由其它视角补位；单台鱼眼（哪怕宽 FoV）不足以独立支撑复杂场景里程计。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C 消融显示 walk-01 序列 mid-right 单相机配置完全失效，多相机融合通过互补视角补偿个体相机跟踪失败；Table IV 该行给出四种单相机与全配置的 RMSE 对比。",
+   "locator": "page 6-7, Section IV-C and Table IV",
+   "source_context": "in the M2DGR walk-01 test sequence (as shown in Figure 8), dynamic vehicles, moving pedestrians, and dense vegetation pose significant challenges to visual feature track- ing. When relying solely on the mid-right camera, the odom- etry system experiences complete failure.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE (m), M2DGR walk-01 by camera configuration",
+    "value_or_direction": "camera-midright: fail (complete failure); camera-left 0.076897, camera-right 0.076795, camera-midleft 0.076557; full system w/ compensation 0.076371",
+    "comparator": "four single-camera configurations vs four-camera fusion (Table IV)",
+    "task_or_sample": "M2DGR Dataset walk-01 sequence with dynamic vehicles/pedestrians/vegetation (Table IV, page 6)",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Section IV-C 逐字给出 mid-right 单相机 complete failure 与多相机互补归因（track- ing / odom- etry 为文本层换行连字符，按原样保留）；Table IV walk-01 行 'walk-01 0.076897 0.076795 0.076557 fail 0.076908 0.079851 0.076371' 逐字给出四种单相机值、midright fail 与全配置 0.076371（已核对）。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C11",
+   "claim": "Hilti'2022 消融证实无任何单相机配置通过全部测试、全配置+补偿全部完成且精度最优：Construction Upper Level 3 四种单相机全部 fail（全配置 w/补偿 0.165085 m）；Corridor Lower Gallery 2 单相机两台 fail、全配置 0.517772 m 优于所有单相机（0.839022-1.084816 m）；作者总结没有单相机成功通过全部测试，多相机融合在单相机缺乏特征信息时保证鲁棒性。",
+   "stance": "support",
+   "relation": "支持命题：在 LiDAR 平面约束不足、光照极端的建筑工地/楼梯间等具身作业典型环境中，单鱼眼相机不构成可用的视觉通道，环视多相机冗余是从'个别视角失效'到'系统可用'的关键差异。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-C 用 Hilti'2022（工地、画廊、地下室，含长走廊、楼梯、无纹理、光照不足、LiDAR 平面约束不足）做额外消融；Table IV 给出四种单相机/LIO/有无补偿全配置对比；作者明确 no single camera successfully passed all tests。",
+   "locator": "page 6-7, Section IV-C and Table IV",
+   "source_context": "Construction Upper Level 3 fail fail fail 0.550198 fail 0.171185 0.165085 Basement 2 0.692945 0.178062 0.294170 0.242493 fail 0.187401 0.166250 Attic to Upper Gallery 2 0.892412 0.868133 1.094798 1.442255 3.918399 0.917128 0.655462 Corridor Lower Gallery 2 0.839022 0.977379 1.084816 fail fail 0.689255 0.517772",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE (m), Hilti'2022 sequences by configuration",
+    "value_or_direction": "Construction Upper Level 3: all four single cameras fail, full system 0.165085; Corridor Lower Gallery 2: two single cameras fail, others 0.839022-1.084816, full system 0.517772; no single camera passed all tests",
+    "comparator": "four single-camera configs vs Ours (w/o camera) vs Ours (w/o compensation) vs Ours (w/ compensation), Table IV",
+    "task_or_sample": "Hilti'2022 Dataset 4 sequences (construction site, basement, attic-to-gallery, corridor; Table IV, page 6)",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 为 page 6 Table IV Hilti'2022 分块 4 行逐字；'no single camera successfully passed all tests' 出自 page 7 Section IV-C 'a single camera alone often fails to provide enough constraints to compensate for drift caused by LiDAR failure, and no single camera successfully passed all tests (as shown in Figure 9)'（已核对）；claim 各数字与 fail 分布均出自该表。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C12",
+   "claim": "多鱼眼全景化的计算代价可控但不为零：四相机配置平均每帧处理时间是单相机配置的 2.15 倍（三数据集平均 98.042750 ms vs 45.555879 ms；Newer College 111.345361 ms、M2DGR 128.731194 ms、Hilti'2022 54.051696 ms），作者称全景特征模型与高效多相机特征融合机制使相机数增至四倍仅带来 2.15 倍计算开销。",
+   "stance": "conditional",
+   "relation": "限定命题：球面统一表示把多相机的计算开销从随相机数线性增长压缩到约 2.15 倍（4 相机），但绝对耗时仍显著高于单相机——多鱼眼方案的部署收益以平台算力与相机帧率匹配为条件（未在嵌入式平台验证）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV-D 对比三个数据集上单相机与四相机配置的平均每帧处理时间；Table V 给出全部数值；作者据此主张全景模型的多视角感知计算效率。",
+   "locator": "page 7, Section IV-D and Table V",
+   "source_context": "As shown in Table V, the average processing time of the four-camera system is only 2.15 times that of the single-camera sys- tem.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average runtime per image frame (ms)",
+    "value_or_direction": "one-camera 45.555879 ms vs four-camera 98.042750 ms (2.15x) on average; Newer College 47.927494 vs 111.345361; M2DGR 45.911853 vs 128.731194; Hilti'2022 42.828289 vs 54.051696",
+    "comparator": "single-camera vs four-camera configuration, Intel i7-9800X CPU",
+    "task_or_sample": "runtime statistics over Newer College, M2DGR, Hilti'2022 datasets (Table V, page 7)",
+    "locator": "page 7, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Section IV-D 逐字给出 2.15 times（sys- tem 为文本层换行连字符，按原样保留）；Table V 逐字给出三数据集单/四相机数值与 Average 45.555879/98.042750（已核对）；'未在嵌入式平台验证'的边界判断已列入 reader_inferred，不在 claim 内。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C13",
+   "claim": "现成单目 LVIO 直接用于鱼眼数据会双重受损：LVI-SAM 的后端优化采用归一化平面，无法利用数据集中鱼眼相机的宽 FoV；鱼眼图像外围区域的严重畸变常导致视觉-LiDAR 数据融合时与点云错位——LVI-SAM 在 Newer College 全部 8 条序列失效。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼/超广角图像不是单目视觉管线的即插即用输入——外围严重畸变破坏与 LiDAR 点云的对齐、透视平面模型浪费宽 FoV，鱼眼数据需要专门的全景/球面模型支撑（这正是本文方法的存在理由）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section IV-A 分析 LVI-SAM 失效原因：归一化平面后端无法利用宽 FoV，外围畸变导致融合错位；Table II 中 LVI-SAM 在全部 8 条 Newer College 序列 fail；本文全景视觉特征模型针对性解决。",
+   "locator": "page 6, Section IV-A and Table II",
+   "source_context": "LVI-SAM employs a normalized plane in its backend optimization, which fails to fully leverage the wide FOV of fisheye cameras in the dataset. Furthermore, severe distortion in the peripheral regions of fisheye images often leads to misalignment with point clouds during visual-lidar data fusion.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "completion outcome across 8 Newer College sequences",
+    "value_or_direction": "LVI-SAM (w/ loop) fails on all 8 sequences; proposed method completes all 8 (best 0.068595 m on Quad-Easy)",
+    "comparator": "LVI-SAM (w/ loop) vs Multi-LVI-SAM (w/ loop), Table II",
+    "task_or_sample": "Newer College Dataset, 8 sequences (Table II, page 6)",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section IV-A 逐字给出归一化平面无法利用宽 FoV 与外围严重畸变导致点云错位两个机制；Table II 中 LVI-SAM 列 8 行全部为 fail（已核对，见 C05 source_context 全表）；0.068595 出自 Quad-Easy 行；claim 的失效计数为表格直接读出。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C14",
+   "claim": "作者自认两项待改进方向界定了当前系统的边界：相邻相机重叠观测区尚未被利用（当前仅按 FoV 归属单台相机处理重叠区深度点），系统在暗环境中的鲁棒性有待提升。",
+   "stance": "limit",
+   "relation": "限定命题：多鱼眼环视方案的信息冗余（重叠区）尚未转化为增益、暗光鲁棒性不足是作者明确承认的开放问题——宽 FoV 优势不能外推到暗环境任务。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论章 future work 指出相邻相机重叠观测区利用与暗环境鲁棒性改进两个方向；重叠区当前处理方式见 III-B.3（深度点投影到 FoV 最可能包含该点云的相机图像）。",
+   "locator": "page 8, Section V Conclusions; page 4, Section III-B.3",
+   "source_context": "The future work will focus on how to take advantage of the overlapping observation areas of neighboring cameras and the improvement of the robustness of the system in dark environments.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Section V 逐字给出两项 future work；'当前重叠区深度点归属单台相机'出自 page 4 III-B.3 'the depth points in the overlapping areas of the fisheye cameras are projected onto the camera image whose FOV most likely contains the point cloud'（已核对）；claim 为作者声明的忠实复述。"
+   }
+  },
+  {
+   "card_id": "2509.05740-C15",
+   "claim": "极端光照是实测受限场景：Hilti'2022 评估中，强户外曝光与楼梯间极暗条件对基于视觉的方法构成重大挑战；同时这些场景 LiDAR 平面约束不足，单靠 LiDAR 难以准确鲁棒定位（工地与楼梯间尤甚），多相机融合正是在视觉与 LiDAR 双重退化的组合场景中提供足够约束。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼视觉通道在强曝光/极暗光照下退化是作者实测确认的环境边界；多相机方案在此类场景的价值是'多视角约束补足'而非'视觉本身可靠'。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section IV-C 描述 Hilti'2022 场景挑战：长走廊、楼梯、无纹理、光照不足、LiDAR 平面约束不足；强曝光与极暗楼梯间挑战视觉方法；多相机融合为 LiDAR 失效漂移提供约束补足。",
+   "locator": "page 7, Section IV-C",
+   "source_context": "Additionally, strong outdoor exposure and extremely dark conditions in stairwells pose significant challenges for vision- based methods.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Section IV-C 逐字给出 strong outdoor exposure and extremely dark conditions in stairwells pose significant challenges for vision- based methods（vision- based 为文本层换行连字符，按原样保留）；LiDAR 平面约束不足出自同节 'Due to the lack of sufficient LiDAR planar constraints in the Hilti'2022 test scenes'（已核对）；claim 未超出作者陈述范围。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "LVI-SAM: Tightly-coupled Lidar-Visual-Inertial Odometry via Smoothing and Mapping",
+   "arxiv_id": "2104.10831",
+   "reason": "本文双子系统架构的直接基座（引文 [5]），也是实验中被指出无法利用鱼眼宽 FoV、受外围畸变损害的失效基线。"
+  },
+  {
+   "title": "VINS-Mono: A Robust and Versatile Monocular Visual-Inertial State Estimator",
+   "arxiv_id": "1708.03852",
+   "reason": "VIO 子系统的基座（引文 [1]）：特征提取/跟踪与滑窗优化框架来源。"
+  },
+  {
+   "title": "LIO-SAM: Tightly-coupled Lidar Inertial Odometry via Smoothing and Mapping",
+   "arxiv_id": "2007.00258",
+   "reason": "LIO 子系统的基座（引文 [3]）：因子图与 scan-to-map 匹配框架来源。"
+  },
+  {
+   "title": "Panoramic Direct LiDAR-assisted Visual Odometry",
+   "arxiv_id": "2409.09287",
+   "reason": "相关工作中全景相机+LiDAR 的最近先行工作（引文 [16]），作者指出其仍易运动漂移——本文全景视觉特征模型与之互补。"
+  },
+  {
+   "title": "Multi-Camera LiDAR Inertial Extension to the Newer College Dataset",
+   "arxiv_id": "2112.08854",
+   "reason": "主评测数据集来源（引文 [32]）：手持多相机 LiDAR 惯性采集 rig。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'多鱼眼+LiDAR+IMU 紧耦合定位'方向的代表性系统证据。关键判断：(1) 应用方式——各鱼眼相机特征经外参投影到归一化球面统一为全景视觉特征模型，作为因子图中单一视觉通道（替代逐相机处理）；(2) 获益任务——无纹理/几何重复环境（Stairs：三基线全灭、本文 0.451 m）、动态物体室内（room-01/02：三基线全灭、本文 0.135/0.127 m）、LiDAR 平面约束不足的工地/楼梯（无单相机通过全部 Hilti 测试、全配置 0.165-0.517 m）；(3) 受限——剧烈姿态变化（Math-Hard 0.882 m 劣于 FAST-LIO2 0.067 m，LiDAR 子系统退化连带视觉）、玻璃墙（LiDAR 深度被干扰）、强曝光/极暗、计算开销 2.15 倍（四相机 98 ms/帧，桌面 CPU）；(4) 鱼眼特有代价——相机中心与球心偏移致三角化误差，需外参补偿（Stairs RMSE -40.6%）；单目 LVIO 直接消费鱼眼图像双重受损（平面模型浪费宽 FoV+外围畸变致点云错位，LVI-SAM 8/8 失效）。立场分布：support 7 / limit 6 / conditional 2 / gap 0。"
+}

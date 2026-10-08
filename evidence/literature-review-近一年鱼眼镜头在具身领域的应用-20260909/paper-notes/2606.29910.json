@@ -1,0 +1,667 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.29910",
+  "title": "Sphere-VIO: Fast and Robust Visual-Inertial Odometry via Unified Spherical Representation for Heterogeneous Multi-Camera Systems",
+  "published": "2026-06",
+  "url": "https://arxiv.org/abs/2606.29910",
+  "authors": [
+   "Yueteng Yang",
+   "Yusen Xie",
+   "Hao Wei",
+   "Qianhao Wang",
+   "Boyu Zhou",
+   "Fei Gao",
+   "Jun Ma",
+   "Jinni Zhou"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "经'环视/超广角多相机'维度进入综述，是'异构多相机统一球面表示'路线的代表系统：(1) 应用方式——任意 Kalibr 兼容相机模型（pinhole/MEI/Kannala-Brandt，含 206° 鱼眼四目 rig）+IMU 的滤波式 VIO，USPM 统一球面全景模型免顺序拼接、HOFA 跨相机特征对齐、球面 bearing 残差 ESKF，CPU-only 实时（page 1-5）；(2) 效果——自建四目 206° 鱼眼数据集上全部 4 个基线（MAVIS/ORB-SLAM3/VINS-Fusion/SchurVINS）因相机模型不兼容或跨相机匹配失败，Sphere-VIO 全序列稳定 0.1230 m ATE；HILTI 2022 0.1821 m 排名第二仅次 MAVIS；立体配置静态三角化仅覆盖中央 90° FoV vs 四相机 360° 均匀覆盖——宽 FoV 收益的初始化级机制证据；四流处理 0.0122 s/帧、NUC 嵌入式 0.0180 s（page 5-7）；(3) 局限——纯 VIO 无回环长期漂移、EuRoC 针孔基准落后 SchurVINS/ORB-SLAM3（球面残差非针孔最优）、自建数据集 5cm 基线/重复 IMU 时间戳、论文无代码公开声明（page 5-8）。另含跨论文张力：将单镜头全景（引 PanoAir）定位为'缺基线约束、尺度不稳'、将 Multi-LVI-SAM 定位为'局限于特定刚性配置'。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and I. Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：现有多相机 VIO 为固定相机配置定制、缺异构统一兼容；无统一跨相机表示与关联机制导致鲁棒跨相机跟踪/稳定深度估计/实时性难兼顾；单镜头全景缺基线约束致尺度不稳；三项贡献声明（USPM/HOFA/ESKF 后端）+ HILTI 2022 预告结果（0.1821 m / 0.0122 s）。"
+   },
+   {
+    "locator": "page 1-2, II. Related Work",
+    "role": "relevant-core",
+    "purpose": "定位前视双目三固有缺陷（窄 FoV 剧烈运动跟踪失败、非共轴异构不灵活、弱纹理遮挡退化）与非共轴多相机工作谱系：CuVSLAM 锁 NVIDIA GPU 且仅 pinhole 阵列、VILENS-MC 因子图开销、MAVIS/ROVINS/D2SLAM 逐相机处理+重优化后端——确立'异构通用+CPU 轻量'缺口。"
+   },
+   {
+    "locator": "page 2-3, III-A Universal Camera Model (USPM)",
+    "role": "method-or-design",
+    "purpose": "精读 USPM 投影/逆投影公式链（式(1)-(9)）：球面约束下比例因子推导、方位角/仰角到全景像素映射、Kalibr 兼容物理投影算子；双向映射支撑快速全景构建+统一特征提取+深度初始化；FAST 关键点替代 ORB、三并行单元（线程池）加速、非平行相机对柱面去畸变。"
+   },
+   {
+    "locator": "page 3-4, III-B Hierarchical Omnidirectional Feature Alignment",
+    "role": "method-or-design",
+    "purpose": "精读 HOFA：SVO 2.0 基座上的任务自适应策略（新特征跨相机逆深度估计+自适应范围过滤 vs 预三角化特征复用深度）、全景级半直接 patch 对齐（式(10)-(11)）、FOV-极线约束下可行逆深度集合推导（式(12)-(14)）、Vogiatzis 深度滤波收敛。"
+   },
+   {
+    "locator": "page 4-5, III-C Efficient ESKF",
+    "role": "method-or-design",
+    "purpose": "精读 ESKF 后端：复用 SchurVINS 15 维 IMU 中心状态与 RK4 传播；3D 球面 bearing 残差替换 2D 透视重投影残差（式(16)，避免全景投影下像素误差强非线性）；残差雅可比链（式(17)）与 Schur 补 ESKF 更新（式(19)）；残差范数超阈值剔除外点。"
+   },
+   {
+    "locator": "page 5, IV-A Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "确认评测设置：4 数据集（EuRoC/TUM-VI/HILTI 2022/自建四目 206° 鱼眼+OptiTrack 真值）、2 指标（SE(3) 对齐 ATE RMSE via evo、平均每帧处理时间）、4 基线全部关闭回环、Dell G15 纯 CPU + Intel NUC 13 嵌入式双平台。"
+   },
+   {
+    "locator": "page 5-6, IV-B Comparison With Baselines on Public Datasets",
+    "role": "results-or-analysis",
+    "purpose": "精读三公共基准结果（Table I-III）：EuRoC 0.1072（胜 VINS-Fusion 48.3% 但落后 SchurVINS——球面残差非针孔最优）；TUM-VI 0.1518（胜 SchurVINS 48.8%/VINS-Fusion 63.6%，长走廊鲁棒）；HILTI 0.1821 第二仅次 MAVIS；MAVIS 跨基准顶级精度的对照语境。"
+   },
+   {
+    "locator": "page 5-7, IV-C Ablation Experiment",
+    "role": "results-or-analysis",
+    "purpose": "精读自建数据集（Table IV：四基线全败的相机模型/跨相机匹配归因；SV 立体 0.1797→多相机 0.1230→NUC 0.1341）与四配置球面三角化分析（Fig. 7：立体仅中央 90°/四相机 360° 均匀覆盖）+硬件限制说明（5cm 基线/重复 IMU 时间戳）。"
+   },
+   {
+    "locator": "page 7, IV-D Computational Efficiency",
+    "role": "results-or-analysis",
+    "purpose": "精读效率：HILTI 40Hz 阈值 0.025s——VINS-Fusion 0.0257 超限、SV 四流+CLAHE 0.0122、SchurVINS 0.0036；自建 20Hz 阈值 0.05s——笔记本 0.0138/NUC 0.0180；MAVIS/ORB-SLAM3 因多线程架构无法测延迟被排除。"
+   },
+   {
+    "locator": "page 8, V. Conclusion and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：CPU-only 滤波式全景 VIO 兼顾通用性/效率/可部署性；确认作者自述局限（纯 VIO 无回环→长期漂移，未来轻量回环）。"
+   },
+   {
+    "locator": "page 8, References (selective cross-check)",
+    "role": "appendix-or-supplement",
+    "purpose": "交叉核对与本批综述直接相关的引文：[9] PanoAir（本批第四篇）、[12] Multi-LVI-SAM（本批第一篇）、[10] 360-VIO、[4] PAN-SLAM、[8] D2SLAM、[16] SchurVINS、[15] SVO 2.0——确认本文对单镜头全景与全景表示方法的定位性引用。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 2-5, III equations (1)-(19) full derivation",
+    "reason": "逐式符号级推导未复核（USPM 比例因子求根、HOFA 光度优化、ESKF 雅可比链式法则），仅核对结构一致性（15 维状态与 SchurVINS 一致、残差为 3 维 bearing）；不影响证据主张。"
+   },
+   {
+    "locator": "page 6, Fig. 6 trajectory plots; page 7, Fig. 7 depth-colored triangulation dots",
+    "reason": "图形为视觉内容，文本层只读图注；轨迹与三角化数值结论以正文与表格为准。"
+   }
+  ]
+ },
+ "research_question": "异构多相机（含 206° 鱼眼环视）VIO：统一球面表示能否同时解决跨相机特征关联、全向深度初始化与 CPU 实时性？宽 FoV 的量化收益（三角化覆盖、恶劣条件稳定性、长走廊鲁棒）与代价（针孔精度、无回环漂移）边界在哪里？",
+ "contributions": [
+  "USPM 统一球面全景模型：支持任意相机模型（Kalibr 兼容），多相机图像与共享球面空间双向快速映射，消除顺序拼接，提供一致的跨相机特征表示与高效三角化。",
+  "HOFA 分层全向特征对齐：极线约束+自适应深度范围过滤（FOV-极线推导的可行逆深度集合）实现鲁棒跨相机匹配与联合深度估计，消除重叠区冗余与误匹配。",
+  "多相机适配 ESKF 后端：球面 bearing 残差+Schur 补边缘化，仅 CPU 资源实现低复杂度实时状态估计。",
+  "实验证明框架支持多种相机配置（针孔双目/多目鱼眼/异构 rig），多相机场景下低计算开销+高鲁棒。"
+ ],
+ "method": {
+  "summary": "输入为异构多相机（任意 Kalibr 兼容模型：pinhole、MEI、Kannala-Brandt 等）+IMU。前端：USPM 将各物理相机图像经球面约束投影（式(1)-(5)）双向映射到共享虚拟球面全景，无需顺序拼接；三并行单元（线程池）加速重映射/去畸变/极线匹配；全景上提取 FAST 关键点（替代 PAN-SLAM 的 ORB 省算力），回投物理相机做跨相机三角化生成全向深度先验，非平行相机对施加 D2SLAM 柱面去畸变。跟踪：HOFA 半直接对齐——预三角化特征直接复用深度，新特征做受 FOV-极线可行逆深度集合约束的跨相机逆深度光度优化（式(11)），Vogiatzis 深度滤波收敛。后端：复用 SchurVINS 15 维 IMU 中心状态与 RK4 传播的滑窗 ESKF，观测改为 3D 球面 bearing 残差（式(16)，避免全景投影下像素误差的强非线性），Schur 补边缘化路标，残差范数超阈值剔除外点；全程纯 CPU 运行。",
+  "assumptions": [
+   "各物理相机外参已标定且刚性固定（Kalibr 标定体系）。",
+   "多相机图像可统一投影到单一虚拟球面（USPM 球面约束成立，全景 FoV 范围参数可任意指定、不要求 360°）。",
+   "IMU 传播与噪声模型沿用 SchurVINS（RK4 积分），深度观测经 Vogiatzis 滤波高斯近似。",
+   "评测协议：基线全部关闭回环、SE(3) 对齐 ATE——不考察全局一致性。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EuRoC MAV（10 序列，针孔双目，低纹理+剧烈快速运动）",
+   "TUM-VI（11 序列，室内长走廊/房间，大范围运动+变化光照）",
+   "HILTI 2022（6 实验，多传感器 rig，稀疏纹理+密集运动+不均匀光照）",
+   "自建全向多相机数据集（5 序列，Seeker OMNI-D 四目 206° 鱼眼+工业 IMU，OptiTrack 真值，20 Hz）"
+  ],
+  "tasks": [
+   "视觉惯性里程计（VIO 定位）",
+   "相机配置泛化（针孔双目/立体对/异构多相机全向）",
+   "嵌入式 CPU 实时部署"
+  ],
+  "embodiments": [
+   "手持/多传感器基准平台（TUM-VI、HILTI 2022）",
+   "MAV 基准数据（EuRoC）",
+   "无下游机器人任务级评测（纯定位基准）"
+  ],
+  "sample_or_scale": "4 数据集共 32 序列（10+11+6+5）；4 基线（MAVIS/ORB-SLAM3/VINS-Fusion/SchurVINS，回环全关）；硬件平台：Dell G15 笔记本（i7-13650HX，32GB，纯 CPU）+ Intel NUC 13 嵌入式（16GB）。"
+ },
+ "evaluation": {
+  "design": "SE(3) 对齐 ATE RMSE（evo 工具）+平均每帧处理时间双指标；基线全部关闭回环保证公平；VINS-Fusion 用官方 EuRoC 配置（每 2 帧 1 关键帧、后端仅关键帧）且跨三数据集保持一致；延迟测试中 VINS-Fusion 改为逐帧后端以匹配滤波式全帧管线，MAVIS/ORB-SLAM3 因多线程架构无法准确测延迟被排除；基线 ATE 结果由作者手工评测。",
+  "baselines": [
+   "MAVIS（图优化，多相机，HILTI 上为多相机配置）",
+   "ORB-SLAM3（图优化，双目）",
+   "VINS-Fusion（图优化，双目）",
+   "SchurVINS（滤波，双目）"
+  ],
+  "metrics": [
+   "SE(3)-aligned ATE RMSE (m) via evo",
+   "平均每帧处理时间 (s)"
+  ],
+  "ablations": [
+   "自建数据集上 SV 立体 vs 多相机 vs NUC 嵌入式变体（Table IV）",
+   "四相机配置（Seeker 全向/HILTI 2022/Seeker 立体/TUM-VI 立体）球面三角化覆盖对比（Fig. 7）",
+   "HILTI 2022 与自建数据集每帧延迟 vs 实时阈值（Table V/VI）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "异构超广角硬件是现成 SLAM 的能力边界：自建四目 206° 鱼眼数据集上 4 个基线全部失败——ORB-SLAM3/MAVIS 的 pinhole/Kannala-Brandt 模型无法适配 >180° FoV；VINS-Fusion/SchurVINS 虽有 206° 能力的 MEI 模型但发散朝向+部分重叠下的跨相机匹配失败；Sphere-VIO 全序列稳定跟踪（多相机 0.1230 m ATE）。",
+   "scope": "自建数据集 5 序列，Seeker OMNI-D 四目 206° 鱼眼+IMU，OptiTrack 真值",
+   "locator": "page 5-6, Section IV-C1 and Table IV"
+  },
+  {
+   "finding": "宽 FoV 的初始化级机制收益被隔离验证：立体配置静态三角化仅覆盖中央 90° 水平 FoV（全向全景的 1/4），区域外特征无法静态初始化、只能依赖 VIO 跟踪期深度估计引入不确定性；四相机配置实现 360° 均匀全覆盖三角化——直接解释系统级性能差距的根因。",
+   "scope": "四种相机配置（Seeker 全向/HILTI 2022/Seeker 立体/TUM-VI 立体）的初始化三角化",
+   "locator": "page 7, Section IV-C2 and Fig. 7"
+  },
+  {
+   "finding": "恶劣条件与长走廊的鲁棒性收益：HILTI 2022 平均 ATE 0.1821 m 排名第二仅次 MAVIS（0.0980），优于 VINS-Fusion/ORB-SLAM3/SchurVINS 达 35.3%/39.7%/55.7%；TUM-VI 0.1518 m 优于 SchurVINS 48.8%、VINS-Fusion 63.6%，长走廊场景立体方案剧烈漂移（VINS-Fusion 0.4171/SchurVINS 0.2965）。",
+   "scope": "HILTI 2022（6 实验）与 TUM-VI（11 序列）公共基准",
+   "locator": "page 5-6, Section IV-B and Tables II, III"
+  },
+  {
+   "finding": "宽 FoV 统一表示的针孔精度代价：EuRoC 上 0.1072 m 虽胜 VINS-Fusion 48.3%，但落后 SchurVINS（0.0779）、ORB-SLAM3（0.0400）、MAVIS（0.0475）——作者归因：球面 bearing 残差面向宽 FoV 多相机而非针孔场景最优。",
+   "scope": "EuRoC 针孔双目基准",
+   "locator": "page 5-6, Section IV-B and Table I"
+  },
+  {
+   "finding": "多相机宽 FoV 不牺牲 CPU 实时性：HILTI 2022（40 Hz，实时阈值 0.025 s）四流+CLAHE 下 SV 平均 0.0122 s/帧（约阈值一半；VINS-Fusion 0.0257 超限）；自建 20 Hz 数据集笔记本 0.0138 s、NUC 13 嵌入式 0.0180 s（阈值 0.05 s），嵌入式 ATE 仅轻微退化至 0.1341 m。",
+   "scope": "HILTI 2022 与自建数据集，纯 CPU（Dell G15 与 Intel NUC 13）",
+   "locator": "page 7, Section IV-D and Tables V, VI"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "纯 VIO 系统无回环，存在长期漂移；未来工作将引入轻量回环扩展为完整 SLAM，同时保持 CPU-only 效率与多相机适应性。",
+    "locator": "page 8, Section V"
+   },
+   {
+    "limitation": "自建数据集 ATE 略高于公共数据集的两个硬件原因：5 cm 立体基线（标准数据集的一半）降低三角化精度；偶发重复 IMU 时间戳引入噪声。",
+    "locator": "page 5, Section IV-C1"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "针孔窄 FoV 场景的精度代价：EuRoC 上 SV（0.1072 m）明显落后双目专用 SchurVINS/ORB-SLAM3（0.0779/0.0400 m）；统一球面残差以针孔精度换配置通用性，纯前视双目部署不应采用本框架。",
+    "basis": "page 5 Section IV-B 归因句（spherical bearing residual targets wide-FOV multi-camera setups rather than pinhole scenarios）+ Table I 数值。"
+   },
+   {
+    "boundary": "自建数据集对比是'存在性证明'而非同台竞技：四基线因相机模型不兼容或跨相机匹配全部失败（Table IV 全'-'），SV 的 0.1230 m 无同硬件对手参照，其绝对精度水平无法横向定位。",
+    "basis": "page 5 Section IV-C1 全败归因 + Table IV 基线行全部为'-'。"
+   },
+   {
+    "boundary": "可复现性风险：论文正文无代码/数据集公开声明（对比 PanoAir 摘要明示开源），自建硬件为商用 Seeker OMNI-D 模组（Differential Robotics），第三方复现与公平复测受限。",
+    "basis": "全文无 availability 声明；page 5 Fig. 5 商用模组描述与作者隶属。"
+   },
+   {
+    "boundary": "MAVIS 的精度-效率权衡未被量化：MAVIS/ORB-SLAM3 因多线程架构无法测延迟被移出效率对比，'宽 FoV 滤波式效率优势'结论只对 VINS-Fusion/SchurVINS 两个延迟基线成立。",
+    "basis": "page 7 Section IV-D 排除说明 + Table V 仅 3 方法。"
+   },
+   {
+    "boundary": "无下游具身任务级评测：全部结论止于里程计 ATE 与帧延迟，无建图质量、导航/操作任务闭环；'具身智能获益'仅限定位子任务的推断。",
+    "basis": "page 5 Section IV-A 评测协议与 page 8 Section V 结论范围。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于 CPU 资源受限平台（笔记本/NUC 级）上异构多相机（含 206° 鱼眼、部分重叠、发散朝向）的 VIO 部署：统一球面表示换来配置通用性+恶劣条件稳定性+实时性，代价是针孔窄 FoV 精度与无回环长期漂移；单镜头全景（无基线约束）与需要全局一致性的长程任务超出适用边界。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "四相机配置的球面三角化覆盖对比（Fig. 7）把宽 FoV 收益隔离到初始化机制层，归因链条清晰。",
+   "自建 OptiTrack 真值数据集暴露 >180° FoV 硬件上现成基线的系统性失败，填补公共基准空白。",
+   "延迟评测绑定相机帧率阈值（40Hz→0.025s / 20Hz→0.05s）并覆盖笔记本与嵌入式双平台，可解释性强。"
+  ],
+  "design_risks": [
+   "自建数据集基线全败源于相机模型不兼容而非算法劣势，存在'选对己方有利硬件'的风险，SV 绝对精度缺同台参照。",
+   "EuRoC 落后说明球面残差并非普适最优，'通用性 vs 专用精度'的权衡未被系统量化。",
+   "基线 ATE 由作者手工评测（manually evaluated），无统一评测脚本或开源复现。"
+  ],
+  "baseline_fairness": "回环全部关闭方向公平；VINS-Fusion 延迟测试改为逐帧后端以匹配滤波式管线、官方配置跨数据集一致；但基线结果由作者手工评测，且 MAVIS/ORB-SLAM3 被排除出延迟对比——精度冠军与效率冠军未同台。",
+  "metric_validity": "SE(3) 对齐 ATE RMSE（evo）为社区标准；每帧处理时间绑定实时阈值可解释；但 SE(3) 对齐会吸收部分漂移，无回环设定下的长期漂移未被独立量化。",
+  "reproducibility": "论文文本无代码/数据集公开声明（与 PanoAir 的开源声明形成对照）；自建 rig 为商用 Seeker OMNI-D；基线结果手工评测——复现依赖联系作者。",
+  "external_validity": "四种相机配置（全向四目/立体对/HILTI 多相机/TUM-VI 立体）支撑 USPM 通用性主张；但全部为定位基准，无机器人任务级验证；作者隶属（HKUST-GZ/ZJU/SUSTECH/Differential Robotics）暗示面向无人机/机器人产业部署。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.29910-C01",
+   "claim": "Sphere-VIO 的应用方式：面向异构多相机系统的轻量滤波式 VIO——以统一球面表示管理多相机（含鱼眼/超广角）图像，CPU-only 实时状态估计，面向资源受限机器人。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 多相机（含鱼眼 rig）在具身智能定位任务中的代表性应用方式——统一球面表示的滤波式 VIO。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要声明三模块（USPM/HOFA/ESKF）与'accuracy, robustness, efficiency, and cross-camera generality'折衷；III 节展开设计。",
+   "locator": "page 1, Abstract and I. Introduction",
+   "source_context": "To address these issues, we present Sphere-VIO, a lightweight filter-based VIO framework with unified spherical representation for heterogeneous multi- camera systems.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于摘要（含'multi- camera'换行断词形态）；claim 的'CPU-only/资源受限'由同页后文'especially resource-constrained devices'与贡献四支持，未超出原文范围。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C02",
+   "claim": "USPM 统一球面全景模型：支持所有标准相机模型（Kalibr 兼容：pinhole、MEI 等），实现多相机图像与共享球面空间的双向快速映射，无需顺序拼接——简化跨相机特征管理并提升三角化效率。",
+   "stance": "support",
+   "relation": "支持命题：环视/鱼眼多相机系统的统一表示技术路线——拼接无关的共享球面空间。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要声明 USPM 能力；III-A 节式(1)-(9) 给出双向映射公式链与 Kalibr 兼容物理投影算子。",
+   "locator": "page 1, Abstract and I. Introduction",
+   "source_context": "Specifically, we first propose a Unified Spherical Panorama Model (USPM) that supports all standard camera models and enables bidirectional fast mapping between multi- camera images and a shared spherical space without sequential stitching, simplifying cross-camera feature management and improving triangulation efficiency.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于摘要；'Kalibr-compatible（pinhole、MEI 等）'的具体型号来自 page 3 III-A 节原文（'To support all Kalibr-compatible camera models [24] (pinhole, MEI, etc.)'），claim 未超出两处原文合计范围。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C03",
+   "claim": "USPM 的通用性边界宽松：面向任意多相机 rig 设计（不要求全 360° 覆盖，窄 FoV 前视双目也可工作），把所有相机图像统一到单一球面——统一表示不强制全景硬件。",
+   "stance": "support",
+   "relation": "支持命题：全景/球面表示的应用门槛——不仅限全景 rig，异构窄宽混合配置均可套用。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-A 开篇明确 USPM 灵活性声明；这解释了 EuRoC/TUM-VI 针孔双目数据集上的可运行性。",
+   "locator": "page 2, Section III-A",
+   "source_context": "We propose the USPM for arbitrary multi-camera rigs, unifying all camera images onto a single spherical surface. USPM is flexible: it does not require full 360° coverage and even works with narrow-FOV forward stereo rigs.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 III-A 首段；claim 为该段直接重述（arbitrary rigs / 不要求 360° / 窄 FoV 双目可用），无外推。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C04",
+   "claim": "领域缺口（本文定位）：采用全景表示的近期工作（含 PAN-SLAM [4]、Multi-LVI-SAM [12]）仍局限于特定刚性相机配置、忽略异构模块几何一致性、依赖昂贵拼接或优化后端，导致实时性差——异构通用+轻量实时是多相机 VIO 的未解缺口。",
+   "stance": "gap",
+   "relation": "补充命题：全景/球面表示路线的既有缺口——特定 rig 绑定与重后端，构成'哪些受限'的领域级证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 末段对近期全景表示工作的定位性评述；[12] 即本批综述第一篇 Multi-LVI-SAM（2509.05740），[4] 为 PAN-SLAM。",
+   "locator": "page 1, Section I. Introduction",
+   "source_context": "Recent works [4], [12] adopt panoramic representations, a special full-field variant of gen- eral spherical representations, but remain confined to specific rigid setups, ignore geometric consistency for heterogeneous modules, and depend on expensive stitching or optimization backends, resulting in poor real-time performance.",
+   "evidence_type": "field-gap",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 Introduction（含'gen- eral'断词形态）；[4]/[12] 身份经 page 8 References 逐条核对（[4]=PAN-SLAM 多鱼眼 rig、[12]=Multi-LVI-SAM），claim 中的领域缺口描述为作者原话重述。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C05",
+   "claim": "单镜头全景相机的结构性局限（本文定位）：提供全 FoV 但缺乏基线约束做可靠尺度估计，被迫依赖噪声 IMU 尺度线索，导致尺度不稳与长期漂移——与多相机 rig 的基线约束形成路线级对比。",
+   "stance": "limit",
+   "relation": "支持命题'哪些受限'：单镜头全景（本批 PanoAir [9]、360-VIO [10]、LF-VISLAM [11] 路线）被指尺度不稳定——跨论文张力证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 对 single-lens panoramic cameras 的直接评述；[9] 即本批 PanoAir（2604.00852），其自报 UAV 基准带度量尺度 100% 成功——构成对照。",
+   "locator": "page 1, Section I. Introduction",
+   "source_context": "Single-lens panoramic cameras [9], [10], [11] provide full FOV but lack baseline constraints for reliable scale estimation, forcing reliance on noisy IMU scale cues and leading to un- stable scale and long-term drift.",
+   "evidence_type": "problem-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 Introduction（含'un- stable'断词形态）；[9]=PanoAir 经 References 核对；claim 为作者对单镜头全景路线的原话重述，跨论文张力标注为综述方观察、非本文内容。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C06",
+   "claim": "HOFA 分层全向特征对齐的任务自适应策略：新特征做跨相机深度估计+范围过滤（FOV-极线约束推导的可行逆深度集合），预三角化特征直接复用可靠深度——两种深度源共同支撑全景级半直接 patch 匹配。",
+   "stance": "support",
+   "relation": "支持命题：环视多相机跨相机特征管理的具体机制——分层复用避免全量跨相机搜索的开销。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 首段给出策略；式(10)-(11) 为对齐与逆深度优化、式(12)-(14) 为可行深度集合推导、Vogiatzis 滤波收敛（page 3-4）。",
+   "locator": "page 3, Section III-B",
+   "source_context": "Building on SVO 2.0 [15], we propose the HOFA frame- work for USPM. It adopts a task-adaptive strategy: new features undergo cross-camera depth estimation with range filtering, while pre-triangulated features directly reuse their re- liable depth.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 III-B 首段（含'frame- work'/'re- liable'断词形态）；claim 的可行逆深度集合与 Vogiatzis 滤波细节出自同节后文（已核对原文），范围未超出 III-B。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C07",
+   "claim": "全景上的轻量化特征选择：沿用 PAN-SLAM 在完整全景上提取全局特征的思路，但改用轻量 FAST 关键点替代 ORB 以最小化计算开销——宽 FoV 表示的计算代价被显式管理。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 收益的工程代价管理——全景全局特征提取+轻量关键点是 CPU-only 实时的前提之一。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-A 末段说明全景特征提取策略；同段前句为 USPM 并行重映射（Parallel Unit 1）降低全景合成延迟。",
+   "locator": "page 3, Section III-A",
+   "source_context": "Follow- ing PAN-SLAM [4], we extract global features on the full panorama, but adopt lightweight FAST keypoints instead of ORB to minimize computational overhead.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 III-A（含'Follow- ing'断词形态）；claim 仅为该句重述，FAST vs ORB 的对比与开销最小化目的均为原文措辞。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C08",
+   "claim": "ESKF 后端核心设计：以 3D 球面 bearing 残差替换 SchurVINS 的 2D 透视重投影残差，避免全景投影下直接像素误差的强非线性；其他全景 SLAM 系统（[4] PAN-SLAM、[7] ROVINS）虽也用球面残差但依赖重量级图优化——本文保留 Schur 补管线以控制 3D 残差的额外计算。",
+   "stance": "support",
+   "relation": "支持命题：全向相机后端适配的机制证据——球面 bearing 残差是宽 FoV 观测模型的轻量替代方案。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-C 残差构造段（式(16) 残差定义、式(17) 雅可比、式(19) Schur 补 ESKF 更新）；[4]/[7] 身份见 References。",
+   "locator": "page 4, Section III-C",
+   "source_context": "We replace SchurVINS’ 2D perspective reprojection resid- ual with a 3D spherical bearing vector residual tailored to USPM (Fig. 4), avoiding the strong nonlinearity of direct pixel error for omnidirectional projections [10]. While other panoramic SLAM systems [4], [7] also use spherical residuals, they rely on heavy graph optimization.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 III-C（含'resid- ual'断词与 SchurVINS 后撇号原字符）；Schur 补保留动机出自紧邻后句'We retain SchurVINS’ full Schur complement pipeline...'（已核对），claim 未超出 III-C。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C09",
+   "claim": "针孔基准上的精度代价（宽 FoV 统一表示的反向证据）：EuRoC 平均 ATE 0.1072 m——胜 VINS-Fusion 48.3% 但落后 SchurVINS（Table I：SchurVINS 0.0779、ORB-SLAM3 0.0400、MAVIS 0.0475）；作者归因：球面 bearing 残差面向宽 FoV 多相机而非针孔场景最优。",
+   "stance": "conditional",
+   "relation": "限定命题：宽 FoV 收益的条件边界——统一球面残差在针孔窄 FoV 配置上有精度代价，通用性以专用精度换取。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B 段落给出 0.1072 与归因；Table I（page 6）给出四基线 EuRoC 全序列数值。",
+   "locator": "page 5-6, Section IV-B and Table I",
+   "source_context": "Our filter-driven Sphere-VIO yields an average ATE RMSE of 0.1072 m on EuRoC, surpassing VINS-Fusion by 48.3% but trailing SchurVINS, as our spherical bearing residual targets wide-FOV multi-camera setups rather than pinhole scenarios optimized by conventional planar reprojection residuals.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg SE(3)-aligned ATE RMSE (m) on EuRoC (loop closure disabled)",
+    "value_or_direction": "Sphere-VIO 0.1072 vs SchurVINS 0.0779 (trailing), ORB-SLAM3 0.0400, MAVIS 0.0475, VINS-Fusion 0.2074",
+    "comparator": "Sphere-VIO vs ORB-SLAM3/MAVIS/VINS-Fusion/SchurVINS (stereo baselines)",
+    "task_or_sample": "EuRoC MAV 10 sequences (MH-01..V2-03), Table I",
+    "locator": "page 5-6, Section IV-B and Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-B；Table I 数值（0.1072/0.0779/0.0400/0.0475/0.2074）逐项核对；48.3% 由 0.2074→0.1072 换算吻合。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C10",
+   "claim": "长走廊/大范围运动鲁棒性收益：TUM-VI 平均 ATE 0.1518 m——优于滤波式 SchurVINS 48.8%（0.2965）、图优化 VINS-Fusion 63.6%（0.4171）；框架无图优化与全局建图，统一球面公式在立体方案剧烈漂移的长走廊环境带来显著鲁棒性。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 球面表示在退化场景（长走廊、弱多视角互补）的获益证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B 段落给出 0.1518 与两个百分比；Table II（page 6）给出 11 序列明细（走廊 c1-c5 漂移最重）。",
+   "locator": "page 5-6, Section IV-B and Table II",
+   "source_context": "On the TUM-VI dataset, our method obtains an ATE RMSE of 0.1518 m. It outperforms the filter-based SchurVINS by 48.8% and surpasses the graph-optimized VINS-Fusion by 63.6%. Notably, our framework operates without graph optimization or global mapping, and our unified spherical formulation brings prominent robustness for long-corridor environments where stereo-based alternatives suffer drastic drift.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg SE(3)-aligned ATE RMSE (m) on TUM-VI",
+    "value_or_direction": "Sphere-VIO 0.1518 vs SchurVINS 0.2965 (-48.8%) and VINS-Fusion 0.4171 (-63.6%); ORB-SLAM3 0.0801, MAVIS 0.0769",
+    "comparator": "Sphere-VIO vs SchurVINS/VINS-Fusion/ORB-SLAM3/MAVIS (stereo baselines)",
+    "task_or_sample": "TUM-VI 11 sequences (corridor c1-c5, room r1-r6), Table II",
+    "locator": "page 5-6, Section IV-B and Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-B；Table II 数值核对（SchurVINS 平均 0.2965、VINS-Fusion 0.4171）；48.8%/63.6% 换算吻合（0.1518/0.2965≈0.512、0.1518/0.4171≈0.364）。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C11",
+   "claim": "恶劣条件基准的稳定收益：HILTI 2022（稀疏纹理+密集运动+不均匀光照）平均 ATE 0.1821 m 总排名第二、仅次 MAVIS（0.0980）；优于 VINS-Fusion/ORB-SLAM3/SchurVINS 达 35.3%/39.7%/55.7%——多相机球面建模在恶劣条件下稳定跟踪，而窄 FoV 立体管线严重漂移。",
+   "stance": "support",
+   "relation": "支持命题：多相机宽 FoV 在挑战环境（弱纹理+不均匀光照）下的定位获益证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B 段落给出 0.1821 与三个百分比；Table III（page 6）给出 6 实验明细（SchurVINS 0.4110、VINS-Fusion 0.2813、ORB-SLAM3 0.3022）。",
+   "locator": "page 5-6, Section IV-B and Table III",
+   "source_context": "On HILTI 2022, Sphere-VIO ranks second overall with 0.1821 m ATE RMSE only inferior to MAVIS, outperforming VINS-Fusion, ORB-SLAM3 and SchurVINS by 35.3%, 39.7% and 55.7% respectively, as multi-camera spherical modeling ensures sta- ble tracking under harsh conditions while narrow-FOV stereo pipelines suffer severe drift.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg SE(3)-aligned ATE RMSE (m) on HILTI 2022",
+    "value_or_direction": "Sphere-VIO 0.1821 (rank 2) vs MAVIS 0.0980 (rank 1); beats VINS-Fusion 0.2813 (-35.3%), ORB-SLAM3 0.3022 (-39.7%), SchurVINS 0.4110 (-55.7%)",
+    "comparator": "Sphere-VIO (multi-camera) vs MAVIS (multi-camera) and three stereo baselines",
+    "task_or_sample": "HILTI 2022, 6 experiments (e04-e18), Table III",
+    "locator": "page 5-6, Section IV-B and Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-B（含'sta- ble'断词形态，'respectively'无断词）；Table III 数值核对（MAVIS 0.0980/VINS-Fusion 0.2813/ORB-SLAM3 0.3022/SchurVINS 0.4110）；三个百分比换算吻合。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C12",
+   "claim": "精度天花板对照：跨全部公共基准，MAVIS（图优化多相机）总体精度顶级——Sphere-VIO 的定位是精度-效率-通用性折衷而非精度第一；宽 FoV 收益不等于全面超越图优化多相机基线。",
+   "stance": "conditional",
+   "relation": "限定命题：宽 FoV 收益的上界——图优化多相机（MAVIS）仍是精度领导者，滤波式宽 FoV 以效率换精度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B 开篇的跨基准总评；与 Table I-III 中 MAVIS 各项第一（EuRoC 0.0475 次于 ORB-SLAM3、TUM-VI 0.0769、HILTI 0.0980）一致。",
+   "locator": "page 5, Section IV-B",
+   "source_context": "Across all bench- marks, MAVIS obtain overall top-tier localization accuracy.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-B（含'bench- marks'断词形态）；'折衷而非精度第一'的定位为引文与 Table I-III 数值（MAVIS 三榜均值均≤0.0980 且 HILTI 第一）的直接综合，无外推。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C13",
+   "claim": "异构超广角硬件是现成 SLAM 的能力边界：自建四目 206° 鱼眼+IMU 数据集（OptiTrack 真值）上全部 4 个基线失败——ORB-SLAM3/MAVIS 的 pinhole/Kannala-Brandt 模型无法适配 >180° FoV；VINS-Fusion/SchurVINS 虽用 206° 能力的 MEI 模型，仍因发散朝向+部分重叠下的跨相机匹配挑战失败。",
+   "stance": "support",
+   "relation": "支持命题'哪些受限'：>180° 鱼眼环视 rig 上现成开源 SLAM 系统性失效——宽 FoV 硬件需要专门的统一表示。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C1 段落给出全败与两层归因；Table IV（page 6）基线行全部为'-'（No valid results available, due to tracking loss, or camera model incompatibility）。",
+   "locator": "page 5-6, Section IV-C1 and Table IV",
+   "source_context": "As shown in Table IV, all baselines fail: ORB-SLAM3 and MAVIS cannot adapt to over 180° FOV due to their pinhole or Kannala-Brandt models, while VINS-Fusion and SchurVINS, despite using 206° FOV- capable MEI models, fail due to cross-camera matching chal- lenges from divergent orientations and partial overlaps.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg SE(3)-aligned ATE RMSE (m) on self-made omnidirectional dataset (valid-result availability)",
+    "value_or_direction": "all 4 baselines: no valid results (tracking loss or camera model incompatibility); Sphere-VIO multi-camera 0.1230",
+    "comparator": "Sphere-VIO vs VINS-Fusion/ORB-SLAM3/MAVIS/SchurVINS (all fail)",
+    "task_or_sample": "5 sequences (s01-s05), Seeker OMNI-D four 206-degree fisheye cameras + industrial IMU, OptiTrack ground truth, Table IV",
+    "locator": "page 5-6, Section IV-C1 and Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-C1（含'FOV- capable'/'chal- lenges'断词形态）；Table IV 四基线行全'-'与图注'No valid results available, due to tracking loss, or camera model incompatibility'核对一致。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C14",
+   "claim": "多相机重叠覆盖的精度增益与嵌入式可行性：同一自建数据集上 Sphere-VIO 立体变体 0.1797 m、多相机变体提升至 0.1230 m（利用重叠覆盖）；Intel NUC 13 嵌入式平台仅轻微退化至 0.1341 m——多相机宽 FoV 配置与资源受限部署同时可行。",
+   "stance": "support",
+   "relation": "支持命题：相机数量/重叠覆盖对宽 FoV VIO 精度的贡献证据 + 具身平台嵌入式部署证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C1 段落三个数；Table IV 明细（SV stereo/MC/NUC 三行）；Table VI 给出对应每帧时间。",
+   "locator": "page 5, Section IV-C1 and Table IV",
+   "source_context": "In contrast, Sphere-VIO tracks stably on all sequences: the stereo variant achieves 0.1797 m average ATE RMSE, while the multi-camera version improves to 0.1230 m by leveraging overlapping coverage. On Intel NUC 13, performance degrades slightly to 0.1341 m, confirming resource-constrained deploy- ment feasibility.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg SE(3)-aligned ATE RMSE (m): stereo vs multi-camera vs embedded variant",
+    "value_or_direction": "SV stereo 0.1797; SV multi-camera 0.1230 (leveraging overlapping coverage); Intel NUC 13: 0.1341",
+    "comparator": "SV stereo vs SV multi-camera (same sequences); laptop vs Intel NUC 13 embedded",
+    "task_or_sample": "5 sequences self-made omnidirectional dataset, Table IV",
+    "locator": "page 5, Section IV-C1 and Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-C1（含'deploy- ment'断词形态）；三个数值与 Table IV 的 SV/SV(MC)/SV(NUC) 行平均列逐项核对一致。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C15",
+   "claim": "宽 FoV 收益的初始化级机制证据：立体配置的静态三角化仅覆盖中央 90° 水平 FoV（全向全景的 1/4），区域外特征无法静态初始化、只能依赖 VIO 跟踪期深度估计引入不确定性并降低精度；四相机配置实现 360° 均匀全覆盖三角化，提供更鲁棒的初始化基础——直接解释系统级性能差距的根因。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 获益的机制解释——静态三角化覆盖随相机配置变化，是'哪些任务获益'的因果链证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C2 段落 + Fig. 7（page 7）四配置三角化可视化（Seeker 全向/HILTI/Seeker 立体/TUM-VI 立体）；同段确认 HILTI/TUM-VI 一致结果支撑泛化。",
+   "locator": "page 7, Section IV-C2 and Fig. 7",
+   "source_context": "stereo configuration achieves valid static triangulation only in the central 90° horizontal FOV, covering just one-quarter of the full omnidirectional panorama, while features outside this region cannot be statically initialized and rely on depth estimation during VIO tracking, introducing uncertainty and degrading accuracy. In contrast, the four-camera configuration achieves uniform 360° full-coverage triangulation, providing a more robust initialization foundation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "horizontal FOV coverage of valid static triangulation",
+    "value_or_direction": "stereo: central 90° only (one-quarter of full omnidirectional panorama); four-camera: uniform 360° full-coverage",
+    "comparator": "Seeker Omnidirection (four fisheye cameras) vs Seeker Stereo; consistent results on HILTI 2022 and TUM-VI Stereo",
+    "task_or_sample": "four camera configurations, initialization-stage spherical triangulation (Fig. 7)",
+    "locator": "page 7, Section IV-C2 and Fig. 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-C2（段首'The'被 Table IV 表格块隔开故从'stereo'起）；90°/one-quarter/360° 与 Fig. 7 图注及正文一致；'root cause'表述出自同段前句'reveals the root cause of the performance gap'（已核对）。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C16",
+   "claim": "多相机宽 FoV 的 CPU 实时效率：HILTI 2022（40 Hz 相机，实时阈值 0.025 s/帧）上 SV 多相机（同时处理四路流+CLAHE 预处理）平均仅 0.0122 s/帧（约阈值一半）；立体 VINS-Fusion 0.0257 s 超限，SchurVINS 0.0036 s——宽 FoV 多相机不以牺牲实时性为代价（效率源于三并行单元线程池）。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 多相机在 CPU-only 约束下的实时性证据——多流处理的算力可控。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 段落给出阈值/三方法数值与并行单元归因；Table V（page 7）给出 6 实验逐项时间。",
+   "locator": "page 7, Section IV-D and Table V",
+   "source_context": "With 40 Hz cameras, HILTI 2022 requires per-frame latency ≤ 0.025 s for real-time operation. As shown in Table V, stereo VINS-Fusion (0.0257 s) exceeds this limit, while SchurVINS and Sphere-VIO run in real time. Our multi- camera Sphere-VIO, processing four streams with CLAHE preprocessing, averages only 0.0122 s per frame, nearly half the threshold.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg per-frame processing time (s) on HILTI 2022 (40 Hz cameras, real-time limit 0.025 s)",
+    "value_or_direction": "Sphere-VIO multi-camera 0.0122 (four streams + CLAHE, nearly half the threshold); VINS-Fusion 0.0257 (exceeds limit); SchurVINS 0.0036",
+    "comparator": "SV (multi-camera, 4 streams) vs VINS-Fusion/SchurVINS (stereo), pure CPU",
+    "task_or_sample": "HILTI 2022, 6 experiments, Dell G15 laptop CPU, Table V",
+    "locator": "page 7, Section IV-D and Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-D（含'multi- camera'断词形态与'≤'原字符）；Table V 三行平均值（0.0257/0.0036/0.0122）逐项核对一致；并行单元归因出自紧邻后句（已核对）。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C17",
+   "claim": "嵌入式部署效率：自建 20 Hz 数据集（实时阈值 0.05 s/帧）上 SV 笔记本 0.0138 s、Intel NUC 13 嵌入式 0.0180 s——均远低于阈值，验证资源受限平台实际部署可行性。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 多相机 VIO 在具身智能嵌入式平台（NUC 级）的部署证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 末句给出双平台数与结论；Table VI（page 8）给出 5 序列逐项时间。",
+   "locator": "page 7, Section IV-D and Table VI",
+   "source_context": "Then as listed in Table VI, on our 20 Hz self-made dataset (latency limit 0.05 s, Section IV-C1), Sphere-VIO achieves 0.0138 s on a laptop and 0.0180 s on Intel NUC 13. Both are well within the limit, verifying practical deployment feasibility.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg per-frame processing time (s) on self-made dataset (20 Hz, real-time limit 0.05 s)",
+    "value_or_direction": "laptop 0.0138; Intel NUC 13 embedded 0.0180 — both well within the 0.05 s limit",
+    "comparator": "Dell G15 laptop CPU vs Intel NUC 13 embedded (both pure CPU)",
+    "task_or_sample": "5 sequences self-made omnidirectional dataset, Table VI",
+    "locator": "page 7, Section IV-D and Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-D 末段；Table VI 两行平均（0.0138/0.0180）核对一致；20 Hz 与 0.05 s 阈值换算吻合（1/20=0.05）。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C18",
+   "claim": "作者自述核心局限：作为纯 VIO 系统无回环，存在长期漂移；未来工作引入轻量回环扩展为完整 SLAM，同时保持 CPU-only 效率与多相机适应性。",
+   "stance": "limit",
+   "relation": "支持命题'哪些受限'：宽 FoV 滤波式 VIO 的长程任务边界——无全局一致性，适合短中程里程计而非完整 SLAM。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V. Conclusion and Future Work 末句直接自述；与 IV-A 评测协议（基线回环全关、SE(3) 对齐）互证。",
+   "locator": "page 8, Section V",
+   "source_context": "As a pure VIO system, it lacks loop closure and suffers from long-term drift. Future work will incorporate lightweight loop closure to extend it to a complete SLAM system while preserving its CPU-only efficiency and multi-camera adaptability.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 V 节结论；claim 为作者原话重述，'长程任务边界'的适用性注解为综述方定位、不改变原意。"
+   }
+  },
+  {
+   "card_id": "2606.29910-C19",
+   "claim": "作者自述自建数据集的硬件局限：ATE 略高于公共数据集的两个原因——5 cm 立体基线（标准数据集的一半）降低三角化精度；偶发重复 IMU 时间戳引入噪声。",
+   "stance": "limit",
+   "relation": "限定命题：自建四目鱼眼基准绝对精度（0.1230 m）的解读边界——部分归因于采集硬件而非算法。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-C1 末段硬件限制说明；同段'Despite these challenges, our method outperforms all baselines'。",
+   "locator": "page 5, Section IV-C1",
+   "source_context": "SE(3)-aligned ATE RMSE is slightly higher than on public datasets due to two hardware limitations: a 5 cm stereo baseline, half that of standard datasets, degrading triangulation accuracy, and occasional duplicate IMU times- tamps introducing noise.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 IV-C1（含'times- tamps'断词形态）；claim 为作者原话重述，两处硬件归因与 5 cm 基线数值均未改动。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "SchurVINS: Schur Complement-Based Lightweight Visual Inertial Navigation System",
+   "arxiv_id": null,
+   "reason": "后端基座（引文 [16]）：完整复用其 15 维状态定义、RK4 传播、噪声模型与 Schur 补 ESKF 更新；Sphere-VIO 仅把 2D 透视重投影残差替换为 3D 球面 bearing 残差；同基准下 SchurVINS 是最强滤波对手（EuRoC 0.0779 领先 SV 的 0.1072）。"
+  },
+  {
+   "title": "MAVIS: Multi-Camera Augmented Visual-Inertial SLAM using SE2(3) Based Exact IMU Pre-integration",
+   "arxiv_id": null,
+   "reason": "最强精度基线（引文 [6]）：跨全部公共基准总体精度顶级（HILTI 0.0980 领先 SV 的 0.1821、TUM-VI 0.0769）；图优化多相机路线代表，SV 以 CPU-only 效率与其差异化。"
+  },
+  {
+   "title": "Panoramic SLAM from a multiple fisheye camera rig (PAN-SLAM)",
+   "arxiv_id": null,
+   "reason": "全景表示前驱（引文 [4]）：SV 沿用其在完整全景上提取全局特征的思路但改用 FAST 关键点省算力；其深度初始化方案被 SV 的跨相机三角化替代；同时被引为'局限于特定刚性配置'的全景表示工作。"
+  },
+  {
+   "title": "Multi-LVI-SAM: A Robust LiDAR-Visual-Inertial Odometry for Multiple Fisheye Cameras",
+   "arxiv_id": "2509.05740",
+   "reason": "本批综述第一篇（引文 [12]）：被 Sphere-VIO 定位为'采用全景表示但局限于特定刚性配置、依赖昂贵优化后端'——跨论文张力：Multi-LVI-SAM 主打 LiDAR 融合度量尺度，Sphere-VIO 主打免 LiDAR 的 CPU 轻量通用。"
+  },
+  {
+   "title": "PanoAir: A Panoramic Visual-Inertial SLAM with Cross-Time Real-World UAV Dataset",
+   "arxiv_id": "2604.00852",
+   "reason": "本批综述第四篇（引文 [9]）：被归入'单镜头全景相机'类——Sphere-VIO 指其缺基线约束、依赖噪声 IMU 尺度线索致尺度不稳；而 PanoAir 自报 UAV 基准 100% 成功带度量尺度——两文对单镜头全景尺度稳定性的判断构成直接对照。"
+  },
+  {
+   "title": "D2SLAM: Decentralized and Distributed Collaborative Visual-Inertial SLAM System for Aerial Swarm",
+   "arxiv_id": null,
+   "reason": "柱面去畸变预处理来源（引文 [8]）：SV 对非平行相机对施加 D2SLAM 的柱面去畸变增强三角化鲁棒性；D2SLAM 亦被列为'逐相机处理+重优化后端'的环视 rig 低效代表。"
+  }
+ ],
+ "notes": "鱼眼/环视维度定位：本文是'异构多相机统一球面表示'路线代表，与本批另四篇构成五种宽 FoV 硬件路径对照——2509.05740（多鱼眼+LiDAR 紧耦合）、2509.15673（多标准相机+LiDAR 拼接环视）、2601.02309（单目 360° 深度学习 VO）、2604.00852（双鱼眼拼接全景 VI-SLAM）。对综述问题的独特贡献：(1) >180° FoV 上现成开源 SLAM 系统性失败的能力边界证据（Table IV 四基线全'-'）；(2) 宽 FoV 收益的初始化级机制解释（立体仅中央 90° 三角化 vs 四相机 360° 均匀覆盖）；(3) 针孔精度代价的反向量化（EuRoC 落后 SchurVINS/ORB-SLAM3）；(4) 两条跨论文张力——对单镜头全景（PanoAir 路线）'缺基线、尺度不稳'的负面定位 vs PanoAir 自报度量尺度成功；对 Multi-LVI-SAM '特定刚性配置'的定位 vs 其 LiDAR 度量尺度优势。批判要点：自建数据集对比为存在性证明（基线因模型不兼容全败）、无代码公开声明、MAVIS 的精度-效率权衡未量化、全部结论止于里程计无任务级验证。"
+}

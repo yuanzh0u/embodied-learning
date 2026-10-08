@@ -1,0 +1,417 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2609.07747",
+  "title": "Dex-X: Learning Visual-Tactile Dexterous Manipulation From Human Videos with Simulated Interaction",
+  "published": "2026-09-07",
+  "url": "https://arxiv.org/abs/2609.07747",
+  "authors": [
+   "Ruoqu Chen",
+   "Feixiang Ruan",
+   "Liu Cao",
+   "Zihao Wang",
+   "Botian Xu",
+   "Shiqin Tong",
+   "Jiajun Liu",
+   "Mingzhi Pei",
+   "Chenyu Zhang",
+   "Wanli Xing",
+   "Kaifeng Zhang",
+   "Mengdi Xu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "单目人类视频→29-DoF 灵巧手-臂管线，提供三级手部检测误差净化链（WiLoR+MANO 时间一致性+手-物穿透联合优化）、重定向可用性的 8cm 硬阈值过滤、罕见的腕部轨迹 sim-vs-real 定量误差分解（均值 2.83cm、分阶段 1.1→3.8cm、z 向 5.7mm 系统偏移），以及视觉-触觉互补的真实世界消融，覆盖综述问题的误差来源、阈值与缓解手段四个子问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "人类视频缺触觉与 sim-to-real 感知噪声两大挑战"
+   },
+   {
+    "locator": "2 Related Works",
+    "role": "relevant-core",
+    "purpose": "重定向/轨迹优化/RL 谱系与视觉-触觉表示定位"
+   },
+   {
+    "locator": "3.1 Problem Formulation",
+    "role": "problem",
+    "purpose": "单目演示输入假设与参考条件策略形式化"
+   },
+   {
+    "locator": "3.2 Motion Prior Data Extraction with Spatial Augmentation",
+    "role": "method-or-design",
+    "purpose": "WiLoR+MANO 精修+穿透约束的手部重建链与两阶段重定向"
+   },
+   {
+    "locator": "3.3 State Expert Training",
+    "role": "method-or-design",
+    "purpose": "触觉反馈、观测噪声随机化与奖励构成"
+   },
+   {
+    "locator": "3.4 Policy Distillation and Sim-to-Real Transfer",
+    "role": "method-or-design",
+    "purpose": "DAgger 蒸馏与视觉-触觉点云表示"
+   },
+   {
+    "locator": "4.1 Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "Franka FR3 + Sharpa Wave 平台与任务构成"
+   },
+   {
+    "locator": "4.2 Q1: Multi-Task Dexterous Manipulation in Simulation",
+    "role": "results-or-analysis",
+    "purpose": "Table 1：运动学重定向 5.2% vs DEX-X 65.9%"
+   },
+   {
+    "locator": "4.3 Q2: The Role of Scene and Tactile Representations",
+    "role": "results-or-analysis",
+    "purpose": "真实世界模态消融（28/30 vs 14/30 vs 11/30 vs 8/30）"
+   },
+   {
+    "locator": "4.4 Q3: Real-World Deployment and Generalization",
+    "role": "results-or-analysis",
+    "purpose": "四任务真实成功率与零样本物体泛化"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论"
+   },
+   {
+    "locator": "6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：感知误差敏感、依赖重定向参考、触觉表示维度有限"
+   },
+   {
+    "locator": "Appendix B Analysis of Sim-to-Real Transfer",
+    "role": "appendix-or-supplement",
+    "purpose": "腕部轨迹 sim-vs-real 定量误差分解（2.83cm 均值、分阶段、z 向 5.7mm）"
+   },
+   {
+    "locator": "Appendix C Hand-Object Reconstruction Details",
+    "role": "appendix-or-supplement",
+    "purpose": "MANO 优化目标、时间精修与联合手-物优化公式"
+   },
+   {
+    "locator": "Appendix D Retargeting Details",
+    "role": "appendix-or-supplement",
+    "purpose": "两阶段重定向目标、手指权重表、8cm 可达性过滤阈值"
+   },
+   {
+    "locator": "Appendix F/H/I Tactile/Domain Randomization/Observation",
+    "role": "appendix-or-supplement",
+    "purpose": "物体位姿噪声 σ=8mm、±5cm episode 偏置等感知误差仿真"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Acknowledgments",
+    "role": "appendix-or-supplement",
+    "purpose": "致谢与综述问题无关"
+   },
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "not-applicable: 参考文献仅用于核对引文身份"
+   }
+  ]
+ },
+ "research_question": "能否从无本体单目人类操作视频（无触觉、无机器人数据）中学习可零样本部署到真实灵巧手-臂平台的视觉-触觉操作策略？仿真能否充当'触觉补全引擎'提供视频缺失的力级监督？",
+ "contributions": [
+  "DEX-X 框架：把人类视频重建为仿真中的物理交互，用仿真接触动力学补全视频缺失的触觉监督",
+  "教师-学生范式：人类视频运动先验 + 触觉感知 RL 训练特权状态专家，再蒸馏为点云+触觉+本体感知的可部署策略",
+  "29-DoF 灵巧手-臂平台零样本 sim-to-real：仿真六类任务教师平均 65.9%，真实世界 cube picking 93%、擦桌 53%",
+  "附录提供罕见的腕部轨迹 sim-vs-real 定量分解与重定向可达性 8cm 过滤阈值"
+ ],
+ "method": {
+  "summary": "单目演示视频经 WiLoR 逐帧估计手部、MANO 参数化拟合 2D 关键点并做全序列时间一致性精修，再与 FoundationPose 物体轨迹做手-物穿透约束联合优化（30Hz）。重定向分两阶段：先仅优化臂追踪腕部位姿，再臂手联合对齐 MANO 关键点（拇指/食指/远端加权）；重定向前做 ±5cm/±10° 空间增强，增强变体平均末端追踪误差超 8cm 即剔除。特权状态专家用 PPO+非对称 actor-critic 在域随机化（物体位姿 σ=8mm 帧噪声、±5cm episode 偏置、触觉 20% 乘性噪声等）下训练；DAgger 蒸馏为 1055×5 视觉-触觉点云（1024 场景点+6 手部关键点+25 触觉点）学生策略，30Hz 部署。",
+  "assumptions": [
+   "单目 RGB 人类视频+离线准备的物体 mesh（3D 扫描或单图重建）",
+   "WiLoR+MANO 精修链能把单目手部估计净化到可作运动参考的精度",
+   "仿真接触动力学足以替代真实触觉监督",
+   "8cm 平均末端追踪误差以内的重定向变体对策略训练可用"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "六类任务 14 段单目人类演示（pick-up 5、tool use 3、peg insertion 2、in-hand rotation 2、in-hand translation 1、bimanual handover 1）"
+  ],
+  "tasks": [
+   "抓取（杯/方块）",
+   "工具使用（刮水器/锤）",
+   "插销插入（<1cm 准则）",
+   "手内旋转/平移",
+   "双臂交接"
+  ],
+  "embodiments": [
+   "Franka FR3 臂 + Sharpa Wave 灵巧手（单臂 29 DoF，双臂 58 DoF）",
+   "IsaacLab 仿真"
+  ],
+  "sample_or_scale": "仿真 4096 并行环境 30Hz；真实世界每任务 30 trials；DAgger 30 迭代×4096 步"
+ },
+ "evaluation": {
+  "design": "仿真中教师专家对比 ManipTrans 式模仿、运动学重定向、DAPG；真实世界零样本部署四任务；模态消融（视觉/触觉/本体）与物体几何零样本泛化；附录 B 做腕部轨迹与指尖力的 sim-vs-real 分布对比",
+  "baselines": [
+   "ManipTrans-style imitation",
+   "Kinematic Retargeting（开环回放）",
+   "DAPG-style PPO"
+  ],
+  "metrics": [
+   "分阶段成功率（Reach/Grasp/Manip/Overall）",
+   "真实世界成功率（30 trials）",
+   "腕部轨迹 sim-to-real 追踪误差（cm）",
+   "指尖力分布一致性"
+  ],
+  "ablations": [
+   "视觉/触觉/本体模态去除",
+   "深度 vs 点云×有无触觉的场景表示",
+   "标量力/二值接触/3D 力编码",
+   "未见过物体几何泛化"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仿真六类任务：DEX-X 平均 65.9%，ManipTrans 21.9%，运动学重定向仅 5.2%；DAPG 对比的五类单手任务上 DEX-X 61.7% vs 40.6%",
+   "scope": "仿真六类任务",
+   "locator": "4.2 Q1: Multi-Task Dexterous Manipulation in Simulation, Table 1"
+  },
+  {
+   "finding": "腕部轨迹 sim-vs-real：平均追踪误差 2.83cm，跨 episode 标准差 0.46-0.82cm；分阶段 1.1cm(approach)→2.7cm(grasp)→3.8cm(lift)，z 向系统性偏高 5.7mm；残差归因于臂阻抗控制器稳态顺应偏移+物体摆放变化(≤1cm)+相机外参标定误差，而非学习到的运动本身",
+   "scope": "cube picking 真实部署",
+   "locator": "Appendix B Analysis of Sim-to-Real Transfer, Fig. 7"
+  },
+  {
+   "finding": "真实世界模态消融：完整视觉-触觉 28/30，去视觉 14/30，去触觉 11/30，仅本体感知 8/30；失败模式为抓取未命中与接触后脱手",
+   "scope": "真实世界 cube picking",
+   "locator": "4.3 Q2: The Role of Scene and Tactile Representations, Table 2"
+  },
+  {
+   "finding": "重定向质量控制：空间增强变体若平均末端位置追踪误差超过 8cm 被标记不可达并排除出策略训练",
+   "scope": "重定向数据筛选",
+   "locator": "Appendix D Retargeting Details"
+  },
+  {
+   "finding": "真实部署四任务：cube 28/30(93.3%)、cup pouring 24/30、cup lifting 22/30、squeegee 16/30(53%)；零样本物体泛化 thin cube 23/30，更大几何变化降至 7-8/30",
+   "scope": "真实世界",
+   "locator": "4.4 Q3: Real-World Deployment and Generalization, Table 3"
+  },
+  {
+   "finding": "域随机化显式仿真感知误差：物体位姿帧级噪声 σ=8mm/0.06rad、episode 级偏置 ±5cm/0.05rad、2 步延迟、2% 丢帧；触觉 20% 乘性噪声+5% 单指丢失",
+   "scope": "专家训练鲁棒化",
+   "locator": "Appendix H Domain Randomization, Table 8; Appendix F Table 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "性能对感知误差、控制器失配与大的几何/类别偏移敏感；部署策略仍依赖重定向运动参考",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "触觉表示仅限每指尖力幅值，不含压力分布、剪切、滑移或接触斑",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "长时程交互与广泛泛化仍困难（squeegee 53%、未见大物体 23-27%）",
+    "locator": "6 Limitations; 4.4 Q3"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "未报告 WiLoR/MANO 手部重建的定量误差（无 MPJPE），三级净化链的收益未单独消融——无法区分成功率提升多少来自重建精修 vs RL 探索",
+    "basis": "3.2 与附录 C 无重建精度评估"
+   },
+   {
+    "boundary": "2.83cm 腕部追踪误差为 sim-vs-real 口径（含控制器顺应与标定误差），不是'手部检测→重定向轨迹'的直接误差测量；输入视频为单目第三视角演示，非 ego-centric",
+    "basis": "附录 B 的误差归因与 4.1 的设置"
+   },
+   {
+    "boundary": "8cm 过滤阈值针对空间增强变体的可达性，非检测误差阈值；真实世界每任务 30 trials 单场景",
+    "basis": "附录 D 过滤机制的目的陈述"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：单目第三视角人类视频、离线物体 mesh 可得、29-DoF 灵巧手-臂、任务可由运动参考指定的场景。可迁移判断：运动学重定向开环回放基本不可用（5.2%），必须经物理交互学习；手部检测链需时间一致性+穿透约束净化；8cm 是重定向变体可用性硬阈值，93% 真实成功率在 2.83cm 腕部追踪残差下仍成立。不可直接外推：无触觉硬件的平台、ego 视角遮挡、大几何/类别偏移。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "罕见的腕部轨迹 sim-vs-real 定量分解（均值/分阶段/分轴/跨 episode 重复性）并做了系统误差归因",
+   "真实世界 30 trials×4 任务+模态消融+物体泛化，证据链覆盖仿真到真实",
+   "基线含运动学重定向开环回放，直接回答'重定向轨迹不经学习是否可用'",
+   "重定向阶段引入显式可达性过滤（8cm）与手指加权（拇指25/食指15/远端优先）"
+  ],
+  "design_risks": [
+   "手部重建精度无定量评估（WiLoR/MANO 链未测 MPJPE）",
+   "三级重建精修链的贡献未消融",
+   "单一实验场景与相机布置；真实世界人工标注成功",
+   "运动参考在部署时仍需保留（策略非完全自主）"
+  ],
+  "baseline_fairness": "ManipTrans/DAPG 适配到同一设置；运动学重定向作为开环下界；模态消融各变体由同一教师蒸馏，公平",
+  "metric_validity": "成功准则分级（严格 3cm/松弛 5cm，旋转 30°，插销 <1cm）；分阶段 G1-G4 成功率便于定位失败；腕部追踪误差是难得的轨迹级直接测量",
+  "reproducibility": "观测空间维度（557/148/417/481）、奖励权重表、随机化参数表、DAgger 配置全部给出；有项目页 dexx-code.github.io",
+  "external_validity": "六类任务含双臂交接与工具使用；但物体几何大偏移时成功率降至 23-27%，跨类别泛化有限；输入视频视角非 ego"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2609.07747-C01",
+   "claim": "对单目人类视频重建并经两阶段优化的重定向轨迹，开环运动学回放几乎不可用：六类灵巧任务仿真平均成功率仅 5.2%，而同一参考经触觉感知 RL 学习的 DEX-X 达 65.9%（ManipTrans 式模仿 21.9%）——从含噪手部检测得到的重定向轨迹必须经物理交互学习才能转化为可用技能。",
+   "stance": "limit",
+   "relation": "支持传播路径命题：单目手部检测→重建→重定向的轨迹误差使开环回放路线失效（5.2%），误差必须通过仿真中的物理交互学习（而非轨迹跟踪本身）吸收；为'重定向后轨迹可用性'提供定量下界对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 正文：DEX-X 65.9% vs ManipTrans 21.9% vs kinematic retargeting 5.2%；DAPG 评估的五类单手任务上 61.7% vs 40.6%。Table 1 显示 Kin. Retarget 在插销、手内旋转/平移上为 0%。",
+   "locator": "4.2 Q1: Multi-Task Dexterous Manipulation in Simulation",
+   "source_context": "success rate of 65.9%, compared with 21.9% for ManipTrans and 5.2% for kinematic retargeting.\nOn the five single-hand categories evaluated by DAPG, DEX-X achieves 61.7% average success\ncompared with 40.6% for DAPG.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "simulation average task success rate",
+    "value_or_direction": "DEX-X 65.9% vs ManipTrans 21.9% vs kinematic retargeting 5.2%",
+    "comparator": "imitation and open-loop retargeting baselines, averages over task categories",
+    "task_or_sample": "six dexterous task categories in IsaacLab simulation",
+    "locator": "4.2 Q1: Multi-Task Dexterous Manipulation in Simulation, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.2 正文与 Table 1 数值逐格核对；claim 限定为'开环回放不可用'，未否定重定向轨迹作为运动参考/初始化的价值（DEX-X 自身仍使用之）。"
+   }
+  },
+  {
+   "card_id": "2609.07747-C02",
+   "claim": "真实部署中机器人腕部轨迹相对仿真参考的平均 sim-to-real 追踪误差为 2.83cm，且随任务阶段递增：approach 1.1cm、grasp 2.7cm、lift 3.8cm；z 向存在约 5.7mm 系统性抬高，跨 episode 重复性标准差仅 0.46-0.82cm。作者将残差归因于臂阻抗控制器稳态顺应偏移、≤1cm 物体摆放变化与相机外参标定误差，而非学习到的运动本身——且在此误差水平下 cube picking 仍达 93% 成功率。",
+   "stance": "support",
+   "relation": "支持可接受阈值与误差分解命题：端到端管线在腕部轨迹存在厘米级（均值 2.83cm、提举段 3.8cm）系统残差时任务仍可成功，给出灵巧抓取对末端轨迹误差的实际容忍锚点；误差分解显示部署段残差主要来自控制器/标定而非检测-学习链。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 B Fig.7：mean sim-to-real tracking error 2.83cm、cross-episode std 0.46-0.82cm、阶段分解 1.1→2.7→3.8cm、z 向 +5.7mm；真实成功率 28/30 出自 4.4。",
+   "locator": "Appendix",
+   "source_context": "The sim-to-real discrepancy exhibits structured patterns across spatial axes and task phases. The\ndominant deviation occurs along the x-axis, which corresponds to the forward load-bearing direc-\ntion, while the y- and z-trajectories remain more closely aligned. Temporally, the discrepancy in-\ncreases from 1.1 cm during approach to 2.7 cm during grasp and 3.8 cm during lift. This pattern is\nconsistent with a steady-state compliance offset of the arm impedance controller under increasing\npayload, together with object-placement variation and camera-calibration error. Along the z-axis,\nthe real robot consistently lifts approximately 5.7 mm higher than in simulation, suggesting a sys-\ntematic vertical offset during execution.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "wrist trajectory sim-to-real tracking error",
+    "value_or_direction": "mean 2.83 cm; phase-wise 1.1 cm approach, 2.7 cm grasp, 3.8 cm lift; z-axis offset 5.7 mm",
+    "comparator": "simulated rollout vs real-world rollouts on the same task",
+    "task_or_sample": "real-world cube picking, five visualized rollouts plus full episode set",
+    "locator": "Appendix B Analysis of Sim-to-Real Transfer, Fig. 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 B 原文逐句核对（2.83cm 均值与 0.46-0.82cm 在 Fig.7 前段，阶段分解在引用段内）；93% 成功率出自 4.4 正文，在 claim 中标注为同一任务，未把 sim-to-real 误差误述为检测误差。"
+   }
+  },
+  {
+   "card_id": "2609.07747-C03",
+   "claim": "单目视频手部轨迹在使用前经三级净化链：WiLoR 逐帧初始估计→MANO 参数模型对检测 2D 关键点的投影拟合→全序列时间一致性精修与手-物穿透约束联合优化；重定向环节再以两阶段优化（先臂-腕后臂-手联合）并对拇指/食指/远端关键点加大权重——检测误差在重建与重定向两个阶段被显式抑制而非直接传导。",
+   "stance": "support",
+   "relation": "支持缓解手段命题：低成本单目管线中，手部检测误差的第一道防线是重建阶段的时间一致性+物理约束（穿透惩罚）净化，第二道是重定向阶段的关键点加权优化；与直接回归原始检测输出的路线形成对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 正文：WiLoR 初始估计+MANO 时间一致性与手-物穿透约束精修；两阶段重定向'using larger weights for the thumb, index finger, and distal keypoints'；附录 C 给出 L_hand/L_batch/L_joint 目标，附录 D 给出手指权重表（拇指25/食指15/中指10/环7/小5，Tip 1.0→Proximal 0.3）。",
+   "locator": "3.2 Motion Prior Data Extraction with Spatial Augmentation",
+   "source_context": "the hand-object motion at 30 Hz. Object poses are estimated using FoundationPose [41], while hand\nposes are estimated using WiLoR [42] and further refined with MANO-based temporal consistency\nand hand-object penetration constraints.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.2 与附录 C/D 原文核对；claim 描述的是管线设计事实，其误差抑制收益未被作者单独消融——已在 reader_inferred 中声明，claim 未夸大成效。"
+   }
+  },
+  {
+   "card_id": "2609.07747-C04",
+   "claim": "重定向环节设显式可用性硬阈值：空间增强后的每个演示变体计算全轨迹平均末端位置追踪误差，超过 8cm 即标记不可达并排除出策略训练——防止检测/重定向质量过差的轨迹污染后续学习。",
+   "stance": "support",
+   "relation": "支持可接受阈值命题：8cm 平均末端追踪误差是该管线对'重定向轨迹可用性'的操作化 cutoff，属少数把轨迹质量阈值显式写入数据筛选的工作；阈值以下的轨迹才进入 RL 运动参考。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 D：'we compute the mean end-effector position tracking error over the trajectory. Augmented variants whose mean error exceeds 8 cm are marked unreachable and excluded from policy training'；该过滤作用于 ±5cm/±10° 空间增强变体。",
+   "locator": "Appendix",
+   "source_context": "tion, we compute the mean end-effector position tracking error over the trajectory.\nAugmented variants whose mean error exceeds 8 cm are marked unreachable and excluded from\npolicy training.",
+   "evidence_type": "method",
+   "quantitative": {
+    "metric": "mean end-effector position tracking error threshold",
+    "value_or_direction": "8 cm cutoff for marking augmented variants unreachable",
+    "comparator": "augmented retargeting variants filtered before policy training",
+    "task_or_sample": "spatial augmentation variants of human video demonstrations",
+    "locator": "Appendix D Retargeting Details"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 D 原文核对；注意该阈值面向'臂可达性/重定向优化收敛'而非手部检测精度本身——claim 措辞限定为轨迹可用性筛选，reader_inferred 已声明此边界。"
+   }
+  },
+  {
+   "card_id": "2609.07747-C05",
+   "claim": "真实世界 cube picking 模态消融（同一教师蒸馏）：完整视觉-触觉策略 28/30（93.3%），移除视觉降至 14/30，移除触觉降至 11/30，仅本体感知 8/30；失败集中于抓取未命中与接触后脱手——触觉反馈与视觉检测形成近半数的独立互补贡献，可补偿视觉/检测链的不足。",
+   "stance": "support",
+   "relation": "支持触觉-视觉互补命题：当视觉检测（深度点云）存在误差或遮挡时，指尖触觉力反馈提供独立信息通道；移除触觉比移除视觉损失更大（11/30 vs 14/30），说明接触阶段触觉可接管视觉失效时的闭环修正。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 正文：full 28/30、no vision 14/30、no tactile 11/30、proprioception only 8/30，变体均蒸馏自同一教师；失败模式为 missing the object during grasp acquisition 与 losing the object after contact。",
+   "locator": "4.3 Q2: The Role of Scene and Tactile Representations",
+   "source_context": "The full visual-tactile policy achieves 28/30 success, while removing vision or tac-\ntile feedback reduces success to 14/30 and 11/30, respectively; using proprioception alone further\nreduces success to 8/30.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-world success rate on cube picking (30 trials)",
+    "value_or_direction": "28/30 full vs 14/30 no-vision vs 11/30 no-tactile vs 8/30 proprioception-only",
+    "comparator": "modality ablations distilled from the same teacher policy",
+    "task_or_sample": "real-world cube picking, Franka FR3 + Sharpa Wave hand",
+    "locator": "4.3 Q2: The Role of Scene and Tactile Representations, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.3 正文与 Table 2 数值核对一致；'同一教师蒸馏'出自正文；claim 中'触觉损失大于视觉损失'为数值直读（11/30<14/30），未延伸到其他任务。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[42] Potamias et al., WiLoR, 2025",
+   "why": "单目 in-the-wild 3D 手部估计，重建链第一级"
+  },
+  {
+   "ref": "[41] Wen et al., FoundationPose, 2024",
+   "why": "物体 6D 位姿估计"
+  },
+  {
+   "ref": "[8] Li et al., ManipTrans, CVPR 2025",
+   "why": "模仿式迁移基线"
+  },
+  {
+   "ref": "[9] Rajeswaran et al., DAPG, 2018",
+   "why": "演示+RL 基线"
+  },
+  {
+   "ref": "[38] Yuan et al., Robot Synesthesia, 2024",
+   "why": "视觉-触觉统一表示最近邻工作"
+  }
+ ],
+ "notes": "输入视频为单目人类演示（未强调 ego 头戴），与综述问题的 robot-free 设定一致；腕部 2.83cm 误差为 sim-to-real 口径而非检测口径，引用时须区分。IDs 计划：0421-0425。"
+}

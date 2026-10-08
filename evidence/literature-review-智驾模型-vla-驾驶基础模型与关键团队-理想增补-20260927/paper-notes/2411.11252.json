@@ -1,0 +1,193 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2411.11252",
+    "title": "DrivingSphere: Building a High-fidelity 4D World for Closed-loop Simulation",
+    "published": "2024-11-18",
+    "url": "https://arxiv.org/abs/2411.11252",
+    "versioned_id": "2411.11252v1",
+    "authors": [
+      "Tianyi Yan",
+      "Dongming Wu",
+      "Wencheng Han",
+      "Junpeng Jiang",
+      "Xia Zhou",
+      "Kun Zhan",
+      "Cheng-zhong Xu",
+      "Jianbing Shen"
+    ]
+  },
+  "review": {
+    "question": "可控占据与视频生成怎样接入可反馈的驾驶仿真？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "可控占据与视频生成怎样接入可反馈的驾驶仿真？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3.1 Dynamic Environment Composition; 3.2 Visual Scene Synthesis; 3.3 Agent Interplay",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "4.1 Settings; 4.2 Fidelity; 4.3 Open-loop; 4.4 Closed-loop",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "可控占据与视频生成怎样接入可反馈的驾驶仿真？",
+  "contributions": [
+    "OccDreamer 由 BEV/文本生成占据静态场景；actor bank 与交通引擎更新主体状态；VideoDreamer 基于 OpenSora ST-DiT 和几何/ID 条件生成多视角视频，策略输出反馈更新世界。"
+  ],
+  "method": {
+    "summary": "OccDreamer 由 BEV/文本生成占据静态场景；actor bank 与交通引擎更新主体状态；VideoDreamer 基于 OpenSora ST-DiT 和几何/ID 条件生成多视角视频，策略输出反馈更新世界。",
+    "assumptions": [
+      "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "nuScenes",
+      "100 predefined simulated routes"
+    ],
+    "tasks": [
+      "可控占据与视频生成怎样接入可反馈的驾驶仿真？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "生成质量、UniAD 感知与规划、开放环以及生成仿真的交互闭环；路线完成度仍低。",
+    "baselines": [
+      "比较模拟器时视觉域差会影响策略分数，不是驾驶算法优越性对照。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "生成质量、UniAD 感知与规划、开放环以及生成仿真的交互闭环；路线完成度仍低。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "DrivingSphere 把可控占据、视觉渲染与交通主体状态更新接成仿真闭环，区别于只生成固定视频。",
+      "scope": "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。",
+      "locator": "3.3"
+    },
+    {
+      "finding": "DrivingSphere 报告的 UniAD 交互仿真路线完成度仍低；逼真度提升不等于策略可靠或已完成实车迁移。",
+      "scope": "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。",
+      "locator": "4.4"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "未来加强动态主体行为和复杂现实场景。",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。",
+        "basis": "生成质量、UniAD 感知与规划、开放环以及生成仿真的交互闭环；路线完成度仍低。"
+      }
+    ]
+  },
+  "transfer_boundary": "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "生成质量、UniAD 感知与规划、开放环以及生成仿真的交互闭环；路线完成度仍低。"
+    ],
+    "design_risks": [
+      "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。"
+    ],
+    "baseline_fairness": "比较模拟器时视觉域差会影响策略分数，不是驾驶算法优越性对照。",
+    "metric_validity": "验证类型与指标限定为：生成质量、UniAD 感知与规划、开放环以及生成仿真的交互闭环；路线完成度仍低。",
+    "reproducibility": "完整 arXiv v1 正文与 CVPR 作者表可核验；本笔记实验以 v1 为准。",
+    "external_validity": "更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2411.11252-C01",
+      "claim": "DrivingSphere 把可控占据、视觉渲染与交通主体状态更新接成仿真闭环，区别于只生成固定视频。",
+      "stance": "support",
+      "relation": "可控占据与视频生成怎样接入可反馈的驾驶仿真？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "明确由环境代理和自车控制反馈更新位置，再生成观测。",
+      "locator": "3.3",
+      "source_context": "Environment Agents are responsible",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "明确由环境代理和自车控制反馈更新位置，再生成观测。 适用边界：更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。"
+      }
+    },
+    {
+      "card_id": "2411.11252-C02",
+      "claim": "DrivingSphere 报告的 UniAD 交互仿真路线完成度仍低；逼真度提升不等于策略可靠或已完成实车迁移。",
+      "stance": "limit",
+      "relation": "可控占据与视频生成怎样接入可反馈的驾驶仿真？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "该数字只对应文中模拟路线与所测策略，不作跨仿真排行榜。",
+      "locator": "4.4",
+      "source_context": "only 11.7% of each route",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该数字只对应文中模拟路线与所测策略，不作跨仿真排行榜。 适用边界：更逼真的模拟中策略分数提升不能证明实车相关性或 RL 收益；动态主体及场景复杂度仍受限。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "DrivingSphere",
+    "core": false,
+    "stack": {}
+  }
+}

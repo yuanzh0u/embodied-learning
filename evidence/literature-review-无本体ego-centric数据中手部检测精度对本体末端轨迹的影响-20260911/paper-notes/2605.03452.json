@@ -1,0 +1,124 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.03452",
+  "title": "BifrostUMI: Bridging Robot-Free Demonstrations and Humanoid Whole-Body Manipulation",
+  "published": "2026-05-06",
+  "url": "https://arxiv.org/abs/2605.03452",
+  "authors": [
+   "Hongwu Wang",
+   "Chenhao Yu",
+   "Youhao Hu",
+   "Jiachen Zhang",
+   "Yuanyuan Li",
+   "Shaqi Luo"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "rejected",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "exclude",
+   "reason": "与 2606.27239（HumanoidUMI, v1, 2026-06-25）为同一 BAAI 作者团队的同一工作更名版（本条目 v2, 2026-07-07）：标题/摘要/五关键点表示/SKR/层级框架/五任务/Table I 全部数字（55/25/2.2×、43/17、61/1、55/30、53/23、62/5）逐项一致；词级 diff（系统名归一化后）仅余断词位置与图块文本插断位置差异，无实质内容差别。证据已由 2606.27239 的 note 投影（EA-EGOPREC-2026-0446~0448），为避免同一工作重复计入证据层，本条目不设证据卡。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble; I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认与 2606.27239 的问题定义与贡献声明一致。"
+   },
+   {
+    "locator": "A. Robot-free Data Collection System; B. High-Level: Diffusion Policy; C. Bridge: Keypoint Retargeting System; D. Low-Level: Whole-Body Controller",
+    "role": "method-or-design",
+    "purpose": "方法章节与 2606.27239 逐节比对，内容同构。"
+   },
+   {
+    "locator": "IV. EXPERIMENTS; A. Effectiveness of the robot-free data collection and train-; C. Efficiency of robot-free data collection",
+    "role": "results-or-analysis",
+    "purpose": "实验设置、消融与 Table I 数字与 2606.27239 完全一致。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论一致。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORKS",
+    "reason": "与 2606.27239 同构。"
+   },
+   {
+    "locator": "REFERENCES",
+    "reason": "参考文献列表。"
+   }
+  ]
+ },
+ "research_question": "（与 2606.27239 相同）如何在不使用目标机器人的前提下采集可部署的人形机器人全身操作演示，并把稀疏人体关键点轨迹经形态学重定向转换为全身可执行行为？",
+ "contributions": [
+  "（与 2606.27239 相同，不重复计入）便携 VR-UMI 采集系统 + 稀疏空间关键点重定向接口 + 三层级策略框架。"
+ ],
+ "method": {
+  "summary": "与 2606.27239（HumanoidUMI）相同：PICO 4 VR + UMI 式手持夹爪采集五/七关键点轨迹，Diffusion Policy 高层 + SKR 重定向 + MJLab 全身控制器三层级部署到 Unitree G1。",
+  "assumptions": []
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [
+   "与 2606.27239 相同五任务"
+  ],
+  "embodiments": [
+   "Unitree G1"
+  ],
+  "sample_or_scale": "与 2606.27239 相同（20 次试验/变体；Table I 吞吐数字逐项一致）"
+ },
+ "evaluation": {
+  "design": "与 2606.27239 相同。",
+  "baselines": [],
+  "metrics": [],
+  "ablations": []
+ },
+ "findings": [],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "同 2606.27239：无追踪精度定量、成功率数值仅在柱状图、λ_leg 与固定偏移的标定细节未报告。",
+    "basis": "两版内容同构，局限继承自同一文本。"
+   }
+  ]
+ },
+ "transfer_boundary": "同 2606.27239；本条目不产生独立证据，引用请以 2606.27239 的投影事件为准。",
+ "critical_appraisal": {
+  "design_strengths": [],
+  "design_risks": [
+   "同一工作以两个 arXiv 条目存在（系统更名），文献计量与证据计数时须去重。"
+  ],
+  "baseline_fairness": "同 2606.27239。",
+  "metric_validity": "同 2606.27239。",
+  "reproducibility": "同 2606.27239。",
+  "external_validity": "同 2606.27239。"
+ },
+ "evidence_cards": [],
+ "core_citations": [],
+ "notes": "去重判定依据：(1) 作者列表与单位（BAAI）完全一致；(2) 系统名外（BifrostUMI↔HumanoidUMI）词级 diff 仅剩断词与图块插断位置差异；(3) Table I 六个数字、λ_leg=0.75、47 维动作空间、H=48、五任务定义逐项一致；(4) 项目页同域 baai-aether.github.io。判定为更名重复版（2605.03452v2 晚于 2606.27239v1，疑为改名后重新提交）。候选注册表与覆盖度统计中此条目应标注 duplicate-of 2606.27239。"
+}

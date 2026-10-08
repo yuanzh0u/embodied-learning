@@ -1,0 +1,598 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.22971",
+  "title": "Humanoid-OmniOcc: Stereo-Based Full-View Occupancy Dataset for Embodied AI",
+  "published": "2026-06",
+  "url": "https://arxiv.org/abs/2606.22971",
+  "authors": [
+   "Xianda Guo",
+   "Bohao Zhang",
+   "Chenwei Huang",
+   "Shiyuan Chen",
+   "Ruilin Wang",
+   "Yiqun Duan",
+   "Cong Yang",
+   "Qin Zou",
+   "Wei Sui"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "dataset",
+  "relevance": {
+   "decision": "include",
+   "reason": "对鱼眼综述的三重价值：(1) 应用方式——环视相机家族的『多相机双目环视』分支：Unitree G1 头部 4 组常规 FOV 双目相机排布实现 360° 覆盖（非鱼眼光学单镜），配 Real2Sim2Real 仿真主导数据生产范式；(2) 效果——同协议下环视双目 vs 单目的量化对比（测试集 mIoU 11.69 vs 5.11；真实世界 19.26 vs 5.34）与立体骨干敏感性消融（真实世界 mIoU 9.78→19.26 随骨干变化）；(3) 局限——立体校正的 FOV 收缩（水平 106°→93°）、真实 GT 依赖 LiDAR+人工标注、单目基线跨域适配混淆。与 OneOcc（单鱼眼全景相机）和 PanoMMOcc（PAL+多模态）构成全景占据感知三路线对照。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：现有占据数据集车载中心（前向/远场/静态道路先验）与人形近场/自我中心/全向需求错位；现具身数据集单目深度歧义或 LiDAR 昂贵笨重；确立环视双目中间路线。"
+   },
+   {
+    "locator": "page 2-4, Section 2 Related Work (2.1 datasets, 2.2 occupancy, 2.3 stereo matching) and Section 3.1 Real2Sim2Real Design Philosophy",
+    "role": "relevant-core",
+    "purpose": "定位：已有立体占据方法限于前视双目、无环视双目占据数据集（gap）；Real2Sim2Real 三段闭环设计哲学（Real→Sim / Sim / Sim→Real）。"
+   },
+   {
+    "locator": "page 3, Table 1 Dataset comparison",
+    "role": "data-or-setting",
+    "purpose": "与 17 个占据数据集逐项对比（场景/环视/模态/场景数/帧数/网格/分辨率），确认 Humanoid-OmniOcc 为唯一室内 Stereo&D 环视行（155K 帧、[44,384,384]@0.04m）。"
+   },
+   {
+    "locator": "page 4-5, Section 3.1-3.4 (Real2Sim2Real, Virtual Scene Setup, Omnidirectional Stereo Configuration, DWA Autonomous Collection)",
+    "role": "method-or-design",
+    "purpose": "提取传感器配置（4×双目前后左右、1280×1080、6cm 基线、596.81px 焦距、FOV 106°×86° raw→93°×83° 校正后）、仿真场景设定（15 种全球室内风格、PBR、DWA 自主导航采集）。"
+   },
+   {
+    "locator": "page 6-7, Section 4 HS²Occ Model (4.1 task, 4.2 features, 4.3 stereo depth network, 4.4 2D-to-3D transformer, 4.5 head and loss)",
+    "role": "method-or-design",
+    "purpose": "理解架构：视差代价体→深度向代价体（SDN，解决视差深度敏感不均）、深度后验引导 splatting 到机器人中心体素、占据头与联合损失（focal+geo_scal+sem_scal+lovasz+λ·depth）。"
+   },
+   {
+    "locator": "page 7-9, Section 5 Experiments (5.1 implementation, 5.2 metrics, 5.3 main results, 5.4 ablations, 5.5 qualitative)",
+    "role": "results-or-analysis",
+    "purpose": "提取实现细节（16×H20、10 epochs、单目基线 nuScenes→4 视图适配）、主结果（test 29.67/11.69；real 35.45/19.26）、立体骨干消融（Table 3）与视差-深度公式消融（Table 4）。"
+   },
+   {
+    "locator": "page 9, Section 6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者总结：stereo cues 显著提升几何保真与泛化（尤其真实域移下）；全文无专门 Limitations 节。"
+   },
+   {
+    "locator": "page 13-14, Appendix A.1-A.4 (dataset overview, GT generation in simulation and real world, scaling analysis)",
+    "role": "data-or-setting",
+    "purpose": "提取数据分布（155,753 样本/15 场景明细）、仿真 GT 深度一致性规则、真实 GT 的 LiDAR+Bresenham 可见性+人工语义标注管线、训练/测试规模分析（Fig. 6）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 10-12, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表仅用于引用映射（HumanoidOcc/EmbodiedScan/FoundationStereo/StereoAnything 等），无需逐条精读。"
+   }
+  ]
+ },
+ "research_question": "多相机环视双目（4 组常规 FOV 双目 rig，非鱼眼单镜）在人形机器人占据感知中的应用方式（360° rig 排布 + Real2Sim2Real 仿真数据生产 + 立体深度先验引导 2D-to-3D 提升）、效果（vs 单目基线的测试集/真实世界提升幅度、立体骨干与代价体公式的敏感性）与局限（立体校正 FOV 收缩、真实 GT 依赖 LiDAR+人工标注、基线适配混淆、绝对性能中等）是什么？",
+ "contributions": [
+  "Humanoid-OmniOcc：首个面向人形机器人的全景双目（panoramic stereo）占据数据集——Unitree G1 头部 4 组双目实现 360° 视觉覆盖，15 类密集语义标注，15 仿真场景+5 真实环境共 155,753 样本，机器人本体不依赖 LiDAR。",
+  "Real2Sim2Real 数据生产管线：真实传感器参数（内外参/基线/FOV/安装几何）精确复刻进 Isaac Sim（PBR 渲染），仿真产出厘米级占据 GT，纯仿真训练模型直接在真实环境评测并以失败模式反馈仿真器精化。",
+  "HS²Occ 模型：利用立体导出深度先验做稳健 2D-to-3D 提升，含视差→深度向代价体转换（SDN）与深度后验引导的 splatting，在测试集与真实世界均超单目 SOTA 基线。",
+  "系统消融：5 种立体骨干（LightStereo-S/L、COEX、IGEV、FoundationStereo）同管线对比 + DDVM vs SDN 代价体公式对比 + 训练/测试规模 scaling 分析。"
+ ],
+ "method": {
+  "summary": "HS²Occ 管线：8 路同步 RGB（前后左右 4 个双目对）经共享 2D backbone 提取多尺度特征；每个双目对构造视差代价体，再按深度-视差关系经双线性插值转换为深度向代价体（SDN——视差代价体的深度敏感不均：同样视差位移在远距对应更大深度变化），经 3D 卷积聚合后 softmax 期望回归左图像素级度量深度；仅左视图特征以立体深度后验 q_i(x,k) 做深度离散化三线性 splatting 提升到机器人中心体素网格，轻量 transformer 沿相机射线聚合多视角上下文；占据头（稀疏卷积+三线性上采样）输出逐体素 logits。损失 L_total = L_occ(focal+geo_scal+sem_scal+lovasz) + λ·L_depth（占据梯度隐式正则化深度预测）。默认立体骨干 FoundationStereo（官方预训练权重），LightStereo/COEX/IGEV 以 StereoAnything 预训练权重初始化；训练 10 epochs、AdamW 4e-4、batch 32、输入 resize 544×640、16×H20。数据侧以 DWA 自主导航策略在 15 个全球风格仿真室内场景采集，Real2Sim2Real 闭环用真实评测失败模式（光照/材质反射率）反馈仿真参数精化。",
+  "assumptions": [
+   "4 组双目相机的内外参已标定且时间同步（标定参数记录在数据集中）",
+   "立体深度后验足以引导体素提升（仅用左视图特征+深度后验，右图只进立体网络）",
+   "Real→Sim 传感器参数复刻 + PBR 渲染足以把视觉域差压到可迁移水平",
+   "场景以静态室内物体为主（家具/结构/悬挂物），动态人/物未在数据生成中显式处理"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Humanoid-OmniOcc（自建，唯一评测集）：155,753 样本×4 双目对，15 个仿真室内场景（15 种全球室内风格：apartments/studios/bedrooms/dining rooms/kitchens/lounges/living rooms/offices/patios 等）+ 5 个真实环境（Bar, Corridor, Office, Apartment）；15 语义类（floor/partitions/door/chair/table/sofa/bed/appliance/cabinet/carpet/plant/objects/suspended/other/free）；占据网格 [44,384,384]@0.04m；仿真 GT 为深度一致性规则自动标注，真实 GT 基于 LiDAR 点云+Bresenham 可见性+人工语义标注。"
+  ],
+  "tasks": [
+   "全景双目语义占据预测（voxel-level semantic occupancy / 3D scene understanding for humanoid navigation and interaction）"
+  ],
+  "embodiments": [
+   "Unitree G1 人形机器人头部 4×双目 rig（front/rear/left/right，1280×1080、6cm 基线、596.81px 焦距、raw FOV ~106°×86°→校正后 93°×83°）；模型绑定该传感器配置但管线与具体本体解耦"
+  ],
+  "sample_or_scale": "155,753 仿真样本（最大场景 Nooks 19,851、Studio 14,860、Office 14,566）+ 5 真实环境评测；数据构建+PBR 渲染耗约 4,000 GPU 小时（NVIDIA L20）；训练 10 epochs/batch 32/16×H20，输入 resize 544×640。"
+ },
+ "evaluation": {
+  "design": "双轨评测（未见仿真测试场景 + 5 个真实环境）对比 4 个单目 SOTA 占据模型；同管线立体骨干消融（5 种）；视差→深度公式消融（DDVM vs SDN）；训练规模（15K→59K）与测试规模（1K→9K）scaling 分析；定性对比（Fig. 5）。",
+  "baselines": [
+   "FB-Occ（CVPR'23 3D 占据冠军方法，Mono，test 28.59 IoU/5.11 mIoU；real 12.22/2.42）",
+   "FlashOcc（Mono，test 18.05/1.71；real 15.39/2.42）",
+   "SurroundOcc（Mono，test 24.71/6.86；real 20.35/8.89）",
+   "GaussianFormer（Mono，test 26.15/5.84；real 17.11/5.30）",
+   "立体骨干消融：LightStereo-S/L（StereoAnything 初始化）、COEX、IGEV、FoundationStereo（官方权重）"
+  ],
+  "metrics": [
+   "per-class IoU（15 类）",
+   "mIoU（valid classes 均值，遵循 SurroundOcc 协议）"
+  ],
+  "ablations": [
+   "立体骨干（Table 3：test LStereo-L 35.11/8.09 vs FDS 29.67/11.69；real FDS 35.45/19.26 vs LStereo-L 33.66/9.78）",
+   "视差→深度公式（Table 4：DDVM vs SDN，test 28.04/10.07→29.67/11.69；real 32.80/17.03→35.45/19.26）",
+   "训练规模 15K→59K（一致提升）与测试规模 1K→9K（波动仅 1–2%）（Fig. 6）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "首个全景双目人形占据数据集：4 组双目 360° 覆盖、15 类语义、15 仿真+5 真实环境、155,753 样本、机器人本体无 LiDAR；配 Real2Sim2Real 闭环（真实传感器参数→Isaac Sim 仿真生成→纯仿真训练→真实评测→反馈精化）。",
+   "scope": "Humanoid-OmniOcc 数据集定位与规模",
+   "locator": "page 1, Abstract; page 3, Contributions and Table 1; page 13, Appendix A.1"
+  },
+  {
+   "finding": "环视双目配置与校正 FOV 代价：4 组双目（front/rear/left/right）1280×1080、6cm 基线；raw FOV ~106°(H)×86°(V)（±3°），立体校正后收缩至 93°(H)×83°(V)（±3°）——水平损失 13°，360° 覆盖靠 rig 排布而非单镜头鱼眼光学。",
+   "scope": "Unitree G1 头部双目 rig 硬件参数",
+   "locator": "page 5, Section 3.3 Omnidirectional Stereo Configuration and Fig. 3"
+  },
+  {
+   "finding": "测试集主结果：HS²Occ 29.67 IoU/11.69 mIoU vs 最强单目 FB-Occ 28.59/5.11——IoU 差距小（+1.08），语义完整性差距大（mIoU 2.3 倍）。",
+   "scope": "Humanoid-OmniOcc 测试集（未见仿真场景）",
+   "locator": "page 8, Section 5.3 and Table 2"
+  },
+  {
+   "finding": "真实世界（sim-to-real）主结果：纯仿真训练的 HS²Occ 35.45 IoU/19.26 mIoU vs 最佳单目 15.39 IoU/5.34 mIoU——域移下环视双目优势放大（IoU 差距 20.06 vs 测试集 1.08），单目方法在多数类别崩溃。",
+   "scope": "5 个真实室内环境（Real2Sim2Real 协议）",
+   "locator": "page 8, Section 5.3 and Table 2"
+  },
+  {
+   "finding": "逐类收益集中在交互相关语义与细薄结构：test floor 50.85/door 12.97/cabinet 16.71；real chair/table/sofa/bed 22.31/22.43/34.74/34.93——单目常崩溃的目标中心类别上双目保持非平凡 IoU。",
+   "scope": "15 类逐类 IoU（test+real）",
+   "locator": "page 8, Section 5.3 and Table 2"
+  },
+  {
+   "finding": "立体骨干敏感性：同占据头与提升管线下，真实世界 mIoU 从 LStereo-L 9.78 到 FDS 19.26（近 2 倍）；测试集上 LStereo-L 的 IoU（35.11）反高于 FDS（29.67）但 mIoU 低——占据质量对立体深度可靠性高度敏感，作者选 FoundationStereo 为默认。",
+   "scope": "5 种立体骨干消融",
+   "locator": "page 9, Table 3; page 8, Section 5.4"
+  },
+  {
+   "finding": "深度向代价体（SDN）一致优于 DDVM：test 28.04/10.07→29.67/11.69，real 32.80/17.03→35.45/19.26——针对视差代价体远距深度敏感不均的设计层改进。",
+   "scope": "视差→深度公式消融",
+   "locator": "page 8, Section 5.4 and Table 4 (page 9); page 6, Section 4.3"
+  },
+  {
+   "finding": "规模分析：训练帧 15K→59K 各指标一致提升（更大场景覆盖→更好空间泛化）；测试帧 1K→9K 指标几乎不变（波动 1–2%）——不依赖场景特定先验，支撑仿真扩规模路线。",
+   "scope": "HS²Occ 训练/测试规模 sweep",
+   "locator": "page 14, Appendix A.4 and Figure 6"
+  },
+  {
+   "finding": "真实 GT 生产依赖外部传感与人工：真实占据监督基于 LiDAR 点云（去噪→baselink 坐标→体素离散化→占据标记），经 FoV 约束+3D Bresenham 射线追踪区分自由/未知，语义标签人工标注——『不依赖 LiDAR』仅指机器人本体传感器栈。",
+   "scope": "真实世界 GT 生成管线",
+   "locator": "page 13-14, Appendix A.3"
+  },
+  {
+   "finding": "基线适配披露：FB-Occ/FlashOcc/SurroundOcc 原为 nuScenes 6 环视相机设计，被适配为 4 视图输入（仅各双目对左图）——跨域适配是 stereo vs mono 主表对比的混淆因素。",
+   "scope": "单目基线适配协议",
+   "locator": "page 7, Section 5.1"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "sim-to-real 域差存在且集中在视觉外观层面：真实评测揭示领域特定失败模式（光照差异、材质反射率不匹配），需以失败模式反馈迭代精化仿真参数——作者以闭环设计承认该差距未完全消除。",
+    "locator": "page 5, Section 3.1 Sim→Real paragraph"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "『全景』实现路线差异：本数据集的 360° 覆盖来自 4 组常规 FOV 双目相机的 rig 排布而非鱼眼/环带镜头光学——单机 raw FOV 仅 ~106°×86°，立体校正后进一步收缩到 93°×83°（水平损失 13°）；在鱼眼综述中应归入『多相机环视双目（surround multi-camera stereo）』路线，与 OneOcc 单鱼眼全景、PanoMMOcc PAL 环带镜头构成三路对照，三者的『全景』一词光学含义不同。",
+    "basis": "page 5 Section 3.3 数字逐字（106°/86° raw → 93°/83° rectified）；全文检索无 fisheye/OCam/omnidirectional lens 等鱼眼模型字样，相机按常规内外参标定。"
+   },
+   {
+    "boundary": "真实 GT 依赖 LiDAR+人工标注：『without relying on LiDAR』只描述机器人本体传感器栈；真实评测监督信号的生成仍需 LiDAR 点云扫描、Bresenham 可见性推理与人工语义标注——环视双目数据集的真实 GT 生产并未摆脱外部传感与人工成本，评测规模受此约束。",
+    "basis": "page 13 Appendix A.3 逐字（based on LiDAR point clouds）与 page 14 后文（3D Bresenham ray-tracing、semantic labels are manually annotated，已核对）。"
+   },
+   {
+    "boundary": "基线适配混淆：单目基线原为 nuScenes 6 环视相机设计、被适配为 4 视图且仅用左图——车载架构→人形设定的跨域适配可能低估单目上限；且测试集 IoU 差距仅 +1.08（29.67 vs 28.59），立体优势主要体现在语义 mIoU，『stereo 全面优于 mono』的引用应限定到该协议。",
+    "basis": "page 7 Section 5.1 逐字（adapt ... to a 4-view input setting using the left images）；page 8 Table 2 数字（29.67 vs 28.59 IoU；11.69 vs 5.11 mIoU）。"
+   },
+   {
+    "boundary": "文本/表格多处不一致，引用数字应以表格为准：正文 best mIoU: 5.34 vs Table 2 GaussianFormer 5.30；『five real-world indoor environments (Bar, Corridor, Office, and Apartment)』5 个环境只列 4 个名字；附录称训练帧 15K→59K 但 Fig. 6 横轴为 15K/52K/104K/146K，且正文列 IoU/Precision/Recall 而图例为 IoU/mIoU。",
+    "basis": "page 8 Section 5.3 文本 vs Table 2 同页；page 13 Appendix A.1『five ... (Bar, Corridor, Office, and Apartment)』；page 14 Appendix A.4 文本 vs Figure 6 轴标与图例。"
+   },
+   {
+    "boundary": "任务闭环与效率缺失：评测止于占据 IoU/mIoU，无下游导航/操作任务收益验证；全文无 FPS/延迟/参数量报告（训练用 16×H20 集群、输入 544×640）——人形端侧实时部署可行性未评估；场景为静态室内物体，动机中提到的动态人类活动未进入数据生成。",
+    "basis": "page 7-9 Section 5 全部实验小节无效率指标；page 1 Section 1 提到 dynamic human activity 为人形挑战，但 page 5 Section 3.2 场景构成为静态物体（tables, chairs, cabinets, walls）。"
+   }
+  ]
+ },
+ "transfer_boundary": "本笔记证据的可迁移范围：人形平台头部 4×双目环视 rig（1280×1080、6cm 基线）、室内场景、仿真主导训练（Real2Sim2Real）、15 类语义占据（[44,384,384]@0.04m）。『stereo 优于 mono』结论绑定该基准协议——单目基线为 nuScenes 6 相机架构跨域适配为 4 视图左图输入，测试集 IoU 差距仅 +1.08；真实世界优势（35.45/19.26 vs 15.39/5.34）绑定 5 个真实室内环境与 LiDAR 生成的评测 GT。『不依赖 LiDAR』仅指机器人传感器栈，真实 GT 生产仍需 LiDAR+人工。FOV 数字（106°→93°）绑定该 6cm 基线双目模块的校正流程。对鱼眼综述的边界：本文代表『多相机环视双目』路线而非鱼眼光学路线，其『panoramic』指 rig 排布达成的 360° 覆盖；三路线（单鱼眼全景/PAL 多模态/环视双目）结论不可互换。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "首个环视双目人形占据数据集，填补 Related Work 确认的 surround-stereo 空白（此前立体占据方法均限于前视双目）",
+   "Real2Sim2Real 闭环设计把仿真数据生产与真实评测耦合成可迭代管线，而非一次性仿真产物",
+   "立体骨干消融在固定占据头与提升管线下切换 5 种骨干，是本文最干净的受控证据",
+   "双轨评测（未见仿真测试集+5 真实环境）直接量化 sim-to-real 迁移",
+   "训练/测试规模分析（Fig. 6）排除场景特定先验与时序偏差解释"
+  ],
+  "design_risks": [
+   "单目基线为 nuScenes 6 相机架构跨域适配（4 视图左图），stereo vs mono 差距混入适配因素",
+   "多处文本/表格不一致（5.34 vs 5.30；five vs 四个命名环境；Fig. 6 轴标 vs 正文 15K→59K；指标名不一致），附录分析未经仔细校对",
+   "无专门 Limitations 节；无效率指标（FPS/延迟/参数），端侧部署叙事缺支撑",
+   "仿真场景为静态物体，动机中的动态人类活动未进入数据；5 个真实环境中正文仅命名 4 个",
+   "mIoU 为 15 类均值且类别分布不均衡（结构类主导），绝对值跨基准可比性有限"
+  ],
+  "baseline_fairness": "四个单目基线均为 SOTA 占据模型（含 CVPR'23 冠军 FB-Occ）且在同数据上重训，但原架构面向 nuScenes 6 环视相机，被适配为 4 视图（仅左图）输入——单目模型看到的视角数与双目模型的左图数相同（4），双目额外利用右图与视差，这对 mono 是公平的输入对齐但对架构是跨域移植；立体骨干消融（同头同管线）才是无混淆对照。真实 GT 由 LiDAR+人工标注生成，评测锚定可靠。",
+  "metric_validity": "per-class IoU + mIoU 遵循 SurroundOcc 协议，15 类覆盖结构与家具类；真实世界 GT 经 LiDAR+Bresenham 可见性推理，遮挡区标 unknown 而非误标 free——监督信号物理一致性有保障；无效率指标与下游任务指标是度量面缺口。",
+  "reproducibility": "训练超参完整（16×H20、10 epochs、AdamW 4e-4、batch 32、544×640、各骨干预训练权重来源明确）；数据集构建流程（Isaac Sim、PBR、DWA 采集、GT 规则）在正文+附录描述充分；代码与数据承诺接收后公开（d-robotics-ai-lab.github.io/humanoid-omniocc），评审时点尚未可用。",
+  "external_validity": "单一平台（Unitree G1 头部 rig）、室内静态场景、15 仿真风格+5 真实环境；对其他本体（四足/轮式）、室外、动态场景、其他 FOV/基线双目的外推未验证；4 组 93° 校正 FOV 的 rig 对更窄过道/更近障碍物的覆盖盲区未分析。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.22971-C01",
+   "claim": "Humanoid-OmniOcc 是首个面向人形机器人的全景双目（panoramic stereo-based）占据数据集：Unitree G1 头部 4 组双目相机实现完整 360° 视觉覆盖、15 类室内语义密集标注、15 个仿真场景+5 个真实环境，机器人本体不依赖 LiDAR。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：环视相机家族的『多相机双目环视』分支进入具身智能的代表性数据基础设施——为全景占据感知提供训练与 sim-to-real 评测基准，Table 1 中唯一室内 Stereo&D 环视行。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "贡献第一条逐字声明 first panoramic stereo-based occupancy dataset for humanoid robots、full 360° visual coverage、15 indoor categories、15 simulated scenes and 5 real-world environments、without relying on LiDAR；Table 1（page 3）给出 155K 帧/[44,384,384]/0.04m 的对比行。",
+   "locator": "page 3, Contributions (bullet 1); page 3, Table 1",
+   "source_context": "• We present Humanoid-OmniOcc, the first panoramic stereo-based occupancy dataset for\nhumanoid robots, offering full 360\n◦ \nvisual coverage with dense semantic labels over 15\nindoor categories, spanning 15 simulated scenes and 5 real-world environments, without\nrelying on LiDAR.",
+   "evidence_type": "dataset-statistic",
+   "quantitative": {
+    "metric": "dataset composition (occupancy dataset comparison, Table 1)",
+    "value_or_direction": "first panoramic stereo-based occupancy dataset for humanoids; full 360° visual coverage; 15 indoor categories; 15 simulated scenes + 5 real-world environments; 155K frames; [44, 384, 384] grid @ 0.04m; no LiDAR on robot",
+    "comparator": "vs HumanoidOcc (6 monocular cameras + LiDAR, 40K frames, 0.1m) and EmbodiedOcc (monocular, 674 frames) in Table 1",
+    "task_or_sample": "Humanoid-OmniOcc dataset vs 17 prior occupancy datasets",
+    "locator": "page 3, Table 1 and Contributions"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 贡献第一条逐字：We present Humanoid-OmniOcc, the first panoramic stereo-based occupancy dataset for humanoid robots, offering full 360° visual coverage with dense semantic labels over 15 indoor categories, spanning 15 simulated scenes and 5 real-world environments, without relying on LiDAR；Table 1 同页给出 Humanoid-OmniOcc Ours Indoor ✓ Stereo & D 15 155K [44, 384, 384] [0.04, 0.04, 0.04] 与 HumanoidOcc 40K、EmbodiedOcc 674 对比行（已核对）；claim 全部逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C02",
+   "claim": "环视双目硬件配置：Unitree G1 头部前/后/左/右各装一组双目模块（共 4 组），构成全景立体感知系统，每组经视差计算做深度估计以保证 360° 空间覆盖；相机分辨率 1280×1080、基线 6cm、焦距 596.81px；原始（畸变）图像 FOV 约 106°(H)×86°(V)（±3°），立体校正后收缩为 93°(H)×83°(V)（±3°）。",
+   "stance": "support",
+   "relation": "支持命题（应用方式/硬件）：环视双目 rig 的具体部署形态与参数——360° 覆盖靠 4 机排布而非鱼眼单镜光学，且立体校正在广角图像上付出水平 FOV 13° 的收缩代价；这是『环视+双目』组合的量化边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 3.3 逐字给出 rig 构成（front/rear/left/right 四方向）、分辨率/基线/焦距与 raw→rectified FOV 数字；全文无鱼眼/OCam 模型字样，相机按常规内外参标定（同段末句）。",
+   "locator": "page 5, Section 3.3 Omnidirectional Stereo Configuration and Fig. 3",
+   "source_context": "As shown in Fig. 3, four stereo camera modules\nare mounted on the Unitree G1’s head facing\nthe front, rear, left, and right directions, form-\ning a panoramic stereo perception system. Each\nstereo pair performs depth estimation through\ndisparity computation, ensuring 360\n◦ \nspatial\ncoverage. In our setup, we employ stereo cam-\neras with a resolution of 1280×1080, a baseline\nof 6 cm, and a focal length of 596.81 pixels. The\nfield of view (FOV) of the raw distorted images\nis approximately 106\n◦ \nhorizontally and 86\n◦ \nver-\ntically (±3\n◦\n), which becomes 93\n◦ \n(H) and 83\n◦\n(V) (±3\n◦\n) after stereo rectification. Intrinsic\nand extrinsic parameters of all cameras are cal-\nibrated and recorded to support precise spatial\nalignment.",
+   "evidence_type": "dataset-statistic",
+   "quantitative": {
+    "metric": "stereo rig configuration on Unitree G1 head",
+    "value_or_direction": "4 stereo modules (front/rear/left/right) for 360° coverage; 1280×1080 resolution; 6 cm baseline; 596.81 px focal length; FOV 106°(H)×86°(V) raw → 93°(H)×83°(V) after stereo rectification (±3°)",
+    "comparator": "raw distorted FOV vs post-rectification FOV per stereo pair (13° horizontal loss)",
+    "task_or_sample": "Humanoid-OmniOcc data collection rig on Unitree G1",
+    "locator": "page 5, Section 3.3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section 3.3 逐字：four stereo camera modules are mounted on the Unitree G1's head facing the front, rear, left, and right directions, forming a panoramic stereo perception system / resolution of 1280×1080, a baseline of 6 cm, and a focal length of 596.81 pixels / approximately 106° horizontally and 86° vertically (±3°), which becomes 93° (H) and 83° (V) (±3°) after stereo rectification；『水平损失 13°』为 106−93 直接算术；claim 数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C03",
+   "claim": "动机：现有具身/室内占据数据集（如 HumanoidOcc）以单目为主——存在深度歧义与弱跨域泛化——或依赖 LiDAR——对人形头戴平台准确但昂贵且笨重；两条既有范式在几何可靠性或硬件成本上受限。",
+   "stance": "support",
+   "relation": "支持命题（应用动机）：单目全景的深度歧义与 LiDAR 的部署负担是人形平台转向『多相机环视双目』路线的两条直接理由——界定环视相机族内不同配置（单目/双目/LiDAR 融合）的取舍逻辑。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言第二段逐字：embodied/indoor occupancy datasets ... predominantly monocular—prone to depth ambiguity and weak cross-domain generalization—or rely on LiDAR, which is accurate but costly and cumbersome for head-mounted humanoid platforms；page 2 首段把两种范式概括为 struggle with geometric reliability or incur prohibitive hardware costs（已核对，在 C04 context 内）。",
+   "locator": "page 1, Section 1 Introduction (second-to-last paragraph)",
+   "source_context": "More recently, embodied/indoor occupancy datasets have begun to emerge (e.g., HumanoidOcc Cui\net al. (2025)), yet they are predominantly monocular—prone to depth ambiguity and weak cross-\ndomain generalization—or rely on LiDAR, which is accurate but costly and cumbersome for head-\nmounted humanoid platforms.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 逐字：More recently, embodied/indoor occupancy datasets have begun to emerge (e.g., HumanoidOcc Cui et al. (2025)), yet they are predominantly monocular—prone to depth ambiguity and weak cross-domain generalization—or rely on LiDAR, which is accurate but costly and cumbersome for head-mounted humanoid platforms；claim 措辞与原文逐点对应，未超出语义。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C04",
+   "claim": "立体中间路线与数据集空白：对近场感知，立体在 arm's reach 距离提供度量接地的稠密深度，成本更低且更易部署；但作者所知此前不存在与人形机器人 360° 自我中心室内感知对齐的环视-双目（surround-stereo）占据数据集。",
+   "stance": "gap",
+   "relation": "界定缺口：环视双目在具身占据感知中此前无对齐数据集（已有立体占据方法均限前视双目）——本文首次填补；为综述提供『环视相机族-双目分支』的谱系节点与前置空白证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 2 逐字给出 stereo 中间路线的三条属性（metrically grounded dense depth at arm's reach / lower cost / easier deployment）与 no surround-stereo occupancy dataset exists 的空白声明；Related Work 2.3 末句确认已有立体占据方法 limited to front-view stereo settings（已核对，page 4）。",
+   "locator": "page 2, Section 1 (stereo-centric approach paragraph); page 4, Section 2.3",
+   "source_context": "struggle with geometric reliability or incur prohibitive hardware costs. To break this bottleneck at both\nthe data and algorithmic levels, we advocate for a stereo-centric approach. For near-field perception,\nstereo offers a pragmatic middle ground: metrically grounded dense depth at arm’s reach with lower\ncost and easier deployment. Meanwhile, stereo depth estimation Guo et al. (2023, 2024, 2025a) has\nmatured to a degree that makes it a strong source of depth priors. However, to our knowledge, no\nsurround-stereo occupancy dataset exists that aligns with humanoid robots’ 360\n◦ \negocentric sensing\nin indoor environments.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 逐字：For near-field perception, stereo offers a pragmatic middle ground: metrically grounded dense depth at arm's reach with lower cost and easier deployment / However, to our knowledge, no surround-stereo occupancy dataset exists that aligns with humanoid robots' 360° egocentric sensing in indoor environments；page 2 首段 struggle with geometric reliability or incur prohibitory hardware costs 亦在 context 内；page 4 Section 2.3 末句 these methods are limited to front-view stereo settings, and no surround-stereo occupancy prediction framework has been explored（已核对）；claim 逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C05",
+   "claim": "Real2Sim2Real 闭环范式：(i) Real→Sim——Unitree G1 的立体相机内外参、基线（6cm）、FOV 与安装几何被精确复刻进 NVIDIA Isaac Sim，配校准材质与光照的 PBR 光度真实渲染以缩小视觉域差；(ii) Sim——以传感器精确数字孪生产出像素级密集标注（厘米级占据 GT、15 类逐体素语义、度量深度图），15 个室内场景共 155K+ 样本；(iii) Sim→Real——纯仿真训练的模型直接部署到同一 Unitree G1 平台的 5 个真实环境（Bar/Corridor/Office/Apartment）评测并量化 sim-to-real 差距。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：环视双目 rig 的数据生产范式——真实传感器参数驱动的仿真生成+真实闭环评测，是具身全景感知数据规模化的代表性路线（区别于真实采集标注与纯仿真一次性产物）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 三段（Real→Sim / Sim / Sim→Real）逐字；闭环失败模式反馈句在 page 5 开头（已核对，见 C15）；Abstract 与 Contributions 第二条复述同一范式。",
+   "locator": "page 4, Section 3.1 Real2Sim2Real Design Philosophy",
+   "source_context": "Real→Sim. The physical sensor configuration of the Unitree G1 robot—including stereo camera\nintrinsics, extrinsics, baseline (6 cm), field of view, and mounting geometry—is precisely replicated\nin NVIDIA Isaac Sim. Photorealistic physically-based rendering (PBR) with calibrated material prop-\nerties and lighting further minimizes the visual domain gap, ensuring that the simulated observations\nclosely match real sensor outputs.\nSim (Data Generation). With the sensor-accurate digital twin in place, we generate large-scale\ntraining data with pixel-accurate dense annotations that would be prohibitively expensive to obtain in\nthe real world. The simulator produces centimeter-level occupancy ground truth, per-voxel semantic\nlabels across 15 categories, and metrically calibrated depth maps—all automatically and at scale\n(155K+ samples across 15 diverse indoor scenes).\nSim→Real. Models trained exclusively on simulated data are deployed and evaluated on real-world\ncaptures from the same Unitree G1 platform in five distinct indoor environments (Bar, Corridor,\nOffice, Apartment). The real-world evaluation quantitatively measures the sim-to-real transfer gap and",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字：physical sensor configuration of the Unitree G1 robot—including stereo camera intrinsics, extrinsics, baseline (6 cm), field of view, and mounting geometry—is precisely replicated in NVIDIA Isaac Sim / centimeter-level occupancy ground truth, per-voxel semantic labels across 15 categories, and metrically calibrated depth maps—all automatically and at scale (155K+ samples across 15 diverse indoor scenes) / Models trained exclusively on simulated data are deployed and evaluated on real-world captures ... in five distinct indoor environments (Bar, Corridor, Office, Apartment)；claim 逐字可溯。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C06",
+   "claim": "测试集主结果：环视双目 HS²Occ 在未见仿真测试场景上取得 29.67 IoU / 11.69 mIoU 的最佳总体表现，超过最强单目基线 FB-Occ（28.59 IoU / 5.11 mIoU）——几何 IoU 差距小（+1.08）而语义 mIoU 差距大（11.69 vs 5.11，约 2.3 倍），作者归因于室内长尾类别上显著更好的语义完整性。",
+   "stance": "support",
+   "relation": "支持命题（效果）：同一 4 视图输入协议下环视双目相对单目在语义占据上的量化收益——立体深度先验主要改善语义完整性而非粗几何；引用时应注意 IoU 差距小、mIoU 差距大的结构性特征。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 5.3 逐字给出 29.67/11.69/28.59/5.11 四个数字与 best overall performance、semantic completeness 结论；Table 2（page 8）行数据一致（FB-Occ Mono 28.59 5.11；HS²Occ Stereo 29.67 11.69）。",
+   "locator": "page 8, Section 5.3 Main Results and Table 2",
+   "source_context": "On the test set, our stereo-based HS\n2\nOcc achieves the best overall performance with 29.67 IoU and\n11.69 mIoU, outperforming the strongest monocular baseline (FB-Occ: 28.59 IoU / 5.11 mIoU),\nindicating notably better semantic completeness on indoor long-tail categories.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IoU / mIoU on Humanoid-OmniOcc test set (15-class semantic occupancy)",
+    "value_or_direction": "HS²Occ (surround stereo) 29.67 IoU / 11.69 mIoU vs FB-Occ (strongest monocular) 28.59 IoU / 5.11 mIoU; IoU margin +1.08, mIoU ~2.3×",
+    "comparator": "four monocular SOTA baselines (FB-Occ/FlashOcc/SurroundOcc/GaussianFormer) adapted to same 4-view input",
+    "task_or_sample": "Humanoid-OmniOcc test set (unseen simulated scenes)",
+    "locator": "page 8, Section 5.3 and Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字：On the test set, our stereo-based HS²Occ achieves the best overall performance with 29.67 IoU and 11.69 mIoU, outperforming the strongest monocular baseline (FB-Occ: 28.59 IoU / 5.11 mIoU), indicating notably better semantic completeness on indoor long-tail categories；Table 2 同页行数据一致（已核对）；+1.08 与 2.3× 为直接算术。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C07",
+   "claim": "真实世界（sim-to-real）主结果：纯仿真训练的 HS²Occ 在真实场景达 35.45 IoU / 19.26 mIoU，大幅超过最佳单目结果（best IoU 15.39 / best mIoU 5.34）——域移下环视双目优势比测试集更显著（真实 IoU 差距 20.06 vs 测试集 1.08），且真实 IoU（35.45）高于测试集（29.67）。",
+   "stance": "support",
+   "relation": "支持命题（效果/获益任务）：立体深度先验是 sim-to-real 泛化的关键——单目方法在域移下崩溃（Table 2 真实行多数类别接近 0）而环视双目保持稳健；语义占据是人形近场感知中明确获益于环视双目的任务。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 5.3 逐字给出 35.45/19.26/15.39/5.34；Table 2 真实世界行（FlashOcc 15.39 IoU；GaussianFormer 5.30 mIoU——正文写 5.34，存在文本/表格 0.04 不一致，引用以表格 5.30 为准）；『20.06 vs 1.08』为两表差值的直接算术。",
+   "locator": "page 8, Section 5.3 Main Results and Table 2",
+   "source_context": "generalizes strongly to real-world scenes under the Real2Sim2Real protocol, reaching 35.45\nIoU and 19.26 mIoU, which exceeds the best monocular results (best IoU: 15.39, best mIoU: 5.34).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IoU / mIoU on real-world captures under Real2Sim2Real protocol",
+    "value_or_direction": "HS²Occ 35.45 IoU / 19.26 mIoU vs best monocular IoU 15.39 (FlashOcc) and best monocular mIoU 5.34 (text; Table 2 shows GaussianFormer 5.30); real-world IoU margin +20.06 vs test-set margin +1.08; real IoU 35.45 > test IoU 29.67",
+    "comparator": "best monocular results among FB-Occ/FlashOcc/SurroundOcc/GaussianFormer, sim-trained only",
+    "task_or_sample": "5 real-world indoor environments (Bar, Corridor, Office, Apartment)",
+    "locator": "page 8, Section 5.3 and Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字：HS²Occ generalizes strongly to real-world scenes under the Real2Sim2Real protocol, reaching 35.45 IoU and 19.26 mIoU, which exceeds the best monocular results (best IoU: 15.39, best mIoU: 5.34)；Table 2 真实行逐字核对（FB-Occ 12.22 2.42 / FlashOcc 15.39 2.42 / SurroundOcc 20.35 8.89 / GaussianFormer 17.11 5.30 / HS²Occ 35.45 19.26）；正文 5.34 与表格 5.30 的不一致已如实记录在 claim 与 quantitative 中。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C08",
+   "claim": "逐类分析：立体深度先验显著改善交互相关语义与细薄结构——测试集上 HS²Occ 的 floor 50.85、door 12.97、cabinet 16.71，且在单目方法常崩溃的目标中心类别上保持非平凡 IoU；真实评测中 chair/table/sofa/bed 达 22.31/22.43/34.74/34.93，验证域移下稳健的 2D-to-3D 提升。",
+   "stance": "support",
+   "relation": "支持命题（获益任务面）：人形交互相关类别（家具/门/柜等细薄结构与长尾语义）是环视双目占据获益最明显的任务面——这些类别的可靠重建依赖度量深度而非外观先验。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 5.3 逐类段落逐字给出全部七个数字与 collapse/robust lifting 结论；Table 2 对应列一致（real: chair 22.31/table 22.43/sofa 34.74/bed 34.93）。",
+   "locator": "page 8, Section 5.3 Per-class results and Table 2",
+   "source_context": "Per-class results further show that stereo depth priors substantially improve interaction-relevant\nsemantics and thin structures: on the test set, HS\n2\nOcc boosts floor (50.85), door (12.97), and cabinet\n(16.71), while maintaining non-trivial IoUs for object-centric classes where monocular methods\noften collapse; in real-world evaluation, HS\n2\nOcc achieves strong recognition for chair/table/sofa/bed\n(22.31/22.43/34.74/34.93), validating robust 2D-to-3D lifting under domain shift.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "per-class IoU on test set and real world",
+    "value_or_direction": "test set: floor 50.85, door 12.97, cabinet 16.71; real world: chair 22.31, table 22.43, sofa 34.74, bed 34.93",
+    "comparator": "monocular baselines which often collapse on object-centric classes (real-world per-class IoUs mostly near 0)",
+    "task_or_sample": "15-class semantic occupancy on Humanoid-OmniOcc test set and real-world captures",
+    "locator": "page 8, Section 5.3 and Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字：stereo depth priors substantially improve interaction-relevant semantics and thin structures: on the test set, HS²Occ boosts floor (50.85), door (12.97), and cabinet (16.71), while maintaining non-trivial IoUs for object-centric classes where monocular methods often collapse; in real-world evaluation, HS²Occ achieves strong recognition for chair/table/sofa/bed (22.31/22.43/34.74/34.93)，validating robust 2D-to-3D lifting under domain shift；数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C09",
+   "claim": "立体骨干消融（固定占据头与 2D-to-3D 提升管线，仅换立体骨干）：测试集上 LStereo-L 取最高 IoU 35.11（FoundationStereo 29.67），但 mIoU 仅 8.09 vs FDS 11.69；真实世界 FDS 35.45 IoU / 19.26 mIoU 大幅领先 LStereo-L 33.66 / 9.78——占据质量对立体深度可靠性高度敏感，作者据此选 FoundationStereo 为默认骨干。",
+   "stance": "conditional",
+   "relation": "条件命题：环视双目占据的收益以立体骨干的鲁棒性为前提——不是『有双目就行』，真实世界 mIoU 随骨干从 9.78（LStereo-L）到 19.26（FDS）变化近 2 倍；几何 IoU 最高的骨干（LStereo-L）语义未必最好，骨干选择需按目标指标权衡。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 全部十行（5 骨干×test/real）逐字；page 8 Section 5.4 的解释句（occupancy quality is highly sensitive to stereo depth reliability / a stronger stereo model can significantly enhance semantic completeness and real-world generalization）在 C09 的 summary 与 relation 中转述（已核对，见 page 8 原文）。",
+   "locator": "page 9, Table 3 Ablation Study on Stereo module; page 8, Section 5.4",
+   "source_context": "Test Set\nLStereo-S Guo et al. (2025a) 33.46 6.55 39.33 6.06 0.00 6.31 12.37 3.40 6.44 0.21 5.37 0.14 1.64 3.87 0.00\nLStereo-L Guo et al. (2025a) 35.11 8.09 42.73 6.62 0.08 7.26 15.21 4.49 9.25 0.03 6.51 0.88 8.54 3.57 0.00\nCOEX Bangunharcana et al. (2021) \n31.17 5.20 43.24 2.49 0.01 5.14 7.40 0.54 1.88 0.02 3.46 0.31 0.57 2.51 0.00\nIGEV Xu et al. (2023a) 27.59 5.59 36.01 2.98 0.02 6.56 10.88 2.52 0.47 0.07 2.97 0.09 6.58 3.57 0.00\nFDS Wen et al. (2025) 29.67 11.69 50.85 4.50 12.97 5.17 6.95 9.57 9.77 7.05 16.71 8.02 10.58 9.70 0.12\nReal World\nLStereo-S Guo et al. (2025a) 33.69 9.00 44.86 13.61 3.81 5.33 14.88 16.08 0.86 0.17 5.43 2.62 0.99 7.54 0.76\nLStereo-L Guo et al. (2025a) \n33.66 9.78 43.52 18.51 0.18 11.32 13.88 15.73 2.87 0.05 6.00 0.33 7.01 7.37 0.36\nCOEX Bangunharcana et al. (2021) 30.07 6.96 43.48 11.78 0.06 6.30 12.94 5.90 0.44 0.04 1.82 0.00 1.65 5.95 0.07\nIGEV Xu et al. (2023a) 28.22 9.32 42.41 9.55 0.65 10.70 13.20 27.65 0.00 0.98 4.34 0.19 4.66 6.89 0.00\nFDS Wen et al. (2025) 35.45 19.26 51.31 14.29 7.77 22.31 22.43 34.74 34.93 1.64 13.52 11.40 11.57 12.12 12.34",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IoU / mIoU by stereo backbone (fixed occupancy head and lifting pipeline)",
+    "value_or_direction": "Test set: LStereo-S 33.46/6.55, LStereo-L 35.11/8.09, COEX 31.17/5.20, IGEV 27.59/5.59, FDS (FoundationStereo) 29.67/11.69; Real world: LStereo-S 33.69/9.00, LStereo-L 33.66/9.78, COEX 30.07/6.96, IGEV 28.22/9.32, FDS 35.45/19.26",
+    "comparator": "five stereo backbones (LightStereo-S/L, COEX, IGEV, FoundationStereo) plugged into the same surround-stereo inputs and 2D-to-3D lifting pipeline",
+    "task_or_sample": "Humanoid-OmniOcc test set and real-world captures",
+    "locator": "page 9, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 3 逐行核对：Test Set LStereo-S 33.46 6.55 / LStereo-L 35.11 8.09 / COEX 31.17 5.20 / IGEV 27.59 5.59 / FDS 29.67 11.69；Real World LStereo-S 33.69 9.00 / LStereo-L 33.66 9.78 / COEX 30.07 6.96 / IGEV 28.22 9.32 / FDS 35.45 19.26；page 8 Section 5.4 逐字（已核对）：occupancy quality is highly sensitive to stereo depth reliability；claim 数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C10",
+   "claim": "视差→深度公式消融：把视差代价体转换为深度向代价体（SDN）相对 DDVM 一致提升——测试集 IoU/mIoU 28.04/10.07 → 29.67/11.69，真实世界 32.80/17.03 → 35.45/19.26；动机是视差代价体存在深度敏感不均（同样视差位移在更远距离对应更大深度变化），深度向公式保证不同距离段的同等对待。",
+   "stance": "support",
+   "relation": "支持命题（机制/设计）：环视双目占据的收益可通过代价体公式进一步放大——深度向重构针对广角/近场设定下远距深度敏感性的设计层改进，是双目占据工程化的可复用组件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 5.4 消融句逐字给出四组数字；动机句在 Section 4.3（page 6，已核对：Disparity-based cost volumes suffer from non-uniform depth sensitivity...ensuring equal treatment across different distance ranges）；Table 4（page 9）行数据一致。",
+   "locator": "page 8, Section 5.4 Ablation Study on Disparity-to-Depth Formulation and Table 4 (page 9); page 6, Section 4.3",
+   "source_context": "Ablation Study on Disparity-to-Depth Formulation. As shown in Tab. 4, compared with DDVM,\nSDN consistently improves occupancy on both the test set (IoU/mIoU: 28.04/10.07 → 29.67/11.69)\nand real-world data (32.80/17.03 → 35.45/19.26).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IoU / mIoU, SDN vs DDVM disparity-to-depth formulation (FoundationStereo backbone)",
+    "value_or_direction": "test set 28.04/10.07 (DDVM) → 29.67/11.69 (SDN); real world 32.80/17.03 (DDVM) → 35.45/19.26 (SDN)",
+    "comparator": "DDVM vs SDN formulation with identical stereo backbone, occupancy head and training protocol",
+    "task_or_sample": "Humanoid-OmniOcc test set and real-world captures",
+    "locator": "page 8, Section 5.4 and Table 4 (page 9)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字：compared with DDVM, SDN consistently improves occupancy on both the test set (IoU/mIoU: 28.04/10.07 → 29.67/11.69) and real-world data (32.80/17.03 → 35.45/19.26)；动机句 page 6 Section 4.3（已核对）与 Table 4 行数据（page 9，已核对）一致；claim 数字全部逐字。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C11",
+   "claim": "基线适配协议披露：FB-Occ、FlashOcc、SurroundOcc 原为 nuScenes 6 环视相机设计，被适配为 4 视图输入设定——仅使用每个双目对的左图；即单目基线看到 4 个视角，双目模型额外利用右图与视差信息。",
+   "stance": "limit",
+   "relation": "限制命题（可比性边界）：stereo vs mono 主表对比带有跨域适配混淆（车载 6 相机架构→人形 4 视图左图），差距不能全部归因于双目深度；固定管线的立体骨干消融（Table 3）才是无混淆对照——引用主表差距时应声明该适配。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 5.1 实现细节逐字；GaussianFormer 为原生的 4 适配之一？——正文仅列 FB-Occ/FlashOcc/SurroundOcc 三个适配对象（GaussianFormer 未在该句中，已核对）；Table 2 中四个单目基线均以 Mono 输入标注。",
+   "locator": "page 7, Section 5.1 Implementation Details",
+   "source_context": "We adapt FB-Occ Li et al. (2023b),\nFlashOcc Yu et al. (2023), and SurroundOcc Wei et al. (2023) (originally designed for nuScenes with\n6 surround-view cameras) to a 4-view input setting using the left images from each stereo pair.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字：We adapt FB-Occ Li et al. (2023b), FlashOcc Yu et al. (2023), and SurroundOcc Wei et al. (2023) (originally designed for nuScenes with 6 surround-view cameras) to a 4-view input setting using the left images from each stereo pair；『看到 4 个视角/额外利用右图与视差』为对该协议的直接算术与结构解读；GaussianFormer 未列入适配句（已核对），claim 措辞已限定为三个基线。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C12",
+   "claim": "数据规模与生产成本：Humanoid-OmniOcc 共 155,753 个样本（每个样本含全向视点采集的 4 组双目对），来自 15 个仿真室内环境（公寓/工作室/卧室/餐厅/厨房/休息室/客厅/办公室/庭院等房型）；另在 5 个真实室内环境采集 sim-to-real 评测数据；整个数据构建与 PBR 渲染过程消耗约 4,000 GPU 小时（NVIDIA L20 集群），涵盖全局光照仿真、立体渲染与体素级占据 GT 生成。",
+   "stance": "support",
+   "relation": "支持命题（应用方式/规模）：环视双目占据数据集的规模上限与生产成本参考——155K 样本为该家族当前最大（Table 1 中 HumanoidOcc 40K、EmbodiedOcc 674），仿真主导生产把标注成本压到 GPU 时间计价。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix A.1 逐字给出 155,753/15/5/4,000 GPU hours/L20 与房型列表；Table 5（page 13）给出逐场景帧数分布（最大 Nooks 19,851）；Table 1（page 3）给出与 HumanoidOcc 40K、EmbodiedOcc 674 的规模对比（已核对）。",
+   "locator": "page 13, Appendix A.1 Overview and Table 5; page 3, Table 1",
+   "source_context": "As summarized in Table 5, Humanoid-OmniOcc dataset comprises a total of 155,753 samples,\neach containing four stereo pairs captured from omnidirectional viewpoints. The data are collected\nfrom fifteen simulated indoor environments, each featuring distinct spatial layouts and aesthetic\nstyles, covering diverse room types including apartments, studios, bedrooms, dining rooms, kitchens,\nlounges, living rooms, offices, and patios. In addition, five real-world indoor environments (Bar,\nCorridor, Office, and Apartment) are captured to enable sim-to-real evaluation. The entire dataset\nconstruction and physically-based rendering process consumed approximately 4,000 GPU hours on\nNVIDIA L20 clusters, encompassing global illumination simulation, stereo rendering, and voxel-level\noccupancy ground-truth generation.",
+   "evidence_type": "dataset-statistic",
+   "quantitative": {
+    "metric": "dataset scale and production cost",
+    "value_or_direction": "155,753 samples (4 stereo pairs each, omnidirectional viewpoints); 15 simulated indoor scenes + 5 real-world environments; ~4,000 GPU hours on NVIDIA L20 clusters for construction and PBR rendering",
+    "comparator": "vs HumanoidOcc 40K frames and EmbodiedOcc 674 frames (Table 1, page 3)",
+    "task_or_sample": "Humanoid-OmniOcc dataset construction",
+    "locator": "page 13, Appendix A.1 and Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 逐字：Humanoid-OmniOcc dataset comprises a total of 155,753 samples, each containing four stereo pairs captured from omnidirectional viewpoints / fifteen simulated indoor environments / five real-world indoor environments (Bar, Corridor, Office, and Apartment) are captured / approximately 4,000 GPU hours on NVIDIA L20 clusters；Table 5 逐场景帧数与 Sum 155,753（已核对）；HumanoidOcc 40K/EmbodiedOcc 674 对比在 page 3 Table 1（已核对）。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C13",
+   "claim": "真实世界 GT 生产依赖外部传感与人工：真实占据监督基于 LiDAR 点云生成——融合稠密点云先经预处理消除无效点/外点/噪声，再变换到统一 baselink 坐标系并离散化到预定义体素空间，含 LiDAR 点的体素标为占据（代表实际物理观测支撑的区域）；未观测/遮挡区域经 FoV 约束可见性评估+3D Bresenham 射线追踪标记为未知而非误标自由，语义标签最终人工标注。",
+   "stance": "limit",
+   "relation": "限制命题（生产边界）：『机器人不依赖 LiDAR』仅对本体传感器栈成立——真实评测的监督/评测信号生成仍需 LiDAR 扫描、射线追踪可见性推理与人工语义标注；环视双目数据集的真实 GT 生产并未摆脱外部传感与人工成本，评测规模因此受限。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix A.3 首段逐字覆盖 LiDAR 点云→预处理→baselink→体素离散化→占据标记；Bresenham 可见性与人工语义标注句在同节 page 14 后文（已核对：we employ the 3D Bresenham ray-tracing algorithm ... semantic labels are manually annotated to obtain semantic occupancy supervision）。",
+   "locator": "page 13, Appendix A.3 Ground Truth Generation in the Real World (continued on page 14)",
+   "source_context": "We generate 3D occupancy supervision ground truth based on LiDAR point clouds. First, the fused\ndense point clouds undergo a preprocessing stage to eliminate invalid points, extreme outliers, and\nsignificant noise, thereby mitigating the impact of artifacts on voxel labeling. Subsequently, the\npoint clouds are transformed into a unified baselink coordinate system using sensor calibration\nparameters, and a predefined 3D voxel space is constructed around the robotic. Each point coordinate\nis discretized into its corresponding voxel unit, where voxels containing LiDAR points are labeled as\noccupied, representing the regions supported by actual physical observations.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 逐字：We generate 3D occupancy supervision ground truth based on LiDAR point clouds / transformed into a unified baselink coordinate system using sensor calibration parameters / voxels containing LiDAR points are labeled as occupied, representing the regions supported by actual physical observations；Bresenham 与人工标注句在 page 14 同节后文（已核对），claim 未超出原文语义。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C14",
+   "claim": "规模分析：训练帧数从 15K 增至 59K 时 IoU/Precision/Recall 一致提升——更大场景覆盖带来更好的空间泛化与完整性；测试帧数从 1K 增至 9K 时各指标几乎不变（波动仅 1–2%）——学习到的表示跨测试场景泛化良好，不依赖场景特定先验或时序偏差。",
+   "stance": "support",
+   "relation": "支持命题（效果条件）：环视双目占据的收益随仿真数据规模扩大持续兑现且不绑定特定测试场景——支撑 Real2Sim2Real 以仿真扩规模的路线；同时提示继续加仿真场景仍有边际收益空间。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix A.4 逐字；注意正文文字（15K→59K、IoU/Precision/Recall）与 Figure 6 轴标（15K/52K/104K/146K）及图例（IoU/mIoU）存在不一致——引用时以定性方向（训练扩规模有效、测试规模不敏感）为准。",
+   "locator": "page 14, Appendix A.4 More Analysis and Figure 6",
+   "source_context": "Figure 6 (Left) illustrates the influence of training data scale on occupancy prediction performance.\nAs the number of training frames increases from 15K to 59K, all three metrics—IoU, Precision,\nand Recall—consistently improve, indicating that larger scene coverage leads to better spatial\ngeneralization and completeness. We also analyze the robustness of HS\n2\nOcc under varying testing\nframe scales, as shown in Figure 6 (Right). When the number of testing frames increases from 1K to\n9K, all three metrics—IoU, Precision, and Recall—remain nearly constant, with fluctuations within\nonly 1–2%. This consistency demonstrates that the learned representation generalizes well across\ndifferent test scenes, confirming that the model does not rely on scene-specific priors or temporal\nbias.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IoU/Precision/Recall vs training and testing frame scale",
+    "value_or_direction": "training frames 15K→59K: all metrics consistently improve; testing frames 1K→9K: metrics nearly constant (fluctuations within only 1–2%)",
+    "comparator": "training-scale sweep vs testing-scale sweep of HS²Occ",
+    "task_or_sample": "HS²Occ on Humanoid-OmniOcc (Figure 6)",
+    "locator": "page 14, Appendix A.4 and Figure 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 逐字：As the number of training frames increases from 15K to 59K, all three metrics—IoU, Precision, and Recall—consistently improve / When the number of testing frames increases from 1K to 9K, all three metrics—IoU, Precision, and Recall—remain nearly constant, with fluctuations within only 1–2% / the model does not rely on scene-specific priors or temporal bias；Fig. 6 轴标/图例与正文的不一致已如实记入 summary 与 reader_inferred。"
+   }
+  },
+  {
+   "card_id": "2606.22971-C15",
+   "claim": "sim-to-real 域差失败模式（作者承认）：真实世界评测揭示领域特定失败模式——光照差异（lighting discrepancies）与材质反射率不匹配（material reflectance mismatch）——这些失败模式反过来指导仿真器参数的迭代精化，以闭合 Real2Sim2Real 环；该闭环设计确保基准不是一次性仿真产物。",
+   "stance": "limit",
+   "relation": "限制命题（域差边界）：环视双目占据的 sim-to-real 剩余差距集中在视觉外观层面（光照/材质反射率）而非几何——外观域差是仿真主导数据生产的当前瓶颈；全文无专门 Limitations 节，此为最接近的自述局限。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 5（Section 3.1 Sim→Real 段落的跨页续文）逐字；Abstract 与 Contributions 的 closes the loop 表述一致；正文其余部分无自述局限（Conclusion 亦无），该判断基于全文结构核查。",
+   "locator": "page 5, Section 3.1 Real2Sim2Real Design Philosophy (Sim→Real paragraph, continued from page 4)",
+   "source_context": "reveals domain-specific failure modes (e.g., lighting discrepancies, material reflectance mismatch),\nwhich in turn inform iterative refinement of the simulation parameters—closing the Real2Sim2Real\nloop.\nThis closed-loop design ensures that the benchmark is not a one-off simulation artifact but a continu-\nously improvable pipeline tightly coupled with real-world deployment requirements.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字：reveals domain-specific failure modes (e.g., lighting discrepancies, material reflectance mismatch), which in turn inform iterative refinement of the simulation parameters—closing the Real2Sim2Real loop / This closed-loop design ensures that the benchmark is not a one-off simulation artifact but a continuously improvable pipeline tightly coupled with real-world deployment requirements；『无专门 Limitations 节』为全文结构核查结论（Section 6 Conclusion 与附录均无自述局限段）。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Humanoid Occupancy: Enabling a Generalized Multimodal Occupancy Perception System on Humanoid Robots",
+   "arxiv_id": "2507.20217",
+   "reason": "引文 HumanoidOcc（Cui et al., 2025）：最接近的前驱——人形全景占据基准，6 单目相机+1 LiDAR 环绕头部；本文 Related Work 与 Table 1 的直接对比行（40K 帧、C&L、[24,200,200]@0.1m），本文以 Stereo&D、155K 帧、0.04m 体素对其升级。"
+  },
+  {
+   "title": "FoundationStereo: Zero-shot Stereo Matching",
+   "arxiv_id": null,
+   "reason": "引文 Wen et al. (CVPR 2025)：HS²Occ 默认立体骨干——消融显示其真实世界 mIoU 19.26 大幅领先其他骨干（LStereo-L 9.78），『占据质量对立体深度可靠性高度敏感』结论的载体。"
+  },
+  {
+   "title": "Stereo Anything: Unifying Stereo Matching with Large-scale Mixed Data",
+   "arxiv_id": "2411.14053",
+   "reason": "引文 Guo et al. (2024)：LightStereo/COEX/IGEV 消融骨干的预训练权重来源（大规模立体对应先验），支撑立体骨干初始化策略。"
+  },
+  {
+   "title": "SurroundOcc: Multi-camera 3D Occupancy Prediction for Autonomous Driving",
+   "arxiv_id": null,
+   "reason": "引文 Wei et al. (ICCV 2023)：评测协议（per-class IoU/mIoU）来源 + 单目基线之一；代表本文基线所来自的车载环视相机范式（nuScenes 6 相机），是基线适配混淆的源头。"
+  },
+  {
+   "title": "EmbodiedScan: A Holistic Multi-modal 3D Perception Suite towards Embodied AI",
+   "arxiv_id": "2312.16170",
+   "reason": "引文 Wang et al. (CVPR 2024)：室内具身多模态 3D 感知数据集（890K 帧、C&D），Table 1 中室内占据数据集谱系节点——本文室内环视双目定位的对照物。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：Humanoid-OmniOcc 是『多相机环视双目』路线的 dataset+benchmark+method 三合一代表，与 OneOcc（单鱼眼全景相机、相机-only 匹敌 LiDAR）和 PanoMMOcc（PAL 环带镜头+四模态、相机-only 弱）构成全景占据感知三路线。关键对照价值：(1) 它量化了『环视+双目』组合的真实世界泛化优势（35.45/19.26 vs 单目 15.39/5.34）——立体深度先验是单目全景（OneOcc 路线）与多模态补强（PanoMMOcc 路线）之外的第三条获取度量的路径；(2) 立体校正在广角图像上的 FOV 收缩（106°→93° 水平）是环视双目相对鱼眼单镜的量化代价——rig 排布换取深度但每机视野变窄；(3) 收益以立体骨干鲁棒性为前提（真实世界 mIoU 9.78→19.26 随骨干变化），『有双目就行』不成立；(4) 真实 GT 生产仍需 LiDAR+人工，说明环视相机族数据集在『摆脱 LiDAR』叙事上的实际边界。三篇对照时必须声明：OneOcc 6 类/QuadOcc 协议、PanoMMOcc 12 类/室外、本文 15 类/室内，绝对值不可跨基准直接互证。"
+}

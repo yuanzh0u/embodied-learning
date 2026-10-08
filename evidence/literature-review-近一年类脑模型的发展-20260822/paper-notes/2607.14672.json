@@ -1,0 +1,374 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.14672",
+  "title": "Scalable Training of Continuous-Time Spiking Neural Networks with Differentiable Spike-Time Discretization",
+  "published": "2026-07-16T07:18:24Z",
+  "url": "https://arxiv.org/abs/2607.14672",
+  "authors": [
+   "Yusuke Sakemi",
+   "Tomoya Takeuchi",
+   "Takeo Hosomi",
+   "Kazuyuki Aihara"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "代表'连续时间/精确脉冲时间训练'这条与代理梯度主流互补的路线:用可微脉冲时间离散化(DSTD)把 TTFS-SNN 训练从浅层推到 9-20 层并实现流水线处理,是评估 SNN 训练方法谱系验证强度的必要对照证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:精确脉冲时间计算的候选维度随前突触脉冲数增长、死神经元问题与深层吞吐下降三大障碍。"
+   },
+   {
+    "locator": "2 Method",
+    "role": "method-or-design",
+    "purpose": "理解 DSTD 核函数映射、候选区间从脉冲数降到固定步数、以及 synfire 链时间正则与流水线机制。"
+   },
+   {
+    "locator": "3 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "核查近似精度、60-150 倍内存效率、单 GPU 训练 9/20 层网络与层间发放窗口组织。"
+   },
+   {
+    "locator": "4 Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "定位与代理梯度方法的差异,收集理论不足与超参搜索负担等自述限制。"
+   },
+   {
+    "locator": "Appendix D Benchmarking",
+    "role": "results-or-analysis",
+    "purpose": "核查与既有连续时间 SNN 的基准对比(90.36% CIFAR-10 / 92.33% F-MNIST)。"
+   },
+   {
+    "locator": "C.1 Learning algorithm",
+    "role": "method-or-design",
+    "purpose": "理解时间惩罚项的损失构造(逐层发放窗口)。"
+   },
+   {
+    "locator": "C.3 Network architecture",
+    "role": "method-or-design",
+    "purpose": "理解 skip-and-delay 残差式结构与推理期复位/流水线操作。"
+   },
+   {
+    "locator": "C.4 Pareto optimization",
+    "role": "results-or-analysis",
+    "purpose": "理解精度-时间窗口权衡的贝叶斯优化协议(约 200 试验/条件)。"
+   },
+   {
+    "locator": "E.1 Convergence of DSTD approximations",
+    "role": "results-or-analysis",
+    "purpose": "核查 DSTD 近似随步数收敛与接近精确解精度的证据。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Appendix A Model / Appendix B (B.1-B.4)",
+    "reason": "模型推导、DSTD 核函数推导与复杂度分析细节,主文陈述已满足综述引用需要。"
+   },
+   {
+    "locator": "C.2 Dataset",
+    "reason": "像素到脉冲时间的编码细节,仅记录输入编码方式要点。"
+   },
+   {
+    "locator": "Acknowledgments / LLM Usage",
+    "reason": "资助与 LLM 使用声明,仅作背景备注。"
+   }
+  ]
+ },
+ "research_question": "如何让基于精确脉冲时间(连续时间)的 TTFS-SNN 训练扩展到深层卷积网络:能否在保留解析梯度与连续时间动力学的同时,把候选发放时间的内存开销降到固定规模,并解决死神经元与深层吞吐问题?",
+ "contributions": [
+  "把可微脉冲时间离散化(DSTD)从先前设置扩展到具有任意膜/突触时间常数的 LIF 神经元:核函数把不规则前突触脉冲映射为固定时间点上的可微加权事件,使近似膜电位在离散时间点与精确解一致",
+  "把候选发放时间维度从前突触脉冲数降为固定 DSTD 步数,消除脉冲排序与输入相关的张量运算;实测输入达 6000 时内存效率提升 60-150 倍,峰值内存约降低两个数量级",
+  "提出 synfire 链式时间正则(Syn-SNN):逐层时间窗惩罚抑制死神经元、组织层间发放时序并实现流水线式逐样本处理",
+  "在单张 GPU(NVIDIA GH200 120GB)上训练 9 层卷积 SNN(CIFAR-10,90.36%)与带 skip-and-delay 残差结构的 20 层卷积 SNN(Fashion-MNIST,92.33%),刷新连续时间 SNN 的可训练深度"
+ ],
+ "method": {
+  "summary": "DSTD 用可微核函数把连续时间脉冲串改写为固定 K 个离散时间点上的加权事件,膜电位在这些时间点上与精确解吻合、时间点之间由核插值,从而以固定大小的规则张量替代随前突触脉冲数增长的候选区间,反向传播因此可行且内存可控。在此之上,对每一层施加 synfire 链式时间惩罚,把各层发放约束在宽度固定、逐层平移的时间窗内:窗口错开使下一层在前一层结束后才工作,推理期用外部复位信号清空状态,实现多样本流水线;20 层网络另用 skip-and-delay 块(延迟跳连+步长卷积)承担残差角色。训练用交叉熵加时间惩罚,超参由 Optuna 贝叶斯优化搜索。",
+  "assumptions": [
+   "TTFS 编码(每神经元至多一次发放);多脉冲情形仅有形式化扩展(B.4)",
+   "离散时间点上核插值足以近似连续膜电位与首次发放时间(误差随 DSTD 步数收敛)",
+   "synfire 链窗口约束可通过时间惩罚学得,且与精度存在权衡(需超参搜索)"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "CIFAR-10(5 万训练/1 万测试,含翻转/旋转/裁剪增广)",
+   "Fashion-MNIST"
+  ],
+  "tasks": [
+   "静态图像分类,像素强度编码为输入脉冲时间",
+   "单神经元级膜电位/发放时间近似精度评测",
+   "单层 1000 LIF 神经元的运行时间/峰值内存基准"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "9 层卷积(CIFAR-10)与 20 层卷积(Fashion-MNIST);单张 NVIDIA GH200 120GB GPU;批大小 50、300 epoch;Pareto 搜索约 200 试验/条件"
+ },
+ "evaluation": {
+  "design": "四层评测:DSTD 与精确解的膜电位/发放时间对比、运行时/峰值内存对精确脉冲时间计算的比值、9/20 层网络的层间脉冲时间分布与流水线演示、与既有连续时间 SNN(ANN 式/伴随方程/QIF/TTFS/多脉冲)的基准表对比;另做精度-时间窗口 Pareto 多目标优化与 DSTD 步数敏感性",
+  "baselines": [
+   "精确脉冲时间计算(同框架无 DSTD)",
+   "Park et al. / Sakemi et al. / Stanojevic et al.(ANN 两阶段式)",
+   "Wunderlich et al. / Meszaros et al. / Konig et al.(adjoint)",
+   "Klos et al. / Wenig et al.(QIF)",
+   "Mostafa / Comsa / Goltz / Sakemi / Zhang / Zhou(TTFS 解析)",
+   "Yamamoto / Bacho / Morrill(多脉冲解析)"
+  ],
+  "metrics": [
+   "分类准确率",
+   "输出层发放时间 RMSE(与精确解)",
+   "每 epoch 计算时间与峰值内存(相对精确方法的比值)",
+   "层间脉冲时间分布与时间窗宽度(精度-延迟权衡)"
+  ],
+  "ablations": [
+   "DSTD 步数对精度的影响(含与精确解模型对照)",
+   "时间窗宽度与精度的 Pareto 前沿",
+   "三种 LIF 时间常数设置"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "输入脉冲数达 6000 时,DSTD 相对精确脉冲时间计算内存效率提升 60-150 倍;引言汇总为峰值内存降低近两个数量级(摘要称最高约 100 倍内存、约 20 倍训练时间)",
+   "scope": "单层 1000 LIF 神经元基准,批 100,5 epoch",
+   "locator": "3 Experiments"
+  },
+  {
+   "finding": "全部结果在单张 NVIDIA GH200 120GB GPU 上获得;训练出 9 层卷积 SNN(CIFAR-10)与 20 层卷积 SNN(Fashion-MNIST)",
+   "scope": "实验设置说明",
+   "locator": "3 Experiments"
+  },
+  {
+   "finding": "基准对比:Syn-SNN-9 在 CIFAR-10 达 90.36%、Syn-SNN-20 在 Fashion-MNIST 达 92.33%,两者均支持流水线;此前 TTFS 路线最深的 16 层 CNN 为 92.68%(CIFAR-10,需 GPU 集群),5 层 CNN 仅 79.26%",
+   "scope": "表 8 连续时间 SNN 基准",
+   "locator": "Appendix D Benchmarking"
+  },
+  {
+   "finding": "时间惩罚成功把各层发放组织到规定窗口内:20 层网络中脉冲仍在逐层窗口内传播,且第 1 层可在第 20 层处理完上一样本前开始处理下一样本(以 0.05 间隔演示 4 样本流水线)",
+   "scope": "图 3/图 4",
+   "locator": "3 Experiments"
+  },
+  {
+   "finding": "DSTD 近似随步数单调收敛:未训练 9 层网络输出层发放时间 RMSE 随步数下降;训练后网络用 DSTD 推理即可达到接近精确解模型的精度",
+   "scope": "图 7",
+   "locator": "E.1 Convergence of DSTD approximations"
+  },
+  {
+   "finding": "作者自述限制:多层 SNN 训练机制的理论理解不足(初始权重分布尚无准则),Syn-SNN 需要大量超参搜索,近似梯度学习过程的理论也待检验",
+   "scope": "讨论节末段",
+   "locator": "4 Discussion"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "多层 SNN 训练机制的理论理解不足:合适的初始权重分布尚不清楚,Syn-SNN 还需为 synfire 链动力学施加合适的训练条件",
+    "locator": "4 Discussion"
+   },
+   {
+    "limitation": "因此 SNN(含 Syn-SNN)需要在大规模超参数集上做大量搜索才能达到高学习性能;更高效搜索或以理论减少超参是训练更大模型的关键",
+    "locator": "4 Discussion"
+   },
+   {
+    "limitation": "DSTD 用小步数训练大规模 SNN 的学习过程基于近似梯度,其理论理解留待未来工作",
+    "locator": "4 Discussion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "验证止步于 CIFAR-10/Fashion-MNIST 的 9-20 层小规模 CNN;无 ImageNet、语言或事件流数据,'可扩展'指深度与内存而非数据/任务规模",
+    "basis": "3 Experiments 与附录 C.2 的数据集设置"
+   },
+   {
+    "boundary": "90.36%(CIFAR-10)远低于同期离散时间代理梯度 SNN(95%+)与脉冲 Transformer(75%+ ImageNet);本文路线的价值在精确时间编码与流水线机制,而非基准精度",
+    "basis": "表 8 与综述内其他论文的对比数字"
+   },
+   {
+    "boundary": "TTFS 每神经元至多一发的约束是多脉冲机制的简化;多脉冲扩展仅在附录 B.4 形式化,未实验验证",
+    "basis": "2 Method 的 TTFS 假设与 B.4 节定位"
+   },
+   {
+    "boundary": "Pareto 权衡曲线由约 200 次贝叶斯优化试验得到且作者自认应视为经验性;超参搜索本身计算昂贵",
+    "basis": "3 Experiments 与 C.4 节"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于'连续时间 TTFS 编码 + 解析梯度'范式下的小规模图像分类(单 GPU、9-20 层 CNN):不能外推到大规模视觉/语言任务、事件流数据或多脉冲编码,其精度也不应与离散时间代理梯度 SNN 的 SOTA 直接比较;流水线吞吐收益依赖逐层时间窗与推理期复位机制在目标硬件上的可实现性。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "与'同框架精确解'做对照,内存/时间收益的归因干净",
+   "从单神经元近似精度、运行时基准到 9/20 层端到端训练的多层次验证",
+   "基准表把 ANN 式/adjoint/QIF/TTFS/多脉冲五类连续时间方法并列,定位清晰",
+   "明确披露全部结果单 GPU 获得,与需 GPU 集群的先前工作形成资源对比"
+  ],
+  "design_risks": [
+   "任务规模小(CIFAR-10/F-MNIST),对'可扩展训练'主张的支撑限于深度维度",
+   "超参依赖贝叶斯优化且作者自认 Pareto 曲线为经验性,复现成本高",
+   "精度绝对值低于离散时间 SNN 主流水平,路线间不可直接比较",
+   "提取文本丢失大量数学符号(时间常数、步数、窗口宽度数值),部分量化表述只能依赖摘要与图注原文"
+  ],
+  "baseline_fairness": "与同框架精确解及同类连续时间方法的对比公平;但未与离散时间代理梯度 SNN 同任务对比,两类路线精度不可直接横比(作者已作范式区分说明)",
+  "metric_validity": "内存/时间比值与发放时间 RMSE 指标直接对应主张;准确率指标受 TTFS 约束影响,横向解释需注明范式",
+  "reproducibility": "方法与损失/正则推导完整,附录给出网络结构表与搜索空间;未见代码发布声明,超参搜索规模(约 200 试验/条件)抬高复现门槛",
+  "external_validity": "仅静态图像分类;事件流、语言与更大规模数据未验证(作者亦以更大规模模型为未来方向)"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.14672-C01",
+   "claim": "作者提出以可微脉冲时间离散化(DSTD)扩展到任意膜/突触时间常数 LIF 神经元的训练框架,并配合 synfire 链式时间正则构成 Syn-SNN;基准中密集前突触输入下峰值内存降低近两个数量级。",
+   "stance": "support",
+   "relation": "支持综述中'连续时间精确脉冲时间训练路线'的年度进展主张:该路线首次把解析梯度训练推到深层卷积规模。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言汇总框架贡献与近两个数量级的内存收益;方法节给出机制。",
+   "locator": "1 Introduction",
+   "source_context": "In our benchmarks, these improvements included nearly two orders of magnitude lower peak memory consumption for dense presynaptic spike inputs.",
+   "evidence_type": "method-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对;'近两个数量级'与摘要的约 100 倍内存/约 20 倍时间及 3 节 60-150 倍实测一致;框架命名(Syn-SNN/DSTD)与 2 Method 原文一致,引用时保留作者自述口径。"
+   }
+  },
+  {
+   "card_id": "2607.14672-C02",
+   "claim": "单层 1000 LIF 神经元基准中,输入脉冲数达 6000 时 DSTD 相对精确脉冲时间计算的内存效率提升 60 到 150 倍;原因在于精确法必须为随前突触脉冲数增长的候选区间保留中间变量,而 DSTD 只用固定数目的区间。",
+   "stance": "support",
+   "relation": "为'精确脉冲时间训练的内存瓶颈被实质性解除'提供定量证据,是该路线可扩展性主张的核心数字。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3 节报告内存/时间比值随输入规模的增长及 60-150 倍区间。",
+   "locator": "3 Experiments",
+   "source_context": "In particular, the improvement in memory efficiency is substantial: even for , which accurately approximates spike times, the memory efficiency improves by a factor of 60 to 150 when the number of inputs reaches 6000.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "memory efficiency",
+    "value_or_direction": "improves by a factor of 60 to 150",
+    "comparator": "exact spike-time computation method",
+    "task_or_sample": "single-layer model of 1000 LIF neurons, number of inputs reaches 6000",
+    "locator": "3 Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "60/150/6000 出自 3 节原句;对照对象 exact spike-time computation method 与候选区间机制解释均在该节原文;原句中 DSTD 步数值被 latexml 丢弃,故主张不引用具体步数,范围限于单层基准设置。"
+   }
+  },
+  {
+   "card_id": "2607.14672-C03",
+   "claim": "全部实验结果均在单张 NVIDIA GH200 120GB GPU 上获得;在该资源约束下训练出 9 层卷积 SNN(CIFAR-10)与 20 层卷积 SNN(Fashion-MNIST),而此前最深的 TTFS 16 层 CNN 报告需要 GPU 集群。",
+   "stance": "support",
+   "relation": "支持'训练效率收益转化为实际可训练深度'的主张,并给出与先前工作资源口径的对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3 节明示单 GPU 设置;附录 D 表 8 注明先前 16 层工作使用 GPU 集群。",
+   "locator": "3 Experiments",
+   "source_context": "All results in this paper were obtained using a single GPU (NVIDIA GH200 120GB).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "training resource",
+    "value_or_direction": "a single GPU (NVIDIA GH200 120GB) for 9-layer and 20-layer models",
+    "comparator": "previous 16-layer TTFS CNN relying on a GPU cluster",
+    "task_or_sample": "CIFAR-10 and Fashion-MNIST training",
+    "locator": "3 Experiments"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "单 GPU 原句出自 3 节;16 层需 GPU 集群出自附录 D 表 8 脚注 3(Zhou et al. 行),两层证据均在提取文本内;GH200 为高端 GPU,综述引用时应保留具体型号而非泛化为普通单卡。"
+   }
+  },
+  {
+   "card_id": "2607.14672-C04",
+   "claim": "基准对比:Syn-SNN-9 在 CIFAR-10 达 90.36%、Syn-SNN-20 在 Fashion-MNIST 达 92.33%,且两者均支持流水线操作;此前 TTFS 路线的 16 层 CNN 为 92.68%(CIFAR-10)、5 层 CNN 为 79.26%,均不支持流水线。",
+   "stance": "support",
+   "relation": "支持'连续时间路线在可训练深度上取得实质进展并首次带回流水线能力'的主张,同时暴露其 CIFAR-10 精度仍低于此前最深工作的边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 D 表 8 汇总各连续时间 SNN 的架构、流水线属性与精度。",
+   "locator": "Appendix D Benchmarking",
+   "source_context": "Syn-SNN-20 (proposed) TTFS (DSTD) 20-layer CNN ( ) YES 92.33 % (F-MNIST) Syn-SNN-9 (proposed) TTFS (DSTD) 9-layer CNN ( , ) YES 90.36 % (CIFAR-10)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Accuracy",
+    "value_or_direction": "90.36 % (CIFAR-10); 92.33 % (F-MNIST)",
+    "comparator": "Zhou et al. TTFS 16-layer CNN 92.68% (CIFAR-10); Sakemi et al. 5-layer CNN 79.26%",
+    "task_or_sample": "CIFAR-10 and Fashion-MNIST test sets",
+    "locator": "Appendix D Benchmarking"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 为表 8 提出行原样文本;92.68%(16 层,脚注 3 标 GPU 集群)与 79.26%(5 层)亦在同表原样出现;两行的 Pipeline 列均为 YES,与流水线主张一致;比较限于连续时间 SNN 表内口径。"
+   }
+  },
+  {
+   "card_id": "2607.14672-C05",
+   "claim": "synfire 链式时间正则通过逐层时间窗惩罚抑制死神经元问题并使流水线操作成为可能:下一数据样本可在末层神经元发放前输入,从而避免多层化导致的吞吐下降。",
+   "stance": "support",
+   "relation": "为综述提供'类脑机制(synfire 链)直接服务于工程目标(深层吞吐)'的例证,是该文区别于纯效率工作的机制贡献。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2 Method 阐明时间惩罚与流水线机制;3 节以 20 层网络与 4 样本顺序输入演示。",
+   "locator": "2 Method",
+   "source_context": "Because the temporal penalty term encourages all neurons to fire, the dead neuron problem is suppressed. Furthermore, as shown in Fig. 1 (g), pipeline operation becomes possible, in which the next datum can be input before the neurons in the final layer fire.",
+   "evidence_type": "method-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "方法节原句逐字核对;20 层演示(样本间隔 0.05、首层先于末层处理下一样本)见 3 节原文,机制主张与演示证据均在提取文本内。"
+   }
+  },
+  {
+   "card_id": "2607.14672-C06",
+   "claim": "路线边界:作者自认多层 SNN 训练机制的理论理解不足、Syn-SNN 需要大量超参数搜索才能达到高性能,且 DSTD 以小步数近似梯度训练的理论尚待检验;配合任务规模止于 CIFAR/F-MNIST 的事实,该路线的证据强度限于'机制可行'而非'大规模实用'。",
+   "stance": "limit",
+   "relation": "限定连续时间路线的推广强度:可扩展性主张的证据是深度与内存维度,理论根基与任务规模仍是短板。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "讨论节末段列出三条理论/实践限制;数据集设置见实验节。",
+   "locator": "4 Discussion",
+   "source_context": "For these reasons, SNNs, including Syn-SNNs, require extensive searches over many hyperparameter sets to achieve high learning performance.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "超参搜索限制原句逐字核对;'理论理解不足'与'近似梯度理论待检验'两点在同节前后文原样出现;任务规模限制由实验节数据集设置支撑,属作者自述与读者可核实事实的合并表述。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Sakemi et al. 2025(时间惩罚项与解析 TTFS 训练,Ref.56)",
+  "Sakemi et al.(原始 DSTD,Ref.58)",
+  "Bohte et al. 2002(SpikeProp,TTFS 精确梯度先驱)",
+  "de Montigny & Mâsse(多层 TTFS 解析反传)",
+  "Zhou et al.(16 层 TTFS CNN,Ref.78)",
+  "Mostafa 2017 / Comsa et al.(解析 TTFS 公式)",
+  "Abeles 等的 synfire chain 动力学",
+  "Optuna(贝叶斯超参优化)"
+ ],
+ "notes": "日本团队(东京大学合原一幸(Kazuyuki Aihara)实验室方向,第一作者 Yusuke Sakemi 即 Ref.56/58 的作者),获 NEDO 项目 JPNP14004 部分资助,2026 年 7 月发布;带 LLM 使用声明(仅语言润色与代码调试)。该工作是'连续时间/精确脉冲时间'训练路线对代理梯度主流的回应,与 2510.05168(QIF 神经元)、2604.12365(自适应神经元)同属机制-训练方法轴,可作为三条并行演进线之一写入综述。提取文本丢失较多数学符号(时间常数/步数/窗口宽度的具体数值),引用数字均以表格与原句保留的数字为准。"
+}

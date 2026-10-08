@@ -1,0 +1,670 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2601.02309",
+  "title": "360DVO: Deep Visual Odometry for Monocular 360-Degree Camera",
+  "published": "2026-01",
+  "url": "https://arxiv.org/abs/2601.02309",
+  "authors": [
+   "Xiaopeng Guo",
+   "Yinzhe Xu",
+   "Huajian Huang",
+   "Sai-Kit Yeung"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "经'全景相机'维度进入综述（审读问题明确含全景相机）：(1) 应用方式——单目 360° 相机（等距柱状投影全景图像）深度学习 VO，SphereResNet 抗畸变特征 + 全景可微 BA，为'第一个深度学习 OVO 框架'（page 1-3）；(2) 效果——真实世界基准上以虚拟 90° FoV 裁切做严格 FoV 解耦实验：窄 FoV 增加 feature leave-view、缩短共视，360° 覆盖相对 DPV-SLAM/DPVO 降低 ATE 56.2%/37.1%，并在剧烈旋转/光照变化场景 100% 跟踪成功 vs 360VO 43%（page 5-6）；(3) 局限——动态物体场景（Hard-06 拥挤桥面）宽 FoV 反而劣于针孔裁切、高分辨率全景输入计算开销大（桌面 8 FPS/Jetson 2 FPS）、普通 CNN 特征在全景图像上退化、SphereNet 直接替换训练发散（page 5-7）。该文同时提供获益与受限双向证据，是全景相机维度上量化最充分的一篇。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and I. Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：全景相机克服透视 VO 的 FoV 限制，但现有 OVO 依赖手工特征或光度目标，剧烈运动/光照变化下缺乏鲁棒性；等距柱状投影强非线性畸变使透视预训练深度特征失效、浪费算力；四项贡献声明。"
+   },
+   {
+    "locator": "page 2, II. Related Works",
+    "role": "relevant-core",
+    "purpose": "定位全景 vs 鱼眼路径分界：既有鱼眼工作仍是'为鱼眼相机定制的扩展'，未完全适配全景场景；ROVO 用多鱼眼拼 360°；OpenVSLAM 支持便携 360 相机；球面 CNN（EquiConvs/SphereNet）与可微 BA（DROID-SLAM/DPVO）两条技术线。"
+   },
+   {
+    "locator": "page 2-4, III. Methodology",
+    "role": "method-or-design",
+    "purpose": "精读两大模块：DAS-Feat（SphereResNet=球面卷积+残差块，7×7 球面核切平面采样，patch 免 warp 直接裁切，128/384 通道双轨）；ODBA（球面重投影约束式(6)、光流修正式(7)、GN 代价函数式(8)、Schur 补块求解式(9)-(10)、统一球面相机模型式(1)-(3)、内参仅由分辨率决定）。"
+   },
+   {
+    "locator": "page 4, IV. 360DVO Dataset",
+    "role": "data-or-setting",
+    "purpose": "确认基准构成：20 条真实序列（3 条 360VOTS + 15 条互联网极端场景 + 2 条香港电车），10 FPS、3840×1920，≥500 帧；Easy/Hard 各 10 条分层；伪真值用 Agisoft Metashape（TartanAirV2 上验证 ATE 0.027 vs COLMAP 2.535）。"
+   },
+   {
+    "locator": "page 5-7, V. Experiments (A-D)",
+    "role": "results-or-analysis",
+    "purpose": "精读三数据集结果（360VO/TartanAirV2/自建）、FoV 解耦实验（虚拟 90° 640×640 裁切）、组件消融（ResNet/SphereNet/SphereResNet）、超参消融（分辨率/patch 数/选择策略）、Jetson Orin 边缘部署与失败模式分析。"
+   },
+   {
+    "locator": "page 8, VI. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论复述三项贡献；确认作者自述局限集中在计算开销与轻量化特征提取器方向。"
+   },
+   {
+    "locator": "page 9-12, Appendix VII-IX",
+    "role": "appendix-or-supplement",
+    "purpose": "复核 ODBA 雅可比推导完整性、20 序列挑战标注（CT/IV/VR/DO）与来源（Bilibili/自采/360VOTS）、五次运行箱线图与逐轴轨迹对比。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-10, VII. Jacobians of ODBA (Eq. 11-21)",
+    "reason": "逐式推导复核仅抽查链式法则结构（式(12)-(13)与正文式(9)-(10)一致），未逐符号验证，不影响证据主张。"
+   }
+  ]
+ },
+ "research_question": "单目 360° 全景相机的深度学习视觉里程计：如何设计抗畸变特征与全景可微 BA？宽 FoV 相对针孔 FoV 的量化收益与反向代价（动态物体、算力）边界在哪里？",
+ "contributions": [
+  "360DVO：第一个基于深度学习的全景视觉里程计（OVO）框架，从单目 360° 视频学习自运动。",
+  "DAS-Feat 抗畸变球面特征提取器：新网络 SphereResNet（SphereNet 球面卷积 + 残差块），从全景图像稳定学习抗畸变特征，patch 无需 warp 直接从特征图裁切。",
+  "ODBA 全景可微捆绑调整：球面重投影约束下联合优化相机位姿与 3D 点深度，无需外部初始化。",
+  "新的真实世界 OVO 基准：20 条序列（Easy/Hard 各 10），覆盖野外/室内/城市/航拍、运动模糊、频繁旋转、动态光照，用 Metashape 伪真值。"
+ ],
+ "method": {
+  "summary": "输入单目 360° 等距柱状全景帧。DAS-Feat 中 SphereResNet 将全景图像逆投影到单位球、7×7 球面卷积核在切平面采样后投回图像，配两对 32/64 维残差块，输出 128 维匹配特征与 384 维上下文特征；在匹配特征图上按梯度幅值选 patch 中心（3×3 patch），免 warp 裁切。ODBA 以统一球面相机模型（内参仅由 H×W 决定）建立帧间球面重投影约束，RNN 从 patch-上下文相关体预测光流修正，Gauss-Newton + Schur 补联合优化位姿与深度，稀疏 patch 图编码 patch-帧关系（DPVO 式）。",
+  "assumptions": [
+   "单目设定，评测用 Sim(3) Umeyama 对齐消除尺度自由度（训练监督用真值深度）。",
+   "每个 patch 内深度恒定（patch 中心深度代表整 patch）。",
+   "全景图像为等距柱状投影且相机为中心投影（球面模型成立）。",
+   "训练数据为 TartanAirV2 62 场景合成全景图（220k+ 帧），泛化到真实世界依赖域差距可控。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "360DVO dataset（自建真实世界基准，20 序列，10 FPS 3840×1920，伪真值 Metashape）",
+   "TartanAirV2 评测集（4 场景 × Easy/Hard 各 1，日/夜、室内/外）",
+   "360VO dataset（10 条合成城市序列）",
+   "训练：TartanAirV2 62 场景 220k+ 等距柱状图像（留 4 场景评测）"
+  ],
+  "tasks": [
+   "单目全景视觉里程计（OVO）/自运动估计"
+  ],
+  "embodiments": [
+   "手持/便携 360° 相机平台（数据含电车、航拍）；Jetson Orin 边缘部署评估（面向机器人适用性）"
+  ],
+  "sample_or_scale": "评测：20 条真实序列（平均约 1k 帧）+ 4 场景 TartanAirV2 + 10 条 360VO 合成序列；训练 220k+ 帧；每方法 5 次运行取平均。"
+ },
+ "evaluation": {
+  "design": "三个数据集对比评测（合成易/合成难/真实），指标 ATE RMSE(m)、RPE(t)(m/frame)、RPE(r)(deg/frame) 与跟踪成功率（5 次运行中过半丢跟踪记失败）；Sim(3) Umeyama 对齐；组件消融（特征提取器与 BA 模块替换）与超参消融（分辨率、patch 数 N、选择策略）；FoV 解耦实验（从全景图虚拟裁切 90° 640×640 针孔序列跑针孔 SOTA）；Jetson Orin 边缘部署吞吐对比。",
+  "baselines": [
+   "ORB-SLAM3",
+   "Droid-SLAM",
+   "DPVO",
+   "DPV-SLAM",
+   "OpenVSLAM",
+   "360VO"
+  ],
+  "metrics": [
+   "ATE RMSE (m)",
+   "RPE(t) (m/frame)",
+   "RPE(r) (deg/frame)",
+   "tracking success rate (%)",
+   "FPS"
+  ],
+  "ablations": [
+   "Pinhole→360°：DPVO 换 ODBA 但用 ResNet 特征（#1，avg ATE 9.99 劣化）；SphereNet 直接替换（#2，梯度爆炸全失败）；完整 SphereResNet+ODBA（3.31/4.35/3.83）",
+   "分辨率：3840×1920(8FPS)→1920×960(17FPS, ATE+21.6%)→960×480(22FPS, ATE+41.0%)",
+   "patch 数：N=192 最优；384 过约束（ATE 5.34）；96/48 欠表达（5.20/4.93）",
+   "选择策略：梯度选择 3.83 vs 随机 5.85"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "全景宽 FoV 的核心收益由 FoV 解耦实验直接量化：同一全景数据虚拟裁切 90° 针孔序列后，针孔 SOTA（DPV-SLAM/DPVO）在自建真实基准上 Easy/Hard 平均 ATE 全面劣于全景方法（360DVO 相对 DPV-SLAM Easy 降 56.2%、相对 DPVO Hard 提升 37.1%）；作者归因：窄 FoV 增加 feature leave-view 事件并缩短长期共视。",
+   "scope": "360DVO dataset 20 序列，针孔分支为 90° 虚拟裁切",
+   "locator": "page 5-6, Section V-B and Table III"
+  },
+  {
+   "finding": "剧烈旋转/光照变化等挑战场景鲁棒性：自建基准上 360DVO 两个配置跟踪成功率均 100%，直接法 360VO 仅 43%（表 III 标 42%），OpenVSLAM 92-94%；TartanAirV2 上 360DVO 100% vs OpenVSLAM 53%、360VO 27%，且 OpenVSLAM/360VO 在全部 Hard 序列几乎失效。",
+   "scope": "360DVO dataset + TartanAirV2 评测集",
+   "locator": "page 5-6, Section V-B and Tables I, III"
+  },
+  {
+   "finding": "抗畸变特征是全景深度 VO 的必要条件而非可选优化：把 DPVO 的 BA 换成 ODBA 但保留 ResNet 特征，360° 输入反而使 avg ATE 从 7.37 劣化到 9.99（Hard 12.7）；直接用 SphereNet 训练梯度爆炸、完全无法估计位姿；SphereResNet+ODBA 才降到 3.83。",
+   "scope": "Table IV 组件消融（自建数据集）",
+   "locator": "page 6-7, Section V-C and Table IV"
+  },
+  {
+   "finding": "宽 FoV 的反向代价（limit）：Hard-06 拥挤桥面序列上针孔方法反超全景方法——针孔裁切主要含静态桥体结构，全景图像纳入大量动态物体拖累特征匹配；Hard-04 重复纹理（天空/草地/植被）下高分辨率默认版劣于 OpenVSLAM/DPVO（fast 版 0.19 最佳，靠隐式正则化避免歧义 patch）。",
+   "scope": "360DVO dataset Hard 序列两个失败/反例场景",
+   "locator": "page 5-6, Section V-B"
+  },
+  {
+   "finding": "算力是全景深度 VO 的主要部署瓶颈：默认 3840×1920+N=192 在桌面 8 FPS；降到 1920×960/960×480 提速到 17/22 FPS 但平均 ATE 恶化 21.6%/41.0%；fast 配置（1920×960, N=96）27 FPS、ATE 4.94。Jetson Orin 上默认版仅 2 FPS（最准 3.98），fast 约 5 FPS（5.07）仍优于 OpenVSLAM（6.38, 3-7 FPS）。",
+   "scope": "Table V 超参消融 + Table VI Jetson Orin 部署",
+   "locator": "page 6-7, Sections V-B, V-D and Tables V, VI"
+  },
+  {
+   "finding": "全景与鱼眼路径的边界表述：作者明确定性既有鱼眼 VO/SLAM 为'为鱼眼相机定制的扩展，未完全适配全景场景'，要达 360° FoV 需 ROVO 式多鱼眼宽基线系统，而 OpenVSLAM/本文走便携单机 360° 相机路线。",
+   "scope": "II. Related Works 领域结构定位",
+   "locator": "page 2, Section II"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "计算上比常规 OVO 方法略贵：高分辨率特征图上的模块是主要瓶颈（默认 8 FPS，Jetson 2 FPS）；需开发更轻量且有效的特征提取器才能在嵌入式平台实时运行（列为未来工作）。",
+    "locator": "page 7-8, Section V-D"
+   },
+   {
+    "limitation": "高分辨率梯度选择在重复纹理场景（Hard-04 天空/草地/植被）会纳入大量歧义 patch，导致新关键帧对应不稳定，默认配置劣于经典与学习方法。",
+    "locator": "page 6, Section V-B"
+   },
+   {
+    "limitation": "动态物体密集场景（Hard-06 拥挤桥面）针孔裁切反超全景方法，全景图像包含的动态对象降低特征匹配性能。",
+    "locator": "page 5, Section V-B"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "单目尺度不可用：评测用 Sim(3) Umeyama 对齐消除尺度自由度，论文未报告尺度漂移或任何度量尺度输出；对需要真实尺度的机器人导航/控制任务，结论不能直接迁移。",
+    "basis": "page 5 Section V-B 评测协议（Sim(3) Umeyama alignment）；全文无尺度误差指标。"
+   },
+   {
+    "boundary": "真实基准伪真值由 Metashape SfM 生成：虽在 TartanAirV2 上验证 ATE 0.027，但 SfM 在动态物体/弱纹理场景的可靠性会传导为真值噪声；Hard 序列恰以动态物体为主题，方法排名对真值质量敏感。",
+    "basis": "page 4 Section IV 伪真值生成与验证段；page 9 Table VII Hard 序列挑战标注（DO 动态物体列）。"
+   },
+   {
+    "boundary": "训练域为 TartanAirV2 合成全景（62 场景 220k+ 帧），真实世界为零样本评测；合成到真实的域泛化差距未被消融（无真实数据微调对照），真实场景精度上限可能被低估。",
+    "basis": "page 5 Section V-A 训练设置；全文无真实域微调实验。"
+   },
+   {
+    "boundary": "fast 与默认配置互不支配（Hard 上 fast 3.68 优于默认 4.35，Easy 上默认 3.31 优于 fast 6.20），精度-速度权衡无单一最优配置；实际部署需按场景特征选择配置。",
+    "basis": "page 6 Table III Easy/Hard 平均 ATE 两配置交叉；page 7 Table V #D/#F 行。"
+   },
+   {
+    "boundary": "纯视觉路线，无 IMU/LiDAR 融合：剧烈运动鲁棒性结论限于视觉通道；与 360-VIO/LF-VISLAM 等视觉惯性全景路线未做直接实验对比，孰优无数据。",
+    "basis": "page 2 Section II 仅在相关工作提及 360-VIO/LF-VISLAM 用 IMU 提升鲁棒性；实验部分无视觉惯性基线。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论可迁移范围：中心投影 360° 全景相机（等距柱状）上的单目 VO，宽 FoV 收益（减少 feature leave-view、延长共视、抗剧烈旋转）与代价（动态物体干扰、高分辨率算力、需专用抗畸变特征网络）的定性边界可外推到其他全景/超广角中心相机任务。不可迁移：单目绝对尺度（Sim(3) 对齐评测）；非中心投影（双目鱼眼拼接的 360° 相机实际光心不重合，本文球面模型假设中心投影）；多传感器融合场景的结论；具身操作等非定位任务。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "FoV 解耦实验设计出色：从同一全景数据虚拟裁切 90° 针孔序列对比，把'宽 FoV 收益'与'算法性能'分离，是本综述问题最直接的证据形式。",
+   "消融完整：特征提取器（ResNet/SphereNet/SphereResNet）× BA（DBA/ODBA）× 超参（分辨率/N/选择策略）三层拆解，失败配置（#1 劣化、#2 训练崩溃）如实报告。",
+   "真实基准挑战分层（Easy/Hard）+ 五次运行均值 + 成功率口径（过半丢跟踪记失败），失败模式（Hard-04/06）有机制解释。",
+   "边缘部署实测（Jetson Orin）而非只报桌面 FPS。"
+  ],
+  "design_risks": [
+   "真实基准伪真值依赖 SfM（Metashape），在动态物体场景（恰是 Hard 主题之一）SfM 真值自身可靠性存疑，可能同时影响全景与针孔方法的排名。",
+   "基线未针对全景图像重新调参/训练：针孔方法跑虚拟裁切、学习基线训练于 TartanAir，全景基线（OpenVSLAM/360VO）为非深度方法，'深度 vs 经典'与'全景 vs 针孔'两个因素部分混淆——不过 TartanAirV2 表中学习型针孔方法也参与对比，部分缓解。",
+   "自建基准 15/20 序列来自互联网视频（Bilibili），相机型号/曝光参数未知且不可控，硬件异质性未报告。"
+  ],
+  "baseline_fairness": "针孔基线在对应透视图像上评测、内参取理想值（fx=fy=cx=cy=320）；全景基线为 OpenVSLAM/360VO 原生支持；学习型针孔方法（Droid-SLAM/DPVO/DPV-SLAM）训练于 TartanAir 而本文训练于 TartanAirV2 全景，训练数据不完全对等但同源。",
+  "metric_validity": "ATE/RPE + 成功率 + FPS 标准且充分；Sim(3) 对齐对单目必要但掩盖尺度误差；成功率阈值（过半帧丢跟踪）偏宽松。",
+  "reproducibility": "提供主页（代码/数据声明）与完整超参表（Table V）；训练 100k 迭代/单卡 RTX-4090D/约 2 天；伪真值管线（Metashape）与验证方法（0.027 vs COLMAP 2.535）描述充分。",
+  "external_validity": "合成（TartanAirV2/360VO）+ 真实（自建 20 序列）双域验证，真实域覆盖野/室内/城市/航拍；但全部为中心投影全景相机，且无 IMU 融合与真实机器人平台闭环任务验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2601.02309-C01",
+   "claim": "360DVO 的应用方式定位：第一个基于深度学习的单目全景视觉里程计框架，用抗畸变球面特征提取器 DAS-Feat 从 360° 图像学习抗畸变特征，再以稀疏特征 patch 建立全景可微捆绑调整 ODBA 的位姿估计约束。",
+   "stance": "support",
+   "relation": "支持命题：全景相机在具身定位（VO）中的代表性深度学习应用方式——单机 360° 相机 + 抗畸变特征 + 全景可微 BA。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要与贡献列表声明'first deep learning-based OVO framework'与 DAS-Feat/ODBA 两模块划分；引言与 III 节展开两模块设计。",
+   "locator": "page 1, Abstract and I. Introduction",
+   "source_context": "we present 360DVO, the first deep learning-based OVO framework. Our approach introduces a distortion-aware spherical feature ex- tractor (DAS-Feat) that adaptively learns distortion-resistant features from 360-degree images.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "'first deep learning-based OVO framework' 与 DAS-Feat 全称逐字见于摘要；相关工作节确认既有 OVO（OpenVSLAM/360VO）为非深度方法，first 声明在其综述范围内成立。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C02",
+   "claim": "全景相机的任务动机：单目 OVO 系统用 360° 相机克服透视 VO 的 FoV 限制；但既有方法依赖手工特征或光度目标，在剧烈运动与光照变化等挑战场景缺乏鲁棒性——本文以此为问题定义。",
+   "stance": "support",
+   "relation": "支持命题：全景相机在 VO 任务中的核心收益主张（克服 FoV 限制）与既有方法的能力缺口。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要开头两句话完整给出动机与缺口；引言进一步列举光照变化、低帧率、运动模糊等现实挑战。",
+   "locator": "page 1, Abstract",
+   "source_context": "Monocular omnidirectional visual odometry (OVO) systems leverage 360-degree cameras to overcome field-of-view limitations of perspective VO systems. However, existing methods, reliant on handcrafted features or photometric objectives, often lack robustness in challenging scenarios, such as aggressive motion and varying illumination.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字对照摘要；'aggressive motion and varying illumination' 的挑战清单与自建基准 Hard 子集设计（IV 节）一致。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C03",
+   "claim": "全景图像的根本光学困难：等距柱状投影造成强非线性畸变，在大规模透视图像上训练的深度特征提取器隐式假设线性采样，从全景图像产出不可靠特征、降低位姿估计稳定性与精度；且非线性区域的计算被浪费、拖慢运行速度。",
+   "stance": "limit",
+   "relation": "支持命题：全景/鱼眼类宽 FoV 传感器的固有代价——畸变使通用视觉特征失效，必须专用特征网络。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言明确列出畸变对深度特征的两重伤害（特征不可靠+算力浪费）；后文消融（#1 ResNet 退化、#2 SphereNet 训练崩溃）对该论断提供实验支撑。",
+   "locator": "page 1, Section I Introduction",
+   "source_context": "Most deep feature extractors [5], [6], [7], [8], [9], [10] trained on large-scale perspective images implicitly assume linear sampling, which produces unreliable features from omnidirectional images, degrading the stability and accuracy of pose estimation. Additionally, computational power would be wasted in the non-linear region, reducing the running speed.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字见于引言第二段；引文 [5]-[10] 对应 SuperPoint/DINOv2/DROID-SLAM/DPVO/GIM 等通用特征网络，论断范围准确。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C04",
+   "claim": "DAS-Feat 的核心设计 SphereResNet：球面卷积模块把全景图像逆投影到单位球，7×7 球面卷积核在球切平面采样像素再投回全景图像，配合两对 32/64 维残差块；由此获得抗畸变特征，patch 可不经 warp 直接从特征图裁切。",
+   "stance": "support",
+   "relation": "支持命题：全景相机应用的代表性技术路径——球面卷积（切平面采样）+ 残差连接解决畸变适配。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-A 节逐句描述 SphereResNet 结构与 7×7 核采样机制；残差块作用（缓解梯度消失）与消融 #2（SphereNet 无残差训练崩溃）互证。",
+   "locator": "page 3, Section III-A",
+   "source_context": "Each input I i is fed into the spherical convolution module that inversely projects the omnidirectional image onto a unit sphere. A 7 × 7 spherical convolution kernel samples pixels on the sphere’s tangent plane and then projects those samples back onto the omnidirectional image.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字见于 III-A SphereResNet 段；patch 免 warp 裁切（'sample unwarped square patches'）见同节 Patchification 段，claim 未超出原文。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C05",
+   "claim": "ODBA 全景可微捆绑调整：以球面重投影约束联合优化相机位姿与 3D 点深度，最小化预测 patch 与重投影 patch 的坐标误差，Gauss-Newton 求解、Schur 补分块更新位姿与深度，不依赖外部初始化。",
+   "stance": "support",
+   "relation": "支持命题：全景 VO 的位姿优化层设计——把 DPVO 式可微 BA 扩展到球面重投影约束。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 节给出完整优化链路（式(6)-(10)）；相关工作节对比 SC-OmniGS（需 SfM/VO 前端初始化）强调本文无需外部初始化。",
+   "locator": "page 3, Section III-B",
+   "source_context": "ODBA jointly optimizes camera poses and 3D point depths by minimizing the coordinate error between the predicted and reprojected patches.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字见于 III-B Nonlinear Optimization 段；式(8)-(10) 与附录 VII 雅可比推导一致。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C06",
+   "claim": "新真实世界 OVO 基准：20 条序列（平均约 1k 帧）按轨迹复杂度与环境动态分为 Easy/Hard 各 10 条；伪真值用 Agisoft Metashape 生成——在 TartanAirV2 上验证 Metashape 轨迹 ATE-RMSE 仅 0.027（接近真值），而 COLMAP 达 2.535，故选 Metashape。",
+   "stance": "support",
+   "relation": "支持命题：全景相机真实世界评测基础设施的构成与真值质量保障方式。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV 节给出数据来源三分（360VOTS 3 条/互联网 15 条/香港电车 2 条）、Easy/Hard 划分标准与伪真值工具选型验证实验。",
+   "locator": "page 4, Section IV",
+   "source_context": "The results show that Agisoft Metashape consistently produces trajectories with negligible ATE-RMSE (i.e., 0.027), which closely matches the provided ground truth, whereas COLMAP yields larger errors and drift (i.e., 2.535).",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "pseudo ground-truth ATE-RMSE on TartanAirV2",
+    "value_or_direction": "Metashape 0.027 vs COLMAP 2.535",
+    "comparator": "Agisoft Metashape vs COLMAP pseudo ground truth vs provided ground truth",
+    "task_or_sample": "TartanAirV2 validation sequences (Section IV, page 4)",
+    "locator": "page 4, Section IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两处数字逐字见于 IV 节伪真值验证段；20 序列与 Easy/Hard 各 10 条的构成句另见同节（已核对原文）。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C07",
+   "claim": "总体效果声明：在自建真实基准与公开合成数据集（TartanAirV2、360VO）上，360DVO 超越 SOTA 基线（含 360VO 与 OpenVSLAM），鲁棒性提升 50%、精度提升 37.5%。",
+   "stance": "support",
+   "relation": "支持命题：全景相机深度 VO 相对既有全景方法的总体量化增益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要总结性声明；正文 V-B 各表给出分项支撑（成功率 100% vs 43-92%；ATE 降幅见 C08-C10、C18 卡）。",
+   "locator": "page 1, Abstract",
+   "source_context": "Extensive experiments on this benchmark and public synthetic datasets (TartanAir V2 and 360VO) demonstrate that 360DVO surpasses state-of-the-art baselines (including 360VO and OpenVSLAM), improving robustness by 50% and accuracy by 37.5%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "robustness and accuracy improvement vs SOTA baselines",
+    "value_or_direction": "robustness +50%, accuracy +37.5%",
+    "comparator": "360DVO vs 360VO and OpenVSLAM",
+    "task_or_sample": "360DVO real-world benchmark + TartanAirV2 + 360VO datasets",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "'improving robustness by 50% and accuracy by 37.5%' 逐字见于摘要；为作者汇总口径，分项数值见 V-B 各表（本卡不附加原文未给的口径拆解）。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C08",
+   "claim": "合成易场景（360VO 数据集）结果：360DVO 在全部指标上优于 OpenVSLAM 与 360VO，ATE 相对 360VO 降低 10%（1.11 vs 1.24 m；RPE(t) 0.235 vs 0.291；RPE(r) 0.440 vs 0.455）。",
+   "stance": "support",
+   "relation": "支持命题：全景相机在常规合成场景的精度增益（相对既有全景方法）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 360VO Dataset 段 + Table II 三方法三指标完整数值。",
+   "locator": "page 5, Section V-B and Table II",
+   "source_context": "As shown in Tab. II, 360DVO achieves better per- formance on all metrics than both OpenVSLAM and 360VO, reducing the ATE by 10% compared with 360VO.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE (m) on 360VO synthetic dataset",
+    "value_or_direction": "360DVO 1.11 vs 360VO 1.24 vs OpenVSLAM 2.25 (10% ATE reduction vs 360VO)",
+    "comparator": "360DVO vs 360VO vs OpenVSLAM",
+    "task_or_sample": "360VO synthetic dataset, 10 urban sequences (Table II, page 5)",
+    "locator": "page 5, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "'reducing the ATE by 10%' 逐字见于 V-B；Table II 数值（1.11/1.24/2.25、0.235/0.291/0.312、0.440/0.455/0.452）与百分比一致（(1.24-1.11)/1.24≈10.5%）。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C09",
+   "claim": "合成难场景（TartanAirV2 评测集）结果：360DVO 默认配置取得最高成功率与精度（100% 成功，平均 ATE 0.038 m），而 OpenVSLAM（53%）与 360VO（27%）在全部 Hard 序列几乎失效；在 TartanAir 训练的学习型针孔方法表现尚可但在 Hard 序列挣扎，凸显全景 FoV 对 VO 的收益。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 在强旋转等挑战场景的鲁棒性收益（与针孔方法同场对比）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B TartanAirV2 段 + Table I：360DVO 8/8 序列最优，成功率 100%；Droid-SLAM/DPVO/DPV-SLAM 100% 但平均 ATE 1.951/1.668/0.168。",
+   "locator": "page 5, Section V-B and Table I",
+   "source_context": "As Tab. I shows, our 360DVO with default settings attains the highest success rate and accuracy, whereas OpenVSLAM and 360VO nearly fail on all hard sequences. Learning-based pinhole methods [7], [8], [37], trained on TartanAir [32], perform reasonably well but struggle on the Hard sequences, highlighting the benefit of omnidirectional FOVs for visual odometry.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "tracking success rate and avg ATE (m) on TartanAirV2 eval set",
+    "value_or_direction": "360DVO 100% success, avg ATE 0.038; OpenVSLAM 53%, 360VO 27%; learning pinhole baselines 100% but avg ATE 0.168-1.951",
+    "comparator": "360DVO vs OpenVSLAM vs 360VO vs Droid-SLAM/DPVO/DPV-SLAM/ORB-SLAM3",
+    "task_or_sample": "TartanAirV2 evaluation set, 4 scenes x Easy/Hard (Table I, page 5)",
+    "locator": "page 5, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "正文句逐字见于 V-B；Table I 数值（360DVO 平均 0.038，DPV-SLAM 0.168，DPVO 1.668，Droid-SLAM 1.951；成功率列 100/100/100/100/53/27/100）核对一致。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C10",
+   "claim": "FoV 解耦实验（本综述问题最直接证据）：为把宽 FoV 收益与算法性能分离，从全景图像虚拟裁切 90° FoV、640×640 的针孔序列跑针孔 SOTA。结论：窄 FoV 使挑战场景更难——增加 feature leave-view 事件、缩短长期共视；OVO 方法整体比针孔方法更稳更优，360DVO 相对 DPV-SLAM 在 Easy 降 ATE 56.2%、相对 DPVO 在 Hard 提升 37.1%。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 收益的受控量化——同一数据上窄 FoV 裁切 vs 全景输入的直接对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 360DVO Dataset 段描述解耦设计与归因；Table III 给出 20 序列完整矩阵（Easy 平均：360DVO 3.31 vs DPV-SLAM 7.56；Hard：360DVO fast 3.68 vs DPVO 6.92）。",
+   "locator": "page 5, Section V-B and Table III",
+   "source_context": "Narrow FOVs make challenging scenes harder by increas- ing feature leave-view events and shortening long-term co- visibility. Overall, OVO methods demonstrate more stable and higher performance than pinhole methods shown in Tab. III, revealing the inherent value of 360-degree coverage. 360DVO reduces ATE over DPV-SLAM by 56.2% on Easy and outperforms DPVO with 37.1% improvement on Hard.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg ATE (m) on 360DVO dataset, OVO vs virtual 90-degree pinhole crops",
+    "value_or_direction": "Easy: 360DVO 3.31 vs DPV-SLAM 7.56 (-56.2%); Hard: 360DVO fast 3.68 vs DPVO 6.92 (+37.1%)",
+    "comparator": "360DVO (omnidirectional) vs DPV-SLAM/DPVO (virtual 90-degree pinhole crops)",
+    "task_or_sample": "360DVO dataset, 20 real-world sequences, Easy and Hard subsets (Table III, page 6)",
+    "locator": "page 5-6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两段引文逐字见于 V-B（解耦设计句与结论句分别核对）；Table III 数值支持百分比口径（Easy 3.31 vs 7.56≈-56.2%；Hard 4.35 vs 6.92≈-37.1%，作者以默认版计 Hard 数）。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C11",
+   "claim": "宽 FoV 的反向边界（动态物体反例）：Hard-06 拥挤桥面序列上针孔方法反超全景方法——针孔裁切主要包含静态桥体结构，而全景图像纳入大量动态物体，降低特征匹配性能。",
+   "stance": "limit",
+   "relation": "限制命题：宽 FoV 并非无条件获益；动态物体密集场景中宽 FoV 引入的干扰可使窄 FoV 更优。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 明确的反例陈述；Table III Hard-06 列显示针孔方法（Droid-SLAM 12.9、DPVO 19.3、DPV-SLAM 17.7）对 360DVO 默认 23.1/fast 22.7 的反超格局（绝对值仍大，但相对排名反转）。",
+   "locator": "page 5, Section V-B and Table III",
+   "source_context": "Notably, the pinhole methods outperform the OVO methods on Hard-06 captured on a crowded bridge. The pinhole crops predominantly contain static bridge structures, whereas the omnidirectional images include many dynamic objects, which degrades feature matching performance.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE (m) on Hard-06 crowded bridge sequence",
+    "value_or_direction": "pinhole methods outperform OVO methods on this sequence (e.g., Droid-SLAM 12.9 / DPVO 19.3 vs 360DVO default 23.1 / fast 22.7 per Table III)",
+    "comparator": "pinhole methods (Droid-SLAM/DPVO/DPV-SLAM) vs OVO methods on Hard-06",
+    "task_or_sample": "Hard-06 crowded bridge sequence, 360DVO dataset (Table III, page 6)",
+    "locator": "page 5-6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "反例句逐字见于 V-B；Table III Hard-06 列数值与陈述一致。该卡为综述'哪些受限'的关键机制证据：宽 FoV 放大动态物体干扰。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C12",
+   "claim": "从针孔到全景的消融（特征网络必要性）：把 DPVO 的 BA 换成 ODBA 即可处理 360° 图像，但沿用经典 CNN（ResNet）特征时性能反而退化（avg ATE 7.37→9.99，Hard 12.7）——为 360° 图像设计专用特征网络是必要的。",
+   "stance": "support",
+   "relation": "支持命题：宽 FoV 输入需要配套算法改造，直接移植透视方法会劣化（畸变代价的实验证明）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C From Pinhole to Omnidirection 段 + Table IV：DPVO(pinhole,ResNet,DBA) 7.83/6.92/7.37 vs #1(360°,ResNet,ODBA) 7.33/12.7/9.99。",
+   "locator": "page 6-7, Section V-C and Table IV",
+   "source_context": "Replacing the BA module of DPVO [8] with the novel omnidirectional differentiable bundle adjustment (ODBA) module enables 360-degree cam- era pose optimization. However, although the modification allows 360-degree image processing, the method relying on classic CNN features has degraded performance as reported",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg ATE (m) ablation on 360DVO dataset",
+    "value_or_direction": "DPVO pinhole+DBA 7.37 vs 360° input + ResNet + ODBA 9.99 (Easy 7.83->7.33, Hard 6.92->12.7)",
+    "comparator": "DPVO (pinhole+DBA) vs #1 (360°+ResNet+ODBA) vs full 360DVO (360°+SphereResNet+ODBA)",
+    "task_or_sample": "360DVO dataset ablation, Easy/Hard avg ATE (Table IV, page 6)",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文截断于页边界（'as reported in' 后接页码标记），截断点前逐字匹配；Table IV 数值核对一致，'necessity of a tailored network' 结论句在同段（跨页处已核对）。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C13",
+   "claim": "球面卷积直接替换的失败（limit 消融）：用 SphereNet 替换经典 CNN 后模型训练中梯度爆炸（尽管做了梯度裁剪与学习率调参），最终完全无法估计任何相机位姿；SphereResNet（加残差块）才稳定训练并取得最佳精度——说明畸变适配网络本身有稳定性门槛。",
+   "stance": "limit",
+   "relation": "限制命题：全景特征提取的工程脆弱性——球面卷积并非即插即用，训练稳定性是隐性成本。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C Distortion-Aware Spherical Features 段 + Table IV #2 行（'-' 表示失败）；Fig. 5 给 ResNet 45% vs SphereResNet 90% patch 跟踪精度的直观对比。",
+   "locator": "page 7, Section V-C and Table IV",
+   "source_context": "However, when re- placing the classic CNN with a spherical feature extractor, SphereNet [11], the model suffers gradient explosions despite clipping gradient and tuning learning-rate during training. It fails to estimate any camera poses consequently, shown in Tab. IV (#2).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ablation: SphereNet variant training outcome",
+    "value_or_direction": "gradient explosions; fails to estimate any camera poses (Table IV #2 all '-'); SphereResNet patch tracking accuracy 90% vs ResNet encoder 45% (Fig. 5)",
+    "comparator": "SphereNet variant vs SphereResNet variant vs ResNet encoder",
+    "task_or_sample": "training outcome on TartanAirV2 training set; patch tracking accuracy comparison (Fig. 5, page 7)",
+    "locator": "page 7, Table IV and Fig. 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字见于 V-C；Table IV #2 全失败与 Fig. 5 的 45%/90% 标注均在原文。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C14",
+   "claim": "重复纹理失败模式（limit）：Hard-04 序列（天空/草地/植被等重复纹理主导）上，高分辨率默认配置劣于经典与学习方法（含 OpenVSLAM、DPVO），而 fast 配置取得最佳结果 0.190 m——高分辨率梯度选择纳入大量歧义 patch，导致新关键帧对应不稳定；低 patch 数与低分辨率的 fast 配置隐式正则化了问题。",
+   "stance": "limit",
+   "relation": "限制命题：全景高分辨率输入在弱纹理/重复纹理场景引入歧义 patch 反而有害，精度-分辨率关系非单调。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 末段详细分析该失败模式；Table III Hard-04 列：默认 5.10 vs fast 0.19 vs OpenVSLAM 0.28、DPVO 0.61。",
+   "locator": "page 6, Section V-B and Table III",
+   "source_context": "On sequence Hard-04, 360DVO (default) underperforms both classical and learning-based methods (e.g., OpenVSLAM [1], DPVO [8]), while 360DVO (fast) achieves the best result (i.e., 0.190). This sequence is dominated by repetitive textures (e.g., sky, grass, foliage). High-resolution gradient-based selection admits many ambiguous patches, yielding unstable correspon- dences in new keyframes.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE (m) on Hard-04 repetitive-texture sequence",
+    "value_or_direction": "360DVO default 5.10 underperforms OpenVSLAM 0.28 / DPVO 0.61; 360DVO fast 0.19 best (text: 0.190)",
+    "comparator": "360DVO default vs 360DVO fast vs OpenVSLAM vs DPVO",
+    "task_or_sample": "Hard-04 repetitive-texture sequence, 360DVO dataset (Table III, page 6)",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 V-B（含 'correspon- dences' 连字符断行原样）；Table III Hard-04 数值（5.10/0.19/0.28/0.61）核对一致。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C15",
+   "claim": "边缘部署算力边界：Jetson Orin 上 360DVO 默认版最准但最慢（2 FPS，avg ATE 3.98），fast 版恢复约 5 FPS 且精度仍有竞争力（5.07 vs OpenVSLAM 6.38）；作者承认计算上比常规 OVO 方法略贵，认为精度与鲁棒性收益抵消开销。",
+   "stance": "limit",
+   "relation": "限制命题：全景深度 VO 的嵌入式部署代价——全景高分辨率输入使深度模型在边缘端远低于实时。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-D Edge Deployment 段 + Table VI（OpenVSLAM 3-7 FPS / 360DVO default 2 FPS / fast 5 FPS）。",
+   "locator": "page 7, Section V-D and Table VI",
+   "source_context": "As shown in Tab. VI, 360DVO (default) is the most ac- curate but also the slowest. 360DVO (fast) recovers efficiency (≈ 5 FPS) while remaining competitive in accuracy, outper- forming OpenVSLAM (5.07 vs. 6.38). Although computation- ally slightly more expensive than conventional OVO methods, 360DVO achieves noticeably higher accuracy and more robust tracking.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE (m) and FPS on Jetson Orin Developer Kit",
+    "value_or_direction": "360DVO default 3.98 @ 2 FPS; fast 5.07 @ ~5 FPS; OpenVSLAM 6.38 @ 3-7 FPS",
+    "comparator": "360DVO default vs 360DVO fast vs OpenVSLAM on Jetson Orin",
+    "task_or_sample": "360DVO dataset, edge deployment on Jetson Orin Developer Kit (Table VI, page 7)",
+    "locator": "page 7, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 V-D（含 'ac- curate'/'outper- forming'/'computation- ally' 断行原样）；Table VI 数值一致。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C16",
+   "claim": "作者自述瓶颈与未来工作：高分辨率特征图上的模块构成主要计算瓶颈；降低输入分辨率或提升硬件算力可提速，但要在嵌入式平台实时运行必须开发更轻量且有效的特征提取器（列为有前景的未来方向）。",
+   "stance": "limit",
+   "relation": "支持命题：全景相机应用的作者自述局限——算力瓶颈与轻量化需求。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V-D 末段结论性陈述；与 Table V 分辨率-FPS-ATE 三元权衡（8→17→22 FPS，ATE +21.6%/+41.0%）互证。",
+   "locator": "page 8, Section V-D",
+   "source_context": "Modules operating on high-resolution feature maps constitute the principal bottle- neck. While reducing input resolution or increasing hardware compute capacity can improve inference speed, developing a more lightweight yet effective feature extractor is necessary for enabling real-time operation on embedded platforms, which is a promising direction for future work.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字见于 V-D 末段；Table V 的 #R0/#R1 行（17/22 FPS，ATE 恶化 21.6%/41.0%）为该陈述的量化背景（数值已另核对）。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C17",
+   "claim": "全景与鱼眼的路径定位：既有工作用鱼眼相机扩展 FoV、并为间接/直接 VO-SLAM 流水线适配投影模型，但这些方法仍是为鱼眼相机定制的扩展，未完全适配全景场景；要达到 360° FoV，ROVO 采用宽基线多鱼眼相机系统；与之相对，OpenVSLAM 支持便携 360° 相机捕获的全景输入。",
+   "stance": "conditional",
+   "relation": "支持命题：综述领域结构中鱼眼路径与全景路径的分界——单鱼眼（定制扩展）→ 多鱼眼拼接（ROVO）→ 单机全景（OpenVSLAM/本文）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "II. Related Works Omnidirectional Visual Odometry 段的领域地图式陈述；为作者对引用工作的定性，非实验结果。",
+   "locator": "page 2, Section II",
+   "source_context": "Prior works [14], [15], [16] expand the field of view by employing fisheye cam- eras and adapting indirect and direct VO/SLAM pipelines [17], [4], [18] with appropriate projection models [19], [20]. Al- though these methods broaden the field of view, they re- main extensions tailored to fisheye cameras, not fully ac- commodating omnidirectional scenarios.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 II 节（含 'cam- eras'/'Al- though'/'re- main'/'ac- commodating' 断行原样）；ROVO 与 OpenVSLAM 定位句紧随其后（已核对）。该卡用于综述的路径对照结构，stance=conditional 因其为作者对领域的定性判断而非可验证实验。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C18",
+   "claim": "真实基准上的全景方法内部对比：360DVO 相对 OpenVSLAM 在 Easy 降 27.6%、Hard 提升 43.4%（OpenVSLAM Easy 4.57 尚可、Hard 7.69 明显劣化）；直接法 360VO 在大量序列失败，平均成功率仅 43%，远低于 360DVO 的 100%。",
+   "stance": "support",
+   "relation": "支持命题：全景相机方法演进中深度方法相对经典方法的量化增益（同为全景输入的内部对照）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-B 360DVO Dataset 段数值陈述；Table III 成功率列 360VO 42%（正文写 43%，四舍五入口径差异）、OpenVSLAM 94%(Easy)/92%(Hard)。",
+   "locator": "page 5, Section V-B and Table III",
+   "source_context": "On the omnidirectional side, 360DVO surpasses OpenVSLAM by 27.6% on Easy and 43.4% on Hard. OpenVSLAM is competitive on Easy (i.e., 4.57) but underperforms on Hard (i.e., 7.69). Direct method 360VO fails on many sequences, with an average success rate of 43%, far below 360DVO’s 100%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "avg ATE (m) and success rate (%) on 360DVO dataset (OVO methods only)",
+    "value_or_direction": "360DVO vs OpenVSLAM: -27.6% Easy, -43.4% Hard (Easy 3.31 vs 4.57; Hard 4.35 vs 7.69); 360VO success rate 43% (table: 42%) vs 360DVO 100%",
+    "comparator": "360DVO vs OpenVSLAM vs 360VO (all omnidirectional methods)",
+    "task_or_sample": "360DVO dataset, 20 real-world sequences (Table III, page 6)",
+    "locator": "page 5-6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 V-B（'360DVO’s' 为原文弯引号）；Table III 数值一致，正文 43% 与表格 42% 的口径差异已如实标注。"
+   }
+  },
+  {
+   "card_id": "2601.02309-C19",
+   "claim": "分辨率-速度-精度三方权衡：默认 3840×1920 桌面 8 FPS；降到 1920×960 提速到 17 FPS 但平均 ATE 恶化 21.6%，960×480 到 22 FPS 但恶化 41.0%——全景图像的高分辨率既是精度来源也是主要算力负担，低分辨率反而靠减少像素位移与模糊稳定剧烈运动。",
+   "stance": "conditional",
+   "relation": "支持命题：全景相机部署的核心权衡——分辨率收益与算力代价的量化边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-C Hyperparameters 段 + Table V #R0/#R1 行；与 C16 瓶颈陈述、C15 边缘部署互证。",
+   "locator": "page 7, Section V-C and Table V",
+   "source_context": "Downscaling the default resolution to 1920 × 960 (#R0) and 960 × 480 (#R1) raises FPS from 8 to 17 and 22, while worsening average ATE by 21.6% and 41.0%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "FPS and avg ATE (m) by input resolution",
+    "value_or_direction": "3840×1920: 8 FPS, ATE 3.83; 1920×960: 17 FPS, ATE 4.66 (+21.6%); 960×480: 22 FPS, ATE 5.41 (+41.0%)",
+    "comparator": "input resolution 3840×1920 vs 1920×960 vs 960×480",
+    "task_or_sample": "360DVO dataset hyperparameter ablation #D/#R0/#R1 (Table V, page 7)",
+    "locator": "page 7, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字见于 V-C；Table V #D/#R0/#R1 行数值（3.83/4.66/5.41 与 8/17/22 FPS）核对一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "360VO: Visual Odometry Using a Single 360 Camera",
+   "arxiv_id": null,
+   "reason": "直接法单目 360° VO 前驱（引文 [2]），本文主要 OVO 基线：合成集 ATE 1.24 vs 本文 1.11，真实集成功率仅 43%，且对输入图像质量要求高。"
+  },
+  {
+   "title": "DPVO: Deep Patch Visual Odometry",
+   "arxiv_id": null,
+   "reason": "稀疏 patch VO 架构基座（引文 [8]）：本文 patch 图、patchification、光流修正与训练设置沿用 DPVO；消融中 DPVO(pinhole+DBA) avg ATE 7.37 为起点。"
+  },
+  {
+   "title": "SphereNet: Learning Spherical Representations for Detection and Classification in Omnidirectional Images",
+   "arxiv_id": null,
+   "reason": "球面卷积来源（引文 [11]）：SphereResNet=SphereNet+残差块；消融显示 SphereNet 直接替换训练梯度爆炸，残差块是稳定训练的关键。"
+  },
+  {
+   "title": "OpenVSLAM: A Versatile Visual SLAM Framework",
+   "arxiv_id": null,
+   "reason": "支持便携 360° 相机输入的 SLAM 框架（引文 [1]），本文最强经典 OVO 基线（Easy 4.57/Hard 7.69，Jetson 3-7 FPS）。"
+  },
+  {
+   "title": "360-VIO: A Robust Visual-Inertial Odometry Using a 360 Camera",
+   "arxiv_id": null,
+   "reason": "360° 视觉惯性路线代表（引文 [22]），本文相关工作指出其与 LF-VISLAM 靠 IMU 提升鲁棒性，构成本文纯视觉路线的对照边界。"
+  }
+ ],
+ "notes": "全景相机维度的核心证据源：(1) FoV 解耦实验是综述问题'哪些任务获益'的最直接量化证据；(2) Hard-06 动态物体反例与 Hard-04 重复纹理失败是'哪些受限'的机制级证据；(3) 鱼眼 vs 全景的路径定位（II 节）可用于综述的领域结构梳理。与 2509.05740（多鱼眼+LiDAR）和 2509.15673（多标准相机拼接环视+LiDAR）构成三种宽 FoV 硬件路径对照：多鱼眼拼接、多标准相机拼接、单机全景。"
+}

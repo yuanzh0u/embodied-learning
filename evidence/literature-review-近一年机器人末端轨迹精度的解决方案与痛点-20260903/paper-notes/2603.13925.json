@@ -1,0 +1,383 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.13925",
+  "title": "SmoothVLA: Aligning Vision-Language-Action Models with Physical Constraints via Intrinsic Smoothness Optimization",
+  "published": "2026-03-14",
+  "url": "https://arxiv.org/abs/2603.13925",
+  "authors": [
+   "Jiashun Li",
+   "Xiaoyu Shi",
+   "Hong Xie",
+   "Mingsheng Shang",
+   "Yun Lu"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接回应综述问题中'VLA 轨迹平滑度'方案族：用内在 jerk 奖励在 RL 后训练阶段显式优化末端轨迹平滑度，含 jerk 量化指标、LIBERO/LIBERO-Plus 成功率与鲁棒性数据、奖励消融；其前置实证研究还提供了'RL 微调引入抖动'的痛点证据。注意其针对的是 RL 探索引入的抖动而非动作分块边界不连续，属于该族中的训练侧正则分支。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认 SFT-RL 的稳定性/探索困境（Exploration-Stability Paradox）问题定义与三项贡献"
+   },
+   {
+    "locator": "2 Empirical Study on Trajectory Smoothness in SFT and RL Fine-Tuned VLA Models",
+    "role": "relevant-core",
+    "purpose": "获取 RL 微调导致轨迹抖动的定性/定量实证证据与 jerk 指标定义"
+   },
+   {
+    "locator": "2.2 Quantitative Analysis: Jerk-based Metric",
+    "role": "results-or-analysis",
+    "purpose": "提取 SFT vs RL 的末端轨迹平均 jerk 数值（Table 1）"
+   },
+   {
+    "locator": "3 SmoothVLA",
+    "role": "method-or-design",
+    "purpose": "理解 MDP/动作分块建模、GRPO 目标与物理先验混合奖励的推导与设计"
+   },
+   {
+    "locator": "4 Experiment",
+    "role": "data-or-setting",
+    "purpose": "获取实现细节（OpenVLA+LoRA、lambda=0.2）、基准与扰动设置"
+   },
+   {
+    "locator": "4.2 Main Results on Robotics Benchmarks",
+    "role": "results-or-analysis",
+    "purpose": "提取成功率、平滑度提升与 LIBERO-Plus 鲁棒性量化结果"
+   },
+   {
+    "locator": "4.3 Ablation Study of Reward Model",
+    "role": "results-or-analysis",
+    "purpose": "提取奖励设计消融（二值/随机/平滑奖励）证据"
+   },
+   {
+    "locator": "4.4 Case Study",
+    "role": "results-or-analysis",
+    "purpose": "核对抓放任务轨迹质量的案例描述"
+   },
+   {
+    "locator": "5 Related Works",
+    "role": "relevant-core",
+    "purpose": "略读定位：VLA 架构分类与 RL/偏好优化在机器人上的相关工作"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限（真机、长时序、自适应平滑目标均为未来工作）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "reason": "仅用于核对核心引用出处，无综述问题所需证据"
+   },
+   {
+    "locator": "Appendix A and B",
+    "reason": "正文提及附录含训练参数与数据预处理细节，但提取的全文中未包含附录内容，无法核读"
+   }
+  ]
+ },
+ "research_question": "论文自问：如何在 VLA 的 RL 微调中把运动平滑度形式化为可优化目标，使模型无需外部传感或人工奖励工程即可自主获得物理反馈，同时不因平滑约束压制探索而陷入次优策略？",
+ "contributions": [
+  "定义并实证了 VLA RL 微调中的'探索-稳定性悖论'：稀疏奖励 RL 提升泛化但引入高频抖动，LIBERO 上 OpenVLA-RL 平均 jerk 0.402 m/s³ 高于 SFT 的 0.374 m/s³",
+  "提出物理先验混合内在奖励 R(tau)=I_success·(1−λ·mean|Jerk|²)：jerk 经雅可比微分运动学从策略 rollout 直接计算（需逆运动学映射到关节空间），不需要外部环境反馈或人工奖励工程",
+  "给出基于 GRPO（组内相对优势）的架构无关后训练协议，可作为插件用于 DPO/GRPO 等框架（叠加后平均成功率再升 2.6%）",
+  "在 LIBERO 与 LIBERO-Plus 上同时改善成功率（80.5%）、平滑度（较标准 RL +13.8%）与扰动鲁棒性（较 SFT 平均 +24.2 个百分点）"
+ ],
+ "method": {
+  "summary": "SmoothVLA 是 OpenVLA 上的 RL 后训练框架：从 SFT 起始模型在线收集轨迹 rollout，经逆运动学映射到关节空间并按微分运动学（J、J̇、J̈）计算 jerk；奖励为二值成功指示乘以 (1−λ·轨迹平均 |jerk|²)，λ=0.2 经网格搜索确定；用 GRPO 的组内归一化优势在多条同指令轨迹间竞争，偏好'最平滑的成功轨迹'，并以 KL 约束锚定参考策略。",
+  "assumptions": [
+   "本体运动学模型（雅可比及其一阶、二阶时间导数）已知，末端轨迹可经逆运动学映射到关节空间",
+   "任务成功可二值判定（提供稀疏成功信号）",
+   "可在仿真或真机环境中进行在线 rollout 交互（GRPO 需要每指令一组 G 条轨迹采样）",
+   "动作输出为本体末端位姿/速度类控制量（论文设置下为末端执行器控制）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "LIBERO（Goal/Spatial/Object/Long 四套件，每任务 50 条专家演示）",
+   "LIBERO-Plus（语言/光照/背景/布局四类扰动的鲁棒性评测）"
+  ],
+  "tasks": [
+   "语言条件桌面操作（抓放等，如 pick up the alphabet soup and place it in the basket）",
+   "消融使用 LIBERO-Spatial 的 10 个空间推理任务"
+  ],
+  "embodiments": [
+   "仿真环境（LIBERO/LIBERO-Plus）中的机械臂末端执行器控制，OpenVLA 为骨干模型"
+  ],
+  "sample_or_scale": "LIBERO 四套件各 10 任务×50 演示；消融实验每设置独立运行 5 次取平均；GRPO 每组采样多条同指令轨迹"
+ },
+ "evaluation": {
+  "design": "四部分：LIBERO in-distribution 成功率（Figure 4）与平均 jerk 平滑度分析（Figure 5）；LIBERO-Plus 四类扰动鲁棒性（Table 2）；LIBERO-Spatial 上奖励设计消融（二值/随机噪声/平滑奖励，五维评估，每设置独立 5 次，Table 3）；抓放任务轨迹质量案例研究",
+  "baselines": [
+   "Octo（同数据微调）",
+   "OpenVLA-SFT",
+   "OpenVLA-DPO",
+   "OpenVLA-GRPO",
+   "消融内部基线：R_binary（纯二值奖励）、R_random（二值+随机噪声奖励）"
+  ],
+  "metrics": [
+   "任务成功率（%）",
+   "末端轨迹平均 jerk（m/s³，平滑度指标）",
+   "平滑度相对提升（较 SFT/RL 的百分比）",
+   "扰动下成功率及其降幅"
+  ],
+  "ablations": [
+   "奖励形式消融：R_binary vs R_random vs R_smooth（Table 3）",
+   "平滑度权重 λ 网格搜索（选定 0.2）",
+   "插件兼容性：平滑度评估叠加到 DPO 与 GRPO 两种偏好优化框架"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "前置实证研究显示稀疏奖励在线 RL 微调显著恶化轨迹平滑度：LIBERO 四套件上 OpenVLA-RL 平均 jerk 0.402 m/s³ vs OpenVLA-SFT 0.374 m/s³，定性轨迹图呈现绕路、回退与抓取点附近的高频振荡",
+   "scope": "LIBERO 仿真、OpenVLA 骨干、稀疏二值奖励的在线 RL 微调",
+   "locator": "2.2 Quantitative Analysis: Jerk-based Metric"
+  },
+  {
+   "finding": "核心机制为内在混合奖励：二值成功信号 × (1−λ·轨迹平均|jerk|²)，jerk 由策略动作序列与本体感知反馈经雅可比微分运动学直接计算，无需外部奖励工程；GRPO 组内竞争使模型在成功轨迹中偏好最平滑者",
+   "scope": "方法设计（作者主张，架构无关）",
+   "locator": "3.3 Physics-Informed Reward: From Jerk to Alignment"
+  },
+  {
+   "finding": "LIBERO in-distribution 上 SmoothVLA-GRPO 平均成功率 80.5%，比同数据微调的 Octo（73.9%）高 6.6 个百分点；平滑度评估作为插件叠加到 DPO/GRPO 后平均成功率再提升 2.6%",
+   "scope": "LIBERO 仿真基准",
+   "locator": "4.2 Main Results on Robotics Benchmarks"
+  },
+  {
+   "finding": "平滑度方面，SmoothVLA 较传统监督微调提升 4.5%、较标准 RL 微调提升 13.8%，验证混合奖励可同时兼顾任务成功与运动平滑",
+   "scope": "LIBERO 仿真基准（Figure 5 平滑度分析，具体归一化口径未在正文定义）",
+   "locator": "4.2 Main Results on Robotics Benchmarks"
+  },
+  {
+   "finding": "LIBERO-Plus 扰动鲁棒性：SmoothVLA 平均成功率领先 SFT 24.2 个百分点（Table 2 中 SmoothVLA-GRPO 46.2 vs OpenVLA-SFT 22.0），GRPO/DPO 变体分别领先 7.0/5.6 个百分点，且扰动下降幅更小",
+   "scope": "LIBERO-Plus 语言/光照/背景/布局四类扰动",
+   "locator": "4.2 Main Results on Robotics Benchmarks"
+  },
+  {
+   "finding": "奖励消融（LIBERO-Spatial，每设置 5 次独立运行）：完整平滑奖励 R_smooth 五维平均 54.1，优于纯二值奖励 48.2（Δ-5.9）与随机噪声奖励 46.5（Δ-7.6），说明增益来自结构化物理先验而非任意密集奖励；布局扰动维度提升最强",
+   "scope": "LIBERO-Spatial 十任务、五维评估",
+   "locator": "4.3 Ablation Study of Reward Model"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "尚未在更复杂的真实机器人平台与长时序操作任务上验证，作者列为未来工作（该场景下平滑约束对安全与稳定更关键）",
+    "locator": "6 Conclusion"
+   },
+   {
+    "limitation": "平滑目标是固定 jerk 惩罚，作者提出未来探索任务相关或感知感知（perception-aware）的自适应可学习平滑目标",
+    "locator": "6 Conclusion"
+   },
+   {
+    "limitation": "尚未与基于模型的控制或世界模型学习结合以更紧地桥接高层策略与低层运动可行性",
+    "locator": "6 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "证据仅来自 LIBERO/LIBERO-Plus 仿真（Franka 桌面操作），未验证真机噪声、控制带宽与推理延迟下 jerk 内在奖励的有效性；仿真中 IK 与雅可比精确已知，真机上模型误差会进入 jerk 计算",
+    "basis": "4.1-4.3 节全部实验在 LIBERO 仿真套件；3.3 节 jerk 推导依赖精确的运动学模型"
+   },
+   {
+    "boundary": "'平滑度提升 13.8%/4.5%' 的归一化口径未在正文定义（相对哪个基线、哪个指标的百分比），且 Figure 5 数值未在文本中展开，无法从提取全文独立复核",
+    "basis": "4.2 节仅给出百分比结论，Figure 4/5 为图像内容，正文中无对应数值表"
+   },
+   {
+    "boundary": "平滑度提升对成功率提升的因果贡献未单独隔离：消融只比较奖励形式（二值/随机/平滑），未报告 λ 取值敏感性曲线或平滑度-成功率的分解分析",
+    "basis": "4.1 节说明 λ=0.2 由网格搜索选定但未给出搜索结果；4.3 节消融设计只覆盖奖励形式"
+   }
+  ]
+ },
+ "transfer_boundary": "该方案证据仅在 LIBERO/LIBERO-Plus 仿真、OpenVLA 骨干、末端位姿/速度控制、任务可二值判定的 RL 后训练场景内成立，不能外推到真机长时序任务或未知运动学模型的本体。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "先用前置实证研究（SFT vs RL 轨迹的定性与定量对比）确立问题，再提出方法，因果链清晰",
+   "消融设计了'随机噪声奖励'对照组，排除了'任意密集奖励都有效'的替代解释，支持结构化物理先验的必要性",
+   "用 LIBERO-Plus 系统评估四类分布外扰动的鲁棒性，而非只报告 in-distribution 成功率",
+   "消融每设置独立运行 5 次取平均，部分弥补单次评测的随机性"
+  ],
+  "design_risks": [
+   "平滑度提升 13.8%/4.5% 的计算口径未定义，主要数值以 Figure 4/5 呈现，文本不可复核",
+   "未报告成功率的标准差或置信区间（除消融声称 5 次运行外），若干差距（如 2.6% 插件增益）可能落入噪声范围",
+   "RL/GRPO 基线的交互样本量与算力未报告，与 SFT 的比较存在训练范式固有差异",
+   "正文引用的附录 A/B 未包含在提取全文中，超参与数据预处理细节不可完全核查"
+  ],
+  "baseline_fairness": "与 Octo 的比较声明基于'相同数据微调'，但各基线（SFT/DPO/GRPO）的交互轮数、采样组大小 G 与算力未报告，RL 系与 SFT 的比较难以判断是否等资源；GRPO/DPO 内部对比（+7%/+5.6%）相对更可控。",
+  "metric_validity": "平均 jerk 是末端轨迹平滑度的合理物理代理且有文献支撑（minimum-jerk 理论），但'平滑度指标提升百分比'的归一化方式未定义；成功率与 jerk 之间的关系主要由理论论证支撑，缺少跨任务相关性数据。",
+  "reproducibility": "主实验超参（骨干、LoRA、学习率、batch size、λ=0.2）已在 4.1 节给出并指向附录，但附录内容未随全文提供，代码与数据未见发布声明；图内关键数值无法从文本复核，复现难度中等偏高。",
+  "external_validity": "仅 LIBERO/LIBERO-Plus 仿真（单一桌面操作域、语言条件任务），真机验证为作者自述未来工作；对动作分块边界不连续、推理延迟导致的抖动等其他成因不适用，迁移到接触丰富或高动态任务无证据支持。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.13925-C01",
+   "claim": "在 LIBERO 仿真基准上，用稀疏二值奖励在线 RL 微调的 OpenVLA 生成的末端轨迹平均 jerk 为 0.402 m/s³，显著高于 SFT 版本的 0.374 m/s³，即 RL 探索以轨迹抖动为代价（探索-稳定性悖论的定量实证）。",
+   "stance": "limit",
+   "relation": "支撑综述中'VLA 后训练/微调引入末端轨迹不平滑'的痛点命题：稀疏奖励 RL 微调本身会恶化轨迹平滑度，是平滑优化方案要解决的核心痛点之一。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "论文 2.2 节在 LIBERO 任务套件上大规模计算末端轨迹平均 jerk，Table 1 显示 RL 微调版本四套件平均 0.402 高于 SFT 的 0.374，且正文明确将其归因于稀疏奖励在线 RL 的策略搜索随机性。",
+   "locator": "2.2 Quantitative Analysis: Jerk-based Metric",
+   "source_context": "As shown in Table1, the Reinforcement- fine-tuned model produces trajectories with a significantly higher average jerk (0.402m/s³) than the Supervised-fine- tuned model (0.374m/s³). This provides strong physical evi- dence that existing online RL fine-tuning methods based on sparse rewards, while improving generalization, indeed intro- duce additional trajectory jitter and degrade motion smooth- ness.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average jerk of end-effector trajectories (m/s³)",
+    "value_or_direction": "RL 0.402, SFT 0.374",
+    "comparator": "OpenVLA-RL compared to OpenVLA-SFT",
+    "task_or_sample": "LIBERO Spatial/Object/Goal/Long 四个任务套件",
+    "locator": "2.2 Quantitative Analysis: Jerk-based Metric, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 2.2 节 Table 1 及其后解读句：RL 微调平均 jerk 0.402 m/s³ 高于 SFT 0.374 m/s³，与 Table 1 中 Long 套件 0.448/0.402 及四套件平均 0.402/0.374 一致；主张限定在 LIBERO 仿真与 OpenVLA 骨干，未超出原文实验范围。"
+   }
+  },
+  {
+   "card_id": "2603.13925-C02",
+   "claim": "在 LIBERO 基准上，SmoothVLA 的平滑度指标相较标准 RL 微调提升 13.8%、相较监督微调提升 4.5%。",
+   "stance": "support",
+   "relation": "支撑综述中'训练侧平滑正则方案族可量化改善 VLA 末端轨迹平滑度'的命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 节 Figure 5 的平滑度分析给出：与传统 SFT 相比平滑度指标提升 4.5%，与标准 RL 微调相比提升 13.8%，作者将其归因于混合奖励对任务成功与运动平滑的兼顾。",
+   "locator": "4.2 Main Results on Robotics Benchmarks",
+   "source_context": "In the smoothness analysis of Figure 5, the SmoothVLA method significantly optimizes motion trajectory quality. Specifically, compared to traditional supervised fine-tuning methods, the smoothness metric improves by 4.5%; when compared to standard RL fine-tuning methods, the improve- ment reaches 13.8%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "smoothness metric based on average jerk",
+    "value_or_direction": "13.8% over standard RL, 4.5% over SFT",
+    "comparator": "SmoothVLA compared to OpenVLA-RL and OpenVLA-SFT",
+    "task_or_sample": "LIBERO 基准（Figure 5 平滑度分析）",
+    "locator": "4.2 Main Results on Robotics Benchmarks, Figure 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.2 节 Results 段原文：与 SFT 比提升 4.5%、与标准 RL 比提升 13.8% 的表述逐字一致；主张限定于 LIBERO 仿真基准与该论文未定义归一化口径的平滑度指标，未外推到真机。"
+   }
+  },
+  {
+   "card_id": "2603.13925-C03",
+   "claim": "在 LIBERO in-distribution 评测中，SmoothVLA-GRPO 平均成功率达 80.5%，比同数据微调的 Octo 基线（73.9%）高 6.6 个百分点；将轨迹平滑度评估作为插件叠加到 DPO/GRPO 等强化微调框架可再提升平均成功率 2.6%。",
+   "stance": "support",
+   "relation": "支撑综述中'平滑正则不牺牲任务成功率、可与现有微调框架插件式组合'的命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 节 Results 段报告 Figure 4 的 in-distribution 结果：SmoothVLA-GRPO 80.5% 平均成功率、较 Octo +6.6 个百分点，并声明作为通用插件叠加 DPO/GRPO 后成功率再增 2.6%。",
+   "locator": "4.2 Main Results on Robotics Benchmarks",
+   "source_context": "As shown in Figure 4, in the in-distribution benchmark evalua- tion, SmoothVLA-GRPO achieves an average success rate of 80.5%, representing a 6.6 percentage point improvement over the baseline method Octo (73.9%). This enhancement proves the effectiveness of SmoothVLA as a universal plugin—when applied to different reinforcement fine-tuning methods (DPO and GRPO) with the incorporation of trajectory smoothness evaluation, the average success rate is further increased by 2.6%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate on LIBERO",
+    "value_or_direction": "80.5% (Octo 73.9%, +6.6 percentage points)",
+    "comparator": "SmoothVLA-GRPO compared to Octo fine-tuned on the same data",
+    "task_or_sample": "LIBERO 任务套件（Figure 4，in-distribution）",
+    "locator": "4.2 Main Results on Robotics Benchmarks, Figure 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.2 节 Results 段：80.5%、6.6 个百分点、Octo 73.9% 与 2.6% 插件增益均逐字出自原文；主张限定在 LIBERO 仿真与同数据微调的 Octo 基线对比。"
+   }
+  },
+  {
+   "card_id": "2603.13925-C04",
+   "claim": "在 LIBERO-Plus 四类扰动（语言/光照/背景/布局）评测中，SmoothVLA 平均成功率领先 SFT 方法 24.2 个百分点（Table 2 中 SmoothVLA-GRPO 46.2 vs OpenVLA-SFT 22.0），GRPO/DPO 变体分别领先 7.0/5.6 个百分点，且扰动下性能降幅更小。",
+   "stance": "support",
+   "relation": "支撑综述中'平滑正则可同时提升泛化/鲁棒性而非仅改善运动学指标'的命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 节 Table 2 的 LIBERO-Plus 鲁棒性评测显示 SmoothVLA 各变体在四类扰动下平均成功率均高于对应 OpenVLA 基线，正文总结为领先 SFT 24.2%、GRPO/DPO 变体领先 7%/5.6%，且降幅更小。",
+   "locator": "4.2 Main Results on Robotics Benchmarks",
+   "source_context": "The robustness evaluation in Table 2 further confirms the superiority of the method. SmoothVLA leads super- vised fine-tuning methods by 24.2% in average success rate, with variants based on GRPO and DPO leading by 7% and 5.6%, respectively. More importantly, when facing out-of- distribution perturbations, SmoothVLA exhibits smaller per- formance degradation, indicating stronger generalization ca- pability and stability.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate under perturbations",
+    "value_or_direction": "SmoothVLA-GRPO 46.2, OpenVLA-SFT 22.0 (+24.2 percentage points)",
+    "comparator": "SmoothVLA-GRPO/DPO compared to OpenVLA-SFT/GRPO/DPO",
+    "task_or_sample": "LIBERO-Plus 语言/光照/背景/布局四类扰动，四任务套件",
+    "locator": "4.2 Main Results on Robotics Benchmarks, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.2 节正文与 Table 2 数值：OpenVLA-SFT 平均 22.0、SmoothVLA-GRPO 46.2、SmoothVLA-DPO 44.8，差值 24.2/7.0/5.6 与正文一致；主张限定在 LIBERO-Plus 仿真扰动设置。"
+   }
+  },
+  {
+   "card_id": "2603.13925-C05",
+   "claim": "在 LIBERO-Spatial 奖励消融（每设置独立 5 次取平均）中，含 jerk 平滑项的完整奖励 R_smooth 在五个评估维度平均 54.1，优于纯二值奖励 R_binary（48.2，差 5.9）与随机噪声奖励 R_random（46.5，差 7.6），说明增益来自结构化物理先验而非任意密集奖励扰动。",
+   "stance": "support",
+   "relation": "支撑综述中'平滑奖励项是有效成分'的机制命题，并排除'任意奖励噪声均可提升'的替代解释。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 节 Table 3 在保持训练超参一致、仅改奖励设计的对照下，R_smooth 五维平均 54.1 最高，R_binary 48.2、R_random 46.5；正文结论明确平滑奖励项显著优于二值与随机奖励配置。",
+   "locator": "4.3 Ablation Study of Reward Model",
+   "source_context": "The results indicate that: (1) incorporating the smooth- ness reward term R smooth significantly enhances overall per- formance compared to basic binary rewards and random re- ward perturbations; (2) all reward components contribute sub- stantially to model robustness across different perturbation types.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate across five evaluation dimensions",
+    "value_or_direction": "R_smooth 54.1, R_binary 48.2, R_random 46.5",
+    "comparator": "jerk-based smoothness reward compared to binary-only reward and random-noise reward",
+    "task_or_sample": "LIBERO-Spatial 十任务消融，每设置独立运行 5 次",
+    "locator": "4.3 Ablation Study of Reward Model, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 4.3 节 Table 3 行值（R_binary 平均 48.2、R_random 46.5、R_smooth 54.1）与正文结论句，五维（In-dom/Lang/Light/Bkgd/Layout）数值一致；主张限定在 LIBERO-Spatial 消融设置。"
+   }
+  },
+  {
+   "card_id": "2603.13925-C06",
+   "claim": "论文全部实验限于 LIBERO/LIBERO-Plus 仿真；作者明确把真实机器人平台与长时序操作任务上的验证、任务自适应/感知感知的平滑目标、以及与基于模型控制或世界模型的结合列为未来工作。",
+   "stance": "gap",
+   "relation": "支撑综述中'平滑方案普遍缺真机验证、固定平滑目标任务域窄'的未解痛点命题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论章节在'promising results'之后自述三个未来方向，第一条即扩展到更复杂真实机器人平台与长时序任务，说明当前证据边界为仿真桌面操作。",
+   "locator": "6 Conclusion",
+   "source_context": "Despite the promising results, this work opens sev- eral directions for future research.First, we plan to extend SmoothVLA to more complex real-world robotic platforms and long-horizon manipulation tasks, where smoothness con- straints are even more critical for safety and stability.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对结论章节原文：作者自述未来工作包含真机平台与长时序任务扩展，且全文实验章节（4.1-4.3）均在 LIBERO/LIBERO-Plus 仿真；主张为作者原话的忠实转述，无外加推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2406.09246",
+  "2410.24164",
+  "2502.19645",
+  "2509.09674"
+ ],
+ "notes": "家族定位：本篇属于'VLA 平滑执行'族中的训练侧平滑正则分支（RL 后训练 + 内在 jerk 奖励），与 SEAM/PACE 等执行层分块策略方案、Action ControlNet 等适配器方案互补；它不处理动作分块边界不连续，而针对 RL 探索引入的高频抖动，可与执行层方案叠加。注意其 13.8% 平滑度增益的归一化口径未定义，引用时应注明。"
+}

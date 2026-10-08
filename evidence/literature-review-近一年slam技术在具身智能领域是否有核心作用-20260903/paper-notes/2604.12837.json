@@ -1,0 +1,341 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.12837",
+  "title": "GGD-SLAM: Monocular 3DGS SLAM Powered by Generalizable Motion Model for Dynamic Environments",
+  "published": "2026-04-14",
+  "url": "https://arxiv.org/abs/2604.12837",
+  "authors": [
+   "Yi Liu",
+   "Haoxuan Xu",
+   "Hongbo Duan",
+   "Keyu Fan",
+   "Zhengyang Zhang",
+   "Peiyu Zhuang",
+   "Pengting Luo",
+   "Houde Liu"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "近一年（2026-04）动态环境单目 3DGS-SLAM 的代表性方法工作，直接对应综述问题中『真实具身场景的运动物体干扰是否仍需专门 SLAM 基础设施』的论证：它展示 SLAM 框架吸收泛化学习先验（DINOv2 特征 + 时序注意力运动分割）而非被端到端模型替代的演化路线，同时其作者自述局限揭示了当前动态 SLAM 只产出静态地图的能力边界。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1",
+    "role": "problem",
+    "purpose": "动态环境对稠密视觉 SLAM 的挑战定位；现有方法（DyPho-SLAM 依赖语义标签+深度、WildGS-SLAM 依赖逐场景 3DGS 渲染损失）的失效模式与动机"
+   },
+   {
+    "locator": "page 2",
+    "role": "relevant-core",
+    "purpose": "相关工作三条路线对比：传统动态 SLAM（单帧检测/光流）、动态 3DGS SLAM（深度输入/渲染不确定性）、运动物体分割 MOS（MegaSAM/MonST3R/Segment-Any-Motion 为何不能直接用于渐进式 SLAM）"
+   },
+   {
+    "locator": "page 2",
+    "role": "method-or-design",
+    "purpose": "问题形式化（单目序列 -> 位姿 + 逐帧高斯参数）与三条贡献"
+   },
+   {
+    "locator": "page 3",
+    "role": "method-or-design",
+    "purpose": "泛化运动模型（GMM）：DINOv2 特征、FIFO 历史帧队列、序列注意力跨帧匹配、动态/静态双头门控增强"
+   },
+   {
+    "locator": "page 4",
+    "role": "method-or-design",
+    "purpose": "GMM 训练损失（base/二元熵正则/Dice）与推理（OTSU 二值化+形态学膨胀）；跟踪模块（Metric3D-v2 尺度先验 + DROID-SLAM DBA 以动态掩码将残差权重置零）；映射的不确定性监督"
+   },
+   {
+    "locator": "page 5",
+    "role": "method-or-design",
+    "purpose": "distractor-adaptive SSIM（自适应核避免动态像素污染）、静态高斯 KD-tree 邻域采样填充遮挡、高斯增量更新与映射损失；实验设置（基线、硬件、关键参数、数据集）"
+   },
+   {
+    "locator": "page 6",
+    "role": "data-or-setting",
+    "purpose": "评测数据集（TUM/Bonn/Wild-SLAM，手持采集）与 GMM 训练数据（Davis）；指标定义（ATE RMSE/Std；重建质量仅在静态区域计算）"
+   },
+   {
+    "locator": "page 6",
+    "role": "results-or-analysis",
+    "purpose": "动态提取器定性对比（Fig.4：单帧静止但长期运动过的椅子被正确判为动态）；跟踪定量结果（Table I）；跟踪消融（Table II）"
+   },
+   {
+    "locator": "page 7",
+    "role": "results-or-analysis",
+    "purpose": "与 RGB-D 方法的对比结论；映射定量结果（Table III）与映射消融（Table IV）；Wild-SLAM 泛化场景定性评测"
+   },
+   {
+    "locator": "page 8",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与未来工作：尚未实现动态物体运动的实时重建与完全遮挡区域的 inpainting"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8",
+    "role": "appendix-or-supplement",
+    "reason": "论文无附录或补充材料；References 部分仅按需核对对证据不可或缺的被引文献（WildGS-SLAM[6]、DROID-SLAM[22]、DyPho-SLAM[5]、MonST3R[20]、Davis[29]），未逐条精读其余条目"
+   }
+  ]
+ },
+ "research_question": "论文自身的问题：在无预定义语义标注、无深度输入的单目设定下，如何在动态环境中同时实现鲁棒相机位姿估计与高保真稠密 3DGS 重建？其核心洞察是：SLAM 渐进式逐帧处理输入，而单帧只含静态属性、运动本质由多帧时序位置变化定义，因此必须为渐进式 SLAM 输入构建泛化的跨帧运动识别先验（区别于依赖语义标签+深度的 DyPho-SLAM 与依赖逐场景渲染损失的 WildGS-SLAM）。",
+ "contributions": [
+  "泛化运动模型（GMM）：面向渐进式 SLAM 输入的动态语义提取器，DINOv2 结构特征 + FIFO 历史帧队列 + 序列注意力（当前帧 query 对历史帧 key/value 跨帧匹配）+ 动态/静态双头门控增强，推理时 OTSU 二值化+形态学膨胀产出域无关动态先验掩码；无需预定义语义标注、深度输入或逐场景在线训练",
+  "动态场景建图优化策略：静态高斯 KD-tree k 近邻随机采样填充被动态物体遮挡的区域以保持背景一致性，配合 distractor-adaptive SSIM 损失（自适应核规避动态像素污染 SSIM 统计）与 GMM 先验监督的不确定性建图",
+  "在 TUM、Bonn、Wild-SLAM 三个真实动态数据集上报告单目稠密 SLAM 中 SOTA 的相机跟踪与稠密重建结果，并给出跟踪（Table II）与映射（Table IV）两组消融"
+ ],
+ "method": {
+  "summary": "GGD-SLAM 是以 WildGS-SLAM 为基线框架的单目动态 3DGS-SLAM。前端：离线训练的泛化运动模型对每帧提取 DINOv2 特征（H'=384、W'=512），经 FIFO 队列聚合 L=12 帧历史特征，序列注意力做跨帧匹配，动态/静态双头门控增强后输出运动概率图，OTSU 二值化+膨胀得到域无关动态先验二值掩码。跟踪：沿用 DROID-SLAM 的帧图与稠密束调整（DBA），以 Metric3D-v2 零样本单目深度为尺度先验，用动态先验掩码将动态区域残差权重置零并附加轨迹平滑项。映射：浅层 MLP 预测不确定性图（以 3DGS 渲染损失 + GMM 先验误差 L_prior + 正则联合监督，动态区域不确定性被推向阈值 Tmax=0.1），增量添加高斯，用静态高斯 KD-tree k=10 近邻采样替换动态点深度/颜色以恢复遮挡，映射损失含不确定性加权的 3DGS 残差、各向同性正则与 distractor-adaptive SSIM。整体哲学：动态物体被识别并从优化中剔除，以保护静态成分的定位与重建。",
+  "assumptions": [
+   "单目 RGB 输入、已知相机内参、固定帧率采集",
+   "地图本质仍是静态成分地图：动态物体被剔除而非建模，静态场景稳定性是优化目标",
+   "离线 GMM 在 Davis 视频分割数据上学到的运动模式分布覆盖部署场景的动态类型",
+   "Metric3D-v2 的零 shot 单目深度先验在目标场景有效（提供尺度）",
+   "DROID-SLAM 式帧图共视约束可构建；动态先验掩码能可靠区分动静成分（误判会直接污染跟踪与建图）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "TUM RGB-D 动态序列（fr3/w/xyz、fr3/w/half、fr3/s/half）",
+   "Bonn RGB-D Dynamic（balloon、balloon2、ps_track、crowd2）",
+   "Wild-SLAM Dataset（泛化评测，手持设备采集，高分辨率+温和相机运动）",
+   "Davis Dataset（GMM 离线训练，含 ground-truth 运动掩码）"
+  ],
+  "tasks": [
+   "动态环境单目稠密 SLAM：相机位姿估计（跟踪）",
+   "静态成分的稠密 3DGS 重建（映射，照片级渲染）",
+   "运动物体语义提取（泛化运动模型的动态先验）"
+  ],
+  "embodiments": [
+   "无机器人本体实验：全部评测序列为手持设备采集；论文定位的目标场景为移动机器人、AR/VR"
+  ],
+  "sample_or_scale": "7 个 TUM/Bonn 动态评测序列 + Wild-SLAM 序列（定性）；8 页会议论文规模；GMM 训练于 Davis 数据集（训练轮数/样本规模未报告）；实验硬件为 3.00GHz Intel Xeon Gold 6151 CPU + 未标型号的消费级 GPU"
+ },
+ "evaluation": {
+  "design": "以 WildGS-SLAM 为基线框架；开源单目 3DGS-SLAM（MonoGS、Splatam）本地复跑，RGB-D 动态 3DGS-SLAM（DG-SLAM、DyPho-SLAM）复现适配到动态环境，其余方法（RoDyn-SLAM、GARAD-SLAM、Gassidy、DGS-SLAM、ADD-SLAM、UP-SLAM、DynaMoN、Dy3DGS-SLAM、Zhou et al.[25]）引用原文数字；按 RGB-D 稠密 SLAM 与单目稠密 SLAM 分组报告；跟踪消融（Table II：泛化先验/OTSU 二值化/平滑项）与映射消融（Table IV：distractor-adaptive SSIM/静态 KD-tree）分离评估组件贡献；另在 Wild-SLAM 数据集做泛化定性评测（Fig. 6）。",
+  "baselines": [
+   "WildGS-SLAM（CVPR 2025，直接基线与不确定性框架来源）",
+   "MonoGS、Splatam（开源单目 3DGS-SLAM，本地复跑）",
+   "DG-SLAM、DyPho-SLAM（RGB-D 动态 3DGS-SLAM，复现适配）",
+   "引用原文数字：RoDyn-SLAM、GARAD-SLAM、Gassidy、DGS-SLAM、ADD-SLAM、UP-SLAM（RGB-D 组）；DynaMoN、Zhou et al.[25]、Dy3DGS-SLAM（单目组）"
+  ],
+  "metrics": [
+   "ATE RMSE（cm）与 ATE Standard Deviation（cm）——相机跟踪",
+   "PSNR（dB）/SSIM/LPIPS——渲染重建质量，仅在静态区域计算"
+  ],
+  "ablations": [
+   "Table II（Bonn ps_track、crowd2 ATE）：Generalizable Prior / OTSU Binarize / Smoothness 三组件",
+   "Table IV（fr3/w/xyz、bonn/cr2 PSNR）：distractor-adaptive SSIM / 静态高斯 KD-tree 两组件"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "单目 GGD-SLAM 的跟踪精度在单目稠密 SLAM 组中领先：TUM 平均 ATE 1.3 cm、Bonn 平均 2.7 cm，均低于最新单目动态基线 WildGS-SLAM（1.4 / 2.9 cm）；作者称在高动态序列 fr3/w/half（1.4 cm）与 bonn/crowd2（1.8 cm）上甚至超过 RGB-D 方法（同表 DyPho-SLAM 对应 2.6 / 2.5 cm）",
+   "scope": "TUM/Bonn 动态基准上的相机跟踪（ATE RMSE）",
+   "locator": "page 6, Table I; page 7"
+  },
+  {
+   "finding": "消融量化泛化运动先验的价值：完整配置（泛化先验+OTSU+平滑项）在 ps_track / crowd2 上 ATE 为 3.41 / 1.79 cm，去掉泛化先验与 OTSU 后退化为 3.56 / 2.14 cm，其中 crowd2 退化最明显",
+   "scope": "Bonn RGB-D Dynamic 跟踪消融",
+   "locator": "page 6, Table II"
+  },
+  {
+   "finding": "静态区域重建质量按平均指标为单目 GS 框架最佳（平均 PSNR 23.03 dB vs WildGS-SLAM 22.23 dB，平均 LPIPS 0.158 vs 0.172），但逐序列并非全面占优（bonn/ps tracking PSNR 22.92 vs 23.35；fr3/w/xyz SSIM 0.751 vs 0.821）；映射消融中 distractor-adaptive SSIM 与静态 KD-tree 需同时启用才最优（fr3/w/xyz 22.68 dB、bonn/cr2 24.27 dB）",
+   "scope": "TUM/Bonn 动态序列渲染质量（PSNR/SSIM/LPIPS，仅静态区域评估）",
+   "locator": "page 7, Table III; page 7, Table IV"
+  },
+  {
+   "finding": "时序历史上下文对动态识别具有决定性：fr3/w/half 第 800 帧中单帧静止但长期被移动过的椅子被 GMM 正确判为动态，而单帧语义分割（Yolo+SAM）、DG-SLAM/WildGS-SLAM 的机制在该帧漏检或误判；仅用逐像素 base loss 训练的 GMM 特征噪声明显，需 Dice 损失保持结构完整性",
+   "scope": "fr3/w/half 动态提取器定性对比",
+   "locator": "page 6, Fig. 4"
+  },
+  {
+   "finding": "在更温和的 Wild-SLAM 场景（高分辨率、轻微相机运动）中不确定性机制本身已足够，GGD-SLAM 与基线 WildGS-SLAM 均表现优异，未给出定量表；泛化运动先验的收益主要体现在 TUM/Bonn 类强动态/大相机运动场景",
+   "scope": "Wild-SLAM 数据集泛化评测（定性）",
+   "locator": "page 7; page 8"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前系统尚未实现对动态物体运动的实时重建（作者列为未来工作目标）",
+    "locator": "page 8"
+   },
+   {
+    "limitation": "当前系统尚未解决完全被遮挡区域的 inpainting（作者列为未来工作目标；现有静态高斯 KD-tree 采样仅能部分缓解遮挡伪影）",
+    "locator": "page 8"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "实时性与资源开销未报告：全文无 GGD-SLAM 的帧率/运行时间数据，实验硬件仅描述为服务器 CPU + 未标型号的消费级 GPU，对机器人在线部署的可行性无法判断",
+    "basis": "page 5 实验设置仅列硬件与超参数，全文无 runtime/fps 报告（not reported）"
+   },
+   {
+    "boundary": "无机器人本体在线闭环实验：全部评测基于手持设备采集的 TUM/Bonn/Wild-SLAM 基准序列，未在真实机器人导航/操作任务中验证定位与地图的下游价值",
+    "basis": "page 5-6 数据集与指标定义均为离线基准评测；论文未报告任何机器人部署实验"
+   },
+   {
+    "boundary": "重建指标仅在静态区域计算（PSNR/SSIM/LPIPS 于 static regions only），动态物体的剔除干净度、遮挡伪影与被剔除区域的恢复质量均无定量指标，指标定义系统性偏向动态剔除策略",
+    "basis": "page 6 Metric 段原文明确 'quantify it by measuring the average difference between the rendered and input images in static regions only'"
+   },
+   {
+    "boundary": "GMM 训练于 Davis 视频目标分割数据集，向机器人平台视角/运动分布的域迁移未量化；评测场景以室内人形动态为主，未覆盖车辆、动物、可动对象操作等具身场景常见动态类型",
+    "basis": "page 6 训练数据描述（'We use the Davis Dataset [29] to train our generalizable motion model'）；全文未提供跨域泛化误差分析"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：结论适用于单目输入、室内/近景、以人为主的运动干扰（TUM/Bonn/Wild-SLAM 类型手持采集序列）下的离线相机跟踪精度与静态区域稠密重建质量；不能外推到机器人本体在线实时运行（无 runtime 证据）、大规模户外或长时程环境、非人形/场景级动态，以及需要把动态物体运动本身纳入地图或预测的具身任务。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "与直接基线 WildGS-SLAM 同框架对比，开源单目方法（MonoGS、Splatam）本地复跑、RGB-D 动态方法（DG-SLAM、DyPho-SLAM）复现适配，比纯引用数字更可控",
+   "跟踪与映射分别设置消融（Table II / IV），可分离归因各组件贡献",
+   "按 RGB-D 与单目分组报告，明确承认深度传感器的绝对尺度优势，单目超越 RGB-D 的说法限定在高动态序列上",
+   "Fig. 4 提供了机制层面的定性证据（单帧静止但历史运动的椅子），支撑时序上下文的必要性论证"
+  ],
+  "design_risks": [
+   "多个未开源 SOTA（GARAD-SLAM、ADD-SLAM、UP-SLAM 等）直接引用原文数字，评测协议（序列子集、轨迹对齐方式）可能不一致；表 I 的 Avg. 列与所示序列的算术均值不完全吻合（如 Ours 四个 Bonn 序列均值 2.475 vs 报告 2.7），平均口径未在文中说明",
+   "重建评估仅在静态区域进行且不同方法的『静态区域』由各自的动态掩码定义，掩码差异会直接改变指标基数，跨方法可比性存疑",
+   "无运行时间/显存/帧率对比，实时性主张缺数据；『consumer-grade GPU』未给型号",
+   "Wild-SLAM 泛化评测仅定性（Fig. 6）无定量表，且该数据集由基线作者提出",
+   "逐序列结果并非全面占优（bonn/ps tracking PSNR、fr3/w/xyz SSIM 低于 WildGS-SLAM），『单目 GS 框架最佳』的表述依赖平均指标"
+  ],
+  "baseline_fairness": "部分公平：与直接基线 WildGS-SLAM 共享代码基础（以其为 baseline 实现），开源单目方法本地复跑、两个 RGB-D 动态方法复现适配，这部分对比设置较充分；但相当数量对比方法为原文引用数字，协议一致性无法核验，且复现适配（reimplement ... adapted to dynamic environments）的具体细节未说明。",
+  "metric_validity": "ATE RMSE/Std. 是动态 SLAM 的标准有效指标；重建指标 PSNR/SSIM/LPIPS 仅在静态区域计算——符合『静态地图』的目标定义，但会系统性有利于激进剔除动态区域的方法，且不能反映动态处理本身（剔除干净度、遮挡恢复）的质量，需结合定性图（Fig. 5/6）解读。",
+  "reproducibility": "中等：关键超参（L=12、H'=384、W'=512、k=10、lambda_d=0.5、Tmax=0.1）、训练损失构成、训练数据（Davis）与评测序列均有给出；但 GPU 型号、GMM 训练细节（轮数、数据规模、增广）与推理耗时未报告，未见代码发布声明，第三方完整复现存在障碍。",
+  "external_validity": "有限：全部为手持设备采集的室内/近景基准，动态干扰以人为主；无机器人本体在线实验、无户外/长时程/多动态类型场景；对真实具身部署（不同本体运动模式、传感器噪声、计算预算）的外推未验证。结论对『动态干扰下单目 SLAM 可达的精度上限』有参考价值，对『SLAM 在具身系统中的在线作用』不构成直接证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.12837-C01",
+   "claim": "作者把动态环境确立为稠密视觉 SLAM 的核心失效场景：移动机器人常在动态环境中运行，不可预测的变化会使稠密 SLAM 算法性能显著退化；其机制性原因是 SLAM 渐进式逐帧处理图像，单帧只能提供物体的静态属性（轮廓、形状、纹理、语义标签）而缺乏显式运动信息，运动本质由多帧序列中的位置变化定义。",
+   "stance": "support",
+   "relation": "支持『SLAM 在具身部署中仍是必需基础设施』的方向：运动物体干扰是真实具身场景（机器人在有人环境运行）下稠密 SLAM 的实质性失效模式，其解决必须利用跨帧时序上下文与渐进式输入处理——按论文分析，单帧感知/分割能力（如 SAM 类基础模型）无法提供显式运动信息，不能直接替代 SLAM 的时序状态估计角色。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1",
+   "source_context": "In the context of SLAM, where image frames\nare processed progressively, a single frame can only pro-\nvide static attributes of objects, such as contour, shape,\ntexture, and semantic labels [7], but lacks any explicit motion\ninformation. The motion nature is inherently defined by\nits positional change over a sequence of frames.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "已核对 page 1 原文：所引片段逐字包含『单帧只含静态属性、缺乏显式运动信息、运动由序列帧间位置变化定义』的表述；claim 前半句『移动机器人常在动态环境运行、稠密 SLAM 显著退化』在同页另有原句（'However, mobile robots often operate in dynamic environments where unpredictable changes can cause dense SLAM algorithms to suffer from significant performance degradation [3]'），措辞与范围一致，未做泛化。"
+   },
+   "summary": "动态环境是稠密 SLAM 的核心挑战：单帧无运动信息，运动须由多帧时序定义。"
+  },
+  {
+   "card_id": "2604.12837-C02",
+   "claim": "GGD-SLAM 的核心组件是专为渐进式 SLAM 输入设计的泛化运动模型（GMM）：对每帧提取 DINOv2 结构特征，经 FIFO 队列聚合历史帧特征，用序列注意力（当前帧为 query、历史帧为 key/value）做跨帧匹配，经动态/静态双头门控增强得到运动概率图，推理时以 OTSU 自适应阈值二值化并做形态学膨胀得到域无关动态先验二值掩码；该模型离线训练、无需逐场景在线训练，作为 GS-SLAM 系统的鲁棒先验使用。",
+   "stance": "support",
+   "relation": "刻画近一年动态 SLAM 的演化方向：把泛化学习先验（基础模型特征 DINOv2 + 时序注意力运动分割 + Metric3D-v2 深度先验）作为模块嵌入既有 SLAM 框架（跟踪沿用 DROID-SLAM 式 DBA、建图用 3DGS），即『SLAM 框架吸收基础模型能力』而非被端到端模型整体替代——SLAM 仍是动态场景空间估计的骨架。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3",
+   "source_context": "Our main contribution lies in designing a generalizable\nmotion model for a dynamic semantics extractor within im-\nage sequences, designed specifically for progressive SLAM\nsystems as Algorithm 1. This generalizable motion model\neliminates the need for per-scene online training, serving as\na robust prior for GS-SLAM systems.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "已核对 page 3 原文：所引片段逐字确认 GMM 面向渐进式 SLAM 系统、消除逐场景在线训练、作为 GS-SLAM 鲁棒先验的定位；claim 中 DINOv2 特征提取、FIFO 队列聚合历史帧、序列注意力以当前帧为 query 与历史帧建立 temporal retrieval index 跨帧匹配、动态/静态双头（D/S 系数）门控融合均在同页 III-A 节式(1)-(3) 逐字出现，OTSU 二值化与形态学膨胀在同页 3) 小节与 page 4 Algorithm 1 出现；措辞未超出原文陈述范围。"
+   },
+   "summary": "泛化运动模型机制：DINOv2+FIFO 历史帧队列+序列注意力，离线训练、免逐场景在线训练。"
+  },
+  {
+   "card_id": "2604.12837-C03",
+   "claim": "在 TUM 与 Bonn 动态序列的相机跟踪评测（Table I，ATE RMSE，单位 cm）中，单目 GGD-SLAM 在 fr3/w/half、bonn/crowd2 与 Bonn 平均值上分别取得 1.4、1.8、2.7 cm，均优于同为单目动态方法的最新基线 WildGS-SLAM（对应 1.5、2.3、2.9 cm）。",
+   "stance": "support",
+   "relation": "单目动态 3DGS-SLAM 在真实动态基准上持续刷新跟踪精度，说明动态鲁棒 SLAM 是活跃推进的前沿而非被替代的旧基础设施；对具身系统而言，动态干扰下的可靠位姿估计仍由专门演化的 SLAM 系统提供（作者进一步声称高动态序列上超过 RGB-D 方法，见 page 7）。 ",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table I",
+   "source_context": "WildGS-SLAM [6] 1.3 0.6 1.5 0.8 1.8 1.1 1.4 0.8 2.9 1.2 2.5 1.2 3.6 1.9 2.3 1.1 2.9 1.4\nOurs \n1.1 0.6 1.4 0.7 1.5 0.8 1.3 0.7 2.4 1.0 2.3 1.1 3.4 1.8 1.8 0.8 2.7 1.1",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE (cm)",
+    "value_or_direction": "1.4 / 1.8 / 2.7 (GGD-SLAM, Ours) vs 1.5 / 2.3 / 2.9 (WildGS-SLAM)",
+    "comparator": "WildGS-SLAM monocular dynamic baseline",
+    "task_or_sample": "TUM fr3/w/half, Bonn crowd2, Bonn dynamic average (Table I)",
+    "locator": "page 6, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "已核对 page 6 Table I 原始数字：Ours 行为 fr3/w/xyz 1.1/0.6、fr3/w/half 1.4/0.7、fr3/s/half 1.5/0.8、TUM 平均 1.3/0.7、balloon 2.4/1.0、balloon2 2.3/1.1、ps_track 3.4/1.8、crowd2 1.8/0.8、Bonn 平均 2.7/1.1；WildGS-SLAM 行对应位置为 fr3/w/half 1.5/0.8、crowd2 2.3/1.1、Bonn 平均 2.9/1.4；claim 所列对比值与表逐字一致，比较范围限定为同表单目稠密 SLAM 组内对比，未引入表外数字。"
+   },
+   "summary": "Table I：单目 GGD-SLAM 跟踪 ATE 在所示序列与 Bonn 平均上全面优于最新单目动态基线 WildGS-SLAM。"
+  },
+  {
+   "card_id": "2604.12837-C04",
+   "claim": "Bonn 消融（Table II）量化了泛化先验的价值：完整配置（Generalizable Prior + OTSU Binarize + Smoothness）在 ps_track / crowd2 上 ATE 为 3.41 / 1.79 cm；去掉泛化先验与 OTSU 后退化为 3.56 / 2.14 cm，其中 crowd2 退化最明显，表明学习型运动先验是动态场景跟踪精度的关键来源。",
+   "stance": "support",
+   "relation": "提供机制层面的量化证据：把泛化运动先验嵌入 SLAM 跟踪带来可测量的精度增益（crowd2 上 ATE 由 2.14 cm 降至 1.79 cm），说明在具身动态场景中『学习先验 + SLAM 优化框架』的组合路线有效，SLAM 框架是这些基础模型衍生先验发挥作用的载体而非被绕过的对象。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table II",
+   "source_context": "Generalizable Prior refers to prior information from GMM; OTSU\nBinarize is our solution for ambiguous edges; and Smoothness\nrefers to the smoothness term in Tracking.\nGeneralizable Prior OTSU Binarize Smoothness ps track crowd2\n✓ ✓ × 3.47 1.95\n✓ × ✓ 3.44 1.86\n× × ✓ 3.56 2.14\n✓ ✓ ✓ 3.41 1.79",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE (cm), tracking ablation",
+    "value_or_direction": "3.41 / 1.79 (full: Generalizable Prior + OTSU + Smoothness) vs 3.56 / 2.14 (prior and OTSU removed)",
+    "comparator": "full system vs ablation without Generalizable Prior and OTSU Binarize",
+    "task_or_sample": "Bonn ps_track and crowd2 dynamic sequences (Table II)",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "已核对 page 6 Table II：表行为 ✓✓× 对应 3.47/1.95、✓×✓ 对应 3.44/1.86、××✓ 对应 3.56/2.14、✓✓✓ 对应 3.41/1.79，与 claim 所列数字逐字一致；组件与列的对应关系由表头（Generalizable Prior / OTSU Binarize / Smoothness）与表题说明（Generalizable Prior 指 GMM 先验信息），claim 将『××✓ 行』准确描述为去掉泛化先验与 OTSU，未引入表外数字或换算。"
+   },
+   "summary": "消融：去掉泛化先验+OTSU 后 crowd2 ATE 从 1.79 退化到 2.14 cm，先验是动态跟踪关键。"
+  },
+  {
+   "card_id": "2604.12837-C05",
+   "claim": "作者自述局限（以未来工作形式表述）：当前 GGD-SLAM 尚未实现对动态物体运动的实时重建，也尚未解决完全被遮挡区域的 inpainting；系统的设计取向是在保证静态场景稳定的前提下处理动态干扰。",
+   "stance": "limit",
+   "relation": "限制『SLAM 已解决动态具身场景』的强主张：当前动态 3DGS-SLAM 的地图仍是剔除动态物体后的静态场景，动态物体只被当作干扰识别和剔除，其运动不被建模进空间记忆；对需要在动态环境中推理/预测运动物体（人群避障、与运动对象交互）的具身任务，SLAM 输出本身不覆盖动态要素，这一缺口需由世界模型或动态场景重建等其他能力补足。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 8",
+   "source_context": "In the future,\nwe aim to develop a method for real-time reconstruction\nof dynamic object motion and inpainting of fully occluded\nregions, while ensuring the stability of the static scene.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "已核对 page 8 结论节原文：所引未来工作原句逐字表明『动态物体运动的实时重建』与『完全遮挡区域的 inpainting』是尚未实现、留待未来的目标，反推当前系统不具备这两项能力；claim 措辞严格限定在该自述范围内（『以未来工作形式表述』），『保证静态场景稳定』亦为同句原文，无扩大。"
+   },
+   "summary": "作者自述：尚未支持动态物体运动的实时重建与完全遮挡区域的 inpainting。"
+  }
+ ],
+ "core_citations": [
+  "WildGS-SLAM: Monocular Gaussian Splatting SLAM in Dynamic Environments (CVPR 2025) —— 直接基线与不确定性建图框架来源 [6]",
+  "DROID-SLAM: Deep Visual SLAM for Monocular, Stereo, and RGB-D Cameras (NeurIPS 2021) —— 跟踪 DBA 框架来源 [22]",
+  "DyPho-SLAM (ICME 2025) —— RGB-D 动态对比方法，代表『深度输入+语义标签』路线 [5]",
+  "MonST3R (arXiv:2410.03825) —— 相关工作中论证现成运动分割/动态重建方法不能直接用于 3DGS-SLAM 任务设定的关键对比 [20]",
+  "DAVIS 2016 视频目标分割基准 (CVPR 2016) —— GMM 训练数据来源 [29]"
+ ],
+ "notes": "提取来源为 alphaxiv-fulltext-api（非 OCR，source_format=pdf，quality=high）；为满足 note schema 的 method 枚举值记为 pdf-text。论文无附录/补充材料。表 I 的 Avg. 列与所示序列的简单算术均值不完全吻合（多行如此，如 Ours 四个 Bonn 序列均值 2.475 vs 报告 2.7），文中未说明平均口径，已在 design_risks 记录，证据卡仅按表内原值引用。DINOv2 与 Metric3D-v2 在正文中作为组件使用但参考文献未单列条目。核心洞察与综述关联：该文是『动态环境 3DGS-SLAM』路线的典型样本——SLAM 以吸收基础模型先验（DINOv2 特征、Metric3D 深度、学习型运动分割）的方式演化，而非被端到端模型替代；但其地图哲学仍是静态世界假设的放松版（剔除动态而非建模动态）。"
+}

@@ -522,4 +522,6 @@ class SnapshotDbSearch:
                 file_handle.write(rendered + "\n")
         else:
             print(rendered)
-        return 0
+        from embodied_learning.search.arxiv import report_partial_batch  # noqa: E402  # local: avoids load-time coupling
+
+        return report_partial_batch(query_results)

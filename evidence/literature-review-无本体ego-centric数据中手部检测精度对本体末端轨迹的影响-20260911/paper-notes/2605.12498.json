@@ -1,0 +1,337 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.12498",
+  "title": "EgoForce: Forearm-Guided Camera-Space 3D Hand Pose from a Monocular Egocentric Camera",
+  "published": "2026-05-13",
+  "url": "https://arxiv.org/abs/2605.12498",
+  "authors": [
+   "Christen Millerdurai",
+   "Shaoxiang Wang",
+   "Yaxu Xie",
+   "Vladislav Golyanik",
+   "Didier Stricker",
+   "Alain Pagani"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "唯一在本批次中报告 ego 视频‘绝对相机系’手部位置误差（CS-MJE）的方法：直接量化 root-relative 精度（PS-MJE 6-9mm）与绝对定位精度（25-50mm）的数量级差，并证明朴素单目深度提升会产生 0.5-4.5m 级误差——正中综述问题的阈值与传播路径核心。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "确认绝对相机系 3D 手姿与跨相机模型问题定位"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "识别深度-尺度歧义、root-relative 局限与贡献"
+   },
+   {
+    "locator": "2 Related Works",
+    "role": "relevant-core",
+    "purpose": "定位相机系手姿方法分类与手部-前臂上下文脉络"
+   },
+   {
+    "locator": "3 The EgoForce Framework",
+    "role": "method-or-design",
+    "purpose": "理解 HALO 手-臂联合回归与 RSS 射线空间提升设计"
+   },
+   {
+    "locator": "4 Experimental Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "核对训练/评测数据集、CS-MJE/RS-MJE/PS-MJE/ACC 指标定义"
+   },
+   {
+    "locator": "4.1 Results",
+    "role": "results-or-analysis",
+    "purpose": "提取四基准 CS-MJE/PS-MJE 对比表（Table 1）与遮挡-收益陈述"
+   },
+   {
+    "locator": "4.2 Ablations",
+    "role": "results-or-analysis",
+    "purpose": "提取相机几何（Table 3）、手臂上下文（Table 4）、深度-尺度与标定鲁棒性消融"
+   },
+   {
+    "locator": "5 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：依赖标定 3D 数据、对内参敏感"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认结论边界"
+   },
+   {
+    "locator": "8.1 Dataset Details",
+    "role": "data-or-setting",
+    "purpose": "核对各数据集 ego/exo 视图与训练/评测划分"
+   },
+   {
+    "locator": "8.4 Evaluation Metrics",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 CS-MJE/RS-MJE/PS-MJE/ACC 精确定义"
+   },
+   {
+    "locator": "9.1 Results",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 HandDGP 复现差异与 in-the-wild 内参估计局限"
+   },
+   {
+    "locator": "9.2 Ablations",
+    "role": "appendix-or-supplement",
+    "purpose": "提取相机系提升方式消融（Table 9）"
+   },
+   {
+    "locator": "11 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取补充局限：单目尺度欠约束、手臂仅作几何先验"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "purpose": "参考文献列表不含新证据"
+   },
+   {
+    "locator": "7 Additional Details about our Framework",
+    "role": "appendix-or-supplement",
+    "purpose": "实现细节（FARM 参数化/CIT/RSS 推导），与精度证据关系间接，按 scoping 深度略读"
+   },
+   {
+    "locator": "10 Implementation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "训练超参细节，按需略读"
+   }
+  ]
+ },
+ "research_question": "如何从单目 ego-centric RGB 相机（含鱼眼/宽视场畸变）恢复绝对（相机系）3D 手部姿态与位置，并跨相机模型泛化而无需逐设备重训？",
+ "contributions": [
+  "HALO：统一的手-前臂 latent-shape 联合回归架构，用前臂人体测量学线索缓解单目深度-尺度歧义",
+  "可微前臂表示（FARM）与手-臂交叉注意力；前臂不可见时用手条件变分先验补全",
+  "Ray Space Solver（RSS）：在原生相机模型射线空间做 2D-3D 提升，跨鱼眼/透视/宽视场统一",
+  "三个 ego 基准上 SOTA：HOT3D CS-MJE 较此前方法降低最多 28%"
+ ],
+ "method": {
+  "summary": "对手部与前臂 crop 分别编码（ViT token + Crop Intrinsics Token 注入归一化 crop 内参），交叉注意力融合后回归 root-relative MANO 与 FARM 参数及 2D 关键点置信度；RSS 在原生相机模型的射线空间闭式求解绝对相机系位姿；可选 Kalman 滤波稳定时序；前臂不可见时以变分先验推断。",
+  "assumptions": [
+   "需要已标定相机内参（in-the-wild 无标定场景需 AnyCalib 估计，鱼眼下精度退化）",
+   "训练依赖带 3D 标注的标定数据集（无法用大规模 2D 手部数据）",
+   "前臂与手部存在可用的人体测量学耦合",
+   "逐手独立处理左右手"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HOT3D (ego, Aria 鱼眼)",
+   "ARCTIC (ego+exo)",
+   "H2O (ego+exo)",
+   "HO3D (exo)",
+   "Re:InterHand",
+   "HandCO"
+  ],
+  "tasks": [
+   "单目 ego 绝对相机系 3D 手部姿态/位置估计",
+   "跨相机模型（透视/鱼眼/宽视场）泛化",
+   "时序稳定性（CS-ACC）评估"
+  ],
+  "embodiments": [
+   "人手+前臂（MANO + FARM）；无机器人本体实验"
+  ],
+  "sample_or_scale": "训练 3.67M RGB 图像（6 数据集）；评测 HOT3D 110K 测试帧、ARCTIC ego 23K、H2O ego 23K、HO3D 11K"
+ },
+ "evaluation": {
+  "design": "四基准对比 HaMeR_D（HaMeR+DepthAnythingV2 提升）、MobRecon、HandOccNet、HandDGP；指标 CS-MJE（绝对相机系）、RS-MJE、PS-MJE、CS/RS-ACC；消融覆盖相机几何处理、手臂上下文、深度-尺度、标定失配、提升方式",
+  "baselines": [
+   "HaMeR_D",
+   "MobRecon",
+   "HandOccNet",
+   "HandDGP",
+   "UmeTrack (对比)",
+   "Zhang et al. 2025 (对比)"
+  ],
+  "metrics": [
+   "CS-MJE (mm)",
+   "RS-MJE (mm)",
+   "PS-MJE (mm)",
+   "CS-ACC / RS-ACC (m/s^2)"
+  ],
+  "ablations": [
+   "相机几何（CIT/Rectification/Undistortion, Table 3）",
+   "手臂输入与变分先验（Table 4）",
+   "深度-尺度（Table 8）",
+   "标定失配（Fig 18/Table 9 引用）",
+   "提升方式（Depth/DGP/RSS/RSS+KF, Table 9）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "绝对相机系误差与 root-relative 精度严重脱节：PS-MJE 各方法仅 5.6-9.9mm，但 CS-MJE 最好方法也要 25.0-49.5mm；HaMeR+单目深度提升（HaMeR_D）在 HOT3D 达 4493.7mm、ARCTIC 2067.3mm",
+   "scope": "ARCTIC/HOT3D/H2O/HO3D 四基准",
+   "locator": "4.1, Table 1"
+  },
+  {
+   "finding": "提升方式决定绝对误差：朴素深度提升 530.5mm(H2O)/1851.9mm(HOT3D)，DGP 25.0/115.6mm，RSS 25.0/45.8mm，RSS+Kalman 25.0/43.9mm 且 CS-ACC 14.0 m/s²",
+   "scope": "H2O(pinhole)/HOT3D(fisheye) 提升消融",
+   "locator": "9.2, Table 9"
+  },
+  {
+   "finding": "鱼眼相机几何处理是主要误差来源：仅去畸变即将 HOT3D CS-MJE 从 123.4 降至 48.7mm（60.5%），CIT+去畸变达 45.8mm",
+   "scope": "HOT3D 相机几何消融",
+   "locator": "4.2, Table 3"
+  },
+  {
+   "finding": "手臂上下文对手部遮挡鲁棒性收益最大区间为手部关节可见率 25-55%（约 5-12 个可见关节），即手-物操作典型遮挡区间",
+   "scope": "ARCTIC",
+   "locator": "4.1 (Fig 4 及正文)"
+  },
+  {
+   "finding": "前臂线索将近场（200-300mm）手部尺度误差从 4.7mm 降至 2.7mm；序列内手部尺度帧间波动低（HOT3D 4mm、ARCTIC 2mm）",
+   "scope": "深度-尺度消融",
+   "locator": "4.2 (Tab 8 引用)"
+  },
+  {
+   "finding": "50% 内参噪声下 HOT3D CS-MJE 反而从 43.9 降至 39.3mm（伴随 25.3mm 相机几何误差），>150% 失配才显著退化",
+   "scope": "标定失配鲁棒性",
+   "locator": "4.2 (Fig 18)"
+  },
+  {
+   "finding": "整机管线（检测+回归+RSS）约 14 FPS（RTX 3090，双手），检测阶段约 40ms",
+   "scope": "运行时",
+   "locator": "4 Experimental Evaluation / 9.1 Table 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "训练依赖标定 3D 数据集，无法利用大规模 2D 手部数据，限制 in-the-wild 泛化",
+    "locator": "5 Limitations"
+   },
+   {
+    "limitation": "对相机内参敏感；无标定 in-the-wild 场景用 AnyCalib 估计内参在鱼眼相机下精度退化",
+    "locator": "5 Limitations / 9.1"
+   },
+   {
+    "limitation": "单目设备的度量尺度仍欠约束，需用户特异尺度线索",
+    "locator": "11 Limitations"
+   },
+   {
+    "limitation": "严重遮挡、有限视场与快速运动下肢体几何推断仍困难",
+    "locator": "11 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "CS-MJE 为关节平均误差而非手腕轨迹误差；25-50mm 的水平对精细操作重定向是否可接受需按任务容差另行评估",
+    "basis": "8.4 指标定义与全文无下游机器人实验"
+   },
+   {
+    "boundary": "评测全部基于实验室标定数据集（HOT3D/ARCTIC/H2O），真实无标定 ego 采集下的精度可能显著更差（作者自述鱼眼+估计内参退化）",
+    "basis": "9.1 In-the-Wild 段"
+   }
+  ]
+ },
+ "transfer_boundary": "精度数字适用于已标定的 Aria 类 ego 采集与四个基准分布；用于无本体 ego 数据采集时，绝对手腕位置误差约 25-50mm（专用方法）是现实的输入量级，而朴素 root-relative+深度提升管线（>0.5m）不可用于轨迹提取；无标定鱼眼场景精度进一步退化。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "CS-MJE/RS-MJE/PS-MJE 三级指标显式分离绝对定位与姿态/对齐误差，恰是轨迹应用最关心的区分",
+   "消融覆盖相机几何、提升方式、手臂上下文、标定失配，归因清晰",
+   "基线含 HaMeR_D 这一‘SOTA root-relative + 深度提升’的常见工程组合，直接证伪该路线"
+  ],
+  "design_risks": [
+   "HaMeR_D 基线为作者自行组合（HaMeR+DepthAnythingV2），其灾难性误差部分来自深度网络近场失效，不能归因于 HaMeR 本身",
+   "HOT3D 使用自定义 60/20 划分而非官方测试集，跨论文数字不可直接比较",
+   "ARCTIC 用验证集代理测试集"
+  ],
+  "baseline_fairness": "MobRecon/HandOccNet 用官方实现重训于同一训练数据，HandDGP 为尽力复现（复现版 61.3mm vs 官方权重 109.3mm，作者如实报告）；HaMeR_D 为工程组合基线，公平性中等。",
+  "metric_validity": "CS-MJE 直接度量绝对相机系关节误差（含平移/尺度/旋转），对轨迹任务效度高；缺世界系与下游任务指标。",
+  "reproducibility": "实现细节、数据划分、指标定义完整；项目页承诺代码；训练需 5×H200 四天，资源门槛高。",
+  "external_validity": "结论适用于标定 ego 设备（Aria 类）；未标定 in-the-wild 与非鱼眼以外的光学配置泛化未充分验证；无机器人下游验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.12498-C01",
+   "claim": "在四个基准（ARCTIC/HOT3D/H2O/HO3D）上，手部姿态的对齐精度（PS-MJE 5.6-9.9mm）与绝对相机系定位精度严重脱节：最好的绝对方法（EgoForce）CS-MJE 仍达 43.9mm（HOT3D）与 49.5mm（ARCTIC），而 SOTA root-relative 方法 HaMeR 经单目深度提升到相机系（HaMeR_D）后误差达 4493.7mm（HOT3D）与 2067.3mm（ARCTIC）。",
+   "stance": "support",
+   "relation": "为综述提供关键阈值证据：文献常报的 PA/root-relative 毫米级精度不能代表轨迹任务所需的绝对手腕位置精度；朴素提升路线误差达米级，即便专用绝对方法也残留厘米级（25-50mm）误差，构成重定向末端轨迹的输入噪声量级。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 同表并列 CS-MJE 与 PS-MJE 两列：PS-MJE 全方法 5.6-9.9mm，而 CS-MJE 从 EgoForce 的 25.0-49.5mm 到 HaMeR_D 的 561.5-4493.7mm 跨越三个数量级。",
+   "locator": "4.1 Results, Table 1",
+   "source_context": "Method ARCTIC HOT3D H2O HO3D\nCS-MJE ↓ PS-MJE ↓ CS-MJE ↓ PS-MJE ↓ CS-MJE ↓ PS-MJE ↓ CS-MJE ↓ PS-MJE ↓\nHaMeR\nD\n2067.3 9.2 4493.7 8.3 631.6 6.3 561.5 7.7\nMobRecon 81.5 9.6 116.3 8.0 49.1 6.2 121.7 9.2\nHandOccNet 256.3 8.0 284.8 6.6 62.1 5.3 156.4 9.1\nHandDGP\n51.7 9.9 61.3 8.6 29.9 6.3 50.3 9.3\nEgoForce (Ours) 49.5 8.0 43.9 6.6 25.0 5.6 49.5 9.0",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "CS-MJE / PS-MJE (mm)",
+    "value_or_direction": "EgoForce CS-MJE 49.5/43.9/25.0/49.5mm（ARCTIC/HOT3D/H2O/HO3D），PS-MJE 8.0/6.6/5.6/9.0mm；HaMeR_D CS-MJE 2067.3/4493.7/631.6/561.5mm",
+    "comparator": "HaMeR_D、MobRecon、HandOccNet、HandDGP 四基线同表",
+    "task_or_sample": "ARCTIC/HOT3D/H2O/HO3D 四基准单目 ego（HO3D 为 exo 参考）绝对相机系 3D 手姿估计",
+    "locator": "4.1, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 全部行值逐字核对一致；HaMeR_D 的深度提升构造在 4.1 正文中明确（DepthAnythingV2 lifting）；claim 限定四基准且未将 PS/CS 差距外推到世界系。"
+   }
+  },
+  {
+   "card_id": "2605.12498-C02",
+   "claim": "将 root-relative 手部姿态提升到相机系的方式决定绝对轨迹误差：同一 HALO 预测经朴素深度提升到 H2O/HOT3D 产生 530.5/1851.9mm 误差与 41.9/180.4 m/s² 加速度误差，经 DGP 为 25.0/115.6mm，经射线空间求解（RSS）为 25.0/45.8mm，RSS+Kalman 滤波进一步将 CS-ACC 从 23.5 降至 14.0 m/s²。",
+   "stance": "conditional",
+   "relation": "标识传播路径中的关键环节与缓解手段：提升（lifting）机制与相机模型处理可使同一姿态预测的绝对误差相差 20-40 倍；几何感知提升+时序滤波是可行缓解，其中鱼眼 ego 相机下 DGP 类针孔假设方法退化 2.5 倍（45.8→115.6mm）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 9 消融四种提升方式；9.2 正文明确朴素深度提升在单目尺度歧义下失效并给出全部数值。",
+   "locator": "9.2 Ablations, Table 9",
+   "source_context": "The naïve depth-based lifting, similar to HaMeR\nD\n’s metric-\ndepth formulation, fails under monocular scale ambiguity, yielding\nlarge translation errors (530.5/1851.9 𝑚𝑚) and correspondingly high\nacceleration errors (41.9/180.4 𝑚/𝑠\n2\n). On H2O, our Ray Space Solver\n(RSS) and DGP from Valassakis and Garcia-Hernando [2024] achieve\nthe same CS-MJE of 25 𝑚𝑚 with nearly identical CS-ACC (7.4 𝑚/𝑠\n2\n),\nindicating that both correctly exploit the pinhole projection con-\nstraints. On HOT3D, however, DGP reaches 115.6 𝑚𝑚 CS-MJE with\n25.0 𝑚/𝑠\n2\nCS-ACC, whereas RSS gives 45.8 𝑚𝑚 and 23.5 𝑚/𝑠\n2\n, re-\nspectively. Applying Kalman filtering on top of RSS (“RSS w/ KF”)\nfurther stabilizes the lifted trajectory, yielding 43.9 𝑚𝑚 CS-MJE and\n14.0 𝑚/𝑠\n2\nCS-ACC, the best performance on both datasets.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "CS-MJE (mm) / CS-ACC (m/s^2)",
+    "value_or_direction": "HALO+Depth 530.5/1851.9mm 与 41.9/180.4；HALO+DGP 25.0/115.6mm；HALO+RSS 25.0/45.8mm；HALO+RSS+KF 25.0/43.9mm 与 5.5/14.0",
+    "comparator": "同一 HALO 预测的四种相机系提升方式（Depth/DGP/RSS/RSS+KF）",
+    "task_or_sample": "H2O（针孔）与 HOT3D（鱼眼）相机系提升消融",
+    "locator": "9.2, Table 9"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "9.2 正文与 Table 9 行值逐字核对一致；倍数差异为表值算术描述；claim 限定 H2O/HOT3D 提升消融，未声称其他管线获得同等收益。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Pavlakos et al., HaMeR [2024]",
+   "reason": "HaMeR_D 基线构造的 root-relative 来源"
+  },
+  {
+   "citation": "Valassakis and Garcia-Hernando, HandDGP [2024]",
+   "reason": "CS-MJE 指标来源与 DGP 提升基线"
+  }
+ ],
+ "notes": "scoping 模式完成六遍阅读；Table 3 相机几何消融与手臂可见率 25-55% 收益区间已记入 findings。"
+}

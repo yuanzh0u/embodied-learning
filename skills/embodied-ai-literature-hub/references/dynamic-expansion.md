@@ -4,6 +4,8 @@ Dynamic expansion is the LLM/agent layer between the static taxonomy and web cal
 
 Use it when the topic uses a new metaphor, product term, or research framing that is not yet encoded in `query_taxonomy.py`. Dynamic suggestions widen recall for this run, but they do not replace the static taxonomy and they are not paper evidence.
 
+**Cache:** if `query_plan_cache.py get` hits for this `topic+mode+time_range+family`, skip writing a new dynamic suggestion file and reuse the cached plan. See [query-plan-cache.md](query-plan-cache.md).
+
 ## When To Use
 
 - The topic contains an overloaded metaphor such as data pyramid, last centimeter, data flywheel, or foundation-model gap.

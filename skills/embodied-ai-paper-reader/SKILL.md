@@ -27,21 +27,22 @@ Reject OCR-derived or scan-only papers as `unavailable`. The workflow does not u
 1. **Build the reading packet.** Require complete `text` for HTML or complete `pages` for PDF. Selected passages alone are insufficient.
 
 ```bash
+# Prefer --summary-first for scoping / structure-map passes (H1 token guard).
+# Full extraction JSON stays on disk for locator windows and claim-support audits.
 python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
   --extraction work/<run>/extractions/2402.10329.json \
   --metadata work/<run>/paper-metadata/2402.10329.json \
   --review-question "UMI 数据在什么条件下可迁移到机器人策略?" \
   --topic-id EA-DATA --topic-id EA-XEMBODIMENT \
   --review-mode scoping \
+  --summary-first --max-section-chars 4000 \
   --output work/<run>/reading-packets/2402.10329.md \
   --note-template work/<run>/paper-notes/2402.10329.json
 ```
 
-2. **Map before deep reading.** Identify the paper type, problem, method/design, results/analysis, conclusion/limitations, and relevant appendix. Never infer the paper from the top-ranked passages alone.
-3. **Read against the review question.** Follow the mode-specific depth in [reading-depth-modes.md](references/reading-depth-modes.md) and the six-pass protocol in [reading-contract.md](references/reading-contract.md).
-4. **Write the paper note.** Follow [paper-note-schema.md](references/paper-note-schema.md). A paper may yield zero, one, or multiple evidence cards; never manufacture a card to satisfy a quota.
-5. **Critically appraise it.** Read [critical-appraisal.md](references/critical-appraisal.md). Separate author-stated limitations from reader-inferred transfer boundaries.
-6. **Validate and audit.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
+2. **Prefer one-shot paper-note (default for rapid/scoping).** Follow [reading-contract.md](references/reading-contract.md): one LLM call on the summary-first packet produces a complete `paper-note.json` per [paper-note-schema.md](references/paper-note-schema.md), covering triage, structure map, question-driven reading, evidence cards, critical appraisal ([critical-appraisal.md](references/critical-appraisal.md)), and verification rationale. Mode depth still follows [reading-depth-modes.md](references/reading-depth-modes.md). Never infer the paper from top-ranked passages alone; for evidence cards prefer **locator windows** from the extraction JSON rather than re-pasting Complete extracted text. A paper may yield zero, one, or multiple evidence cards; never manufacture a card to satisfy a quota.
+3. **Optional six-pass deep mode.** Use the six-pass protocol in [reading-contract.md](references/reading-contract.md) only for `systematic` / high-stakes reviews or when one-shot notes repeatedly fail claim-support. Do not default to six full-text reloads on scoping runs.
+4. **Validate and audit locally.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
 
 ```bash
 python3 skills/embodied-ai-paper-reader/scripts/note_tools.py validate-paper-note \
@@ -53,7 +54,20 @@ python3 skills/embodied-ai-paper-reader/scripts/note_tools.py audit-claim-suppor
   --output work/<run>/paper-notes/2402.10329.audit.json
 ```
 
-7. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
+5. **On audit failure, retry only failing cards with a locator window** (not a full re-read):
+
+```bash
+python3 skills/embodied-ai-paper-reader/scripts/extract_failed_card_window.py \
+  --audit work/<run>/paper-notes/2402.10329.audit.json \
+  --extraction work/<run>/extractions/2402.10329.json \
+  --paper-note work/<run>/paper-notes/2402.10329.json \
+  --output work/<run>/paper-notes/2402.10329.retry-windows.json \
+  --markdown-output work/<run>/paper-notes/2402.10329.retry-windows.md
+```
+
+Patch only the failing cards, then re-run validate + audit.
+
+6. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
 
 ```bash
 python3 skills/embodied-ai-paper-reader/scripts/note_tools.py project-evidence-events \
@@ -63,7 +77,7 @@ python3 skills/embodied-ai-paper-reader/scripts/note_tools.py project-evidence-e
   --output work/<run>/evidence/2402.10329.jsonl
 ```
 
-8. **Update the reading ledger.** Keep recovered, mapped, deeply read, verified, and accepted counts separate.
+7. **Update the reading ledger.** Keep recovered, mapped, deeply read, verified, and accepted counts separate.
 
 ```bash
 python3 skills/embodied-ai-paper-reader/scripts/update_reading_ledger.py \
@@ -87,7 +101,7 @@ python3 skills/embodied-ai-paper-reader/scripts/update_reading_ledger.py \
 
 ## Outputs
 
-- `reading-packet.md`: complete text plus structure and reading instructions; working material only.
+- `reading-packet.md`: structure map + reading instructions; use `--summary-first` for scoping (section windows) and keep full text on disk in the extraction JSON. Working material only.
 - `paper-note.json`: paper-level source of truth for reading decisions.
 - `paper-note.audit.json`: locator/context and manual-verification gate result.
 - `evidence.jsonl`: compatibility projection for the existing review workflow.

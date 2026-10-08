@@ -1,0 +1,433 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.05391",
+  "title": "Evaluating Magic Leap 2 Controller Tracking for Sensor Tool Guidance in AR-Based Industrial Inspections",
+  "published": "2025-10-08",
+  "url": "https://arxiv.org/abs/2509.05391",
+  "authors": [
+   "Christian Masuhr",
+   "Julian Koch",
+   "Thorsten Schüppstuhl"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "命中综述'末端跟踪精度评测痛点'维度（用户指定的评测证据位）：以机械臂驱动可重复运动+光学真值，把工业机器人标准（EN ISO 9283）与定位系统标准（ISO/IEC 18305）改编为商用inside-out工具跟踪的量化基准——给出ML2控制器正面视角约2 mm级精度/0.3-0.8 mm重复性的量化锚点，同时暴露四类痛点：侧向视角347 mm级'自信但错误'系统失效（对简单离群过滤免疫）、运动模式相关误差（光栅扫描RMS 16.27 mm恰为检测工作流最差模式）、遮挡恢复强速度依赖（50 mm/s下OSR=0）、评测自身的采样率伪影（同一轨迹1σ差3倍）。精度/可重复性数字与ISO类指标齐备，是评测方法学与失效模式证据的核心样本。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "相关性分诊：商用AR硬件工具跟踪缺公开基准；本文用机械臂可重复运动（EN ISO 9283）+OptiTrack真值系统评估ML2控制器静/动态跟踪，输出量化基线与可迁移评测方法学。"
+   },
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "动机与知识缺口：安全关键手工传感器检测（氢电解槽泄漏）需沿预定义路径精确控制速度与距离；ML2控制器无公开性能基准，以往跟踪研究依赖不可重复人工移动、文档不足；预试验静态精度1.39 mm。"
+   },
+   {
+    "locator": "II. STATE OF THE ART",
+    "role": "problem",
+    "purpose": "相关工作地图：outside-in（OptiTrack/Vicon，高精度低移动性）vs inside-out（HMD自带SLAM/VIO）；医疗marker系统sub-mm不可迁移到工业反光场景；SOTA评测趋势为机械臂驱动+多标准改编（EN ISO 9283+ATE+jitter/drift/latency）。"
+   },
+   {
+    "locator": "III-A. Use-Case of an AR-Assisted Leakage Inspection",
+    "role": "data-or-setting",
+    "purpose": "用例需求定义：端到端要求<5 mm、<10°（涵盖跟踪精度+物体配准）；环境挑战=反光弱纹理金属面、1/4英寸小尺寸器件、密集布局致频繁视线遮挡、需时间稳定性（低抖振低漂移）。"
+   },
+   {
+    "locator": "III-B. Rationale for Technology Selection",
+    "role": "data-or-setting",
+    "purpose": "ML2选型理由：控制器运行独立SLAM（IMU+相机）输出实时位姿流；主动IR marker免外部光源；外置计算单元保持头显轻量——商用集成的低部署成本方案。"
+   },
+   {
+    "locator": "III-C. Experimental Methodology",
+    "role": "method-or-design",
+    "purpose": "实验设计核心：UR10e（标称重复性±0.05 mm）夹持控制器+OptiTrack 6×Prime X13（±0.2 mm）真值；8静态位姿×30重复+5类动态轨迹×10重复（EN ISO 9283缩比200 mm测试立方+应用特定轨迹）；条件矩阵=4个HMD位置（F1/F2正面500/600 mm、S3/S4 45°侧向400/500 mm）×2速度；ArUco每系列前重配准隔离世界锚点漂移；ML2(~30 Hz)与OptiTrack(50 Hz)最近时间戳对齐。"
+   },
+   {
+    "locator": "III-D. Metrics and Data Evaluation",
+    "role": "method-or-design",
+    "purpose": "指标体系（表II）：AP/AO/RP/STB/TP/TDR/OSR/ROT/INT/RLT/DRT；绝对精度（含每系列一次性标定偏移）与相对精度（1σ散射）明确区分、讨论强调后者；DRT/STB因不可配置5秒节能模式不可测；Z-score/IQR/运动学滤波清洗管线开源。"
+   },
+   {
+    "locator": "IV-A. Static Tracking Accuracy",
+    "role": "results-or-analysis",
+    "purpose": "静态结果（表III，8位姿×6条件×30重复）：正面条件平均2.1-3.4 mm且更高接近速度略改善；S3侧向下SP05/SP06平均偏差高达347 mm但重复性0.3-0.4 mm——'自信但错误'的系统失效。"
+   },
+   {
+    "locator": "IV-B. Dynamic Tracking Accuracy",
+    "role": "results-or-analysis",
+    "purpose": "动态结果（表IV，32次试验）：line平均3D RMS 2.70 mm最低、raster 16.27 mm最高（紧邻执行仍系统性偏离）；1σ以line/raster最低（~0.55 mm）、circle 1.38 mm最高；50 mm/s的1σ略优于低速；最精确0.290 mm（S3,line,50 mm/s）；原始最大3D误差34.72 mm；漂移趋零；角度误差始终<10°；遮挡10 mm/s下OSR=100%（1σ 0.79/1.11 mm）vs 50 mm/s下OSR=0；RLT/INT<1 s。"
+   },
+   {
+    "locator": "V. DISCUSSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "解释与判定：系统失效根因假设=控制器SLAM环境特征不足→稳定但错误位姿，'自信但错误比可观察抖振更危险'；与SOTA对比（动态<2 mm，优于手势跟踪>20 mm、不及医疗marker sub-mm，1-2 mm精度换集成便利）；对安全关键氢检测用例判定'不可靠'、需超越简单离群过滤的失效安全机制；节能模式等商用约束；局限（实验室/单设备/恒定姿态/ArUco手动步/异步采样伪影）。"
+   },
+   {
+    "locator": "VI. CONCLUSION AND FUTURE WORK",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：最佳条件<2 mm、可靠性高度依赖视角与控制器姿态；系统失效可检测、可软件级缓解。未来：根因分析、Kalman平滑+鲁棒离群检测后处理、全6-DoF分析、用户研究、配准/标定精度评估。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES [1]-[40]",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅按需核对关键引文的正文表述（[10] EN ISO 9283、[18] ISO/IEC 18305、[31] 手势跟踪>20 mm、[15]/[24] 医疗marker sub-mm、[26] HoloLens 2先前工作），未逐条精读全部40条。"
+   }
+  ]
+ },
+ "research_question": "商用inside-out AR控制器（Magic Leap 2，自带IMU+相机SLAM与主动IR marker）在工业检测（氢电解槽泄漏检测）的工具轨迹引导场景下，静态与动态位姿跟踪的精度、可重复性、鲁棒性与稳定性如何？能否满足<5 mm端到端精度要求，其失效模式与适用条件是什么？",
+ "contributions": [
+  "首个面向ML2控制器的工业工具跟踪综合基准：UR10e机械臂驱动可重复运动+OptiTrack光学真值，协议改编自EN ISO 9283与ISO/IEC 18305并补充应用特定轨迹（管道上方直线、接头环面、光栅扫描），直接回应以往研究'人工移动不可重复、文档不足'的方法学缺陷",
+  "量化性能基线：正面视角下静态平均误差2.1 mm（F2,50 mm/s）、动态平均精度<2 mm、静态重复性0.3-0.8 mm量级、平均3D漂移趋近于零、角度误差始终低于10°操作阈值——优于通用手势跟踪（文献>20 mm）但不达医疗marker系统sub-mm",
+  "识别并刻画关键失效模式：侧向视角下特定位姿出现高达347 mm的粗大误差且与极佳重复性（0.3-0.4 mm）耦合（'自信但错误'的系统失效，作者归因于SLAM环境特征不足）；光栅扫描轨迹平均RMS 16.27 mm（约为直线2.70 mm的6倍）且由少数高幅离群驱动；遮挡恢复强速度依赖（10 mm/s下100%成功、50 mm/s下0%）",
+  "可复现与可迁移的评测方法学：绝对精度（含一次性标定偏移）与相对精度（1σ散射）解耦分析框架；每系列前重配准隔离世界锚点漂移；自暴露采样率伪影（同一慢速轨迹10 Hz测1σ=1.34 mm vs 50 Hz测0.44 mm）；计算管线（Z-score/IQR/运动学滤波）开源于Git仓库"
+ ],
+ "method": {
+  "summary": "用UR10e六轴机械臂（厂商标称重复性±0.05 mm）经3D打印夹具（含9个不对称主动IR marker）夹持ML2控制器（自带IMU+相机的独立SLAM、输出实时位姿流；另设前置气体传感器探头安装件），在模拟电解槽检修环境（不锈钢管、法兰、接头）中执行标准化测试。静态：8个位姿（EN ISO 9283缩比200 mm测试立方的ISO位姿+管道接头附近/管上方应用位姿）每姿态保持2.5 s后记录、各重复30次；动态：5类轨迹（直线L=500 mm、圆R=200 mm、方S=300 mm、环面R=100/r=30 mm、10×10 cm光栅扫描5条平行线）各10次重复。条件矩阵为4个HMD位置（F1/F2正面500/600 mm、S3/S4 45°侧向400/500 mm）×2速度（低速与50 mm/s；静态接近速度25/50 mm/s）。OptiTrack（6×Prime X13，±0.2 mm）为位姿真值；ArUco标记把AR世界系对齐到真值系，每个测试系列前重新配准以隔离世界锚点长期漂移（代价是每次引入新标定误差，从而使散射与系统偏移解耦）；ML2（约30 Hz）与OptiTrack（50 Hz）数据按最近时间戳对齐（无插值）。指标改编自EN ISO 9283与ISO/IEC 18305：绝对精度（AP位置/AO姿态/RMS）与相对精度（RP静态重复性、动态3D 1σ散射）分开报告，另含遮挡成功率OSR、遮挡/丢失重捕获时间ROT/RLT、初始化时间INT与漂移TDR/DRT；数据经Z-score/IQR/运动学滤波清洗，精度类指标按1σ报告。",
+  "assumptions": [
+   "端到端要求<5 mm、<10°（基于预试验设定）同时涵盖跟踪精度与物体配准两部分误差",
+   "每个测试系列前重配准AR坐标系可隔离世界锚点漂移的跨条件累积；绝对精度受该一次性标定偏移影响，相对精度（散射）不受——两者不直接相关，可独立分析",
+   "ML2与OptiTrack异步数据流用直接时间戳相关（无插值）对齐：50 mm/s下最大理论位置误差0.25 mm，落在OptiTrack自身精度（约0.2 mm）范围内，影响可忽略",
+   "控制器姿态在绝大多数测试中保持恒定（对应前置传感器安装件的典型朝向），旋转自由度未系统扫描（全6-DoF分析留待未来工作）",
+   "UR10e与OptiTrack的厂商标称精度（±0.05/±0.2 mm）足以担当毫米级测量的运动源与真值角色"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无外部数据集：自建实验数据（静态8位姿×6条件×30重复、动态32次试验、系统级遮挡/重捕获/初始化测试）；计算管线与数据在关联Git仓库公开"
+  ],
+  "tasks": [
+   "静态位姿精度与重复性（EN ISO 9283测试立方位姿+管道接头/管上方应用位姿）",
+   "动态轨迹精度（EN ISO 9283直线/圆/方+应用特定环面与光栅扫描，10与50 mm/s两档速度）",
+   "系统级鲁棒性/可靠性：5秒手部遮挡恢复（先部分后完全）、跟踪体积丢失重捕获、初始化时间、（长时漂移ST01因节能模式未测成）",
+   "应用背景：氢电解槽泄漏检测AR引导——气体传感器沿预定义路径、恒定速度与近距离，反光弱纹理金属面环境"
+  ],
+  "embodiments": [
+   "Magic Leap 2 HMD（RGB/IR/深度相机，外置Power Puck计算单元）+ML2控制器（独立SLAM：IMU+相机，主动IR marker，前置3D打印气体传感器探头安装件）",
+   "UR10e六轴机械臂（标称重复性±0.05 mm）作为可重复运动执行器夹持控制器",
+   "OptiTrack光学跟踪系统（6×Prime X13相机，标称精度±0.2 mm）作为位姿真值"
+  ],
+  "sample_or_scale": "静态：8位姿×30次重复×6视角/速度条件；动态：32次试验（line/circle/square/raster×4位置×2速度，各10次重复）；系统级：遮挡×10、初始化×10、重捕获×10；单台ML2设备、单一实验室环境、恒定工具姿态"
+ },
+ "evaluation": {
+  "design": "受控实验室单系统基准测试（非横向方法对比）：机械臂驱动可重复运动+光学真值；静态/动态/系统级三层协议（表I）改编自EN ISO 9283与ISO/IEC 18305并加入用例特定轨迹；分析上区分绝对精度（含每系列一次性标定偏移）与相对精度（1σ散射），讨论刻意强调后者以刻画跟踪算法固有特性；数据经Z-score/IQR/运动学滤波与3σ离群处理后报告。",
+  "baselines": [
+   "无同场控制器基线（单系统基准研究）；主要对照为预设端到端要求（<5 mm、<10°）",
+   "作者先前初步测试（ML2控制器静态1.39 mm）与HoloLens 2先前工作揭示的系统局限",
+   "文献量级参照：通用手势跟踪误差常超20 mm；医疗专用marker式inside-out系统sub-mm——跨设备跨设置，仅作量级参照"
+  ],
+  "metrics": [
+   "AP位置精度/AO姿态精度（mm/deg，1σ）",
+   "RP静态位置重复性（mm，1σ）",
+   "TP轨迹精度：平均3D RMS误差与3D 1σ散射（mm）",
+   "最大误差与3D漂移速率（mm/s）",
+   "OSR遮挡成功率（%）、ROT遮挡重捕获时间/RLT丢失重捕获时间（s）、INT初始化时间（s）",
+   "DRT长时漂移与STB静态抖动：因控制器不可配置的5秒节能模式无法评估"
+  ],
+  "ablations": [
+   "条件扫描（非消融）：HMD位置（正面F1/F2 vs 侧向S3/S4）×速度（10 vs 50 mm/s）×轨迹类型（line/circle/square/raster）",
+   "遮挡方式对比：仅IR传感器被遮挡 vs IR+相机同时被遮挡",
+   "采样率对照：同一慢速光栅轨迹10 Hz vs 50 Hz测量（T17 vs T21）",
+   "静态位姿×条件的逐格矩阵（表III），识别位姿-视角交互失效（SP05/SP06仅在侧向失效）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "正面视角静态精度高且速度正向：F2条件、50 mm/s接近速度下8个位姿的平均误差仅2.1 mm（最大误差4.3、重复性0.8 mm），六条件平均2.0-5.1 mm（重复性0.3-1.4 mm），正面条件下更高接近速度普遍带来轻微改善。",
+   "scope": "静态位姿测试，正面F1/F2与侧向S3/S4六条件（表III均值已剔除S3/S4下SP05/SP06的347 mm级离群）",
+   "locator": "IV-A. Static Tracking Accuracy, Table III"
+  },
+  {
+   "finding": "核心失效模式：侧向视角（S3，表III显示S4同样受累）下SP05/SP06出现平均高达347 mm的粗大位置误差，却与0.3-0.4 mm的极佳重复性耦合——系统自信且一致地报告严重错误位置；作者假设根因为控制器SLAM环境特征不足导致稳定但错误的位姿，并判定'自信但错误的信号比可观察的抖振对用户引导更危险'。",
+   "scope": "静态位姿测试，侧向S3/S4条件，SP05/SP06为管道接头附近应用位姿",
+   "locator": "IV-A. Static Tracking Accuracy, Table III; V-A. Interpretation of Key Findings"
+  },
+  {
+   "finding": "动态误差强依赖运动模式：32次试验中直线轨迹平均3D RMS最低（2.70 mm）、光栅扫描最高（16.27 mm，约为直线6倍）——光栅与直线在空间上紧邻执行仍大幅偏离，说明是特定于运动模式的系统性偏差；光栅的RMS-1σ差全类别最大（平均1σ仅0.846 mm），高RMS由少数高幅离群驱动（原始最大3D误差34.72 mm出现在圆轨迹）；最精确单次结果0.290 mm（S3,line,50 mm/s）。",
+   "scope": "动态轨迹测试（line/circle/square/raster×4位置×2速度）",
+   "locator": "IV-B1) Accuracy Metrics: Absolute Accuracy (RMS Error), Table IV"
+  },
+  {
+   "finding": "速度的反直觉效应：50 mm/s的3D 1σ误差普遍略低于低速（10 mm/s）——作者推测低速下跟踪估计更易受传感器噪声影响、连续运动中传感器融合更重IMU权重从而滤除噪声。",
+   "scope": "动态轨迹测试的两档速度对比",
+   "locator": "IV-B1) Accuracy Metrics; V-A. Interpretation of Key Findings"
+  },
+  {
+   "finding": "遮挡鲁棒性高度速度依赖：10 mm/s下5秒遮挡100%成功重捕获（ROT可忽略；仅IR被遮挡1σ=0.79 mm、相机+IR全遮挡1.11 mm），50 mm/s下无法恢复稳定跟踪（OSR=0）；跟踪体积丢失重捕获RLT<1 s（重捕获期间1σ=1.52 mm）、初始化INT<1 s。",
+   "scope": "系统级遮挡/可靠性测试（各10次重复）",
+   "locator": "IV-B4) Robustness, Reliability, Stability"
+  },
+  {
+   "finding": "时间与角度稳定性良好：平均3D漂移速率趋近于零（多数条件<0.005 mm/s量级）；角度误差在全部测试条件下始终显著低于10°操作阈值（详细角度数据在Git仓库）。",
+   "scope": "全部32次动态试验与角度数据",
+   "locator": "IV-B2) Drift (Temporal Stability); IV-B3) Angular Tracking Performance"
+  },
+  {
+   "finding": "总体判定与SOTA定位：最佳条件动态平均精度<2 mm，优于通用手势跟踪（文献常>20 mm）但不达医疗marker系统sub-mm——量化了'牺牲1-2 mm绝对精度换取商用集成与低部署成本'的权衡；对氢泄漏检测这一安全关键任务，正面视角误差远低于5 mm要求但不能在全部配置维持，作者结论'ML2控制器不能被认为对该安全关键任务可靠'，部署需能检测'高精度失效模式'的失效安全机制（超越简单离群过滤）。",
+   "scope": "全文综合判定；实验环境按泄漏检测场景设计，作者声称结果可有意义地迁移到该应用",
+   "locator": "V-B. Comparison with the State of the Art; V-C. Implications for the Industrial Use Case; VI. CONCLUSION AND FUTURE WORK"
+  },
+  {
+   "finding": "评测方法学发现：同一慢速光栅轨迹10 Hz采样测得3D 1σ=1.34 mm、50 Hz仅0.44 mm（约3倍差）——异步数据流的时间不确定性在低采样率下更显著、可能是测量伪影，50 Hz数据才更准确代表系统真实精度；绝对精度（含标定偏移）与相对精度（散射）的解耦是可迁移的评测框架。",
+   "scope": "V-D方法学讨论与表IV采样率对照试验（T17 vs T21）",
+   "locator": "V-D. Limitations; III-D. Metrics and Data Evaluation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "研究在受控实验室环境进行，真实工业现场（粉尘、振动、光照变化）性能可能不同",
+    "locator": "D. Limitations"
+   },
+   {
+    "limitation": "评估限于单台ML2设备，可能限制结果泛化性",
+    "locator": "D. Limitations"
+   },
+   {
+    "limitation": "控制器姿态在多数测试中保持恒定，变姿态下的全6-DoF误差分析留待未来工作",
+    "locator": "D. Limitations"
+   },
+   {
+    "limitation": "ArUco重标定在每次HMD换位时引入必要的手动步骤",
+    "locator": "D. Limitations"
+   },
+   {
+    "limitation": "异步数据流（ML2约30 Hz vs OptiTrack 50 Hz）用直接时间戳相关对齐而非插值：50 mm/s下最大理论误差0.25 mm在OptiTrack精度内可忽略，但低采样率下时间不确定性更显著、可能是测量伪影（同一慢速轨迹10 Hz测1σ=1.34 mm vs 50 Hz的0.44 mm）",
+    "locator": "D. Limitations"
+   },
+   {
+    "limitation": "长时漂移（DRT）与静态抖动（STB）因控制器不可配置的5秒节能模式无法评估",
+    "locator": "III-D. Metrics and Data Evaluation"
+   },
+   {
+    "limitation": "不可配置的节能模式（5秒不活动即停用跟踪）妨碍含暂停的工作流——商用系统低部署成本与不可定制性的权衡；量产级设计需改进鲁棒性与紧凑性",
+    "locator": "C. Implications for the Industrial Use Case"
+   },
+   {
+    "limitation": "缺用户研究：测得精度对任务表现的影响待评估；端到端精度还需检验配准精度与（用户执行的）标定性能本身",
+    "locator": "VI. CONCLUSION AND FUTURE WORK"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "系统性静态失效不止于S3：表III显示第二个侧向位置S4下SP05/SP06同样出现346.5-347.5 mm级粗大误差（带*剔除出均值），正文仅点名S3——失效应关联到'45°侧向视角'整体而非单一位置",
+    "basis": "表III SP05/SP06行S4(25 mm/s)列：347.5/348.1/0.3与346.5/347.5/0.4，均带*号"
+   },
+   {
+    "boundary": "论文速度口径内部不一致：III-C写动态'实用基线5 mm/s'，但表IV与IV-B4全部按10 mm/s报告——引用低速结果应以结果表为准，方法节疑似未同步更新",
+    "basis": "III-C 'a practical baseline of 5 mm/s' vs 表IV速度列10/50与IV-B4 'At the lower speed of 10 mm/s'"
+   },
+   {
+    "boundary": "讨论节'简单轨迹（直线、光栅）精度高于复杂轨迹（圆、方）'与结果节数据矛盾（光栅平均RMS 16.27 mm为四类最高）——该句仅在1σ散射口径下成立（line 0.555/raster 0.846 < square 0.999 < circle 1.384 mm），引用时必须区分RMS与1σ两个口径",
+    "basis": "V-A 'Simpler trajectories (line, raster) yielded higher accuracy than more complex paths (circle, square)' vs 表IV Average行RMS与1σ两列"
+   },
+   {
+    "boundary": "环面轨迹DT04-1在协议表I列出但表IV未单列结果（仅circle/line/raster/square四组）——其单独表现不可考",
+    "basis": "表I DT04-1（Torus path around Pipe D）vs 表IV仅四类轨迹分组"
+   },
+   {
+    "boundary": "3σ离群剔除+347 mm级静态离群被排除出均值计算，均值数字可能低估最差情况；RDS口径混合一次性标定偏移与跟踪误差，绝对数字依赖每次运行的手动标定质量",
+    "basis": "III-D清洗管线描述、表III带*脚注（'excluded from the calculation as they represent outliers'）、IV-B1 'peaks that persisted even after 3σ outlier removal'"
+   },
+   {
+    "boundary": "结论'不可靠'限定于该安全关键任务与所测配置（单设备、恒定姿态、模拟环境）；不能外推到其他HMD/控制器、真实工业现场、变工具姿态或更高速度场景",
+    "basis": "V-C判定句的限定语境与V-D自述局限（实验室/单设备/恒定姿态）"
+   }
+  ]
+ },
+ "transfer_boundary": "结论仅适用于受控实验室中单台ML2控制器、恒定工具姿态、模拟电解槽（反光金属面）场景的inside-out工具跟踪：正面视角静态约2.1 mm/动态<2 mm、重复性0.3-1.4 mm、漂移趋零的量化锚点在该条件下成立；侧向视角347 mm级'自信但错误'系统失效、光栅运动平均RMS 16.27 mm、50 mm/s遮挡后OSR=0、低采样率高估散射约3倍等痛点数字不可外推到其他设备、真实工业现场、变姿态或更高速度场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "机械臂（UR10e，±0.05 mm重复性）驱动可重复运动+OptiTrack（±0.2 mm）真值，直接解决以往跟踪研究'人工移动不可重复、文档不足、不可比较'的方法学缺陷",
+   "双标准改编（EN ISO 9283工业机器人+ISO/IEC 18305定位系统）+应用特定轨迹（管道上方直线、接头环面、光栅扫描），兼顾跨研究可比性与用例代表性",
+   "绝对精度vs相对精度（1σ散射）的明确区分，通过每系列前重配准隔离世界锚点漂移，使系统偏移与固有散射解耦分析",
+   "失效模式刻画超越均值报告：识别'高重复性+粗大误差'的系统失效，给出根因假设（SLAM特征不足）与缓解方向（软件级失效安全、可检测性）",
+   "计算管线开源（含Z-score/IQR/运动学滤波），10 vs 50 Hz对照试验自暴露采样率伪影，方法学自省程度高"
+  ],
+  "design_risks": [
+   "单设备单环境单姿态，泛化性受限（作者自认）；设备间方差完全未量化",
+   "内部口径不一致：动态速度5 mm/s（III-C）vs 10 mm/s（表IV/IV-B4）；讨论节'line/raster精度更高'与结果节RMS矛盾（仅1σ口径成立）",
+   "3σ离群剔除与347 mm静态离群排除出均值可能低估尾部风险；RMS混合标定偏移与跟踪误差，绝对数字依赖手动标定质量",
+   "工具姿态恒定、无6-DoF分析；DRT/STB未测——时间稳定性证据不完整",
+   "无同场横向基线（单系统基准），文献对比（手势>20 mm、医疗marker sub-mm）跨设备跨设置仅能作量级参照"
+  ],
+  "baseline_fairness": "无同场对比基线（单系统基准研究），主要对照为预设端到端要求（<5 mm、<10°）、作者先前初步测试（静态1.39 mm）与文献值——后者跨设备跨设置只能作量级参照；与要求的比较公平且与用例直接绑定，判定'不可靠'有表III数据支撑。",
+  "metric_validity": "指标体系改编自EN ISO 9283/ISO-IEC 18305（AP/AO/RP/TP/OSR/ROT/INT等），静态重复性RP与动态3D 1σ作为散射度量合理且与绝对RMS分开报告；但RMS含一次性标定偏移（作者已声明）、3σ剔除截尾、10 Hz采样会高估1σ约3倍（作者自识别）——引用绝对数字须注明口径、采样率与清洗方式。",
+  "reproducibility": "高：硬件设置、协议（表I）、指标定义（表II）、条件矩阵（4位置×2速度×5轨迹）与清洗管线全部披露，计算代码开源于Git仓库；但商用黑盒SLAM固件版本不可控、单设备方差未量化，精确复现依赖同批硬件与环境复刻。",
+  "external_validity": "中低：受控实验室、单台设备、恒定工具姿态、模拟电解槽场景；真实工业环境（粉尘/振动/光照）、其他设备个体、变姿态与更高速度均未验证——作者明确承认并把用户研究、6-DoF扩展与配准/标定评估列为未来工作。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.05391-C01",
+   "claim": "在45°侧向视角条件（S3）下的静态位姿测试中，ML2控制器在SP05、SP06两个位姿出现平均高达347 mm的粗大位置误差，且该误差与极佳的重复性（0.3-0.4 mm）并存——系统自信且一致地报告严重错误位置的系统失效，而非随机噪声；表III显示第二个侧向位置S4下SP05/SP06同样出现346.5-347.5 mm级误差。",
+   "stance": "limit",
+   "relation": "限制综述命题'商用inside-out AR跟踪可支撑工业级末端（工具）轨迹引导'：高重复性/低散射指标无法暴露系统性粗大误差，此类'自信但错误'失效对简单离群过滤免疫，是末端跟踪精度评测与安全设计的核心痛点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-A原文：S3侧向视角下SP05/SP06出现高达347 mm的平均偏差且与0.3-0.4 mm的极佳重复性耦合，作者判定为系统性失效（系统自信且一致地报告严重错误位置）；表III逐格核对S3(25 mm/s)下SP05=346.9/347.4/0.3、SP06=346.8/347.6/0.4，S4(25 mm/s)下SP05=347.5/348.1/0.3、SP06=346.5/347.5/0.4（带*剔除出均值）；讨论节假设根因为控制器SLAM环境特征不足导致稳定但错误的位姿。",
+   "locator": "IV-A. Static Tracking Accuracy, Table III",
+   "source_context": "Despite the generally robust performance, a critical failure mode observed under the angled viewing condition S3 signif- icantly diminished its reliability. While most poses remained accurate, SP05 and SP06 exhibited gross positional errors, with a mean deviation of up to 347 mm. The most significant finding is that this major error was coupled with excellent repeatability (0.3-0.4 mm) (see Table III). This indicates a sys- tematic failure where the system confidently and consistently reports a severely incorrect position.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "静态位姿平均位置偏差/最大误差/重复性 (mm)",
+    "value_or_direction": "SP05/SP06在S3: 346.9/347.4/0.3与346.8/347.6/0.4；在S4: 347.5/348.1/0.3与346.5/347.5/0.4（重复性均为0.3-0.4 mm）",
+    "comparator": "正面视角F1/F2下同位姿平均误差2.1-3.4 mm（F2@50 mm/s全场平均仅2.1 mm）",
+    "task_or_sample": "UR10e夹持ML2控制器于8个静态位姿×30次重复×6视角/速度条件，OptiTrack(±0.2 mm)真值；SP05/SP06为管道接头附近的应用特定位姿",
+    "locator": "Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对IV-A两句原文（含'signif- icantly'与'sys- tematic'两处跨行连字符原样保留）；'高达347 mm'与'重复性0.3-0.4 mm'为作者原话；与表III SP05/SP06行S3/S4列数值（346.9/347.4/0.3、346.8/347.6/0.4、347.5/348.1/0.3、346.5/347.5/0.4）逐格核对一致；S4同样失效为表III观察（正文仅点名S3），claim中已标注为表III补充。"
+   }
+  },
+  {
+   "card_id": "2509.05391-C02",
+   "claim": "在32次动态轨迹试验中，末端跟踪的平均3D RMS误差强依赖运动模式：直线轨迹最低（2.70 mm），光栅扫描轨迹最高（16.27 mm，约为直线的6倍）——光栅路径与直线在空间上紧邻执行，说明这是特定于光栅运动模式的系统性路径偏离，而非位置环境或随机精度问题（光栅轨迹平均3D 1σ仅0.846 mm，高RMS由少数高幅离群驱动）。",
+   "stance": "limit",
+   "relation": "限制综述命题'商用AR跟踪满足工业末端轨迹引导精度'：典型检测工作流（光栅扫描）恰好是平均RMS最差的运动模式且误差为系统性偏离——为末端轨迹精度评测痛点（误差口径与运动模式强相关）提供证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B1原文：直线平均3D RMS误差最低（2.70 mm）、光栅最高（16.27 mm），且光栅与直线紧邻执行仍大幅系统偏离、路径本身精度很高；表IV交叉核对Average行：line 3D RMS=2.696（1σ=0.555）、raster=16.268（1σ=0.846）、circle=3.513（1σ=1.384）、square=3.126（1σ=0.999）mm——raster的RMS-1σ差全类别最大。",
+   "locator": "IV-B1) Accuracy Metrics: Absolute Accuracy (RMS Error), Table IV",
+   "source_context": "Line trajectories consistently per- formed best, showing the lowest average 3D RMS error (2.70 mm). In contrast, raster trajectories were the least accurate, with a significantly higher average RMS error of 16.27 mm. This is particularly noteworthy as the raster paths were executed in close proximity to the line trajectories, which suggests a substantial systematic deviation from the intended path that is specific to the raster motion pattern, despite the high precision of the path itself.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "分轨迹类别的平均3D RMS误差与3D 1-sigma误差 (mm)",
+    "value_or_direction": "line轨迹平均3D RMS误差最低2.70 mm、raster最高16.27 mm（约为line的6倍；表IV中raster 1σ 0.846 mm）；line/raster的3D 1-sigma平均约0.55 mm、circle约1.38 mm",
+    "comparator": "四类轨迹类别间对比（各自跨4个HMD位置×2速度平均）",
+    "task_or_sample": "32次动态试验：line/circle/square/raster×位置F1/F2/S3/S4×速度10/50 mm/s（EN ISO 9283轨迹+10×10 cm应用光栅扫描），各10次重复；表IV Average行交叉核对：line 2.696（1σ 0.555）、raster 16.268（1σ 0.846）、circle 3.513（1σ 1.384）、square 3.126（1σ 0.999）mm",
+    "locator": "Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对IV-B1段原文（含'per- formed'跨行连字符原样保留）；2.70/16.27 mm两数字为作者原话，0.55/1.38 mm为同段'approx.'复述值（均在该节文本中）；'紧邻执行''特定于运动模式的系统偏离''路径本身精度高'均为原话；value_or_direction仅收该节正文实际陈述的数值，表IV Average行精确值2.696/16.268/0.555/0.846/1.384/0.999（位于提取文本的表体节）与'约为6倍'（16.268/2.696=6.03，标'约'）为读者据表IV计算核对，记录于task_or_sample。"
+   }
+  },
+  {
+   "card_id": "2509.05391-C03",
+   "claim": "遮挡恢复能力高度依赖运动速度：10 mm/s低速下系统对5秒遮挡取得100%遮挡成功率（OSR）且重捕获时间可忽略（仅IR传感器被遮挡时3D 1σ误差0.79 mm、相机与IR同时被挡时1.11 mm），而50 mm/s高速下遮挡后无法恢复稳定跟踪、OSR降为0——高速遮挡失效是该方案族在视线频繁受遮挡的工业检测场景的硬边界。",
+   "stance": "conditional",
+   "relation": "条件化综述命题'商用inside-out跟踪可用于工业末端轨迹引导'：遮挡鲁棒性仅在低速成立、50 mm/s即全失效，为该方案族的适用条件提供速度边界证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B4原文：系统对遮挡的鲁棒性高度速度依赖——10 mm/s下100% OSR、5秒遮挡后重捕获时间可忽略、精度仅轻微退化（IR-only 1σ 0.79 mm、全遮挡1.11 mm）；50 mm/s下无法恢复稳定跟踪、OSR为0。讨论节补充：高速下维持清晰视线对防止跟踪失效至关重要。提取文本中IV-B4小节正文物理上位于表IV/Fig.6-7内容之后的表体节（节标题'X Y Z 3D...'），故定位器为复合形式。",
+   "locator": "IV-B4) Robustness, Reliability, Stability / X Y Z 3D X Y Z 3D X Y Z 3D 3D",
+   "source_context": "The system’s robust- ness to occlusion was found to be highly velocity-dependent. At the lower speed of 10 mm/s, the system demonstrated a 100% Occlusion Success Rate (OSR), re-acquiring the track after a 5-second occlusion with a negligible Re-acquisition Time (ROT). During these 10 mm/s tests, a slight degradation in precision was noted. The tracking remained highly precise when only the IR sensors were occluded (3D 1-sigma error of 0.79 mm), with a more pronounced, yet still robust, decrease in precision when both camera and IR sensors were blocked (3D 1-sigma error of 1.11 mm). At the higher speed of 50 mm/s, however, no stable tracking could be recovered, resulting in an OSR of 0",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "遮挡成功率OSR与遮挡后3D 1σ误差",
+    "value_or_direction": "10 mm/s: OSR=100%、ROT可忽略、1σ 0.79 mm（仅IR遮挡）/1.11 mm（相机+IR全遮挡）；50 mm/s: OSR=0（无法恢复稳定跟踪）",
+    "comparator": "10 mm/s vs 50 mm/s两档速度，同一5秒遮挡协议（先部分后完全）",
+    "task_or_sample": "静态位姿下手部遮挡5秒×10次重复；同一节另报跟踪体积丢失重捕获RLT<1 s（重捕获期间1σ 1.52 mm）与初始化INT<1 s",
+    "locator": "IV-B4) Robustness, Reliability, Stability / X Y Z 3D X Y Z 3D X Y Z 3D 3D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对IV-B4完整段落（含'system’s'弯撇号U+2019与'robust- ness'跨行连字符原样保留；引用整段以在单一逐字片段中同时保留10 mm/s 100% OSR与50 mm/s OSR=0两端对比，段落末'an OSR of 0'后原文无标点亦原样截止）；100%/0.79/1.11/0四个数字、速度条件与'高度速度依赖'均为原文；'硬边界'为读者概括。定位器说明：该段在提取文本中位于'X Y Z 3D...'表体节内（表IV与Fig.6/7内容之后），复合定位器第二片段即该节真实标题，用于让审计解析到包含此段原文的节表面。"
+   }
+  },
+  {
+   "card_id": "2509.05391-C04",
+   "claim": "在最佳正面HMD条件下静态跟踪精度高：F2条件、50 mm/s接近速度下8个静态位姿的平均误差仅2.1 mm（每位姿30次重复），且正面条件下更高接近速度普遍带来轻微改善；作者在讨论与结论中另总结最佳条件动态平均精度<2 mm、角度误差始终低于10°操作阈值——构成该商用方案族约2 mm级的量化精度锚点。",
+   "stance": "support",
+   "relation": "支撑综述命题'商用inside-out控制器跟踪在正面视角等受控条件下可达约2 mm级末端位置精度'，为AR工具引导方案族提供量化效果上限锚点及其适用条件（正面视角+低速遮挡）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-A原文：静态评估显示对视角与接近速度的清晰依赖，正面HMD位置下精度持续高——F2@50 mm/s全位姿平均误差仅2.1 mm、更高接近速度在最佳条件下普遍略有改善；表III F2(50)平均行Mean/Max/Repeat=2.1/4.3/0.8 mm核对一致；V-B首句与VI结论另报最佳条件动态平均精度<2 mm，IV-B3报角度误差始终显著低于10°阈值。",
+   "locator": "IV-A. Static Tracking Accuracy, Table III",
+   "source_context": "The static tracking evaluation revealed a clear dependency on the viewing angle and approach speed. Under optimal, frontal HMD positions, the system consistently achieved high accuracy. For instance, in the F2 condition at an approach speed of 50 mm/s, the mean error across all poses was only 2.1 mm. Higher approach speeds were generally associated with slight improvements in these optimal conditions.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "静态全位姿平均位置误差 mean error across all poses (mm)",
+    "value_or_direction": "F2条件、50 mm/s接近速度下8个位姿平均误差仅2.1 mm；正面条件下更高接近速度普遍带来轻微改善（higher approach speeds → slight improvements）；最佳平均位姿SP02为2.4 mm",
+    "comparator": "正面frontal vs 侧向S3（SP05/SP06平均偏差up to 347 mm、重复性0.3-0.4 mm）",
+    "task_or_sample": "8个静态位姿×30次重复×6条件（F1/F2正面500/600 mm、S3/S4侧向45° 400/500 mm；25/50 mm/s接近速度），UR10e驱动+OptiTrack真值；表III交叉核对F2(50 mm/s)平均行Mean/Max/Repeat=2.1/4.3/0.8 mm，六条件平均2.0-5.1 mm、重复性0.3-1.4 mm（S3为剔除347 mm离群后的均值）",
+    "locator": "Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对IV-A两句原文（视角/速度依赖、F2@50 mm/s平均2.1 mm、更高速度轻微改善）；value_or_direction仅收该节正文实际陈述的数值（2.1 mm、SP02 2.4 mm），表III F2(50 mm/s)平均行（2.1/4.3/0.8）与六条件范围（2.0-5.1/0.3-1.4 mm）为读者据表III核对、记录于task_or_sample；'动态<2 mm'与'角度<10°'分别核对V-B首句（'The achieved mean dynamic accuracy in the <2 mm'）与IV-B3角度段，claim中已明确标注其为讨论/结论节总结。"
+   }
+  },
+  {
+   "card_id": "2509.05391-C05",
+   "claim": "对氢泄漏检测这一安全关键任务，控制器在最佳正面视角下误差持续低于预设5 mm端到端要求，但该精度未能在全部配置中维持（特定非正面视角出现显著位置离群）；作者结论：ML2控制器不能被认为对该安全关键任务可靠，实际部署需要能检测这种'高精度失效模式'（高重复性+粗大误差）的失效安全机制，而这超越简单离群值过滤。",
+   "stance": "limit",
+   "relation": "支撑综述'末端轨迹精度评测痛点'命题：精度达标≠系统可靠——正面视角毫米级精度与侧向视角347 mm级系统失效并存，且失效模式对常规离群过滤免疫，必须专门的失效安全设计；为'未解痛点'维度提供作者判定证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V-C原文：实验环境与参数按泄漏检测场景设计、结果可有意义地迁移到预期应用；正面视角下误差远低于5 mm要求，但并非所有配置都能维持、特定非正面视角出现显著位置离群；基于这些结果，ML2控制器不能被认为对该安全关键任务可靠；实际实现需要能检测这种特定高精度失效模式的失效安全机制，超越简单离群过滤。",
+   "locator": "V-C. Implications for the Industrial Use Case",
+   "source_context": "For the hydrogen leak inspection task, the controller’s performance under optimal, frontal viewing conditions con- sistently yielded errors well below the predefined 5 mm re- quirement. However, this level of accuracy was not maintained across all configurations, with significant positional outliers occurring under specific non-frontal viewing angles. Based on these results, the ML2 controller cannot be considered reliable for this safety-critical task. A practical implementation would require a fail-safe mechanism capable of detecting this specific, high-precision failure mode, which goes beyond simple outlier filtering.",
+   "evidence_type": "author-judgment",
+   "quantitative": {
+    "metric": "安全关键任务下相对预定义5 mm要求的位置误差达成情况 (mm)",
+    "value_or_direction": "正面视角误差well below the predefined 5 mm requirement；非正面视角出现significant positional outliers",
+    "comparator": "vs 简单离群过滤simple outlier filtering；需fail-safe机制检测high-precision failure mode",
+    "task_or_sample": "氢电解槽泄漏检测AR引导用例（实验环境按该场景设计，作者声称结果可迁移）；ML2控制器+前置气体传感器探头安装件；'显著位置离群'对应表III S3/S4侧向列SP05/SP06的346.5-348.1 mm级离群（见C01），端到端要求<5 mm、<10°的来源核对III-A（'a primary end-to-end requirement of <5 mm and <10° deviation'）",
+    "locator": "V-C. Implications for the Industrial Use Case"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对V-C段原文（含'controller’s'弯撇号U+2019与'con- sistently'/'re- quirement'两处跨行连字符原样保留）；'不能被认为对该安全关键任务可靠'与'超越简单离群过滤的失效安全机制'为作者原话；value_or_direction/comparator中的英文短语（well below the predefined 5 mm requirement、significant positional outliers、simple outlier filtering、high-precision failure mode）均为该节原文逐字短语；'<5 mm、<10°'要求的设定出处核对III-A（'a primary end-to-end requirement of <5 mm and <10° deviation'），347 mm级离群数值由表III S3/S4列SP05/SP06行补充核对（详见C01）。"
+   }
+  },
+  {
+   "card_id": "2509.05391-C06",
+   "claim": "评测方法学痛点：同一慢速光栅轨迹以10 Hz采样测得3D 1σ误差1.34 mm、以50 Hz采样仅0.44 mm（约3倍差）——异步数据流（ML2约30 Hz vs OptiTrack 50 Hz）的时间不确定性在低采样率下更显著、可能是测量伪影，50 Hz数据才更准确代表系统真实精度；时间戳直接对齐（无插值）在50 mm/s下的最大理论位置误差为0.25 mm，落在OptiTrack约0.2 mm精度范围内、影响可忽略。",
+   "stance": "limit",
+   "relation": "支撑综述'末端轨迹精度评测痛点'：跟踪精度测量本身受异步采样与采样率伪影影响，低采样率会显著高估散射（同轨迹1σ差约3倍）——评测协议必须报告采样率并验证时间对齐误差，否则跨研究精度数字不可比。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V-D原文：ML2（约30 Hz）与OptiTrack（50 Hz）异步数据流用直接时间戳相关对齐（无插值），50 mm/s下最大理论位置误差0.25 mm、在OptiTrack精度范围内影响可忽略；但该时间不确定性在低采样率下更显著、可能是测量伪影——同一慢速轨迹10 Hz测得1σ=1.34 mm vs 50 Hz的0.44 mm，50 Hz数据更准确代表真实精度；表IV交叉核对T17（raster F2,10 mm/s,10 Hz）1σ=1.340、T21（同轨迹50 Hz）0.440。",
+   "locator": "V-D. Limitations",
+   "source_context": "However, the effect of this temporal uncertainty appears to be more pronounced at lower sampling rates, potentially indicating a measurement artifact. This was evident when an identical slow trajectory yielded a 3D 1-sigma error of 1.34 mm when measured at 10 Hz, versus 0.44 mm at 50 Hz (see Table IV). This discrepancy indicates that the 50 Hz data more accurately represents the system’s true precision.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "同一慢速轨迹的3D 1σ误差（10 Hz vs 50 Hz采样）；时间对齐最大理论位置误差",
+    "value_or_direction": "1.34 mm（10 Hz）vs 0.44 mm（50 Hz），约3倍差；时间戳直接对齐最大理论误差0.25 mm@50 mm/s（OptiTrack约0.2 mm精度内可忽略）",
+    "comparator": "同一光栅轨迹（F2位置、10 mm/s）两档采样率重复测量（表IV T17 vs T21）；无插值直接时间戳对齐",
+    "task_or_sample": "raster光栅轨迹（F2位置、10 mm/s）分别以10 Hz与50 Hz采样测量；ML2约30 Hz、OptiTrack 50 Hz异步流",
+    "locator": "Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对V-D段原文（含'system’s'弯撇号U+2019原样保留）；1.34/0.44 mm两数字、'测量伪影'与'50 Hz更准确代表真实精度'为原文；与表IV T17/T21行（1.340/0.440）交叉核对一致；'约3倍'（1.34/0.44=3.05）为读者计算并标'约'；0.25 mm与约0.2 mm两数字核对V-D前文（'maximum theoretical position error from the temporal discrepancy (0.25 mm at 50 mm/s)'与'OptiTrack’s own accuracy range (˜0.2 mm)'）。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "本篇定位：'末端跟踪精度评测痛点'证据（用户指定的评测视角样本），非控制方案族。对综述映射：方案=机械臂驱动+双标准（EN ISO 9283/ISO-IEC 18305）改编的商用inside-out跟踪评测协议，核心机制=绝对精度与相对精度（1σ散射）解耦+每系列重配准隔离漂移；量化效果=正面视角静态2.1 mm/动态<2 mm、重复性0.3-1.4 mm、漂移趋零、低速遮挡100%恢复；痛点=侧向视角347 mm级'自信但错误'系统失效（对简单离群过滤免疫）、光栅运动平均RMS 16.27 mm（检测工作流恰为最差模式）、50 mm/s遮挡OSR=0、不可配置5秒节能模式、低采样率高估散射约3倍。引用注意：(1)动态速度以表IV（10/50 mm/s）为准，III-C的'5 mm/s'为疑似未更新表述；(2)讨论节'line/raster精度高于circle/square'仅1σ口径成立，RMS口径光栅最差；(3)表III均值已剔除S3/S4下SP05/SP06的347 mm级离群（带*），引用均值需注明；(4)定位器解析说明：层级式定位器（IV-A/IV-B1/V-C等）经审计的IEEE层级前缀规则解析到对应字母小节；C02/C04的量化字段已收敛为所在节正文实际陈述的数值，表III/表IV表体精确值作为交叉核对记录于task_or_sample；(5)C03引用完整段落（115词）以在单一逐字片段中保留10↔50 mm/s的OSR对比两端，其定位器为复合形式——该段在提取文本中物理位于表IV/Fig.6-7内容之后的表体节（节标题'X Y Z 3D...'）；全部source_context按审计规范化（空白折叠+小写）逐字验证通过（含U+2019弯撇号与跨行连字符原样保留）。"
+}

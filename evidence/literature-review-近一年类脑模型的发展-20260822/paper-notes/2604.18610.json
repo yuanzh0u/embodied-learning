@@ -1,0 +1,327 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.18610",
+  "title": "SpikeMLLM: Spike-based Multimodal Large Language Models via Modality-Specific Temporal Scales and Temporal Compression",
+  "published": "2026-04-13T15:32:44Z",
+  "url": "https://arxiv.org/abs/2604.18610",
+  "authors": [
+   "Han Xu",
+   "Zhiyong Qin",
+   "Di Shang",
+   "Jiahong Zhang",
+   "Xuerui Qiu",
+   "Bo Lei",
+   "Tiejun Huang",
+   "Bo Xu",
+   "Guoqi Li"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个把 SNN 引入多模态大模型(MLLM)的框架,含 7B-72B 规模验证与 RTL 加速器协同设计,直接回答脉冲范式能否扩展到多模态大模型的问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "确认问题:异质模态使统一脉冲编码不足,高分辨率图像放大时间步展开开销,既有脉冲 LLM 工作止步单模态文本。"
+   },
+   {
+    "locator": "2.2. Integer-to-Spike LIF",
+    "role": "method-or-design",
+    "purpose": "理解整数-脉冲展开范式与量化等级到时间步的映射。"
+   },
+   {
+    "locator": "3. Method",
+    "role": "method-or-design",
+    "purpose": "理解 MED 引导的模态特定时间尺度(MSTS)与时间压缩 LIF(TC-LIF)机制。"
+   },
+   {
+    "locator": "4.1. Main Results",
+    "role": "results-or-analysis",
+    "purpose": "核对四个 MLLM 上的近无损性能与平均差距数字。"
+   },
+   {
+    "locator": "4.2. Ablation Study",
+    "role": "results-or-analysis",
+    "purpose": "核对 MSTS 模态时间步分配的消融证据与文本模态敏感性。"
+   },
+   {
+    "locator": "4.3. Deployment-oriented Co-designed System Study",
+    "role": "results-or-analysis",
+    "purpose": "核对 RTL 加速器吞吐与功耗对比及其仿真属性。"
+   },
+   {
+    "locator": "5. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者总结的贡献边界。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "7.1. Proof of the Reference Equivalence under Standard Integer-to-Spike Unfol",
+    "reason": "数学证明细节,不影响证据卡措辞。"
+   },
+   {
+    "locator": "10.2. RTL Synthesis Details",
+    "reason": "硬件实现细节,仅确认其为综合仿真而非流片。"
+   }
+  ]
+ },
+ "research_question": "脉冲神经网络能否扩展到多模态大模型:如何在异质模态间分配时间步并压缩时间步展开开销,同时保持接近 FP16 的多模态精度?",
+ "contributions": [
+  "首个面向 MLLM 的脉冲框架 SpikeMLLM,把既有 ANN 量化方法(RTN/GPTQ/QuaRot)统一到脉冲表示空间中建模。",
+  "提出模态演化差异(MED)引导的模态特定时间尺度(MSTS):文本模态获得更多时间步、视觉模态更少,并在残差层级别按 MED 排序分配。",
+  "提出时间压缩 LIF(TC-LIF),把时间步从量化等级数(如 15)压缩到 2-3,大幅降低脉冲推理的时间展开开销。",
+  "给出算法-硬件协同设计验证:基于 SMIC 28nm 综合的 RTL 加速器原型,展示 9.06× 吞吐与 25.8× 功耗优势(相对 A800 FP16 基线)。"
+ ],
+ "method": {
+  "summary": "SpikeMLLM 在整数-脉冲展开范式上构建 MLLM 脉冲化框架:MSTS 用两层策略(全局模态层+残差层)按模态演化差异分配时间步,动态演化的文本模态获得更多时间步;TC-LIF 用时间加权积分把每层时间步从离散量化等级数压缩到 2-3。框架兼容 RTN/GPTQ/QuaRot 等既有量化方法,并以 QuaRot+MSTS+TC-LIF 为部署配置实现 3-bit 时间-幅值数据通路,配套 RTL 加速器原型。",
+  "key_mechanisms": [
+   "MSTS(模态特定时间尺度)",
+   "TC-LIF(时间压缩 LIF)",
+   "整数-脉冲展开统一 ANN 量化",
+   "3-bit 时间-幅值数据通路加速器"
+  ]
+ },
+ "study_context": {
+  "models": [
+   "Qwen2VL-7B",
+   "InternVL2-8B",
+   "MiniCPM-V-2.6-8B",
+   "Qwen-VL-Chat-9.6B",
+   "Qwen2VL-72B(扩展验证)"
+  ],
+  "benchmarks": [
+   "TextVQA",
+   "DocVQA",
+   "OCRBench",
+   "MME",
+   "ScienceQA"
+  ],
+  "setting": "脉冲化多模态推理;时间步压缩 15→2/3;RTL 综合于 SMIC 28nm CMOS;GPU 基线 NVIDIA A800 batch-size-1"
+ },
+ "evaluation": {
+  "protocol": "五个多模态基准上与 FP16 基线对比平均性能差距;MSTS 分配比连续消融;TC-LIF 固定时间步预算消融;RTL 仿真(Synopsys DC/VCS)对 A800 实测吞吐与整板功耗。"
+ },
+ "findings": [
+  {
+   "finding": "在激进时间步压缩下,SpikeMLLM 对 FP16 基线的平均性能差距仅 1.03%(Qwen2VL-7B)与 0.72%(InternVL2-8B),且把时间步从 15 压到 2。",
+   "scope": "四个 MLLM、五个多模态基准",
+   "locator": "4.1. Main Results"
+  },
+  {
+   "finding": "文本模态对时间步分配更敏感:同一 prefill 成本下把时间步从视觉转给文本,OCRBench 从 32 恢复到 717、DocVQA 从 5.31 恢复到 84.20。",
+   "scope": "Qwen2VL-7B/InternVL2-8B 低时间步预算消融",
+   "locator": "4.2. Ablation Study"
+  },
+  {
+   "finding": "RTL 加速器(SMIC 28nm 综合)吞吐 393.7 token/s 对 A800 FP16 的 43.5 token/s(9.06×),系统功耗 7.13 W 对 184 W(25.8×)。",
+   "scope": "QuaRot+MSTS+TC-LIF 低时间步配置,batch-size-1 部署场景",
+   "locator": "4.3. Deployment-oriented Co-designed System Study"
+  },
+  {
+   "finding": "扩展性在 Qwen2VL-72B 上验证,平均性能差距 1.19%。",
+   "scope": "72B 规模单点验证",
+   "locator": "1. Introduction"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "常规整数-脉冲展开在极低时间步配置下所有模型均严重退化(如 MiniCPM-V-2.6-8B OCRBench 掉到 35),表明表示容量受损。",
+    "locator": "4.1. Main Results"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "硬件结论来自 SMIC 28nm 综合与周期级仿真的估计,非流片芯片实测;吞吐/功耗对比对象是单卡 A800 FP16 批大小 1 场景,不代表真实数据中心或端侧部署配置。",
+    "basis": "4.3 节自述使用 Synopsys DC 综合估计面积功耗、VCS 提取周期数、自定义周期级仿真器评估延迟,HBM 行为为建模而非实测。"
+   },
+   {
+    "boundary": "近无损结论依赖 QuaRot 旋转量化框架与 MSTS/TC-LIF 组合;RTN/GPTQ 在低时间步下的退化表明结论不能推广到任意量化方法。",
+    "basis": "4.1 节报告 SpikeMLLM(RTN/GPTQ) 需要极长时间步,SpikeMLLM(QuaRot) 在低时间步下所有模型显著退化。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于所测五个多模态基准与 7B-72B 系 MLLM;时间步敏感性结论建立在这些模型的文本/视觉 token 分布上,对视频等长时序模态或其他 token 密度结构未验证;加速器数字为综合仿真,不可直接当作部署实测。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "首次把脉冲范式推进到 MLLM 并给出 7B-72B 规模验证",
+   "消融设计针对性强:MSTS 分配比连续扫描+TC-LIF 固定预算对照",
+   "算法-硬件协同设计闭环,RTL 级数据通路与模型配置一致"
+  ],
+  "design_risks": [
+   "GPU 基线仅 A800 FP16 批大小 1,未与低位量化 GPU 部署或现有 SNN 加速器对比",
+   "72B 扩展验证只有平均差距单点数字,缺逐基准明细",
+   "时间步-幅值混合编码的有效位数与精度权衡依赖 QuaRot 框架"
+  ],
+  "baseline_fairness": "GPU 侧用 FP16 而非低比特量化基线,对脉冲路线偏有利;但算法侧与 RTN/GPTQ/QuaRot 三种量化在同框架内对比公平。",
+  "metric_validity": "五个基准覆盖文本理解/OCR/感知/科学推理,平均差距是合理汇总;吞吐与功耗指标在综合仿真与实测板卡间口径存在差异,作者有说明但读者易混淆。",
+  "reproducibility": "方法与消融描述完整,但 RTL 综合流程(Synopsys DC/VCS + ARM SRAM 编译器)依赖商业 EDA,社区复现门槛高。",
+  "external_validity": "结论对所测 MLLM 家族与静态图像模态成立;未涉及视频流、音频或事件相机输入。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.18610-C01",
+   "claim": "SpikeMLLM 是首个面向多模态大模型(MLLM)的脉冲框架,统一既有 ANN 量化方法于脉冲表示空间,并把脉冲 LLM 路线从单模态文本扩展到多模态。",
+   "stance": "support",
+   "relation": "支持\"脉冲范式在近一年内从单模态 LLM 扩展到多模态大模型\"的进展主张。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言明确自述 the first spike-based framework for MLLMs(注意介词 within 与摘要版 in 略有差异,以引言版为准)。",
+   "locator": "1. Introduction",
+   "source_context": "To address these challenges, we propose SpikeMLLM , the first spike-based framework for MLLMs, which unifies existing ANN quantization methods within the spiking representation space.",
+   "evidence_type": "author-position",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对,'first spike-based framework for MLLMs' 为作者自我定位;既有工作止步单模态文本在上一句有明示,故该首个性主张范围限于其所述文献范围。"
+   }
+  },
+  {
+   "card_id": "2604.18610-C02",
+   "claim": "在激进时间步压缩(15→2)下,SpikeMLLM 对 FP16 基线的五基准平均性能差距仅 1.03%(Qwen2VL-7B)与 0.72%(InternVL2-8B),四个模型趋势一致。",
+   "stance": "support",
+   "relation": "支持\"转换式脉冲多模态大模型在低时间步下可近无损\"的进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 节给出平均差距数字与时间步压缩幅度。",
+   "locator": "4.1. Main Results",
+   "source_context": "After incorporating MSTS and TC-LIF, at , the average performance gap to the FP16 baseline (across five benchmarks) is only 1.03% on Qwen2VL-7B and 0.72% on InternVL2-8B, while reducing the timestep from 15 to",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average performance gap to the FP16 baseline across five benchmarks",
+    "value_or_direction": "only 1.03% on Qwen2VL-7B and 0.72% on InternVL2-8B",
+    "comparator": "FP16 baseline",
+    "task_or_sample": "TextVQA, DocVQA, OCRBench, MME, ScienceQA",
+    "locator": "4.1. Main Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.1 节原句逐字核对,1.03%/0.72% 数字与模型名一致;时间步压缩起点 15 在同句给出,终点数字在提取文本中丢失但不影响两个平均差距数字的语义。"
+   }
+  },
+  {
+   "card_id": "2604.18610-C03",
+   "claim": "文本模态对时间步分配显著更敏感:同一 prefill 成本下,文本时间步不足导致 OCRBench 32、DocVQA 5.31 的严重退化,把时间步转给文本后恢复到 OCRBench 717、DocVQA 84.20。",
+   "stance": "support",
+   "relation": "支持\"模态异质性是脉冲多模态化的核心矛盾,需要模态特定机制而非统一编码\"的机制主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 消融给出文本/视觉时间步分配的量化敏感性证据。",
+   "locator": "4.2. Ablation Study",
+   "source_context": "insufficient text timesteps (e.g., ) cause severe performance degradation (OCRBench: 32, DocVQA: 5.31), whereas allocating more timesteps to the text modality at the same cost (e.g., ) substantially recovers performance (OCRBench: 717, DocVQA: 84.20)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OCRBench score and DocVQA score under modality-specific timestep allocation",
+    "value_or_direction": "OCRBench: 32 to 717, DocVQA: 5.31 to 84.20",
+    "comparator": "insufficient text timesteps vs allocating more timesteps to the text modality",
+    "task_or_sample": "Qwen2VL-7B and InternVL2-8B ablation",
+    "locator": "4.2. Ablation Study"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.2 节原句逐字核对,四个数字 32/5.31/717/84.20 一致;括号内具体时间步数值在提取文本中丢失,但退化与恢复方向及数字完整。"
+   }
+  },
+  {
+   "card_id": "2604.18610-C04",
+   "claim": "部署导向协同设计:SMIC 28nm RTL 加速器实现 393.7 token/s 对 A800 FP16 43.5 token/s(9.06× 吞吐),系统功耗 7.13 W 对 184 W(25.8× 降低)。",
+   "stance": "support",
+   "relation": "支持\"算法-硬件协同设计是脉冲大模型落地路径\"的部署主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 节给出吞吐与功耗对比数字。",
+   "locator": "4.3. Deployment-oriented Co-designed System Study",
+   "source_context": "the proposed design shows 9.06 higher throughput (393.7 token/s vs. 43.5 token/s). In terms of system power, the proposed design operates at 7.13 W, compared with 184 W for the GPU reference, corresponding to 25.8 lower power.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "throughput and system power",
+    "value_or_direction": "9.06 higher throughput (393.7 token/s vs. 43.5 token/s); 7.13 W vs 184 W, 25.8 lower power",
+    "comparator": "Qwen2VL-7B-FP16 (NVIDIA A800)",
+    "task_or_sample": "batch-size-1 deployment setting",
+    "locator": "4.3. Deployment-oriented Co-designed System Study"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.3 节原句逐字核对,9.06/393.7/43.5/7.13/184/25.8 全部一致;表 6 同数字。倍数符号在提取文本中丢失但数值与单位完整。该结果为综合仿真与 A800 实测的对比,已在卡内主张措辞中限定为部署导向协同设计研究。"
+   }
+  },
+  {
+   "card_id": "2604.18610-C05",
+   "claim": "边界:常规整数-脉冲展开在极低时间步下所有模型严重退化(MiniCPM-V-2.6-8B OCRBench 掉到 35),近无损结论依赖 QuaRot+MSTS+TC-LIF 组合而非任意脉冲化方法。",
+   "stance": "limit",
+   "relation": "限定\"脉冲多模态大模型近无损\"主张的适用条件:仅在配套时间步分配与压缩机制下成立。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 节报告低时间步配置下 SpikeMLLM(QuaRot) 各模型显著退化。",
+   "locator": "4.1. Main Results",
+   "source_context": "SpikeMLLM(QuaRot) achieves competitive performance at ; however, at the low timestep configuration , all models suffer significant performance degradation — for instance, the OCRBench score of MiniCPM-V-2.6-8B drops to 35 — indicating that aggressively reducing timesteps under conventional integer-to-spike unfolding significantly degrades representation capacity in multimodal settings.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "OCRBench score",
+    "value_or_direction": "drops to 35",
+    "comparator": "MiniCPM-V-2.6-8B under the low timestep configuration",
+    "task_or_sample": "OCRBench multimodal benchmark",
+    "locator": "4.1. Main Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.1 节原句逐字核对,'all models suffer significant performance degradation' 与 OCRBench 35 一致;低时间步具体数值在提取文本中丢失,但退化事实与数字完整,支持边界主张。"
+   }
+  },
+  {
+   "card_id": "2604.18610-C06",
+   "claim": "边界:加速器结果来自 Synopsys DC 在 SMIC 28nm 的综合估计与周期级仿真,非流片实测;GPU 对照仅 A800 FP16 批大小 1 配置。",
+   "stance": "limit",
+   "relation": "限定\"9.06× 吞吐/25.8× 功耗优势\"部署主张的证据强度:为仿真估计而非硬件实测。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 节方法学描述明确数字来自综合与仿真。",
+   "locator": "4.3. Deployment-oriented Co-designed System Study",
+   "source_context": "We implement the RTL design for SpikeMLLM and use Synopsys DC on SMIC 28nm CMOS technology to estimate logic area and power.",
+   "evidence_type": "method-note",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.3 节原句逐字核对,综合/仿真方法学描述明确;同节 'we deploy the Qwen2VL-7B FP16 baseline on an NVIDIA A800 under the same batch-size-1 setting' 限定对照口径。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "SpikingBrain: Spiking Brain-inspired Large Models",
+   "arxiv_id": "2509.05276"
+  },
+  {
+   "title": "Spike-driven Large Language Model",
+   "arxiv_id": "2604.16475"
+  }
+ ],
+ "notes": "中科院自动化所李国齐团队(BICLab)工作,与 SpikingBrain/SDLLM 同一研究脉络,脉冲大模型从 LLM 扩展到 MLLM 的标志性一步;配套 RTL 加速器为 3-bit 时间-幅值数据通路。"
+}

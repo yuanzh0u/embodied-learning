@@ -1,0 +1,501 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.09519",
+  "title": "DemoBridge: A Simulation-in-the-Loop Toolkit for Single-View Human Demonstration Retargeting",
+  "published": "2026-07-10",
+  "url": "https://arxiv.org/abs/2607.09519",
+  "authors": [
+   "Zehao Wang",
+   "Fabien Despinoy",
+   "Sergey Zakharov",
+   "Tinne Tuytelaars",
+   "Rahaf Aljundi"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是'单视角（无本体）人类演示→机器人手臂可执行轨迹'的重定向工具链，直接量化单视角手部参考位姿精度（仅数毫米）与抓取容差（物体宽≈夹爪开口）的相互作用，给出误差源（jitter/drift/接触遮挡/深度提升错误）、缓解（滤波+MANO 解剖先验+仿真回环重规划）与系统级成功率证据。视角为固定单目立体而非头戴 ego，已在迁移边界中声明。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认两类耦合困难（运动学可行性、单视角感知噪声）与逐字误差源陈述。"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "定位与 RoboWheel（逐帧 IK）、YOTO（稀疏关键帧 IK 插值）、SPIDER 等重定向路线的差异。"
+   },
+   {
+    "locator": "III. SYSTEM OVERVIEW",
+    "role": "method-or-design",
+    "purpose": "理解四层架构与可换感知后端（SAM/RecGen、MediaPipe/HaMeR、Any6D/FoundationPose）。"
+   },
+   {
+    "locator": "IV. DESIGN CHOICES",
+    "role": "method-or-design",
+    "purpose": "确认手部追踪后端与 2D→3D 深度提升方式。"
+   },
+   {
+    "locator": "V. RETARGETING SOLVER",
+    "role": "method-or-design",
+    "purpose": "精读事件抽取（噪声滤波+MANO 去噪+运动共现接触检测）、仿真回环协调器与运动规划器（同伦播种+轨迹优化）。"
+   },
+   {
+    "locator": "VI. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "提取合成基准（Table I：端点误差/成功率/碰撞/nDTW）与真实演示（Table II：四阶段累积成功率）及阈值陈述。"
+   },
+   {
+    "locator": "VII. LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者陈述的物体追踪限制与双臂限制。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "relevant-core",
+    "reason": "参考文献列表不承载与综述问题直接相关的证据，仅按需回查引文编号。"
+   }
+  ]
+ },
+ "research_question": "如何把单视角 RGB 立体录制的人类手部演示转写为特定机器人手臂可物理执行、经物理验证的轨迹？核心难点是运动学可行性（全臂碰撞、逐路点 IK 可行）与单视角感知噪声（关键点抖动/漂移/接触时遮挡）相互耦合，必须联合处理。",
+ "contributions": [
+  "统一重定向规划器：单一碰撞感知轨迹优化器耦合抓取选择、全臂+被抓物体碰撞与对演示末端路径的跟踪，同一目标覆盖 goal-only 到达、参考跟随与搬运。",
+  "仿真回环、免标注的重定向：每一相位在 Isaac Sim 中执行验证、失败回退重规划；抓取/释放时机从手-物运动共现关系自动推断；输出轨迹动力学一致且可直接作仿真 rollout。",
+  "模块化配置驱动工具链：场景重建、手部追踪、物体 6D 追踪均为可换后端服务，机器人与管线阶段可配置替换。"
+ ],
+ "method": {
+  "summary": "感知层：单视角 RGB 立体相机经 TRI-STEREO/FOUNDATIONSTEREO 出度量深度；手部用 MediaPipe Hands 或 HaMeR 检测 2D 关键点并经深度提升为米制 3D 腕/掌参考；物体用 Any6D/FoundationPose 恢复逐帧 6D 位姿；场景经 SAM 点选分割+RecGen/SAM3D 重建为逐物体水密网格。求解器三段：(1) 事件抽取——对原始轨迹做噪声滤波（遮挡间隙插值、中值滤波去毛刺、Savitzky-Golay 平滑），对物体前景遮挡手部导致深度提升出错的关节用 MANO 模型拟合后重读解剖一致关节，再从手-物运动共现读出 grasp/transport/release 事件并记录接触时人手姿态作抓取先验；(2) 协调器——四相位状态机，每相位由规划器出轨迹后在仿真中验证（夹爪到达并持物、被携物体跟随演示、邻物不动），失败则回退并以下一候选抓取（按演示手姿排序的对跖采样）重试；(3) 运动规划器——全局层用演示参考经碰撞感知投影作同伦先验播种（无参考时 RRT-Connect），局部层在 PyRoKi 上做非线性最小二乘轨迹优化（L_track+L_attach+L_smooth+L_coll+L_lim，增广拉格朗日把关节限位与桌面间距提为硬约束，被抓物体 clearance 在末 τ 节点渐缩以允许贴合物体）。",
+  "assumptions": [
+   "单视角 RGB 立体相机固定且可获度量深度；场景一次重建多演示复用。",
+   "演示的人手轨迹是可行轨迹的良好同伦先验，可经碰撞感知投影作为优化种子。",
+   "接触事件可从手-物运动共现可靠读出，无需人工标注抓取时机。",
+   "物体表面用 100 个半径 4mm 球近似足够支撑桌面级碰撞规划。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "真实演示：三个桌面场景各 10 条人类演示（mug-on-plate 放置、cup-stack 精确叠放、pour-milk 轨迹跟随），RECGEN 重建+FOUNDATIONPOSE 物体追踪+MEDIAPIPE 手部追踪",
+   "合成基准：程序生成的 Franka 桌面杂乱场景 50 个 held-out（goal-only / with-reference × base / attach），物体以 100 个 4mm 半径球近似，障碍物距 witness 轨迹扫掠体 ≥5cm"
+  ],
+  "tasks": [
+   "真实：reach→grasp→transport→place 四阶段累积成功率（全物理仿真评分）",
+   "合成：端点误差（<5mm 为成功）、碰撞场景计数（32 子步插值审计、>2mm 穿透计碰撞）、nDTW 参考路径保真度"
+  ],
+  "embodiments": [
+   "Franka 手臂（合成基准与重定向目标，仿真内）",
+   "单视角 RGB 立体相机（TRI-STEREO/FOUNDATIONSTEREO 深度）"
+  ],
+  "sample_or_scale": "30 条真实人类演示；50 个 held-out 合成场景；真实实验固定后端组合（RECGEN+FOUNDATIONPOSE+MEDIAPIPE+multi-stage planner）。"
+ },
+ "evaluation": {
+  "design": "合成基准隔离规划器性能（goal-only 与 with-reference 两种设定，与 PyRoKi trajopt、segmented trajopt、single-stage 消融对比）；真实演示跑全管线并按四阶段累积成功率评分，基线为作者重实现的 YOTO†（稀疏关键帧 IK 插值）与 RoboWheel†（逐帧 IK 密集路径跟踪，仅自碰撞），基线的抓取/释放时机由人工标注补给。",
+  "baselines": [
+   "Trajopt（PyRoKi 轨迹优化）",
+   "Trajopt (seg)（分段参考航点）",
+   "Single-stage（去全局层的自身消融）",
+   "YOTO†（重实现）",
+   "RoboWheel†（重实现）"
+  ],
+  "metrics": [
+   "端点误差（mm，<5mm 为成功）",
+   "碰撞场景数（/50）",
+   "nDTW 路径相似度",
+   "四阶段累积成功率（/10）"
+  ],
+  "ablations": [
+   "single-stage vs multi-stage（全局同伦播种的隔离）",
+   "goal-only vs with-reference（参考路径的作用）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "合成基准上 multi-stage 规划器 goal-only 端点误差 3.2mm/98% 成功（trajopt 9.1mm/26%）；with-reference 下 4.6mm/68%、nDTW 0.78（base）与 3.0mm/100%、nDTW 0.86（attach），碰撞至多 1/50；single-stage 消融在 base 上碰撞 29-30/50、端点误差 18.9mm。",
+   "scope": "50 个 held-out 程序生成场景，Franka 臂。",
+   "locator": "A. Synthetic planner benchmark, Table I (Table I float 在抽取文本中位于 'B. Real demonstrations' 标题之下)"
+  },
+  {
+   "finding": "真实演示上 DemoBridge 三任务 place 6/10、7/10、7/10（mug-on-plate/cup-stack/pour-milk），grasp 8-9/10；重实现基线 YOTO†/RoboWheel† 大多止步于 grasp 之前（place 0-2/10）；一旦 grasp 成功进入搬运，transport 从未失败。",
+   "scope": "每任务 10 条演示，全物理仿真评分。",
+   "locator": "B. Real demonstrations, Table II"
+  },
+  {
+   "finding": "单视角参考位姿仅精确到数毫米；当物体接近夹爪开口宽度时该偏移足以漏抓——基线直接跟踪参考故失败，而重选抓取（re-seating）可成功。",
+   "scope": "VI-B 结果分析。",
+   "locator": "B. Real demonstrations"
+  },
+  {
+   "finding": "剩余失败集中在可行域薄的区域：演示抓取同时固定位置与夹爪朝向，当该位姿接近臂展极限时非凸优化返回次优解（mug-on-plate 最难）；物体位姿追踪错误可传播进重定向（Fig. 3C 位姿翻转但 rollout 仍成功）。",
+   "scope": "VI-B 失败分析与 Fig. 3。",
+   "locator": "B. Real demonstrations"
+  },
+  {
+   "finding": "作者声明其主要限制为物体追踪：操作中手部部分遮挡物体使逐帧 6D 追踪丢失，污染参考轨迹与抽取的事件；本文演示中追踪误差保持在任务容差内，故 Table II 成功率主要反映重定向质量。",
+   "scope": "VII LIMITATIONS 与 VI-B。",
+   "locator": "VII. LIMITATIONS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "主要限制是物体追踪：实际操作中手部部分遮挡物体，逐帧 6D 位姿追踪常丢失，污染参考轨迹与抽取的事件。",
+    "locator": "VII. LIMITATIONS"
+   },
+   {
+    "limitation": "求解器当前仅支持单臂；双臂事件抽取（含 handover 事件）已可靠但双臂运动规划尚未纳入。",
+    "locator": "VII. LIMITATIONS"
+   },
+   {
+    "limitation": "在更具挑战的情况下，有限的图像分辨率、物体遮挡或运动模糊可导致更严重的追踪失败。",
+    "locator": "B. Real demonstrations (Fig. 3 讨论)"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "设定为固定单视角立体相机的桌面场景，非头戴 ego 视频：无相机自运动与视野截断问题，其'参考位姿数毫米精度'与'物体宽≈夹爪开口即漏抓'的阈值结论不可直接外推到 ego-centric 视频（后者手部尺度-深度歧义与动态模糊更严重）。",
+    "basis": "摘要 'single-view RGB stereo recording'；全文无相机自运动/视野截断处理。"
+   },
+   {
+    "boundary": "成功率在全物理仿真内评分，未报告真机执行；仿真-现实差距（摩擦、接触、感知在真机的噪声）未评估。",
+    "basis": "VI-B 'We evaluate each retargeted demonstration under full physics simulation'。"
+   },
+   {
+    "boundary": "'few millimeters' 的参考精度为经验性陈述，全文无手部追踪逐点误差分布的测量表；任务容差以'物体宽 vs 夹爪开口'定性刻画，无系统性精度-成功率剂量曲线。",
+    "basis": "VI-B-d 仅有定性陈述；无追踪误差与成功率的敏感性分析。"
+   },
+   {
+    "boundary": "两个最近基线代码不可得而由作者重实现，且 grasp timing 由人工标注补给基线；尽管这对基线有利，重实现保真度无法核对。",
+    "basis": "VI-B-c 'Neither of the closest methods ships with a retargeting pipeline we can run on our setup... We cannot reproduce their grasp-timing extraction, so we manually annotate'。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：固定单视角 RGB 立体相机、桌面级单臂抓取-搬运-放置任务、场景可一次重建复用、许可仿真在环验证的重定向场景；其'参考精度数毫米'与'物体宽≈夹爪开口即漏抓'的阈值证据在该设定下成立。不适用于：头戴 ego-centric 运动相机视频（尺度-深度歧义与视野截断未处理）、双臂/灵巧手任务、需要真机验证的部署结论、无深度传感的纯单目设定。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "把单视角感知噪声与运动学可行性作为耦合问题联合处理，且明确区分误差源（jitter/drift/接触遮挡/深度提升错误）并逐层配缓解（滤波、MANO 解剖先验、仿真回环重规划）。",
+   "合成基准构造保证可行性（witness path 反转+障碍距扫掠体 ≥5cm），端点 <5mm 成功阈值与 32 子步>2mm 穿透的碰撞审计定义清晰。",
+   "对基线公平性处理诚实：给重实现基线人工补给其无法自行提取的 grasp timing，反而强化'参考位姿才是更深问题'的结论。"
+  ],
+  "design_risks": [
+   "真实演示每任务仅 10 条、且全部在仿真内评分，统计功效与 sim-real 外推均有限。",
+   "基线为作者重实现，YOTO/RoboWheel 的官方结果无法核对。",
+   "'参考位姿数毫米精度'与'追踪保持在任务容差内'为定性陈述，无手部追踪误差的量化分布支撑。",
+   "真实实验固定单一后端组合（MediaPipe+FoundationPose+RecGen），未做后端替换（如 HaMeR）对手部参考精度影响的消融。"
+  ],
+  "baseline_fairness": "基线代码不可得而重实现，且作者人工标注 grasp/release 时机补其短板（对基线有利）；两基线均不做全臂场景碰撞规划，属方法代差对比，公平性中等。",
+  "metric_validity": "合成端点误差/nDTW/碰撞审计定义严格；真实演示为四阶段累积成功率（reach/grasp/transport/place），不报告轨迹级连续误差；成功率受感知与重定向混合影响，作者声明追踪在容差内故主要反映重定向质量，但未给分解证据。",
+  "reproducibility": "后端（MediaPipe/HaMeR、Any6D/FoundationPose、RecGen/SAM3D、PyRoKi、Isaac Sim、RRT-Connect）与关键参数（100 球 4mm、5cm 间距、50 场景、<5mm、32 子步、2mm 穿透）披露完整；代码开源（GitLab 链接）。",
+  "external_validity": "固定立体相机+桌面场景+仿真评分三重约束；向 ego-centric 运动相机、强遮挡 in-the-wild 视频、双臂/灵巧手与真机部署的外推均未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.09519-C01",
+   "claim": "单视角人类演示的感知误差具有结构性：手部关键点与物体位姿会抖动、漂移，并在接触时刻被遮挡——作者逐字指出 'The demonstrated reference is therefore inaccurate exactly where it matters most'（演示参考恰恰在最要紧处不准）；该感知问题与逐路点 IK 可行性问题耦合，必须联合求解。",
+   "stance": "support",
+   "relation": "回答综述的误差来源问题：单视角（robot-free）视频中手部/物体追踪误差在接触瞬间最大，直接污染用于重定向的参考轨迹；误差源不是均匀分布而是集中在交互关键时刻。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "I. INTRODUCTION 逐字给出两类耦合困难（运动学、感知）与 'jitter, drift, and are occluded at the moment of contact' 的误差源刻画；属问题框定型主张，无量化分解，按作者主张收录。",
+   "locator": "I. INTRODUCTION",
+   "source_context": "The second is perceptual. From a single view, hand\nkeypoints and object poses jitter, drift, and are occluded at the\nmoment of contact. The demonstrated reference is therefore\ninaccurate exactly where it matters most.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "I. INTRODUCTION 原文逐字支持抖动/漂移/接触遮挡三类误差与'最要紧处不准'的论断；claim 限定为作者的问题框定，未延伸为定量结论。"
+   }
+  },
+  {
+   "card_id": "2607.09519-C02",
+   "claim": "单视角 2D 手部关键点经深度图提升为 3D 时，凡被操作物体前景遮挡手部的位置，深度错误导致提升关节同步出错（'the depth is wrong, and so is the lifted joint'）；缓解手段为：遮挡间隙插值+中值滤波去毛刺+Savitzky-Golay 平滑的噪声滤波链，再以 MANO 手模型拟合关键点并从摆好姿态的网格重读解剖一致的关节（含指尖），接触事件则从手-物运动共现（同动才判持物）读出。",
+   "stance": "support",
+   "relation": "回答综述的误差传播与缓解手段问题：2D→3D 深度提升把遮挡处的深度误差直接传导为手部 3D 关节误差（传播路径），而参数化手模型（MANO）解剖先验与运动共现接触检测是工程上有效的低成本缓解。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V-A Event extraction 逐字描述噪声滤波三件套（插值/中值/SG）、深度提升在前景遮挡处出错的机制、MANO 拟合重读与运动共现接触判定；IV. DESIGN CHOICES 补充手部后端（MediaPipe/HaMeR）与 2D→米制 3D 提升路径。",
+   "locator": "A. Event extraction",
+   "source_context": "noise filter: occlusion gaps are\ninterpolated, spikes are removed with a median filter, and the\nhand keypoints and wrist pose are smoothed (Savitzky–Golay\nfilter [15]). Single-view keypoints are lifted to 3D through\nthe depth map. Wherever the manipulated object foreground-\noccludes the hand, the depth is wrong, and so is the lifted\njoint. We denoise these by fitting a MANO hand model to\nthe keypoints and re-reading clean, anatomically consistent\njoints (fingertips included) from the posed mesh. We then\nread contacts off kinematic co-motion: an object is held over\na window only if it moves together with the gripper while the\ngripper is moving.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "V-A 原文逐字支持滤波链、深度提升遮挡出错机制、MANO 重读与运动共现接触检测；claim 未声称这些缓解的定量收益（原文亦未给出），表述强度一致。"
+   }
+  },
+  {
+   "card_id": "2607.09519-C03",
+   "claim": "单视角参考位姿仅精确到数毫米（'accurate only to a few millimeters'）；当物体接近夹爪开口宽度时，该偏移足以漏抓——可接受阈值因此由任务几何（物体宽 vs 夹爪开口）决定而非固定数值。全管线在三个真实演示任务上 place 阶段成功 6/10（mug-on-plate）、7/10（cup-stack）、7/10（pour-milk），grasp 8-9/10；人工补给 grasp timing 的重实现基线 YOTO†/RoboWheel† 大多止步于 grasp 之前（place 0-2/10），且一旦 grasp 成功，transport 从未失败。",
+   "stance": "support",
+   "relation": "回答综述的可接受阈值与可用性问题：单视角手部参考的数毫米误差是否致命取决于任务几何容差（物体宽与夹爪开口的间隙），直接跟踪含噪参考的逐位姿重定向因此失败，而碰撞感知全轨迹优化+抓取重选在同样输入下把 place 成功率提到 60-70%。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-B-d 逐字给出 'few millimeters' 与 'nearly as wide as the gripper opening, that offset is enough to miss the grasp' 的阈值论断及 'Transport never fails once a rollout has grasped' 的观察；Table II 给出三任务四阶段累积成功率（Ours place 6-7/10，基线 0-2/10）。",
+   "locator": "B. Real demonstrations",
+   "source_context": "Grasp timing is necessary but far from sufficient. We\nsupply the baselines with the grasp timing they cannot reliably\nextract, yet both clear only the reach stage and rarely grasp.\nThe reference pose is the deeper problem. From a single view\nit is accurate only to a few millimeters.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "four-stage cumulative success (Reach/Grasp/Transp./Place, of 10) and single-view reference pose accuracy",
+    "value_or_direction": "reference pose accurate only to a few millimeters; Ours Place 6/10 (mug-on-plate), 7/10 (cup-stack), 7/10 (pour-milk), Grasp 8-9/10; baselines rarely grasp, Place 0-2/10",
+    "comparator": "YOTO† and RoboWheel† reimplementations with manually annotated grasp timing",
+    "task_or_sample": "three real-demonstration tabletop tasks, 10 human demonstrations each, scored under full physics simulation",
+    "locator": "B. Real demonstrations, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table II 各行（Ours 8/8/8/6、9/9/9/7、8/8/8/7；YOTO†/RoboWheel† 各阶段）与正文 'few millimeters'、'Transport never fails' 陈述逐字核实；claim 已注明基线为重实现且 grasp timing 系人工标注，未夸大对比强度。"
+   }
+  },
+  {
+   "card_id": "2607.09519-C04",
+   "claim": "作者自述主要限制为物体追踪：实际使用中手部在操作过程中部分遮挡物体，逐帧 6D 位姿追踪常因此丢失，进而污染参考轨迹与抽取的事件——即物体追踪误差沿'位姿丢失→参考轨迹污染→事件抽取错误'的路径传入重定向；次要限制为仅支持单臂（双臂事件抽取已可靠但双臂运动规划未纳入）。",
+   "stance": "limit",
+   "relation": "限制综述命题：即使手部追踪被滤波与模型先验稳定化，物体侧 6D 追踪在手部遮挡下的丢失仍构成重定向链路的残余瓶颈——手部检测精度不是唯一误差源，手-物遮挡同时攻击物体位姿通道。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VII. LIMITATIONS 逐字给出物体追踪丢失→污染参考轨迹与事件的因果链及单臂限制；VI-B Fig. 3C 给出物体位姿翻转的具体实例（该 rollout 仍成功），并声明本文演示中追踪保持在任务容差内。",
+   "locator": "VII. LIMITATIONS",
+   "source_context": "The main limitation is object tracking. In real use the hand\npartially occludes the object during manipulation, and the per-\nframe 6D pose tracker then often loses track of it. This corrupts\nthe reference trajectory and the extracted events. A second\nlimitation is bimanual support. The solver currently supports\na single arm.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "VII. LIMITATIONS 原文逐字支持物体追踪限制、传播路径与单臂限制；传播路径的概括（位姿丢失→参考污染→事件错误）与原文 'corrupts the reference trajectory and the extracted events' 一致，未夸大。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "reference": "RoboWheel [26] / YOTO [27]",
+   "why_core": "最近的逐位姿重定向路线（逐帧 IK / 稀疏关键帧插值），本文以其重实现为基线证明参考噪声与全臂碰撞必须联合处理。"
+  },
+  {
+   "reference": "Pavlakos et al., HaMeR [13]; MediaPipe Hands [25]",
+   "why_core": "手部 2D 关键点检测后端；其输出经深度提升为 3D 腕/掌参考，是参考噪声的上游。"
+  },
+  {
+   "reference": "Romero et al., MANO",
+   "why_core": "参数化手模型，用作去噪先验：从拟合网格重读解剖一致关节以修复深度提升在遮挡处的错误。"
+  },
+  {
+   "reference": "PyRoKi [3, 7]",
+   "why_core": "运动规划器的轨迹优化底座，同时也是合成基准的主要对比对象。"
+  }
+ ],
+ "notes": "本篇把'手部检测/追踪精度→重定向末端轨迹'链路具象化为工程系统：误差源（抖动/漂移/接触遮挡/深度提升错误）→缓解（滤波+MANO+仿真回环重规划）→阈值刻画（参考数毫米精度 vs 物体宽≈夹爪开口的任务几何容差）→系统证据（place 6-7/10 vs 重实现基线 0-2/10）。对综述的两点提醒：(1) 设定是固定单视角立体相机而非头戴 ego，阈值结论外推需谨慎；(2) 成功率在仿真内评分，未上真机。Table I float 在抽取文本中位于 'B. Real demonstrations' 标题之下，其数值讨论在 'A. Synthetic planner benchmark' 正文（可达），未受定位限制。",
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Planner comparison on the held-out 50-scene synthetic benchmark. Succ. is the fraction reaching within 5mm; Coll. counts scenes with any collision. End. err. reports the mean final gripper-position error over 50 scenes.",
+   "section": "A. Synthetic planner benchmark",
+   "rows": [
+    [
+     "Method",
+     "Base End.err(mm)",
+     "Base Succ(<5mm)",
+     "Base Coll",
+     "Base nDTW",
+     "Attach End.err(mm)",
+     "Attach Succ",
+     "Attach Coll",
+     "Attach nDTW"
+    ],
+    [
+     "Trajopt (goal only)",
+     "9.1",
+     "26%",
+     "1/50",
+     "–",
+     "10.1",
+     "12%",
+     "0/50",
+     "–"
+    ],
+    [
+     "Single-stage (goal only)",
+     "16.8",
+     "0%",
+     "30/50",
+     "–",
+     "6.9",
+     "50%",
+     "2/50",
+     "–"
+    ],
+    [
+     "Multi-stage (goal only)",
+     "3.2",
+     "98%",
+     "0/50",
+     "–",
+     "3.3",
+     "98%",
+     "0/50",
+     "–"
+    ],
+    [
+     "Trajopt (with ref)",
+     "11.8",
+     "12%",
+     "7/50",
+     "0.11",
+     "10.1",
+     "12%",
+     "0/50",
+     "0.08"
+    ],
+    [
+     "Trajopt seg (with ref)",
+     "9.2",
+     "12%",
+     "7/50",
+     "0.56",
+     "8.7",
+     "18%",
+     "0/50",
+     "0.70"
+    ],
+    [
+     "Single-stage (with ref)",
+     "18.9",
+     "0%",
+     "29/50",
+     "0.75",
+     "6.8",
+     "54%",
+     "1/50",
+     "0.93"
+    ],
+    [
+     "Multi-stage (with ref)",
+     "4.6",
+     "68%",
+     "1/50",
+     "0.78",
+     "3.0",
+     "100%",
+     "0/50",
+     "0.86"
+    ]
+   ],
+   "usage": "作者用该表隔离规划器性能（端点误差/成功率/碰撞/路径保真）；本笔记用于 findings 第 1 条。"
+  },
+  {
+   "table_id": "T2",
+   "caption": "Real-demonstration success through four cumulative stages (of 10). YOTO†, RoboWheel†: our reimplementations of the closest methods.",
+   "section": "B. Real demonstrations",
+   "rows": [
+    [
+     "Task",
+     "Method",
+     "Reach",
+     "Grasp",
+     "Transp.",
+     "Place"
+    ],
+    [
+     "Mug-on-plate",
+     "YOTO†",
+     "6/10",
+     "0/10",
+     "0/10",
+     "0/10"
+    ],
+    [
+     "Mug-on-plate",
+     "RoboWheel†",
+     "7/10",
+     "3/10",
+     "3/10",
+     "2/10"
+    ],
+    [
+     "Mug-on-plate",
+     "Ours",
+     "8/10",
+     "8/10",
+     "8/10",
+     "6/10"
+    ],
+    [
+     "Cup-stack",
+     "YOTO†",
+     "7/10",
+     "3/10",
+     "3/10",
+     "0/10"
+    ],
+    [
+     "Cup-stack",
+     "RoboWheel†",
+     "8/10",
+     "1/10",
+     "1/10",
+     "0/10"
+    ],
+    [
+     "Cup-stack",
+     "Ours",
+     "9/10",
+     "9/10",
+     "9/10",
+     "7/10"
+    ],
+    [
+     "Pour-milk",
+     "YOTO†",
+     "8/10",
+     "1/10",
+     "1/10",
+     "1/10"
+    ],
+    [
+     "Pour-milk",
+     "RoboWheel†",
+     "10/10",
+     "1/10",
+     "1/10",
+     "1/10"
+    ],
+    [
+     "Pour-milk",
+     "Ours",
+     "8/10",
+     "8/10",
+     "8/10",
+     "7/10"
+    ]
+   ],
+   "usage": "作者用该表展示全管线在真实演示上的四阶段累积成功率；本笔记用于 C03。"
+  }
+ ]
+}

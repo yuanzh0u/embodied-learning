@@ -1,0 +1,477 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.00557",
+  "title": "Multi-Camera View Scaling for Data-Efficient Robot Imitation Learning",
+  "published": "2026-04",
+  "url": "https://arxiv.org/abs/2604.00557",
+  "authors": [
+   "Yichen Xie",
+   "Yixiao Wang",
+   "Shuqi Zhao",
+   "Cheng-En Wu",
+   "Masayoshi Tomizuka",
+   "Jianwen Xie",
+   "Hao-Shu Fang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是“环视/多相机”主题的关键对照证据：它用常规窄视角 RGB 相机（±15°/±30° 小角度扰动）实现视角多样性扩展，与鱼眼/全景单传感器路线形成正面对照。其方法设计、仿真与真机定量结果、以及关键的负面结果（分布外视角无益、动作空间耦合、真机仅两视角）直接回答综述问题中“哪些任务/设置获益、哪些受限”，并为宽视角增益的边界条件提供可定位证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：模仿学习泛化受演示分布约束、环境多样性难获取，提出用多相机视角扩展替代场景多样性。"
+   },
+   {
+    "locator": "page 2, II Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理多视角表示学习与机器人多视角输入方法的关系定位：本文训练期扩展视角、推理期单视角。"
+   },
+   {
+    "locator": "page 2-4, III Methodology (III-B pseudo-demonstrations, III-C action spaces, III-D aggregation)",
+    "role": "method-or-design",
+    "purpose": "精读伪演示生成、三种动作空间（base/camera/EEF）的动作变换与推理期多视角动作聚合算法（Alg. 1）。"
+   },
+   {
+    "locator": "page 4, IV-A Experiment Setup",
+    "role": "data-or-setting",
+    "purpose": "确认任务（robomimic square/can/lift + 真机倒水）、相机布置（Cam_F ±15°/30°）、基线（diffusion policy + DINOv3 LoRA）。"
+   },
+   {
+    "locator": "page 4-7, IV-B Results (Q1-Q6) and Tables I-VI",
+    "role": "results-or-analysis",
+    "purpose": "提取六组问题的定量结果：视角数量增益、动作空间效应、视角选择负面结果、推理视角泛化、多视角聚合、真机验证。"
+   },
+   {
+    "locator": "page 6, V Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录结论与范围声明（固定场景内视角多样性）及散落的作者限制（真机两视角、标定人工）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 6-8, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 本文无附录或补充材料，页 6-8 为参考文献列表。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：在演示采集预算有限时，如何在不增加人工执行次数与不改变推理硬件需求的前提下提升模仿学习的场景多样性——具体地，多相机同步录制生成伪演示是否等价于扩大训练分布，动作空间与视角选择如何影响该增益，以及单视角策略能否在推理期利用多相机。",
+ "contributions": [
+  "提出相机视角扩展（camera view scaling-up）：每条专家演示经 V 台同步相机扩展为 V 个伪演示，几乎零额外采集人工（N·V 训练样本）。",
+  "系统分析动作空间（base/camera/EEF）与视角扩展的交互：base/camera 空间均获益、camera 空间多数情况更优但需多相机标定、EEF 空间整体显著更差。",
+  "提出多视角动作聚合（扩散去噪步聚合，Alg. 1）：单视角策略推理期聚合多相机预测动作分布，无架构修改、GPU 并行低延迟。",
+  "仿真（robomimic 三任务）与真机（FANUC 倒水）验证：多视角训练一致优于单视角，且策略获得推理视角泛化能力。"
+ ],
+ "method": {
+  "summary": "训练期在演示采集现场布置多台常规 RGB 相机（前视 Cam_F 及其 ±15° 左/右/上/下旋转变体，Q3 中另测 ±30° 与侧/顶视角），同步录制每条演示，把每条轨迹扩展为 V 个伪演示；训练时随机采样视角。动作空间决定伪演示的动作变换 F_v：base 空间直接复制、EEF 空间转换为末端坐标、camera 空间按各相机外参投影（不同伪演示动作不同、多样性最大但需标定）。策略为扩散策略 + DINOv3-base/LoRA 视觉编码器（真机为 ResNet-18+Spatial Softmax+FiLM），推理默认单视角；可选地把多视角输入独立前向后在扩散去噪步中聚合动作预测。",
+  "assumptions": [
+   "视角多样性与场景多样性对模仿学习泛化的作用相似（作者类比，引 data scaling laws [9]）。",
+   "多台相机同步录制不改变演示本身（每次执行仍只需一次）。",
+   "相机空间动作变换依赖各相机外参标定的准确性。",
+   "推理默认单一前视相机；多视角聚合是可选副产物。",
+   "仿真视角由围绕工作区中心旋转相机得到，等价于多台实体相机布置。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "robomimic（square/can/lift）已有演示轨迹中随机抽取，N=10/25/50",
+   "自采集真机演示：50 条倒水任务遥操作演示（训练 25/50 两种规模）"
+  ],
+  "tasks": [
+   "仿真：robomimic square nut 插入、can 拾放、lift（固定工作区桌面任务）",
+   "真机：抓茶壶倒水入锅（FANUC CRX-10iA + 平行爪，物体初始位姿随机）"
+  ],
+  "embodiments": [
+   "仿真 robomimic 平台；真机 FANUC CRX-10iA 机械臂（6 轴 + 平行夹爪，软指尖）"
+  ],
+  "sample_or_scale": "仿真每设置 N=10/25/50 演示 × V=1/3/5 视角；真机 50 演示、2 相机；评估为成功率，无种子/方差报告。"
+ },
+ "evaluation": {
+  "design": "结构化问答式评估（Q1-Q6）：视角数量增益（Tab. I）、动作空间效应（Tab. I/II）、视角选择（Tab. III）、推理视角泛化（Tab. IV）、推理期多视角聚合（Tab. V）、真机验证（Tab. VI）；指标统一为成功率。",
+  "baselines": [
+   "单视角 diffusion policy（同任务同数据量，DINOv3-base+LoRA 编码器）——自设基线，无外部多视角/数据增强方法对比"
+  ],
+  "metrics": [
+   "task success rate（仿真与真机统一）"
+  ],
+  "ablations": [
+   "视角数量 1/3/5",
+   "动作空间 base/camera/EEF",
+   "视角几何（15° vs 30° vs 前/侧/顶异构）",
+   "推理视角与推理期聚合（Tab. IV/V）",
+   "注意力图定性分析（Fig. 3）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "多相机伪演示训练在全部仿真设置上优于单视角，部分设置翻倍（can N=10 五视角 camera 空间 0.37 vs 0.18，105%↑）。",
+   "scope": "仿真定量结果",
+   "locator": "page 4-5, Section IV-B Q1, Table I"
+  },
+  {
+   "finding": "五视角训练在大多数设置优于三视角。",
+   "scope": "仿真定量结果",
+   "locator": "page 4, Section IV-B Q1"
+  },
+  {
+   "finding": "视角选择影响扩展收益：前+侧+顶异构视角几乎无增益（0.17/0.24/0.40 vs 单视角 0.14/0.26/0.42）；30° 夹角增益弱于 15°。",
+   "scope": "仿真负面结果",
+   "locator": "page 5, Section IV-B Q3, Table III"
+  },
+  {
+   "finding": "EEF 动作空间显著劣于 base/camera（0.06-0.41 vs 0.14-0.55），多视角增益在 EEF 空间被整体劣化掩盖。",
+   "scope": "仿真消融",
+   "locator": "page 4-5, Section IV-B Q2, Table II"
+  },
+  {
+   "finding": "五视角训练策略推理视角泛化：换视角仍 0.30-0.77，单视角策略崩溃至 0.00-0.07。",
+   "scope": "仿真定量结果",
+   "locator": "page 5-6, Section IV-B Q4, Table IV"
+  },
+  {
+   "finding": "推理期多视角聚合进一步提升性能（can N=10 0.39 vs 0.30 vs 0.18），GPU 并行低延迟。",
+   "scope": "仿真定量结果",
+   "locator": "page 6-7, Section IV-B Q5, Table V"
+  },
+  {
+   "finding": "真机两视角训练增益不显著（0.50 vs 0.45，N=25），但聚合推理显著提升（0.75）；N=50 时 0.85 vs 0.70。",
+   "scope": "真机定量结果",
+   "locator": "page 6-7, Section IV-B Q6, Table VI"
+  },
+  {
+   "finding": "范围声明：框架聚焦固定场景内视角多样性；相机空间动作需多相机标定（性能-人工权衡）。",
+   "scope": "作者范围与限制声明",
+   "locator": "page 5, Q2; page 6, Section V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "真机受硬件限制仅有两个相机视角，两视角训练的性能增益不显著。",
+    "locator": "page 6, Section IV-B, Q6 b)"
+   },
+   {
+    "limitation": "相机动作空间需要多相机标定、引入额外人工；base 与 camera 空间之间是性能与劳动强度的权衡。",
+    "locator": "page 5, Section IV-B, Q2"
+   },
+   {
+    "limitation": "框架聚焦固定场景内的视角多样性，环境随机化、跨具身数据、大规模基础模型结合留待未来工作（视角多样性不等于场景多样性）。",
+    "locator": "page 6, Section V Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全部实验使用常规窄视角透视相机（±15°/±30° 小角度扰动），未涉及任何鱼眼/全景/超广角光学与畸变成像；“视角扩展”结论不能直接外推到鱼眼图像域。",
+    "basis": "page 4 IV-A c) 相机布置仅描述旋转常规相机；全文（page 1-8）无 fisheye/panoramic/ultra-wide 表述"
+   },
+   {
+    "boundary": "无种子、方差或显著性报告：部分格间差仅 0.01-0.03（如 square N=10 0.17 vs 0.14；Tab. III 多数差 ≤0.03），单次成功率数字下增益可能落入随机波动。",
+    "basis": "page 4-7 全部表格均为单值成功率，无 error bar/多次运行报告"
+   },
+   {
+    "boundary": "“视角多样性 ≈ 场景多样性”的核心类比依赖引用 [9]（data scaling laws），本文未做场景多样性对照实验验证该等价性。",
+    "basis": "page 1 引言类比句 + 引文 [9]；实验仅固定场景内变视角"
+   },
+   {
+    "boundary": "Q3 负面结果仅在 square 任务上测得，且未报告动作空间设置；结论“分布外视角无益”在其他任务/动作空间下的稳健性未知。",
+    "basis": "page 5 Tab. III 仅含 square 三列；正文未说明该实验所用动作空间"
+   },
+   {
+    "boundary": "真机证据规模很小：单一倒水任务、单臂 FANUC、2 相机、25/50 演示；未测试大工作区/超出视野目标/杂乱场景——恰是鱼眼与全景方案主张获益的场景。",
+    "basis": "page 6 Q6 实验设置段；全文无 out-of-view 或大工作区任务"
+   }
+  ]
+ },
+ "transfer_boundary": "适用范围：固定工作区桌面操作（robomimic square/can/lift、真机倒水），常规 RGB 第三视角相机（绕工作区中心 ±15°/±30° 小角度旋转得到多视角），扩散策略 + DINOv3/ResNet 编码器，单视角部署（可选多视角聚合）。不适用/未验证：鱼眼/全景/超广角畸变成像（全文未涉及）、大工作区或超出固定视野的目标、移动底盘、跨场景/环境多样性、EEF 动作空间下的收益、以及视角数量超过 5 或夹角超过 30° 的设置。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "问题结构化（Q1-Q6）且变量控制清晰：同一基线策略下系统变化视角数量、动作空间、视角几何、推理视角，能较干净地归因增益来源。",
+   "伪演示的采集成本主张可信：每条演示一次执行 + 多相机同步录制，硬件改动小。",
+   "包含稀缺的负面结果（Q3：分布外视角几乎无益）与范围声明（固定场景），为宽视角收益的边界条件提供证据。",
+   "推理视角泛化（Tab. IV）与推理期聚合（Tab. V/VI）给出部署侧收益的两条独立证据链。"
+  ],
+  "design_risks": [
+   "无种子/方差/显著性：多格增益 0.01-0.03，单值成功率无法排除随机波动；仿真结论的统计稳健性未知。",
+   "场景多样性等价性靠引文类比而非对照实验。",
+   "Q3 负面结果只覆盖 square 任务且未说明动作空间，外推受限。",
+   "真机规模小（1 任务、2 相机、50 演示），无法支撑“数据效率显著提升”的强真机主张。"
+  ],
+  "baseline_fairness": "自设单视角基线（同策略同数据）对回答视角扩展问题是公平的；但未与任何外部方法（多视角输入策略 [30-32]、数据增强、视图合成）对比，也未比较“同预算更多演示 vs. 多视角”这一最直接的成本对照。",
+  "metric_validity": "任务成功率是部署相关指标；但无方差报告使小增益不可判定，且仿真/真机数字不可横向比较（不同任务与编码器）。",
+  "reproducibility": "提供项目网站（yichen928.github.io/robot_multiview/）；视觉编码器（DINOv3-base+LoRA、ResNet-18+FiLM）与任务来源明确；但相机外参标定流程、聚合超参 γ、训练轮数/种子数未完整报告。",
+  "external_validity": "结论限于固定场景桌面操作、小角度视角扰动的常规相机；对鱼眼/全景畸变域、大工作区超出视野目标、移动操作、以及 5 视角/30° 以外的视角几何均未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.00557-C01",
+   "claim": "该论文的“相机视角扩展”使用常规透视 RGB 相机（单个前视 Cam_F，另四个相机仅绕工作区中心向左/右/上/下各旋转 15° 得到 Cam_F_L、Cam_F_R、Cam_F_U、Cam_F_D），采集时同步录制、推理默认只用前视 Cam_F——即通过多台窄视角常规相机获得视角多样性，而非鱼眼/全景/超广角光学。",
+   "stance": "conditional",
+   "relation": "界定命题：本文属于“多常规相机视角扩展”路线而非宽视角光学路线，其结论的作用域是小角度视角扰动下的桌面操作，不能直接外推到鱼眼畸变成像。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "实验设置 c) Camera Views 明确给出相机布置：默认前视相机加 15° 旋转得到的四个附加视角；全文未出现鱼眼、全景或超广角相机。该卡用于固定本文证据的传感边界。",
+   "locator": "page 4, Section IV-A, c) Camera Views",
+   "source_context": "c) Camera Views: Unless otherwise specified, we consider a camera with its perspective view directed to the front of the robot arm, denoted as Cam F . We ro- tate the camera around the workspace center by 15 ◦ towards the left, right, upper, and down sides sepa- rately, deriving four additional camera views denoted as Cam F L , Cam F R , Cam F U , Cam F D respectively. All these cameras will record the expert demonstration for imitation learning policy training. During inference, unless otherwise specified, we only adopt the front view Cam F .",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 实验设置 c) 段逐字给出 Cam_F 定义、15° 旋转生成四个附加视角、采集时全部录制、推理默认仅用 Cam_F；claim 仅复述该设置并指出全文无鱼眼/全景光学（已检查 page 1-8 提取文本，无 fisheye/panoramic 表述），未附加性能断言。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C02",
+   "claim": "在 robomimic 仿真三任务（square/can/lift）上，用多相机伪演示训练显著优于单相机训练（所有 N=10/25/50 设置一致）：例如 can 任务 N=10 时，单视角成功率 0.18，五视角（base 动作空间）0.32（78%↑）、相机动作空间 0.37（105%↑）；square N=25 从 0.26 升至 0.42（base，62%↑）。",
+   "stance": "support",
+   "relation": "支持命题：多视角（环视式）相机布置可在不增加人工演示采集执行次数的情况下提升具身模仿学习的数据效率与成功率——视角多样性是窄视角相机的廉价替代增益来源。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. I 报告了三种视角数量（1/3/5）×三种动作空间下全部设置的成功率，正文总结“multi-camera training significantly outperforms single-camera training in all the scenarios, even achieving double success rates in some settings”。",
+   "locator": "page 5, Table I",
+   "source_context": "TABLE I: Camera View Scaling-Up Results in Simulation Environments. Training View Space Square Can Lift N = 10 N = 25 N = 50 N = 10 N = 25 N = 50 N = 10 Cam F Base 0.14 0.26 0.42 0.18 0.54 0.72 0.69 Cam F , Cam F L , Cam F R Base 0.16 (14%↑) 0.31 (19%↑) 0.47 (12%↑) 0.27 (50%↑) 0.63 (17%↑) 0.78 (8%↑) 0.79 (14%↑) Camera 0.17 (21%↑) 0.29 (12%↑) 0.47 (12%↑) 0.30 (67%↑) 0.68 (26%↑) 0.83 (15%↑) 0.76 (10%↑) Cam F , Cam F L , Cam F R Cam F U , Cam F D Base 0.18 (29%↑) 0.42 (62%↑) 0.55 (31%↑) 0.32 (78%↑) 0.65 (20%↑) 0.80 (11%↑) 0.80 (16%↑) Camera 0.18 (29%↑) 0.39 (50%↑) 0.58 (38%↑) 0.37 (105%↑) 0.68 (26%↑) 0.85 (18%↑) 0.85 (23%↑)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate",
+    "value_or_direction": "Can N=10: 0.18 single view -> 0.32 (78%↑) 5-view base / 0.37 (105%↑) 5-view camera; Square N=25: 0.26 -> 0.42 (62%↑)",
+    "comparator": "single-camera (Cam_F) diffusion policy baseline, same N demonstrations",
+    "task_or_sample": "robomimic square/can/lift tasks; N=10/25/50 expert demonstrations; V=1/3/5 camera views",
+    "locator": "page 5, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Tab. I 逐格给出单视角（0.14/0.26/0.42、0.18/0.54/0.72、0.69）与五视角 base/camera 行（含 0.32 (78%↑)、0.37 (105%↑)、0.42 (62%↑) 等括号内相对增益），claim 引用的每个数字与任务/设置均在表中逐字可见；正文同结论句位于 page 4 Q1 段（已核对），claim 未超出表格与正文报告范围。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C03",
+   "claim": "作者报告在大多数情况下，用五个相机训练比用三个相机取得明显更好的性能，反映了继续增加相机视角的扩展收益。",
+   "stance": "support",
+   "relation": "支持命题：视角数量沿 1→3→5 扩展时收益总体单调递增（多数设置），相机视角扩展具有可扩展性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Q1 段的结论句：training with five cameras achieves notably better performance than training with three cameras in most cases，与 Tab. I 中 5 视角行普遍高于 3 视角行一致。",
+   "locator": "page 4, Section IV-B, Q1",
+   "source_context": "Additionally, training with five cameras achieves notably better performance than training with three cameras in most cases. This further reflects the benefits of scaling up camera views in imitation learning.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Q1 段逐字给出 training with five cameras achieves notably better performance than training with three cameras in most cases 与 This further reflects the benefits of scaling up camera views；claim 复述该句且保留“大多数情况”限定，Tab. I（page 5）的 3/5 视角行对比与之一致（已核对：仅个别格持平或略低，如 Square N=10 base 0.18 与 3-view 0.16 相比升、Can N=50 base 0.80 vs 0.78）。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C04",
+   "claim": "视角选择强烈影响扩展收益：加入与部署视角分布差异大的训练视角几乎无益——在 square 任务上，Cam_F+侧视+顶视三相机训练仅得 0.17/0.24/0.40（N=10/25/50），与单视角 0.14/0.26/0.42 基本持平甚至更低；相机间夹角从 15° 增大到 30° 时增益也明显小于默认设置。作者归因于这些分布外视角数据不能改善固定 Cam_F 推理输入下的模型性能。",
+   "stance": "limit",
+   "relation": "限定命题：多视角训练的收益依赖训练视角与部署视角的分布一致性——视角多样性本身不是无条件增益，宽/异构视角数据可能因分布外而不起作用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. III 对比了四种训练视角组合：默认 15° 邻近视角、30° 夹角、前+侧+顶完全不同视角。Q3 正文明确：setting 1) 中多视角伪演示 hardly improves performance，setting 2) 增益 less significant，均归因于视角分布差异。",
+   "locator": "page 5, Section IV-B, Q3 and Table III",
+   "source_context": "In setting 1), exploiting pseudo-demonstrations from multiple views hardly improves the performance of imitation learning. Since only Cam F is used during inference, the ad- ditional side-view and top-view cameras used during training capture perspectives that have distinct distributions. Despite their diversity, these out-of-distribution data may not help to improve the model performance with Cam F inputs during inference. In setting 2), a performance gain is also observed, but it is less significant than that in our default setting. We attribute this to a similar reason as in setting 1) that the additional camera views capture visual inputs that have a different distribution with visual inputs from Cam F during inference, so it cannot greatly improve the performance of a fixed view during inference.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (Square task)",
+    "value_or_direction": "Cam_F+Cam_S+Cam_T: 0.17/0.24/0.40 vs single Cam_F: 0.14/0.26/0.42 (N=10/25/50); 30-degree spacing Cam_F+Cam30_F_L+Cam30_F_R: 0.18/0.26/0.44",
+    "comparator": "single-view Cam_F training; default 15-degree 3-view training (0.17/0.29/0.47)",
+    "task_or_sample": "robomimic square task, N=10/25/50 demonstrations",
+    "locator": "page 5, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Tab. III 逐格给出四组视角设置的成功率（0.14/0.26/0.42；0.18/0.26/0.44；0.17/0.24/0.40；0.17/0.29/0.47），claim 中每个数字均来自该表；Q3 正文（同页）逐字给出 hardly improves、less significant 与分布外归因两句，source_context 覆盖 setting 1)/2) 的完整论证；claim 未超出表格与正文范围。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C05",
+   "claim": "用五视角伪演示训练的策略可自然泛化到推理期不同相机视角：can 任务上五视角训练的策略在 Cam_F/Cam_F_L/Cam_F_U 推理视角下分别得 0.37/0.68、0.30/0.66、0.37/0.77（N=10/25）；而单视角训练策略换到 Cam_F_L/Cam_F_U 时崩溃至 0.00/0.07 与 0.01/0.05。",
+   "stance": "support",
+   "relation": "支持命题：多视角训练提升视角不变性，使部署相机布置更灵活——宽/多视角数据的价值不仅是性能，还有部署鲁棒性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. IV 对比五视角训练与单视角训练策略在三种推理视角下的成功率；正文总结 our policy achieves stable performance over several different camera view inputs, which allows more flexibility in the camera setup in the deployment。",
+   "locator": "page 6, Table IV",
+   "source_context": "TABLE IV: Camera View Generalization in the Inference. Training View Inference View Can N = 10 N = 25 Five Views Cam F 0.37 0.68 Cam F L 0.30 0.66 Cam F U 0.37 0.77 Single View Cam F 0.18 0.54 Cam F L 0.00 0.07 Cam F U 0.01 0.05",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (Can task, alternate inference views)",
+    "value_or_direction": "Five-view training: Cam_F_L 0.30/0.66, Cam_F_U 0.37/0.77; single-view training: Cam_F_L 0.00/0.07, Cam_F_U 0.01/0.05 (N=10/25)",
+    "comparator": "policy trained with five views vs policy trained with single fixed view, same inference view",
+    "task_or_sample": "robomimic can task; N=10 and N=25 demonstrations",
+    "locator": "page 6, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Tab. IV 逐格给出 Five Views 与 Single View 两组在 Cam_F/Cam_F_L/Cam_F_U 下的成功率（0.37/0.68、0.30/0.66、0.37/0.77 与 0.18/0.54、0.00/0.07、0.01/0.05），claim 的每个数字均逐字来自该表；Q4 结论句位于 page 5 末-6 初（已核对原文），claim 未超出表与正文。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C06",
+   "claim": "单视角策略可在推理期通过多视角动作聚合免费获益：can 任务 N=10 时，三视角训练+三视角聚合推理达 0.39，高于三视角训练+单视角推理的 0.30 与单视角基线的 0.18；square N=25 从 0.29 升至 0.33。各视角输入独立并行处理，聚合在 GPU 上高度并行，额外延迟低。",
+   "stance": "support",
+   "relation": "支持命题：推理期多相机信息融合（动作分布乘积聚合）可进一步提升单视角策略性能且不引入架构修改——部署期环视多相机的一条低成本利用路径。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. V 给出三种训练/推理组合在 square/can 六个设置下的成功率；正文指出 using three views in the deployment can improve the model performance compared with using a single fixed view，且并行处理降低聚合延迟。",
+   "locator": "page 7, Table V",
+   "source_context": "TABLE V: Multiview Composition with Single-View Policy. Training View Inference View Square Can N = 10 N = 25 N = 50 N = 10 N = 25 N = 50 Cam F Cam F 0.14 0.26 0.42 0.18 0.54 0.72 Cam F , Cam F L , Cam F R Cam F 0.17 0.29 0.47 0.30 0.68 0.83 Cam F , Cam F L , Cam F R 0.18 0.33 0.51 0.39 0.73 0.85",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate",
+    "value_or_direction": "Can N=10: 0.39 (3-view training + 3-view composition) vs 0.30 (3-view training, single-view inference) vs 0.18 (single-view baseline); Square N=25: 0.33 vs 0.29",
+    "comparator": "same policy with 3-view inference aggregation vs single fixed view inference",
+    "task_or_sample": "robomimic square/can tasks, N=10/25/50 demonstrations",
+    "locator": "page 7, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Tab. V 逐格给出三行成功率（0.14...0.72；0.17 0.29 0.47 0.30 0.68 0.83；0.18 0.33 0.51 0.39 0.73 0.85），claim 引用的 0.39/0.30/0.18/0.33/0.29 均逐字来自该表；并行性与低延迟表述逐字位于 page 6 Q5 段（已核对），claim 未超出两处证据。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C07",
+   "claim": "动作空间与视角扩展强耦合：EEF 动作空间在有无多视角训练时都显著差于 base/camera 空间（square 单视角 EEF 0.06/0.25/0.32 vs base 0.14/0.26/0.42；五视角下 EEF 0.09/0.27/0.41 vs base 0.18/0.42/0.55），作者归因于 EEF 坐标系原点移动大幅增加策略学习难度；base 与 camera 动作空间都能从多视角训练显著获益。",
+   "stance": "limit",
+   "relation": "限定命题：多视角/宽观察增益与动作表示耦合——EEF 相对动作空间下视角扩展收益被整体性能劣化掩盖，获益条件是动作空间与视角扩展兼容。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tab. II 单独对比 base 与 EEF 动作空间在单视角/五视角下的成功率；正文（page 4）指出 EEF 显著更差且归因于移动原点，base/camera 空间则均能获益，显示视角扩展对动作空间的鲁棒性与例外。",
+   "locator": "page 5, Table II",
+   "source_context": "TABLE II: Effect of Action Space. Training View Space Square N = 10 N = 25 N = 50 Cam F Base 0.14 0.26 0.42 EEF 0.06 0.25 0.32 Cam F , Cam F L , Cam F R Cam F U , Cam F D Base 0.18 0.42 0.55 EEF 0.09 0.27 0.41",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (Square task)",
+    "value_or_direction": "single view: EEF 0.06/0.25/0.32 vs Base 0.14/0.26/0.42; five views: EEF 0.09/0.27/0.41 vs Base 0.18/0.42/0.55 (N=10/25/50)",
+    "comparator": "EEF action space vs base action space, with and without multi-view training",
+    "task_or_sample": "robomimic square task, N=10/25/50 demonstrations",
+    "locator": "page 5, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Tab. II 逐格给出单视角与五视角下 base/EEF 两行成功率，claim 的六个数字均逐字来自该表；EEF 显著更差与移动原点归因逐字位于 page 4 Q2 段（已核对），base/camera 均获益的表述亦在同段；claim 未超出表与正文。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C08",
+   "claim": "相机动作空间虽在多数情况下性能更好，但需要多相机标定、带来额外人工；作者明确称在 base 与 camera 动作空间之间选择是性能与劳动强度的权衡。",
+   "stance": "limit",
+   "relation": "限定命题：视角/相机空间表示的工程成本——把动作投影到相机空间需要多相机外参标定这一额外人工，是该方法规模化应用的隐性成本。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Q2 段末的权衡声明：camera action space requires multiview camera calibration, which incorporates extra human labor; it is a trade-off between performance and labor intensiveness。",
+   "locator": "page 5, Section IV-B, Q2",
+   "source_context": "However, it is also worth mentioning that camera action space requires multiview camera calibration, which incorporates extra human labor. Therefore, it is a trade-off between performance and labor intensiveness to select the action spaces between base and camera spaces.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Q2 段末逐字给出 camera action space requires multiview camera calibration、incorporates extra human labor 与 trade-off between performance and labor intensiveness；claim 逐点对应原文，无扩展。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C09",
+   "claim": "真机实验受硬件限制只有两个相机视角（左视/右视），作者自述两视角训练带来的性能增益不显著；但推理期多视角聚合仍能在真机上提升单视角推理性能（Tab. VI：N=25 时单视角 0.45、双视角训练 0.50、双视角训练+聚合 0.75；N=50 时 0.70/0.85/0.85）。",
+   "stance": "conditional",
+   "relation": "条件性命题：真机证据支持多视角聚合的推理收益，但训练收益受可用视角数量约束（两视角时增益有限）——真机视角扩展的验证规模小于仿真。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Q6 段给出真机设置（FANUC CRX-10iA 倒水任务、50 条演示、双固定相机）与结果解读：双视角联合训练略优但 gain not very significant，多视角聚合则验证了 Alg. 1 的有效性；Tab. VI 给出三个数值行。",
+   "locator": "page 6-7, Section IV-B Q6 and Table VI",
+   "source_context": "However, due to hardware limitations, we only have two camera views in total. As a result, the performance gain from two-view training is not very significant. Afterwards, we further study whether multiview composition in the inference stage can better improve the visual policy performance. The results are also revealed in Tab. VI. Multiview composition can help improve model performance over single-view inference, which verifies the effectiveness of our algorithm in Alg. 1 in the real-world setting, suggesting that we can exploit complementary viewpoint-specific cues.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (real-world water pouring)",
+    "value_or_direction": "N=25: single view 0.45, both views training 0.50, both views + composition 0.75; N=50: 0.70/0.85/0.85",
+    "comparator": "single-view training/inference vs both-view training vs both-view training with multiview inference composition",
+    "task_or_sample": "real-world teapot pouring into cooking pot, FANUC CRX-10iA, 50 teleoperated demonstrations, policies trained with 25 or 50 demos",
+    "locator": "page 7, Table VI"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Q6 段逐字给出 hardware limitations、two camera views、performance gain not very significant 与多视角聚合的结论句；Tab. VI（page 7）逐格给出 Single 0.45/0.70、Both 0.50/0.85 与聚合行 0.75/0.85（表中第三行符号在提取中显示为 !，对应 Both+composition 组合），claim 的数字均来自该表；claim 对增益不显著与聚合有效的两面均已按原文限定。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C10",
+   "claim": "作者在结论中明确限定：该框架聚焦固定场景内的视角多样性，未来工作才探索把视角扩展与环境随机化、跨具身数据或大规模基础模型结合以进一步增强泛化——即视角多样性不等于环境/场景多样性。",
+   "stance": "conditional",
+   "relation": "边界命题：多相机视角扩展只替代“固定场景内”的视角维度多样性，不能替代场景/环境多样性；对跨场景泛化的主张未被本文验证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论段的范围声明：While our framework focuses on viewpoint diversity within a fixed scene, future work may explore combining view scaling with environment randomization, cross-embodiment data, or large-scale foundation models。",
+   "locator": "page 6, Section V Conclusion",
+   "source_context": "While our framework focuses on viewpoint diversity within a fixed scene, future work may explore combining view scaling with environment randomization, cross-embodiment data, or large-scale foundation models to further enhance generaliza- tion.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 结论段逐字给出 focuses on viewpoint diversity within a fixed scene 与 future work 的三个方向；claim 仅复述该范围声明，未附加实验断言。"
+   }
+  },
+  {
+   "card_id": "2604.00557-C11",
+   "claim": "视角扩展在演示采集阶段几乎零额外人工：每条专家演示仍只需一次执行，多台相机同步录制即可把每条演示扩展为 V 个伪演示（N·V 训练样本）；推理可保持单相机部署。",
+   "stance": "support",
+   "relation": "支持命题：多相机环视布置是一种低硬件成本、与现有模仿学习算法兼容的数据效率增强手段（相对收集更多轨迹或布置新环境）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "方法节声明 scaling up camera views adds negligible extra effort in expert demonstration collection process since each expert demonstration still requires only a single execution；部署节声明模型面向单视角输入、无需多相机部署。",
+   "locator": "page 3, Section III-B",
+   "source_context": "It is worth mentioning that scaling up camera views adds negligible extra effort in expert demonstration collection process since each expert demonstration still requires only a single execution.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 III-B 段逐字给出 negligible extra effort 与 single execution；“单视角部署”设计声明逐字位于 page 3 III-D 段（aiming to benefit from camera view scaling-up during training without multi-camera deployment during inference，已核对）；claim 未附加性能数字。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Data Scaling Laws in Imitation Learning for Robotic Manipulation",
+   "arxiv_id": "2410.18647",
+   "reason": "本文“场景多样性重于演示数量”核心动机的来源（引文 [9]）；视角多样性≈场景多样性的类比依赖该工作，属于核心支撑。"
+  },
+  {
+   "title": "Diffusion Policy: Visuomotor Policy Learning via Action Diffusion",
+   "arxiv_id": "2303.04157",
+   "reason": "默认基线与策略骨干（引文 [2]），所有对比均建立在其上。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口点：本文代表“多常规相机小角度视角扰动”路线（环视的相机阵列替代方案），而非宽视角光学路线。(1) 正面：视角数量扩展（1→3→5）总体提升数据效率与视角泛化，推理期多视角聚合是免费的部署增益；(2) 负面/边界：训练-部署视角分布一致性是增益前提（分布外视角几乎无益）、EEF 动作空间不兼容、相机空间动作需标定人工、真机视角数量受硬件限制；(3) 范围：全部为固定场景桌面任务，未涉及鱼眼畸变、大工作区、超出视野目标。IEEE 会议格式（ICRA 风格），8 页。所有 source_context 均逐字取自 pdf-text 提取页（页 3-7）。"
+}

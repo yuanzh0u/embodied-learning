@@ -70,8 +70,56 @@ class ReviewRunsTest(unittest.TestCase):
         (run_json.parent / review_runs.STANDARD_ARTICLES[-1]).unlink()
         catalog = self.write_catalog("incomplete")
 
-        with self.assertRaisesRegex(ValueError, "missing reader-facing articles"):
+        with self.assertRaisesRegex(ValueError, "missing reader-facing article"):
             review_runs.load_catalog_runs(self.root, catalog)
+
+    def test_loader_accepts_declared_single_scientific_memo(self) -> None:
+        run_json = write_catalog_run(self.root, "memo-only")
+        manifest = json.loads(run_json.read_text(encoding="utf-8"))
+        manifest.update(
+            {
+                "style": "scientific-memo",
+                "scope_note": "用户明确只要求科研备忘录",
+            }
+        )
+        manifest["files"]["outputs"] = ["scientific-memo_keyan.md"]
+        run_json.write_text(json.dumps(manifest), encoding="utf-8")
+        for name in review_runs.STANDARD_ARTICLES[1:]:
+            (run_json.parent / name).unlink()
+        catalog = self.write_catalog("memo-only")
+
+        loaded = review_runs.load_catalog_runs(self.root, catalog)
+
+        self.assertEqual([item.directory.name for item in loaded], ["memo-only"])
+        self.assertEqual(
+            review_runs.reader_articles(run_json, manifest),
+            ("scientific-memo_keyan.md",),
+        )
+
+    def test_loader_rejects_reduced_scope_without_scope_note(self) -> None:
+        run_json = write_catalog_run(self.root, "missing-scope-note")
+        manifest = json.loads(run_json.read_text(encoding="utf-8"))
+        manifest["style"] = "scientific-memo"
+        manifest["files"]["outputs"] = ["scientific-memo_keyan.md"]
+        run_json.write_text(json.dumps(manifest), encoding="utf-8")
+        catalog = self.write_catalog("missing-scope-note")
+
+        with self.assertRaisesRegex(ValueError, "requires scope_note"):
+            review_runs.load_catalog_runs(self.root, catalog)
+
+    def test_only_explicit_run_links_route_current_versions(self) -> None:
+        write_catalog_run(self.root, "current")
+        write_catalog_run(self.root, "historical")
+        catalog = self.root / "knowledge" / "literature-review-catalog.md"
+        catalog.write_text(
+            "[run](../evidence/current/run.json)\n"
+            "[历史版本](../evidence/historical/run.json)\n",
+            encoding="utf-8",
+        )
+
+        loaded = review_runs.load_catalog_runs(self.root, catalog)
+
+        self.assertEqual([item.directory.name for item in loaded], ["current"])
 
     def test_evidence_path_cannot_escape_its_run(self) -> None:
         run_json = write_catalog_run(self.root, "unsafe")
@@ -84,7 +132,7 @@ class ReviewRunsTest(unittest.TestCase):
     def test_catalog_route_cannot_escape_evidence_root(self) -> None:
         catalog = self.root / "knowledge" / "literature-review-catalog.md"
         catalog.write_text(
-            "[bad](../evidence/../outside/run.json)\n",
+            "[run](../evidence/../outside/run.json)\n",
             encoding="utf-8",
         )
 

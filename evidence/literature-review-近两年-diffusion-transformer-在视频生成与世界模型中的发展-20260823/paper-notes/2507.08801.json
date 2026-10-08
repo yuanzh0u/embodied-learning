@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2507.08801",
+    "title": "Lumos-1: On Autoregressive Video Generation with Discrete Diffusion from a Unified Model Perspective",
+    "published": "2025-07-11",
+    "url": "https://arxiv.org/abs/2507.08801",
+    "authors": ["Hangjie Yuan", "Weihua Chen", "Jun Cen", "Hu Yu", "Jingyun Liang", "Shuning Chang", "Zhihui Lin", "Tao Feng", "Pengwei Liu", "Jiazheng Xing", "Hao Luo", "Jiasheng Tang", "Fan Wang", "Yi Yang"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向的能力演进、向世界模型转型机制、评测与方法边界。重点关注自回归与离散扩散（相对纯 Diffusion DiT）的竞争/混合路线、长视频时序一致性与训练效率、数据/计算尺度边界。",
+    "topic_ids": ["EA-MODEL", "EA-EVAL", "EA-DATA"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "Lumos-1 是 '自回归（LLM/AR）+ 离散扩散（mask 预测）' 相对纯 diffusion-DiT 竞争路线的核心代表：LLM 架构 + 3D RoPE(MM-RoPE) + temporal-tube 离散扩散。其 T2I/I2V/T2V 结果与效率、以及 60M 图像/10M 视频的尺度边界，是综述 'DiT vs AR 竞争/混合路线与长视频一致性' 命题的直接证据。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确立两大挑战：1D RoPE 不适合视频 3D 时空相关；next-token 自回归范式对视频低效、无法建模帧内双向+帧间时序因果。"},
+      {"locator": "3.1 Spatiotemporal Correlation Injection via MM-RoPE", "role": "method-or-design", "purpose": "读 MM-RoPE：分布式+缩放的 3D RoPE，兼容文本 RoPE、均匀频率分配、战略缩放；对比 M-RoPE/U-RoPE/VideoRoPE 等。"},
+      {"locator": "3.2 Autoregressive Discrete Diffusion Forcing", "role": "method-or-design", "purpose": "读 AR-DF：temporal tube masking 训练 + partial-context masking 推理，解决 random masking/diffusion forcing 的 loss 失衡与信息泄漏；temporal causal attention。"},
+      {"locator": "3.3 Implementation", "role": "method-or-design", "purpose": "架构 Llama+QK-Norm；Cosmos 离散 tokenizer；codebook 129536（65k 文本+64k 视觉）；三尺度 0.5B/1B/3B；VBench-I2V/T2V 表。"},
+      {"locator": "4.2 Comparison with Other Methods on Visual Generation", "role": "results-or-analysis", "purpose": "T2I（GenEval）对 SD-XL/FLUX/EMU3；I2V 对 VideoCrafter-I2V/COSMOS-Video2World 数据与算力对比；AR-DF vs 其它训练法 Table 5。"},
+      {"locator": "4.3 Analysis and Ablation Studies", "role": "results-or-analysis", "purpose": "定性对比、temporal-tube mask 有效性（loss 分析）、MM-RoPE 消融、CFG 敏感性、推理时延 Table 6（next-token 960s vs mask pred 77.8s）。"},
+      {"locator": "F.2 Limitations and Future Work Discussions", "role": "conclusion-or-limitations", "purpose": "作者自述限制：60M 图像/10M 视频语料相对 foundation models 较小、在精细人体动作/复杂场景动力学上泛化不足；后续缩放三轴。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否用纯 LLM 架构（自回归 + 离散扩散/掩码预测）的 '统一模型' 路线，在 3D 时空相关建模（RoPE）与训练/推理范式（mask 预测）上达到与 diffusion-DiT 相当的 T2I/I2V/T2V 生成质量与更高推理效率？",
+  "contributions": [
+    "提出 Lumos-1：纯 LLM 架构（Llama 风格）、离散扩散、自回归视频生成的统一模型，支撑 T2I/I2V/T2V。",
+    "提出 MM-RoPE：分布式且缩放的 3D RoPE，兼容标准文本 RoPE，均匀频率分配 + 战略缩放，优于 M-RoPE/U-RoPE/VideoRoPE 等。",
+    "提出 Autoregressive Discrete Diffusion Forcing (AR-DF)：temporal tube masking，解决 AR 训练中帧间 loss 失衡与空间信息泄漏。",
+    "阶段式、GPU 内存友好训练，用有限数据（60M 图/10M 视频）和算力，在 GenEval、VBench-I2V、VBench-T2V 上达到与/优于多种 diffusion/AR 基线。"
+  ],
+  "method": {
+    "summary": "Lumos-1 用 Llama 风格 LLM backbone（QK-Norm 稳定训练），离散 Cosmos tokenizer（时空压缩率 4*8*8），统一 codebook（65,536 文本 + 64,000 视觉 token）。(1) MM-RoPE 对 video 分配三维频率（时间/高/宽），与文本 RoPE 无缝兼容，提供均匀频率分配与战略缩放。(2) AR-DF 训练时对每一帧用一个从首帧抽取再重复到后续帧的 temporal tube mask，配合 temporal causal attention（帧内双向、帧间因果、mask token 填充），仅对 masked token 计算 cross-entropy；推理时首帧多步生成后用 partial-context masking 生成后续帧，避免 train/inference 不一致导致的帧质量与运动退化。",
+    "assumptions": [
+      "next-token 预测对视觉数据本质低效，掩码/离散扩散式并行预测是相对 diffusion-DiT 更高效的生成范式。",
+      "1D RoPE 不适用于视频 3D 时空相关；需要与文本 RoPE 兼容的多维 RoPE（MM-RoPE）。",
+      "视频的空间信息冗余导致 AR 训练 '帧越靠后 loss 越低'，需 temporal-tube masking 消除空间信息泄漏这一学习捷径。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["60M 图像 + 10M 视频（自建多源语料，保留原始宽高比，视频裁剪 25 帧）", "GenEval（T2I）", "VBench-I2V（I2V）", "VBench-T2V（T2V）"],
+    "tasks": ["text-to-image", "image-to-video（未专门训练，靠 AR 首帧指定）", "text-to-video", "多宽高比生成"],
+    "embodiments": [],
+    "sample_or_scale": "模型 0.5B/1B(1.5B)/3B(3.6B) 三尺度；训练用 8-28 H20/H100；codebook 129,536；T2I/I2V/T2V 对比用 1B/3B"
+  },
+  "evaluation": {
+    "design": "在统一蒸馏/评估协议下对比 T2I（GenEval）、I2V（VBench-I2V Total 及各维度）、T2V（VBench-T2V Total 及各维度）；另做推理时延分析（单 H20, batch 1, CFG 默认）、多 RoPE 对比、不同训练法对比（Table 5）、fig.7/8 定性。",
+    "baselines": ["T2I: SD-XL, FLUX, EMU3, Fluid, Lumina-mGPT, Show-o2", "I2V: VideoCrafter-I2V, COSMOS-Video2World, SEINE, I2VGen-XL, CogVideoX", "T2V: OpenSoraPlan, LTX-Video, SVD"],
+    "metrics": ["GenEval", "VBench-I2V (Total/Quality/Back/Subject/Image qualities)", "VBench-T2V (Total/各维度)", "帧级 loss (fig.7)", "单 H20 推理时延 (s, Table 6)", "训练 GPU 时 (A100 GPU-days)"],
+    "ablations": ["训练法对比：random masks / linear-decay / step-decay / diffusion forcing / AR-DF", "RoPE 设计对比（1D/M/MM）及缩放因子 (4,8,8) 敏感性", "CFG 尺度敏感性", "推理 mask 有/无"]
+  },
+  "findings": [
+    {"finding": "AR-DF 的 temporal tube masking 在 VBench 一致性/成像质量上优于 random masks 与 diffusion forcing masks；loss reweighting 无法消除信息泄漏，而 tube masking 尤其适合视频。", "scope": "AR 视频生成训练/推理方案对比（GenEval + VBench）", "locator": "4.2 Comparison ... / 4.3 Analysis and Ablation Studies"},
+    {"finding": "Lumos-1 (3.6B) 在 VBench-I2V 上优于 VideoCrafter-I2V 并与 COSMOS-Video2World（100M 视频、10000 H100 训练）相当，体现小数据/低算力 AR 路线的竞争力。", "scope": "VBench-I2V", "locator": "4.2 Comparison ..."},
+    {"finding": "掩码并行预测显著快于 next-token 预测：单 H20 视频生成 960.0s →（mask pred, w/ KV cache）77.8s；MM-RoPE 相对 1D RoPE 推理时延几乎不变（77.8s vs 75.1s）。", "scope": "推理时延 (1B, 1xH20)", "locator": "4.3 Analysis and Ablation Studies (Table 6)"},
+    {"finding": "作者自述 60M 图像/10M 视频的训练语料相对含十亿级样本的 foundation models 偏小，导致在精细人体动作/复杂场景动力学上泛化不足。", "scope": "作者自述局限", "locator": "F.2 Limitations and Future Work Discussions"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "训练语料（60M 图像/10M 视频）相对近期含十亿级样本的 foundation models 偏小，在精细人体动作或高度复杂场景动力学下欠泛化。", "locator": "F.2 Limitations and Future Work Discussions"},
+      {"limitation": "AR-DF 推理必须使用与训练一致的 partial-context masking，否则帧质量与运动显著退化（伪影/闪烁）。", "locator": "4.3 Analysis and Ablation Studies"},
+      {"limitation": "作为初探，作者强调这是 research-oriented，发布前需严格安全治理（误导内容风险）。", "locator": "F.3 Potential Societal Impacts and Safeguards"}
+    ],
+    "reader_inferred": [
+      {"boundary": "Lumos-1 是 LLM/自回归+离散扩散架构，并非 diffusion transformer（DiT）；其证据支撑 'AR/离散扩散对 DiT 的竞争/混合路线'，但不能外推为 DiT 缩放律或 DiT 视频生成本身的结论。", "basis": "论文明确 'Lumos-1, a pure LLM-based unified architecture with discrete diffusion'，主干为 Llama 风格。"},
+      {"boundary": "生成质量证据以 GenEval/VBench 标准为主，且重点是单帧/中短时序；未提供 action-conditioned 世界模型、长超长时序一致性的系统性量化，也未评估任意下游闭环。", "basis": "实验任务限于 T2I/I2V/T2V 与 VBench 指标，无世界模型/具身环节。"}
+    ]
+  },
+  "transfer_boundary": "Lumos-1 的证据界定了 'AR+离散扩散' 相对 diffusion-DiT 的竞争性（相似质量 + 大幅降推理时延）与尺度边界（60M 图/10M 视频下欠泛化）。其结论仅适用于 LLM/AR 视频生成路线，不直接转移给 DiT 视频/世界模型；mask 预测效率与 MM-RoPE 时空建模设计可作为 DiT-AR 混合路线的可迁移机制参考。",
+  "critical_appraisal": {
+    "design_strengths": ["提供 AR 与 diffusion 基线的统一 VBench/GenEval 对比，及资源对比（数据量、GPU 时）", "AR-DF 信息泄漏分析用帧级 loss 图直接支撑设计动机", "多尺度模型与统一 codebook 支持多宽高比"],
+    "design_risks": ["少数对比依赖论文报告值（如 COSMOS-Video2World），非独立复现", "VBench/GenEval 为短期标准，对长程时序一致性/世界模型能力证据有限", "部分表以 'Lumos-1 ( )' 呈现型号占位，模型大小与指标对应需谨慎核对"],
+    "baseline_fairness": "总体合理：在统一评估协议下与数据/算力标注齐全的 diffusion 与 AR 模型对比，并给出资源差异。",
+    "metric_validity": "GenEval/VBench 是该路线通用基准，但偏短视宽；对 '长视频一致性' 与 '世界模型' 的度量有效性有限，需单独机制验证（推理 mask、KV cache）。",
+    "reproducibility": "公开代码与模型链接、训练协议与 hyperparamb 表、阶段式训练细节；有 Reproducibility Statement。",
+    "external_validity": "限于 AR/离散扩散统一视觉生成（T2I/I2V/T2V），对动作条件世界模型/具身及超长时序需另行验证。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2507.08801_C01",
+      "claim": "在 AR 视频生成训练中，AR-DF 的 temporal tube masking 在 VBench-Overall Consistency (OC) 0.249 与 Imaging Quality (IQ) 0.559 上同时优于 random masks（0.232/0.424）与 diffusion forcing masks（0.241/0.540），GenEval 基本持平（0.591）。",
+      "stance": "support",
+      "relation": "支持综述命题：AR+离散扩散路线的训练范式（tube masking）可同时提升时序一致性与成像质量，对应 '长视频一致性机制' 的 AR-DF 实现。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.2 的 Table 5 给出各训练法在 GenEval/OC/IQ 数值，AR-DF OC/IQ 最高；且 4.3 文本解释 loss reweighting 无法解决信息泄漏、diffusion forcing 仅缓解、tube masking 最适合视频，故结论为该结果的实际支撑。",
+      "locator": "4.2 Comparison with Other Methods on Visual Generation",
+      "source_context": "Diffusion forcing masks 0.590 0.241 0.540 AR-DF 0.591 0.249 0.559",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "GenEval / VBench-Overall Consistency (OC) / VBench-Imaging Quality (IQ)",
+        "value_or_direction": "AR-DF: GenEval 0.591, OC 0.249, IQ 0.559（OC/IQ 最高）；Diffusion forcing: 0.590/0.241/0.540；Random masks: 0.593/0.232/0.424",
+        "comparator": "random masks、linear decay loss、step decay loss、diffusion forcing masks",
+        "task_or_sample": "AR 视频生成训练方案对比（1B 模型）",
+        "locator": "Table 5 (4.2 Comparison ...)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.2 段 Table 5 原始行 'Diffusion forcing masks 0.590 0.241 0.540 AR-DF 0.591 0.249 0.559' 与 'Random masks 0.593 0.232 0.424' verbatim 存在于全文；且 4.3 帧级 loss 分析佐证 AR-DF 消除信息泄漏，主张限定于训练方案对比、未夸大到绝对生成质量最优。"
+      }
+    },
+    {
+      "card_id": "2507.08801_C02",
+      "claim": "掩码并行预测相对 next-token 预测显著降低视频推理时延：单 H20 上视频生成从 next-token 960.0s 降到 mask-pred-with-KV-cache 77.8s；MM-RoPE 相对 1D RoPE 时延几乎不变（77.8s vs 75.1s, 1B）。",
+      "stance": "support",
+      "relation": "支持综述命题：AR+离散扩散（掩码预测）是相对 diffusion-DiT 增加推理效率的部署方向，且多维 RoPE 设计不牺牲推理速度。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.3 的 Table 6 给出对应时延：Next-Token 960.0s → Mask-pred w/o KV cache 383.0s → Mask-pred w/ KV cache 77.8s，以及 1D/M/MM-RoPE 三档均约 75-78s。",
+      "locator": "4.3 Analysis and Ablation Studies",
+      "source_context": "Next-Token Pred Mask Pred w/o KV Cache Mask Pred w/ KV Cache Video ( ) 960.0s 383.0s 77.8s",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "视频推理时延 (seconds, 1B, 1xH20, batch 1)",
+        "value_or_direction": "next-token 960.0s → mask-pred w/o KV cache 383.0s → mask-pred w/ KV cache 77.8s；MM-RoPE(1B) 77.8s vs 1D RoPE(1B) 75.1s",
+        "comparator": "next-token prediction vs mask prediction（含/不含 KV cache），1D-RoPE vs MM-RoPE",
+        "task_or_sample": "视频生成（单位时长 25 帧 384p 规格）",
+        "locator": "Table 6 (4.3 Analysis and Ablation Studies)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.3 段 Table 6 原文 'Next-Token Pred Mask Pred w/o KV Cache Mask Pred w/ KV Cache Video ( ) 960.0s 383.0s 77.8s' 与 '75.1s / 173.6s 77.8s / 178.5s 77.8s / 178.5s' verbatim 存在，且表注给出 'Results are reported on one H20 with batch size set to 1'，忠于该测量条件。"
+      }
+    },
+    {
+      "card_id": "2507.08801_C03",
+      "claim": "Lumos-1 (3.6B) 在 VBench-I2V 上优于 VideoCrafter-I2V 并与使用 100M 视频、10000 H100 训练的 COSMOS-Video2World 相当，体现 AR 路线用较少数据/算力达到竞争力的结果。",
+      "stance": "support",
+      "relation": "支持综述命题：在 I2V/视频生成上，AR+离散扩散可在更少资源下与大规模 diffusion/world-model 模型竞争。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.2 文本直接报告 Lumos-1 'outperforms the popular VideoCrafter-I2V model and is on par with the leading COSMOS-Video2World model'，并明示后者资源差异（100M 视频、10000 H100 训练）。",
+      "locator": "4.2 Comparison with Other Methods on Visual Generation",
+      "source_context": "Lumos-1 outperforms the popular VideoCrafter-I2V model and is on par with the leading COSMOS-Video2World model, which uses substantially more data (100M 10M) and training resources (10000 H100s 48 H20s), demonstrating the promising performance of Lumos-1",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "VBench-I2V 生成质量 + 训练资源对比",
+        "value_or_direction": "Lumos-1(3.6B) 总指标优于 VideoCrafter-I2V，与 COSMOS-Video2World 相当（后者 100M 视频 vs Lumos 10M、10000 H100 vs 48 H20）",
+        "comparator": "VideoCrafter-I2V、COSMOS-Video2World",
+        "task_or_sample": "VBench-I2V 基准",
+        "locator": "Table 3 + 4.2 prose"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.2 段 verbatim 'Lumos-1 outperforms the popular VideoCrafter-I2V model and is on par with the leading COSMOS-Video2World model, which uses substantially more data (100M 10M) and training resources (10000 H100s 48 H20s)' 存在；资源数字随后一句 '100M videos vs 10M, 10000 H100s'（论文对比）支撑，主张为作者报告结果且限定 I2V 维度。"
+      }
+    },
+    {
+      "card_id": "2507.08801_C04",
+      "claim": "Lumos-1 的训练语料（60M 图像 + 10M 视频）相对最近含十亿级样本的 foundation models 明显偏小，因此在需要精细人体动作或高度复杂场景动力学的场景下欠泛化。",
+      "stance": "limit",
+      "relation": "限制综述命题：AR/离散扩散路线的竞争力受数据规模限制，其 '欠泛化' 是相对 diffusion-/foundation-scale 的关键边界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 F.2 明确以 modest 形容 60M 图/10M 视频语料相较于含 billions 样本的 foundation models，并指出精细人体动作/复杂动力学欠泛化；这是自述尺度边界。",
+      "locator": "F.2 Limitations and Future Work Discussions",
+      "source_context": "Most prominently, its training corpus (60 million images and 10 million videos) is modest compared with datasets used by recent foundation models [ 70 , 34 ] , which usually contain billions of samples. Consequently, Lumos-1 can under-generalize in scenarios that require fine-grained human actions or highly intricate scene dynamics.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "F.2 Limitations and Future Work Discussions 含 verbatim 'its training corpus (60 million images and 10 million videos) is modest compared with datasets used by recent foundation models ... which usually contain billions of samples' 及 'can under-generalize in scenarios that require fine-grained human actions or highly intricate scene dynamics'；为作者自述限制，scope 明确，未夸大。"
+      }
+    },
+    {
+      "card_id": "2507.08801_C05",
+      "claim": "AR-DF 推理必须在推理阶段使用与训练一致的 partial-context masking，省略该 mask 会显著损害质量（可见伪影与闪烁）。",
+      "stance": "limit",
+      "relation": "限制综述命题：AR+离散扩散路线在推理阶段需要与训练匹配的条件推理；这是相对 '训练即可生成' 的 diffusion-DiT 在部署上新增的约束。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "4.3 说明 AR-DF 'requires the same partial-context masking at inference as during training; omitting these masks severely harms quality'，fig.8(b) 显示 without 的伪影/闪烁。",
+      "locator": "4.3 Analysis and Ablation Studies",
+      "source_context": "AR - DF requires the same partial - context masking at inference as during training; omitting these masks severely harms quality.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.3 段含 verbatim 'AR - DF requires the same partial - context masking at inference as during training; omitting these masks severely harms quality'，并以 fig.8(b) 视觉对比佐证；属于该方法的部署约束性限制主张，未声称指标数字。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Lumos-1 的关键定位：它不是 DiT，而是 LLM/AR + 离散扩散（掩码预测）的统一模型。对本综述，它提供 (1) AR 与 diffusion-DiT 的竞争/混合路线证据（质量相当 + 推理效率高），(2) 长视频一致性的 AR-DF tube-masking 机制，(3) 数据尺度边界（小语料欠泛化）。表 3 的 Lumos 行在 '3.3 Implementation' section，定量卡 C03 以 4.2 prose 为 locator 保证 provenance。"
+}

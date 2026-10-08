@@ -1,0 +1,629 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.21402",
+  "title": "Selective Cross-View Consistency for World Action Models: Held-Out Viewpoint Robustness Without Test-Time Camera Information",
+  "published": "2026-08",
+  "url": "https://arxiv.org/abs/2608.21402",
+  "authors": [
+   "Bingqi Huang",
+   "Bingchuan Wei",
+   "Yingkai Cai",
+   "Zhaokui Wang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文不使用鱼眼/全景/超广角相机（全部实验为 LIBERO 仿真透视相机的四类外参扰动），但为综述提供三块不可替代的证据：(1) 机制层——跨视角一致性施加于世界动作模型（WAM）联合去噪目标时必须按变换律选择性约束（仅不变块），错误坐标一致性有可验证的收缩危害（1/(1+4λ) 定律），界定该训练期路线接入含视频预测头的具身世界模型（含多路广角/环视视频流）的硬边界；(2) 效果层——held-out 视角外推 +12.2/+15.5 点（三轴两种子复现）、包络内零增益、ID 保持，给出'多相机数据帮助什么、何时不帮助'的分档量级；(3) 测量学层——腕部相机混杂审计证明已发表相机鲁棒性数字由腕部位姿稳定性携带（腕部遮蔽塌缩至 0.2%），综述横向比较任何相机配置鲁棒性证据时必须先过该协议可比性关卡。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：WAM 去噪目标混含视角协变坐标（预测未来场景）与不变坐标（动作块/未来本体感知/价值），一致性损失应加在哪些输出坐标；腕部混杂与评估契约问题；四点贡献。"
+   },
+   {
+    "locator": "page 2-3, II Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与 ReViWo（表征级视角不变编码器）、AGRA（foresight-action 诊断）、测试时视角合成/相机条件化/增广/等变策略等家族的差异（输出级选择性约束 vs 表征级/接口级改造），及与一致性正则理论（Yang et al. 增广一致性优于增广 ERM）的承接与违反点。"
+   },
+   {
+    "locator": "page 3, III Problem Setup",
+    "role": "method-or-design",
+    "purpose": "精读动作等价配对定义、Y=(Y_I,Y_C) 不变/协变块分解、Assumption 1（基座系 delta 末端动作约定及其对数据集/控制器的直接回归验证）。"
+   },
+   {
+    "locator": "page 3-4, IV-A Objective and IV-B Why selectivity is necessary",
+    "role": "method-or-design",
+    "purpose": "精读 SCVC 损失（共享 (σ,n) 噪声抽样、Π_I 不变帧选择子、λ(t) ramp 至 2.0、协变块仅逐视图监督）、Lemma 1 均值-残差分解、Proposition 1 错误坐标收缩律、Proposition 2 噪声配对必要性。"
+   },
+   {
+    "locator": "page 4, IV-C Controlled verification of the shrinkage law",
+    "role": "results-or-analysis",
+    "purpose": "核对收缩律受控测量（0.715/0.337/0.116 vs 预测 0.714/0.333/0.111）与 2B WAM 上 2k 步错误坐标臂 0.18 塌缩 vs 选择性/λ=0 双臂约 0.98，及 Fig 2 ghosting 可视化。"
+   },
+   {
+    "locator": "page 4-5, V Carve-and-hold-out evaluation protocol",
+    "role": "data-or-setting",
+    "purpose": "精读稠密轴挖洞（方位角/尺度）与稀疏轴翻转（端点/仰角）设计、583,648 对训练 manifest、66,437 严重方位角对、6.2 有效 epoch、桶划分、λ=0 匹配对照与预注册分析计划。"
+   },
+   {
+    "locator": "page 5-6, VI-A Setup and VI-B Wrist audit",
+    "role": "results-or-analysis",
+    "purpose": "核对 Cosmos Policy 2B 场景-only 配置与 7.2M 样本呈现预算；腕部遮蔽审计（80.5→66.6 场景遮蔽、0.2% 腕部遮蔽、1,200 rollouts/条件）与 Table I 腕部版/场景-only 掉点对比（19.0 vs 67.2）。"
+   },
+   {
+    "locator": "page 6, VI-C Motivating observation",
+    "role": "results-or-analysis",
+    "purpose": "核对场景-only 参照零样本差距（93.2/26.0）与轴间分解（7.5/21.4/61.3）、轨道轴保真-控制解离（53%→3% vs 平坦 excess-FID）。"
+   },
+   {
+    "locator": "page 6-7, VI-D Main result and Table II",
+    "role": "results-or-analysis",
+    "purpose": "核对预注册桶级结果全表（方位角/dolly/仰角/端点 × 分布内/插值/外推）、三轴签名、第二种子全套数字与插值 cell 跨种子不稳定性细节。"
+   },
+   {
+    "locator": "page 7, VII Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "精读归因逻辑（对照看到完全相同扰动相机，外推增益归一致性项）、套件级异质性（spatial +40.8/object −11.6/复合 −40.4）与不对称收益边界（包络内零收益、包络外 +4~+16）。"
+   },
+   {
+    "locator": "page 7-8, VIII Limitations and IX Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者限制：配对数据真实世界需求、全部闭环证据仿真、仅示范状态监督、仰角单外推点、插值桶小且检查点变异超抽样区间、场景-only 协议范围、收缩律规模定量测量推迟。"
+   },
+   {
+    "locator": "page 8-9, References",
+    "role": "appendix-or-supplement",
+    "purpose": "核对核心引文条目（Cosmos Policy [1]、LIBERO-Plus [4]、π0.5 [6]、流 VLA 一致性 [7]、LIBERO [27]）。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "当世界动作模型（WAM）用同状态跨视角图像对训练时，一致性损失应施加在联合去噪目标的哪些输出坐标上？仅约束视角不变块（动作块、未来本体感知、价值）而不约束协变块（预测未来场景）、且训练与测试均不使用相机标签/外参/深度/视角合成，能否恢复对训练包络之外 held-out 视角的闭环鲁棒性，同时保持分布内能力与包络内插值性能？",
+ "contributions": [
+  "选择性一致性原则：把 WAM 联合去噪目标按相机变换律分解为不变块 Y_I（动作块 a、未来本体感知 q'、价值 V）与协变块 Y_C（预测未来场景），一致性损失只加在不变块（SCVC）；对协变块施加一致性的错误坐标选择有可证明的收缩偏置（点wise 最优把视图差收缩到 1/(1+4λ)，Proposition 1），受控实验在 10% 内验证、2B 模型上定性复现。",
+  "噪声配对分析（Proposition 2）：两分支必须共享同一 (σ, n) 噪声抽样；独立噪声下一致性目标对完全不变的去噪器也无法归零，其残余梯度惩罚正确去噪器对噪声输入的合法依赖。",
+  "carve-and-hold-out 评估协议：稠密轴挖洞（插值洞+外推带）、稀疏轴翻转，把官方基准任务按相机参数重划为分布内/插值/外推桶，配对任务 bootstrap 95% CI 与预注册分析计划；同 manifest 的 λ=0 匹配对照把一致性项与配对暴露干净分离。",
+  "跨骨干腕部混杂审计：已发表相机鲁棒性数字由腕部相机位姿稳定性承载（遮蔽场景相机仅掉 14 点、遮蔽腕部塌缩至 0.2%；腕部版掉 19.0 vs 场景-only 掉 67.2 点），对当前评估实践的系统性纠正。"
+ ],
+ "method": {
+  "summary": "SCVC 在 EDM 式去噪器 D_θ 上对每个同状态跨视角对 (o0, op)：共享权重、共享同一噪声级与噪声实现 (σ, n)，两支仅在场景条件帧与协变目标内容上不同；损失为两支逐视图监督项 + λ(t)w(σ)‖Π_I(D0−Dp)‖²（仅作用于不变帧选择子 Π_I），λ(t) 在前 2% 训练线性升至 λ_CV=2.0；协变未来场景帧只受逐视图监督，每支自由预测自己相机的未来。一致性项仅作用于示范样本（仿真状态可重渲染配对）；rollout 样本单视图通过。训练与测试均无相机参数、外参、深度或合成视角，配对结构只存在于损失中，部署接口不变。配对构造：训练相机分布匹配 LIBERO-Plus 边缘分布后移除 held-out 区域——稠密轴挖洞（方位角 |h|∈[0,62] 去插值洞 (20,30) 留 (62,75] 外推；尺度 [100,175] 去 (128,142) 留 (175,200]），稀疏轴翻转（端点训练用非官方值 {±3,±5,±7} 使官方 {±4,±6} 为插值、{±8,±10} 为外推；仰角训练用 8 使官方 15 为单外推点），最终 manifest 583,648 对（严重方位角段 [31,62] 保留 66,437 对），固定预算下约 6.2 个有效 epoch（低于预设 10 epoch 过拟合阈值）。Assumption 1（动作以机器人基座系 delta 末端指令表示，相机变化下不变）通过对存储动作对基座末端位移的回归恢复缩放恒等映射直接验证。",
+  "assumptions": [
+   "动作块以机器人基座系 delta 末端指令表示（Assumption 1），同状态下对相机变化不变；作者对数据集/控制器直接回归验证；若动作以相机坐标表示（部分近期系统刻意如此），不变性前提构造性失效。",
+   "同状态跨视角配对可由仿真状态重置重渲染获得；真实世界需同步多相机 rig（近似配对是未解决问题）。",
+   "配对两视图均任务可观测且扰动不改变任务语义（视角不变块不变性成立的前提）。",
+   "两分支共享 (σ, n) 噪声抽样是增广匹配的组成部分（Proposition 2：独立噪声使一致性目标不可归零）。",
+   "分布内桶只作分布匹配上限解读、不携带 OOD 语言（评估契约的一部分）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "LIBERO 名义示范数据（场景-only 参照训练，四套件）",
+   "LIBERO-Plus 相机扰动基准（1,599 实例，四轴：轨道方位角 ±75°、仰角 {0,15}、dolly 距离 100–200、端点朝向 ±10）",
+   "自渲染 carve manifest 583,648 个同状态配对（含 66,437 个严重方位角 [31,62] 配对）"
+  ],
+  "tasks": [
+   "LIBERO 四套件 ID 评估（500 episodes/套件）",
+   "LIBERO-Plus 相机轨道 12 个轴级桶（分布内/插值/外推，桶大小 49–386 任务，每任务 10 trials）",
+   "腕部混杂审计：相机扰动任务上的输入遮蔽评估（1,200 rollouts/条件）"
+  ],
+  "embodiments": [
+   "Cosmos Policy 2B 参数世界动作模型（场景-only 配置：七帧潜序列 = 空白帧+当前本体感知+当前场景图+动作块+未来本体感知+未来场景图+价值），EDM 式去噪器，从发布 LIBERO 检查点继续后训练",
+   "审计对象另含发布腕部版 Cosmos 检查点与公开 π0.5 LIBERO 策略（仅用于腕部混杂测量）"
+  ],
+  "sample_or_scale": "两臂（λ_CV=0 对照与 SCVC λ_CV=2.0）各 7.2M 样本呈现（10,000 步、有效 batch 720、lr 5e-5、EMA、单一最终检查点）；独立第二种子双臂重训复现；腕部审计每条件 1,200 rollouts。"
+ },
+ "evaluation": {
+  "design": "同一 carve manifest、同一场景-only 基础检查点、同预算双臂，唯一差异 λ_CV；预注册主终点 = 方位角插值/外推桶（配对任务 bootstrap 95% CI），其余单轴桶次级，分布内桶不携带 OOD 语言，null 如实报告；独立第二种子双臂重训复现全部层级。另含三类支撑证据：腕部遮蔽审计（跨三模型家族）、收缩律受控验证+2B on-model 检查、保真-控制解离动机观察（相机条件化 excess-FID 扣除 oracle 地板）。",
+  "baselines": [
+   "Matched control（λ_CV=0，同 manifest 同检查点同预算的相机增广基线，主对照）",
+   "Scene-only 名义参照（零起点脆弱性测量，冻结）",
+   "发布腕部版 Cosmos 检查点与公开 π0.5 策略（仅腕部混杂审计）",
+   "OpenVLA-OFT 官方排行榜数字（wrist/no-wrist 56.4/10.4，引证非自测）"
+  ],
+  "metrics": [
+   "闭环成功率（%，每任务 10 trials，配对任务 bootstrap 95% CI）",
+   "四套件 ID 成功率（500 episodes/套件）",
+   "腕部审计成功率（Wilson 95% CI，1,200 rollouts/条件）",
+   "相对 excess-FID（相机条件化、扣除真值重放 oracle 地板，保真代理）",
+   "受控收缩比 R(λ)/R(0) 与 held-out 跨视角未来场景比（错误坐标危害度量）"
+  ],
+  "ablations": [
+   "错误坐标一致性臂（协变块额外加一致性，2k 步，对照选择性运行与 λ=0 控制均约 0.98 而其塌缩至 0.18）",
+   "受控两视图去噪器收缩律测量（λ∈{0.1,0.5,2.0}）",
+   "shuffled-pair 控制（引 [7] 流 VLA 实例化：破坏状态匹配即移除收益）",
+   "稀疏轴翻转 vs 稠密轴挖洞（评估协议设计选择）",
+   "6.2 有效 epoch vs 预设 10 epoch 过拟合阈值"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "主结果：held-out 轨道方位角外推桶上 SCVC 比同数据 λ=0 匹配对照 +12.20 点（63.8→76.0，CI [+7.40,+17.00]），第二种子 +15.50（CI [+11.70,+19.40]）；dolly 外推 +4.24、仰角外推 +8.76 独立复现；插值桶两种子均 null（−1.22/−4.29），ID 仅 −0.60/−0.2 点。",
+   "scope": "仿真 LIBERO-Plus 相机轨道，场景-only 协议，预注册桶级比较",
+   "locator": "page 1, Abstract; page 6-7, Section VI-D, Table II"
+  },
+  {
+   "finding": "腕部混杂审计：遮蔽场景相机仅使腕部版 Cosmos 从 80.5% 降至 66.6%（1,200 rollouts/条件），遮蔽腕部塌缩至 0.2%；Table I 腕部版掉 19.0 点 vs 场景-only 参照掉 67.2 点（98.5/79.5 对 93.2/26.0），OFT 去 wrist 56.4→10.4——已发表相机鲁棒性数字主要由腕部位姿稳定性承载。",
+   "scope": "跨三模型家族的测量学审计",
+   "locator": "page 5-6, Section VI-B, Figure 3, Table I"
+  },
+  {
+   "finding": "零样本脆弱性量级：场景-only 参照 93.2% ID vs 26.0% 全相机轨道，掉点轴间不均（dolly 7.5%、轨道 21.4%、端点朝向 61.3%）；轨道轴上动作成功率 53%→3% 而 excess-FID 平坦（−0.07~+0.16）——视频先验恰在控制失效最重的轴上存活（foresight-action 解离）。",
+   "scope": "冻结场景-only 参照，全相机轨道",
+   "locator": "page 6, Section VI-C, Figure 4"
+  },
+  {
+   "finding": "错误坐标一致性可验证地有害：受控实验收缩比 0.715/0.337/0.116 对预测 0.714/0.333/0.111（λ=0.1/0.5/2.0，10% 内）；2B WAM 上 2k 步错误坐标臂的 held-out 跨视角未来场景比塌缩至 0.18（选择性/λ=0 双臂约 0.98）——选择性是结构要求而非超参选择。",
+   "scope": "受控合成实验 + 2B 模型 on-model 检查",
+   "locator": "page 4, Section IV-C, Figure 2"
+  },
+  {
+   "finding": "套件级异质性与复合回归：主外推桶内 spatial +40.8 点而 object −11.6 点；预注册终点外的复合极端方位角+仰角位移下 object 套件回归 40.4 点——跨视角一致性修复的是视角再定位分量，精细抓取几何分量在其 reach 之外且交换可为负。",
+   "scope": "桶内套件拆分与非预注册复合位移",
+   "locator": "page 7, Section VII"
+  },
+  {
+   "finding": "协议规模：583,648 对 carve manifest（严重方位角 [31,62] 保留 66,437 对，~6.2 有效 epoch）；两臂同 manifest/检查点/预算唯一差异 λ_CV=2.0；分析计划评估前预注册并如实报告 null。",
+   "scope": "训练与评估协议",
+   "locator": "page 5, Section V-B and V-C"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "配对数据真实世界需求：同状态跨视角配对在仿真中通过状态重置渲染很廉价，但真实世界需要同步多相机 rig 或配对数据集；扩展到近似匹配配对是未来工作（Proposition 2 的协方差分解提示一条路线）。",
+    "locator": "page 7, Section VIII Limitations (first paragraph)"
+   },
+   {
+    "limitation": "全部闭环证据为仿真：在公认公开基准（LIBERO-Plus）上按披露协议进行；同一一致性机制的流 VLA 实例化已迁移到真机 [7]，说明机制可迁移性，但 WAM 实例化的真机证据保持开放。",
+    "locator": "page 8, Section VIII Limitations"
+   },
+   {
+    "limitation": "一致性仅在示范状态上监督：rollout 数据缺乏可恢复的仿真状态，因此对失败/恢复状态上的视角鲁棒性不做任何主张。",
+    "locator": "page 8, Section VIII Limitations"
+   },
+   {
+    "limitation": "仰角轴按基准构造只贡献单个外推点。",
+    "locator": "page 8, Section VIII Limitations"
+   },
+   {
+    "limitation": "插值桶小（46–49 任务）且处于 85–93% 成功率区间，检查点间变异超过配对抽样区间；第二种子插值 cell 读 −4.29（CI [−7.56, −1.22]）而第一种子为 null（−1.22）。",
+    "locator": "page 8, Section VIII Limitations"
+   },
+   {
+    "limitation": "场景-only 协议是隔离场景视角不变性的受控损伤实验；腕部相机位姿扰动不在研究范围内。",
+    "locator": "page 8, Section VIII Limitations"
+   },
+   {
+    "limitation": "收缩律在受控尺度定量验证、在 2B 模型上定性演示（Fig. 2）；其在规模上的定量测量，以及仅约束输出时网络内部残余多少视角敏感性，均被推迟。",
+    "locator": "page 8, Section VIII Limitations (final paragraph)"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全文不含鱼眼/全景/超广角/环视相机：所有相机扰动为透视相机外参级四轴（方位角/仰角/dolly 距离/端点朝向），无镜头模型或径向畸变变量；强畸变成像下配对渲染、一致性与 carve 协议的有效性均未被测试——对鱼眼替换场景仅有机制层推断。",
+    "basis": "对 9 页全文检索 fisheye/fish-eye/wide-angle/panoramic/distortion 零命中；轴定义出自 page 5 Section V-B（±75°/{0,15}/100–200/±10 四轴枚举）。"
+   },
+   {
+    "boundary": "WAM 实例化全部在仿真闭环：与同组流 VLA 版本（2608.06965，有真机 held-out 相机证据）互补但不可互换——视频扩散骨干后训练的真机部署成本、一致性收益与视频预测质量的相互作用无证据。",
+    "basis": "page 8 'real-robot evidence for the WAM instantiation remains open'；2608.06965 提供流 VLA 真机证据但骨干与动作头不同。"
+   },
+   {
+    "boundary": "复合外推回归（object 套件 −40.4 点）与第二种子插值负 cell（−4.29，CI 排除零）说明'外推增益/包络内无损'的结论有域边界：复合视角位移与非预注册设置下交换可为负；两种子插值结论不一致本身限制插值区证据强度。",
+    "basis": "page 7 Section VII 复合回归数字与 page 8 Limitations 插值 cell 种子间分歧。"
+   },
+   {
+    "boundary": "收益只在'控制臂已跌至 55–67%'的严重外推区出现且为 +4~+16 点量级：对控制本身已强的端点朝向轴（±10°）增益为零——该路线不是通用相机鲁棒性提升，而是覆盖耗尽处的补偿；综述引用时应报告各轴严重度基线。",
+    "basis": "page 7 Section VII 'inside the envelope it buys nothing...beyond the envelope, where the control falls to 55–67%, it returns +4 to +16 points'；C3 端点轴双侧 null（Table II）。"
+   },
+   {
+    "boundary": "预注册终点为方位角桶：dolly/仰角为次级、C3 与复合桶为文本报告；除主终点外各桶样本量差异大（49–386 任务），复合桶与 ±2 端点桶（6 任务）不可读——次级轴结论的证据等级低于主轴。",
+    "basis": "page 5 Section V-C 预注册分级与 page 7 Table II 桶大小及文本披露（'too small to read'）。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：联合视频-动作去噪的 WAM/世界模型（输出混含协变+不变块）、透视场景相机外参扰动族（方位角/仰角/尺度/端点朝向）、可获得仿真状态重渲染配对的数据、场景-only 评估协议；以训练期选择性一致性换部署接口完全不变（无相机标签/外参/深度/视角合成）的 held-out 视角外推鲁棒性（+4~+16 点，三轴两种子），且错误坐标选择的危害有定量定律。不适用/未验证：镜头类型替换（鱼眼/超广角/全景/环视阵列）与径向畸变域差距；真实世界闭环（WAM 实例化开放，流 VLA 版本已有真机证据）；失败/恢复状态；腕部相机位姿扰动；动作以相机坐标表示的系统（不变性前提构造性失效）；无法构造同状态配对的存量数据；包络内插值区（零增益甚至小代价）。对综述的接口：本文是'训练期视角鲁棒性'路线在 WAM 骨干上的机制+协议双证据，与 2608.06965（流 VLA 版本）构成同一机制的两个实例化；其腕部混杂审计与 carve-and-hold-out 协议是综述横向比较任何相机鲁棒性证据（含鱼眼/环视配置主张）前必须套用的测量学标尺。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "双臂同 manifest/基础检查点/预算/噪声调度，唯一差异 λ_CV，把一致性项与配对暴露干净分离；对照看到完全相同的扰动相机，外推增益可归因一致性项。",
+   "预注册分析计划（主终点/次级/分布内桶语言分级）+ 如实报告 null 与负结果；独立第二种子双臂重训复现全部层级。",
+   "carve-and-hold-out 协议把'分布匹配上限'与'真 OOD'分离，训练/评估泄漏问题（状态/rollout/标签不相交）被显式处理。",
+   "腕部混杂审计跨三个模型家族（Cosmos 遮蔽实验、π0.5 遮蔽引证、OFT 排行榜 wrist/no-wrist），且用'无输入仍成功证明输入不必要'的方向性论证规避遮蔽损坏混淆。",
+   "收缩律三层证据链：解析推导（Prop 1）→ 独立配对最小化器机器精度复现 → 共享主干受控收敛训练 10% 内 → 2B 模型定性塌缩（0.18 vs 0.98）。",
+   "Assumption 1（基座系动作约定）被直接对数据回归验证而非默认接受。"
+  ],
+  "design_risks": [
+   "全部闭环证据在仿真（LIBERO 任务族）；WAM 实例化真机证据开放，机制迁移性仅由流 VLA 版本间接支撑。",
+   "场景-only 协议与文献保留腕部视图的 LIBERO-Plus 数字不可比（作者已披露），绝对量级跨论文比较仍需协议换算。",
+   "插值桶小（46–49 任务）且高天花板（85–93%），检查点间变异超过配对抽样区间；两种子插值结论不一致（null vs −4.29）。",
+   "复合极端位移回归（object −40.4）在预注册终点之外，样本少；'外推增益'主张的复合位移边界证据薄弱。",
+   "excess-FID 是预测帧分布保真的弱代理（作者自认 strictly weaker than semantic plan correctness），保真-控制解离的动机证据不构成语义级结论。",
+   "仰角轴单外推点、±2 端点桶 6 任务不可读——次级轴统计功效有限。"
+  ],
+  "baseline_fairness": "主对照（λ_CV=0 同 manifest 同检查点同预算）公平性最强，且被明确定位为相机增广基线而非弱基线；场景-only 参照用于脆弱性测量而非性能比较；发布腕部版检查点与 π0.5 仅用于腕部混杂审计（作者明确匹配场景-only 参照的 ID 差 5 点）；OFT 数字引自官方排行榜非自测。所有桶级比较在同协议内进行。",
+  "metric_validity": "闭环成功率（配对任务 bootstrap 95% CI）为主效用指标，预注册分级报告规范；腕部审计用 Wilson CI+1,200 rollouts/条件+多填充类型稳定性检查；excess-FID 仅作动机观察且作者声明其弱代理性质；收缩比 R(λ)/R(0) 与跨视角未来场景比为机制度量，直接对应 Proposition 1 预测。未见成功率之外的效用维度（安全性/时间效率）。",
+  "reproducibility": "训练超参（λ_CV=2.0 ramp 2%、10,000 步、batch 720、lr 5e-5、EMA、7.2M 呈现、6.2 epoch）与协议细节在正文 V/VI 节完整披露；代码与协议工具、第二种子十二桶表承诺随代码发布；LibERO/LIBERO-Plus/Cosmos Policy 检查点均公开。收缩律受控实验的合成设置可独立复现。",
+  "external_validity": "结论限于 LIBERO 任务族、透视相机四轴外参扰动、仿真闭环、场景-only 输入配置与同状态可重渲染数据。相机类型替换（鱼眼/环视/全景）、真机 WAM、移动底盘、动态场景、腕部位姿扰动、失败恢复状态均未覆盖——对广角/环视相机场景仅提供机制与量级参照及协议标尺，不能作直接证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.21402-C01",
+   "claim": "在 LIBERO-Plus 相机轨道的 carve-and-hold-out 协议下，仅约束不变块的选择性跨视角一致性（SCVC）在 held-out 轨道视角外推区把闭环成功率比同数据匹配对照提高 12.2 点（95% CI [7.4, 17.0]；独立第二训练种子下 +15.5，CI [11.7, 19.4]），效应被另外两个相机轴复现；而训练包络内的插值区两种子均零增益（−1.2 与 −4.3 点），分布内能力保持（−0.6 与 −0.2 点）。",
+   "stance": "support",
+   "relation": "支持命题：训练期选择性跨视角一致性可在部署接口完全不变（无相机标签/外参/深度/视角合成）的条件下恢复世界动作模型对训练包络外相机视角的外推鲁棒性——为'多相机/异构视角配置进入统一策略'提供 WAM 骨干上的训练期路线效果量级参照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要主结果句给出全部关键量级：外推 +12.2/+15.5、两轴复现、插值零增益、ID 保持；桶级明细见 Table II（C02）。",
+   "locator": "page 1, Abstract; page 6-7, Section VI-D, Table II",
+   "source_context": "On held-out orbital viewpoints beyond the training envelope, SCVC improves closed-loop success over the matched control by 12.2 points (95% CI [7.4, 17.0]; +15.5, CI [11.7, 19.4], under an independent second training seed)—an effect two further camera axes replicate—while interpolation within the envelope shows no gain in either seed (−1.2 and −4.3 points) and in- distribution competence is preserved (−0.6, −0.2).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "LIBERO-Plus camera-track held-out orbital extrapolation closed-loop success gain over matched control",
+    "value_or_direction": "+12.2 points (95% CI [7.4, 17.0]) first seed; +15.5 (CI [11.7, 19.4]) second seed; interpolation null in both seeds (−1.2, −4.3 points); ID preserved (−0.6, −0.2 points)",
+    "comparator": "matched control trained on the identical carved same-state pair manifest with consistency weight zero",
+    "task_or_sample": "LIBERO-Plus camera-perturbation track under the carve-and-hold-out protocol, two independent training seeds, scene-only configuration",
+    "locator": "page 1, Abstract; page 6-7, Section VI-D, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 12.2 points、(95% CI [7.4, 17.0])、+15.5 CI [11.7, 19.4]、two further camera axes replicate、(−1.2 and −4.3 points)、(−0.6, −0.2)（已核对，含 in- distribution 断词形式）；桶级数字 63.8→76.0 与 +12.20 (+7.40, +17.00) 由 page 7 Table II 行逐字核对（C02）；claim 的每个数字、种子限定与协议限定均来自这两处，未外推到其他任务域或相机类型。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C02",
+   "claim": "桶级明细（第一训练种子，每任务 10 trials）：C2 方位角分布内桶 84.0→88.5（+4.52 [+2.65,+6.39]）、插值桶 86.3→85.1（−1.22 [−4.29,+1.84]，跨零）、外推桶 63.8→76.0（+12.20 [+7.40,+17.00]）；C1 dolly 外推 67.0→71.2（+4.24 [+0.71,+7.88]）而插值 null；C2 仰角外推（386 任务）54.9→63.7（+8.76 [+6.40,+11.11]）；C3 端点朝向轴插值/外推均 null（−0.97/−0.58）；四套件 ID 92.3→91.7（−0.60）。",
+   "stance": "support",
+   "relation": "支持命题：视角一致性收益按扰动轴与区域分层——方位角/仰角外推最大、尺度次之、端点朝向（小角度再定向）零收益，插值区普遍 null——综述聚合'多相机训练帮助什么'时应按分布内/插值/外推三档与轴类型分级证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 给出预注册比较全表：两臂唯一差异是一致性权重；分布内桶为分布匹配上限而非 OOD 主张；外推桶是真正未见视角。",
+   "locator": "page 7, Table II",
+   "source_context": "C2 azimuth in-dist 294 84.0 88.5 +4.52 (+2.65, +6.39) interp 49 86.3 85.1 −1.22 (−4.29, +1.84) extrap 100 63.8 76.0 +12.20 (+7.40, +17.00) C1 dolly in-dist 168 91.5 91.3 −0.18 (−1.90, +1.67) interp 46 88.7 89.6 +0.87 (−1.96, +3.91) extrap 99 67.0 71.2 +4.24 (+0.71, +7.88) C2 elevation extrap 386 54.9 63.7 +8.76 (+6.40, +11.11) C3 endpoint interp 62 92.6 91.6 −0.97 (−3.71, +1.61) extrap 226 88.6 88.0 −0.58 (−2.12, +1.02) ID (4 suites, 500 eps/suite) 92.3 91.7 −0.60",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "per-bucket closed-loop success rate (%, 10 trials per task, paired task-bootstrap difference with 95% CI)",
+    "value_or_direction": "C2 azimuth in-dist 84.0→88.5 (+4.52), interp 86.3→85.1 (−1.22), extrap 63.8→76.0 (+12.20); C1 dolly extrap 67.0→71.2 (+4.24), interp null (+0.87); C2 elevation extrap 54.9→63.7 (+8.76); C3 endpoint interp −0.97 / extrap −0.58 (null); ID (4 suites) 92.3→91.7 (−0.60)",
+    "comparator": "matched control λ_CV=0 trained on the identical carved pair manifest from the same base checkpoint",
+    "task_or_sample": "twelve axis-level buckets, N=49–386 tasks per bucket, first training seed, LIBERO-Plus camera track",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table II 全表逐字核对（含桶大小 294/49/100/168/46/99/386/62/226、全部均值与 CI 括号、ID 行 92.3 91.7 −0.60）；表题声明两模型唯一差异是一致性权重、数字为第一训练种子；claim 的每个数字均来自该表，插值 null 的解读与 C3 双侧 null 由表内 CI 跨零直接支撑。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C03",
+   "claim": "错误坐标一致性（把跨视角一致性施加于协变未来场景块）的危害被定量验证：受控共享主干去噪器收敛训练下，held-out 配对的归一化视图差比率在 λ∈{0.1,0.5,2.0} 测得 0.715/0.337/0.116，对 Proposition 1 预测值 0.714/0.333/0.111 相差在 10% 以内且随 λ 单调；2B WAM 上 2k 步错误坐标臂（除一致性额外加在协变未来场景块外与选择性运行全同）的 held-out 跨视角未来场景比塌缩至 0.18 并向 Proposition 1 渐近下降，而选择性运行与 λ=0 控制均保持约 0.98。",
+   "stance": "limit",
+   "relation": "限定命题：跨视角一致性不能整体套用于含协变输出（未来场景/视频预测头）的具身世界模型——一致性约束必须按输出坐标的变换律选择，否则预测被拉向视图平均的 ghosted 图像并主动损害模型；对把鱼眼/环视多路视频流接入带视频预测头的 WAM，这是该训练期路线的硬边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "收缩定律三层验证中的两层：受控合成实验（共享网络训练到达逐对最优）与 2B 模型 on-model 短程检查；作者声明 2B 模型上的全定量测量超出范围。",
+   "locator": "page 4, Section IV-C, Figure 2",
+   "source_context": "The measured ratios are 0.715, 0.337, and 0.116 at λ ∈ {0.1, 0.5, 2.0}, against predicted values 0.714, 0.333, and 0.111: within ten percent everywhere and monotone in λ. Shared-network training reaches the per-pair optimum here, so wrong-coordinate consistency collapses covariant content exactly as the algebra says. A full quantitative measurement of the law on the 2B model is out of scope; as a quali- tative on-model check we trained a short (2k-step) wrong- coordinate arm on the WAM itself, identical to the selective run except that the consistency term is additionally imposed on the covariant future-scene block. Its training covariant guard—the held-out cross-view future-scene ratio—collapses to 0.18 at 2k steps, descending toward the Proposition 1 asymptote, while the selective run and the λ CV =0 control both hold near 0.98.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "normalized view-difference ratio R(λ)/R(0) on held-out pairs (controlled two-view denoiser) and held-out cross-view future-scene ratio (2B WAM)",
+    "value_or_direction": "measured 0.715 / 0.337 / 0.116 at λ = 0.1 / 0.5 / 2.0 vs predicted 0.714 / 0.333 / 0.111 (within 10%, monotone in λ); 2B model wrong-coordinate arm collapses to 0.18 at 2k steps while selective and λ=0 control hold near 0.98",
+    "comparator": "Proposition 1 pointwise-optimum prediction; selective run and λ_CV=0 control on the same 2B WAM",
+    "task_or_sample": "controlled shared-trunk denoiser trained to convergence on synthetic two-view targets with an exactly invariant and an exactly covariant block; 2k-step wrong-coordinate arm on the 2B WAM",
+    "locator": "page 4, Section IV-C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 IV-C 逐字给出 0.715/0.337/0.116、{0.1, 0.5, 2.0}、0.714/0.333/0.111、'within ten percent everywhere and monotone in λ'、2k-step wrong-coordinate arm 设置、0.18、λ CV =0 control、near 0.98（已核对，含 quali- tative / wrong- coordinate / λ CV =0 断词形式）；claim 的每个数字与实验设置限定均来自该段，Proposition 1 预测值的含义未超出原文 'against predicted values' 表述。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C04",
+   "claim": "腕部相机混杂遮蔽审计（每条件 1,200 rollouts）：对发布腕部版 Cosmos 策略，遮蔽场景相机（被相机基准扰动的传感器）仅使成功率从 80.5%（Wilson 95% CI [78.2, 82.6]）降至 66.6%（[63.9, 69.2]，噪声填充 69.7%），遮蔽腕部相机则塌缩至 0.2%（[0.1, 0.7]）——策略在完全没有场景视图时仍解决三分之二相机扰动任务，而无腕部则完全无助；名义任务小型试点同构（140/180 场景遮蔽 vs 37/180 腕部遮蔽，填充类型间至多 5 点变化），公开 π0.5 LIBERO 策略同样场景遮蔽无碍而腕部遮蔽完全失效。",
+   "stance": "support",
+   "relation": "支持命题：已发表相机鲁棒性数字被腕部相机位姿稳定性系统性混杂——综述横向比较'相机配置/视角鲁棒性'证据（含鱼眼/环视替换主张）时必须先核对腕部遮蔽/保留/场景-only 协议，否则量级不可比；与 2608.06965 的腕部遮蔽协议线构成同一测量学问题的双证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "遮蔽审计以'无输入仍成功证明输入不必要'的方向性论证隔离混杂；场景遮蔽仅掉 14 点而腕部遮蔽归零说明相机轨道分数由腕部视图承载。",
+   "locator": "page 5, Section VI-B, Figure 3",
+   "source_context": "Figure 3 presents a masking audit of the released wrist- enabled Cosmos policy run directly on the camera-perturbed tasks (1,200 rollouts per condition). Blacking out the scene camera, the very sensor the camera benchmark perturbs, lowers success only from 80.5% (unmasked, Wilson 95% CI [78.2, 82.6]) to 66.6% ([63.9, 69.2]), with a scene-noise fill at 69.7% ([67.0, 72.2]); blacking out the wrist collapses it to 0.2% ([0.1, 0.7]). The policy thus still solves two- thirds of camera-perturbed tasks with no scene view at all, while it is helpless without the wrist. We rest the argument on the scene-mask direction: succeeding without an input proves the input is unnecessary, whereas failure without an input can also reflect sensitivity to the corruption itself. A smaller pilot on nominal tasks shows the same asymmetry and is stable across fill types (140/180 scene-masked versus 37/180 wrist-masked, with the scene result varying by at most 5 points across black, gray, and noise fills), and a public π 0.5 LIBERO policy is likewise unaffected by scene masking and completely broken by wrist masking [6], [7]",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "camera-perturbed track success rate under input masking (wrist-enabled Cosmos policy)",
+    "value_or_direction": "unmasked 80.5% (Wilson 95% CI [78.2, 82.6]) → scene camera blacked 66.6% ([63.9, 69.2]) / scene-noise fill 69.7% ([67.0, 72.2]) → wrist blacked 0.2% ([0.1, 0.7]); pilot 140/180 scene-masked vs 37/180 wrist-masked",
+    "comparator": "unmasked wrist-enabled released policy; scene-mask vs wrist-mask direction; fill-type stability (black/gray/noise, at most 5 points)",
+    "task_or_sample": "LIBERO-Plus camera-perturbed tasks, 1,200 rollouts per condition; nominal-task pilot 180 rollouts per condition",
+    "locator": "page 5, Section VI-B, Figure 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 VI-B 逐字给出 1,200 rollouts per condition、80.5%、[78.2, 82.6]、66.6%、[63.9, 69.2]、69.7%、[67.0, 72.2]、0.2%、[0.1, 0.7]、two-thirds、140/180、37/180、at most 5 points、π 0.5 LIBERO policy unaffected/broken（已核对，含 wrist- enabled / π 0.5 断词形式）；claim 的每个数字、rollout 数与填充类型限定均来自该段，π0.5 的 100%/0% 数字出自 page 1 引言（已核对）但未写入 claim 本体。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C05",
+   "claim": "腕部混杂对基准数字的后果（Table I）：发布腕部版检查点 ID 98.5%/相机轨道 79.5%/掉点 19.0，而匹配的场景-only 参照 ID 93.2%/相机轨道 26.0%/掉点 67.2——ID 差约 5 点而相机掉点差近 50 点；官方排行榜独立模型家族 corroborate（OpenVLA-OFT 去 wrist 输入相机分从 56.4 掉至 10.4）；场景视图对腕部版策略仍有信息量（遮蔽它聚合掉 14 点，从 spatial 增益到 goal 大掉），但腕部视图是测量场景视角不变性的混杂因子。",
+   "stance": "support",
+   "relation": "支持命题：腕部相机是当前相机鲁棒性数字的主要承载输入——去掉腕部后场景相机扰动的真实脆弱性（67 点级掉点）才暴露；对以鱼眼/环视替换场景相机且常无稳定腕部参照的部署，文献 wrist-enabled 数字会系统性高估其鲁棒性，综述必须按协议分层比较。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 把遮蔽审计转化为基准后果：同一基准上腕部版与场景-only 的 ID 差 5 点、相机掉点差近 50 点；OFT 排行榜数字为独立家族佐证。",
+   "locator": "page 6, Table I",
+   "source_context": "Policy ID Camera Drop Released ckpt (wrist) 98.5 79.5 19.0 Scene-only reference 93.2 26.0 67.2 OFT (wrist / none) – 56.4 / 10.4 – input from OpenVLA-OFT drops its camera score from 56.4 to 10.4 [4]. The scene view still informs wrist-equipped policies—masking it costs 14 points aggregate, ranging from a gain on spatial to a large drop on goal—and the audit shows the wrist view is a confound for measuring scene- view invariance, the quantity a camera benchmark intends to measure.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "LIBERO-Plus ID and camera-track success rates with their drop, wrist-enabled vs scene-only policies",
+    "value_or_direction": "released wrist-enabled ckpt: ID 98.5 / camera 79.5 / drop 19.0; scene-only reference: ID 93.2 / camera 26.0 / drop 67.2; OpenVLA-OFT wrist vs no-wrist camera score 56.4 / 10.4; scene masking costs 14 points aggregate for wrist-equipped policies",
+    "comparator": "matched scene-only reference vs released wrist-enabled checkpoint; official leaderboard OFT wrist/no-wrist numbers (independent model family)",
+    "task_or_sample": "LIBERO-Plus camera track; OFT numbers cited from the official leaderboard, not self-measured",
+    "locator": "page 6, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table I 行逐字给出 98.5 79.5 19.0、93.2 26.0 67.2、56.4 / 10.4（含 en-dash '–' 形式，已核对）；紧随表后的正文逐字给出 'drops its camera score from 56.4 to 10.4 [4]'、'masking it costs 14 points aggregate, ranging from a gain on spatial to a large drop on goal'、'confound for measuring scene- view invariance'（已核对，含 scene- view 断词）；ID 差 5 点/掉点差近 50 点的表题表述（'ID DIFFERS BY FIVE POINTS BUT THE CAMERA DROP DIFFERS BY NEARLY FIFTY'）已核对；claim 各数字均有逐字来源。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C06",
+   "claim": "场景-only 参照的零样本脆弱性量级：分布内 93.2% 而全相机轨道仅 26.0%，且掉点轴间不均——dolly 7.5%、轨道视角变化 21.4%、原地端点再定向 61.3%——轨道轴贡献基准大部分相机实例，是零样本差距的主要所在。",
+   "stance": "support",
+   "relation": "支持命题：场景-only 世界动作模型对相机几何/视角变化的零样本脆弱性达 67 点量级且按扰动类型分层（端点朝向最脆）——引入更大几何域差距的相机（鱼眼/超广角/环视）而无相应机制时，策略侧退化预期不低于此量级，为综述提供风险基线。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-C 以冻结场景-only 参照量化零样本差距并按轴分解，作为方法要解决的失效定位。",
+   "locator": "page 6, Section VI-C",
+   "source_context": "The scene-only reference reaches 93.2% in distribution yet 26.0% on the full camera track, and the drop is un- even across axes: 7.5% under dolly, 21.4% under orbital viewpoint change, 61.3% under in-place reorientation. This is the zero-shot gap the method addresses, and the orbital axis, which contributes the majority of the benchmark’s camera instances, is where most of it lives.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "frozen scene-only reference zero-shot success rate on the full camera track vs in-distribution",
+    "value_or_direction": "ID 93.2% vs full camera track 26.0%; per-axis drops 7.5% (dolly), 21.4% (orbital viewpoint change), 61.3% (in-place reorientation)",
+    "comparator": "the same policy's in-distribution performance on the four LIBERO suites",
+    "task_or_sample": "frozen scene-only reference evaluated across the full LIBERO-Plus camera track",
+    "locator": "page 6, Section VI-C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 VI-C 逐字给出 93.2%、26.0%、7.5%、21.4%、61.3% 与轨道轴贡献多数实例的表述（已核对，含 un- even 断词与 benchmark’s 弯引号）；'67 点量级'为 93.2−26.0 的算术差值，出现在 relation 而非 claim 本体；claim 各数字与轴名均有逐字来源。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C07",
+   "claim": "保真-控制解离：在轨道轴上，闭环动作成功率跨严重度从 53% 崩溃至 3%，而相对 excess-FID 保持平坦（全部级别介于 −0.07 与 +0.16 之间）；dolly 轴上预测保真与控制共同退化。视频先验恰在控制失效最重的轴上存活（呼应他处观察到的 foresight-action 失配）。",
+   "stance": "conditional",
+   "relation": "限定命题：WAM 的视频预测保真不蕴含控制正确——视角鲁棒性问题主要在动作侧而非预测侧，修复目标应放在动作/不变块输出；对'用世界模型视频预测补偿广角/鱼眼成像的视角变化'的预期构成反面证据（保真的预测不保证不崩的动作）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "excess-FID 扣除同相机真值重放的 oracle 地板后衡量分布保真；作者自认其严格弱于语义计划正确性，仅作动机证据。",
+   "locator": "page 6, Section VI-C, Figure 4",
+   "source_context": "On the orbital axis, action success collapses from 53% to 3% across severity levels while relative excess-FID stays flat (between −0.07 and +0.16 across all levels). On the dolly axis, in contrast, prediction fidelity co-degrades with control. The video prior thus survives precisely on the axis where control fails hardest, echoing foresight-action misalignment observed elsewhere [9], and marking the orbital axis as the natural primary target for an action-side repair.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "closed-loop action success rate and relative excess-FID across camera severity levels",
+    "value_or_direction": "orbital axis: action success 53% → 3% across severity levels while relative excess-FID stays flat (−0.07 to +0.16); dolly axis: fidelity and control co-degrade",
+    "comparator": "predicted-future-scene fidelity (camera-conditioned excess-FID minus oracle floor) vs closed-loop control success on the same frozen reference",
+    "task_or_sample": "frozen scene-only reference on the full camera track, severity levels L1–L5 per axis",
+    "locator": "page 6, Section VI-C, Figure 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 VI-C 逐字给出 53%、3%、(between −0.07 and +0.16 across all levels)、dolly 轴 co-degrades、video prior survives precisely on the axis where control fails hardest（已核对）；oracle 地板与 excess-FID 定义出自同节前文（已核对）；claim 各数字与轴限定均有逐字来源，'严格弱于语义计划正确性'的自认出自同节末句并写入 summary。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C08",
+   "claim": "套件级异质性：主外推桶内部 spatial 套件提升 40.8 点而 object 套件回归 11.6 点；在预注册终点之外的复合极端方位角+仰角位移下 object 套件回归 40.4 点——没有任何单轴桶接近该失败量级。作者解读：不变块上的跨视角一致性约束末端执行器去向，而 object 中心套件强调的精细抓取几何在其 reach 之外，复合位移回归显示该交换可以为负。",
+   "stance": "limit",
+   "relation": "限定命题：视角一致性的获益按任务族分层——视角再定位类（spatial）大幅获益、精细抓取几何类（object）可能负收益、复合极端视角位移可致大负回归；对依赖精细视觉对齐的任务（含鱼眼边缘畸变下的抓取）不能预期同等增益，须配合互补方法。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VII 节如实报告桶内套件异质性与非预注册复合位移的负回归，并给出机制解读（抓取精度分量在目标 reach 外）。",
+   "locator": "page 7, Section VII",
+   "source_context": "The heterogeneity inside the primary extrapolation bucket is sharper—spatial improves by 40.8 points while object regresses by 11.6—and under a compound extreme azimuth-and-elevation shift outside the pre-registered endpoints the object suite regresses by 40.4 points, a failure no single-axis bucket approaches. The pattern admits a consistent reading: cross-view agreement on the invariant block constrains where the end-effector should go, while the fine grasp geometry that the object-centric suites stress lies outside its reach, so on tasks dominated by grasp-precision failures the objective has little to repair— and the compound-shift regression shows the trade can go negative.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "suite-level success difference (SCVC minus matched control) inside the primary azimuth extrapolation bucket and under a compound extreme shift",
+    "value_or_direction": "spatial +40.8 points, object −11.6 points inside the primary extrapolation bucket; object suite regresses 40.4 points under a compound extreme azimuth-and-elevation shift outside the pre-registered endpoints",
+    "comparator": "SCVC vs matched control, per suite",
+    "task_or_sample": "LIBERO spatial/object suites within the azimuth extrapolation bucket; non-pre-registered compound extreme azimuth-and-elevation shift",
+    "locator": "page 7, Section VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 VII 逐字给出 40.8、11.6、40.4、'a failure no single-axis bucket approaches' 与机制解读句（已核对，含 object- centric 断词）；claim 各数字、套件名与'预注册终点之外'限定均逐字对应；作者解读部分以'作者解读'标注未混入独立断言。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C09",
+   "claim": "收益-代价交换不对称（作者总结）：训练包络内该目标不买任何东西、还可能对近天花板对照损失几点；包络外（对照跌至 55–67% 处）它在三个轴、两个种子上回报 +4 到 +16 点。",
+   "stance": "conditional",
+   "relation": "限定命题：该训练期路线的净收益只在训练覆盖用尽处出现——综述引用'多相机/一致性训练帮助泛化'主张时必须区分覆盖内插值（预期零收益）与覆盖外外推（预期 +4~+16 点且需控制臂已显著退化为前提）两种证据档位。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VII 节结尾以不对称交换刻画方法边界，与 Table II/第二种子数字一致。",
+   "locator": "page 7, Section VII",
+   "source_context": "The exchange the objective offers is asymmetric: inside the envelope it buys nothing and can cost a few points against a near-ceiling control; beyond the envelope, where the control falls to 55–67%, it returns +4 to +16 points across three axes and two seeds.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "closed-loop success gain of SCVC inside vs beyond the training envelope",
+    "value_or_direction": "inside the envelope: no gain, can cost a few points against a near-ceiling control; beyond the envelope (control at 55–67%): +4 to +16 points across three axes and two seeds",
+    "comparator": "near-ceiling matched control inside the envelope vs control falling to 55–67% beyond the envelope",
+    "task_or_sample": "three camera axes, two training seeds, LIBERO-Plus camera track",
+    "locator": "page 7, Section VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 VII 逐字给出该总结句（含 55–67% 与 +4 to +16 points across three axes and two seeds，已核对）；+4/+16 的下上界与 Table II dolly +4.24、仰角 +8.76、方位角 +12.20/+15.50 及第二种子 dolly +4.44、仰角 +4.84 一致（page 6-7 已核对）；claim 为作者总结的忠实复述，未加外推。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C10",
+   "claim": "独立第二种子（双臂同协议重训）复现层级结构：外推 +15.50（CI [+11.70,+19.40]）、dolly +4.44（[+0.61,+8.49]）、仰角 +4.84（[+3.11,+6.58]）、分布匹配方位角区 +3.40（[+1.77,+4.93]）、ID 保持 −0.2、两个复合桶转正（+5.16/+16.36）；其插值 cell 读 −4.29（CI [−7.56,−1.22]）。跨种子看，方法臂插值成功数移动 3/490 trials（85.1%→85.7%）而对照臂移动 18（86.3%→90.0%），其中 14 个落在单一长程任务的五个插值视图上，goal 套件对照两种子均 100% 解插值 trials（方法臂 95.6%/90.0%）。",
+   "stance": "conditional",
+   "relation": "限定命题：外推增益跨种子稳健，但插值 cell 种子间不稳定且由对照臂检查点变异（单一长程任务）支配——插值区小幅差异不能作为稳健证据引用；综述引用本文插值结论时应标注两种子分歧（null vs −4.29）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第二种子全套数字与跨种子插值移动分析显示方法臂稳定性高于对照臂，但插值结论不可下。",
+   "locator": "page 7, Section VI-D",
+   "source_context": "A second seed, both arms retrained under the identical protocol, reproduces the hierarchy: extrapolation +15.50 (CI [+11.70, +19.40]), dolly +4.44 ([+0.61, +8.49]), el- evation +4.84 ([+3.11, +6.58]), the distribution-matched azimuth region +3.40 ([+1.77, +4.93]), ID preservation −0.2, and both compound buckets now positive (+5.16, [+0.78, +9.69]; +16.36, [+12.73, +20.20]). Its interpola- tion cell reads −4.29 ([−7.56, −1.22]). Across seeds the method’s interpolation successes move by 3 trials in 490 (85.1% to 85.7%) and the control’s by 18 (86.3% to 90.0%); 14 of those 18 lie in the five interpolation views of one long-horizon task whose success varies strongly between checkpoints, and the goal suite’s control solves 100% of interpolation trials in both seeds (the method: 95.6%, 90.0%).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "second-seed paired bucket differences and cross-seed interpolation success movement",
+    "value_or_direction": "extrapolation +15.50 (CI [+11.70, +19.40]); dolly +4.44 ([+0.61, +8.49]); elevation +4.84 ([+3.11, +6.58]); dist-matched azimuth +3.40 ([+1.77, +4.93]); ID −0.2; compound buckets +5.16/+16.36; interpolation cell −4.29 ([−7.56, −1.22]); method interp successes move 3/490 trials (85.1%→85.7%), control 18 (86.3%→90.0%)",
+    "comparator": "first-seed hierarchy; both arms retrained under the identical protocol with an independent seed",
+    "task_or_sample": "both arms retrained under an independent second training seed; 490 interpolation trials across seeds",
+    "locator": "page 7, Section VI-D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出第二种子全套数字（+15.50、+4.44、+4.84、+3.40、−0.2、+5.16、+16.36、−4.29 及各 CI）与跨种子移动（3 trials in 490、85.1% to 85.7%、18、86.3% to 90.0%、14 of those 18、100%、95.6%、90.0%）（已核对，含 el- evation / interpola- tion 断词与 method’s / control’s / suite’s 弯引号）；claim 各数字均有逐字来源。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C11",
+   "claim": "对照设计的因果分离：两模型在同一 carve 配对 manifest、同一场景-only 基础检查点上训练——λ_CV=0 的对照与 λ_CV=2.0 的 SCVC；因对照的两支均接收监督损失，它是相机增广基线，方法-对照差在相同数据、初始化与预算下隔离出一致性项本身的效应。",
+   "stance": "support",
+   "relation": "支持命题：存在严格的同数据对照设计可分离'一致性目标'与'配对数据暴露'——综述评估多相机/视角训练方法时应要求同 manifest 的 λ=0 对照而非仅'加数据'对照，本文提供了该标准的设计模板。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "对照看到与 SCVC 完全相同的扰动相机配对；外推增益因此可归因一致性项而非数据暴露。",
+   "locator": "page 5, Section V-C",
+   "source_context": "Two models are trained on the identical carved manifest from the same scene-only base checkpoint: a control with λ CV = 0 and the method (SCVC) with λ CV = 2.0. Because the control receives the supervised loss on both branches, it is a camera-augmented baseline, and the method- minus-control difference isolates the consistency term under identical data, initialization, and budget.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 V-C 逐字给出该设计句（含 λ CV = 0 / λ CV = 2.0 断词形式与 method- minus-control 断词，已核对）；claim 是设计声明的忠实复述，λ 数值、'相机增广基线'定位与'相同数据/初始化/预算'限定均逐字对应，无性能数字外推。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C12",
+   "claim": "分析计划在评估前固定（预注册）：主终点为方位角插值与外推桶，以配对任务 bootstrap 95% CI 比较；其余单轴桶为次级；分布内桶不携带 OOD 语言；结果按测量值报告，包括 null 结果。",
+   "stance": "conditional",
+   "relation": "限定命题：相机鲁棒性证据需预注册终点与 null 如实报告的披露标准——分布匹配训练的高分数只证明分布内视角不变性、不构成对未见视角的 OOD 主张；综述应按此标准分级文献证据强度，防止'分布匹配=泛化'的系统性高估。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "预注册+null 报告与 carve-and-hold-out 协议共同构成评估契约；V-A 节另披露分布匹配契约的局限（每个被评估姿态都被训练过则无 OOD 空间）。",
+   "locator": "page 5, Section V-C",
+   "source_context": "Our analysis plan was fixed before evaluation: the primary endpoints are the azimuth interpolation and extrapolation buckets, compared by paired task bootstrap with 95% confidence intervals; the remaining single-axis buckets are secondary; in-distribution buckets carry no OOD language. We report the plan’s out- come as measured, including null results.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 V-C 逐字给出该预注册声明（含 plan’s 弯引号与 out- come 断词形式，已核对）；claim 是协议声明的忠实复述，终点分级、CI 方法、null 报告承诺均逐字对应；relation 中'分布匹配高分数不构成 OOD 主张'的表述出自同页 V-A 节（'leave no room for an out-of-distribution claim, because every evaluated pose was trained on'，已核对）。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C13",
+   "claim": "作者声明的数据前提限制：方法需要同状态跨视角配对——仿真中通过状态重置渲染很廉价，但真实世界需要同步多相机 rig 或配对数据集；扩展到近似匹配配对是未来工作（Proposition 2 背后的协方差分解提示一条路线）。",
+   "stance": "limit",
+   "relation": "限定命题：该训练期路线的真实世界数据前提严格——存量单相机/非同步多相机数据（含多数鱼眼/环视采集）不能直接复用该目标，需要同步采集基础设施或状态对齐技术；与 2608.06965 的同条限制互证，是跨视角一致性家族的共同边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "限制章节第一条：配对需求与近似配对开放性；仿真廉价性与真世界成本形成对照。",
+   "locator": "page 7, Section VIII Limitations (first paragraph)",
+   "source_context": "The method requires same-state cross-view pairs, which are cheap in simulation through state-reset rendering but demand synchronized multi-camera rigs or paired datasets in the real world; extending the analysis to approximately matched pairs is future work, and the covariance decom- position behind Proposition 2 suggests a route.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 VIII 逐字给出该限制句（含 decom- position 断词形式，已核对）；claim 为作者限制声明的忠实复述，'仿真廉价/真世界需同步 rig/近似配对为未来工作'三层限定均逐字对应，未加量化外推。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C14",
+   "claim": "作者声明的证据范围限制：本文全部闭环证据均为仿真（在公认公开基准上按披露协议）；同一一致性机制的流 VLA 实例化已迁移到真机 [7]、说明机制可迁移性，但 WAM 实例化的真机证据保持开放。",
+   "stance": "limit",
+   "relation": "限定命题：WAM 实例化的视角一致性收益仅有仿真证据——对真机鱼眼/环视部署只有流 VLA 版本（2608.06965，骨干与动作头不同）的间接机制迁移证据；综述引用本文量级时应标注'仿真 WAM'限定。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "限制章节第二条：仿真闭环+流 VLA 真机间接证据+WAM 真机开放的三段式声明。",
+   "locator": "page 8, Section VIII Limitations",
+   "source_context": "loop evidence in this paper is likewise simulated, on a recognized public benchmark under a disclosed protocol; the flow-VLA instantiation of the same consistency mech- anism has transferred to a real robot [7], which speaks to the mechanism’s transferability; real-robot evidence for the WAM instantiation remains open.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 VIII 逐字给出该限制句（起始 'All closed-' 在 page 7 末行，正文主体在 page 8，含 mech- anism 断词与 mechanism’s 弯引号，已核对）；claim 为作者声明的忠实复述，[7] 即流 VLA 一致性论文（本 run 精读对象 2608.06965）的对应关系由引文列表页 8 参考条目 [7] 作者与标题核对。"
+   }
+  },
+  {
+   "card_id": "2608.21402-C15",
+   "claim": "本文评估的相机变化轴全部为透视相机外参级四轴：LIBERO-Plus 枚举的 1,599 个相机扰动任务实例的参数覆盖轨道方位角（水平 ±75°）、仰角（垂直 {0, 15}）、dolly 距离（尺度 100 到 200）与相机端点原地再定向（±10）；训练配对采样同轴并匹配基准边缘分布——全文不存在镜头模型/畸变级别的相机变量。",
+   "stance": "gap",
+   "relation": "标识综述缺口：视角鲁棒性机制文献（含本文与 2608.06965）默认透视相机外参扰动族，镜头类型/畸变模型替换（鱼眼、超广角、全景/环视阵列）下的选择性跨视角一致性训练、配对渲染与 carve 协议均未被任何实验覆盖——综述需单独收集'相机类型替换 vs 相机位姿扰动'分界的证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "轴枚举出自 V-B 节；'全文无镜头模型变量'为读者对 9 页全文的检索事实，仅支撑 gap 立场而非性能断言。",
+   "locator": "page 5, Section V-B",
+   "source_context": "LIBERO-Plus enumerates 1,599 camera-perturbed task instances whose parameters span four axes: orbital azimuth (horizon, ±75 ◦ ), elevation (vertical, {0, 15}), dolly distance (scale, 100 to 200), and in-place reorientation of the camera endpoint (±10) [4]. Our training pairs sample the same axes with density matched to the benchmark marginal, after which we remove held-out regions.",
+   "evidence_type": "reported-statistic",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 V-B 逐字给出 1,599、四轴枚举（±75 ◦ 断词形式、{0, 15}、100 to 200、±10）与训练配对同轴采样声明（已核对）；'全文不存在镜头模型/畸变级别变量'为读者检索事实（对 9 页全文 fisheye/wide-angle/panoramic/distortion 零命中，仅在 summary 与本 rationale 中标注），claim 主体为四轴枚举的忠实复述；gap 立场由检索事实支撑，未作性能断言。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Cosmos Policy: Fine-tuning video models for visuomotor control and planning",
+   "arxiv_id": "2601.16163",
+   "reason": "2B WAM 骨干与场景-only LIBERO 检查点来源（引文 [1]，page 8），全部后训练与评估的底座。"
+  },
+  {
+   "title": "LIBERO-Plus: A progressive robustness benchmark for vision-language-action models",
+   "arxiv_id": "2510.13626",
+   "reason": "相机扰动基准（1,599 实例四轴）与官方排行榜 OFT wrist/no-wrist 数字来源（引文 [4]，page 8），评估轨道与轴定义。"
+  },
+  {
+   "title": "π0.5: a vision-language-action model with open-world generalization",
+   "arxiv_id": "2504.16054",
+   "reason": "公开 π0.5 LIBERO 策略用于腕部混杂审计（引文 [6]，page 8），场景遮蔽无碍/腕部遮蔽失效的独立佐证。"
+  },
+  {
+   "title": "Cross-view action consistency for camera-robust vision-language-action policies",
+   "arxiv_id": "2608.06965",
+   "reason": "同一跨视角一致性机制的流 VLA 实例化（引文 [7]，page 8），shuffled-pair 控制与真机迁移证据来源；本 run 精读对象之一。"
+  },
+  {
+   "title": "LIBERO: Benchmarking knowledge transfer for lifelong robot learning",
+   "arxiv_id": "2306.03310",
+   "reason": "名义数据与 ID 四套件评估（引文 [27]，page 9）。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'训练期视角鲁棒性'路线在世界动作模型骨干上的机制+协议双证据而非鱼眼直接证据。关键判断：(1) 应用方式——同状态跨视角配对上的选择性跨视角一致性（仅约束不变块：动作块/未来本体感知/价值；协变未来场景块保持逐视图监督+共享噪声抽样），训练/测试均无相机标签、外参、深度、视角合成，部署接口不变；(2) 效果——held-out 视角外推 +12.2/+15.5 点（三轴两种子），包络内插值零增益、ID 保持 −0.6/−0.2；腕部混杂审计（场景遮蔽 80.5→66.6、腕部遮蔽 0.2%、Table I 掉点 19.0 vs 67.2）是横向比较任何相机鲁棒性数字的测量学标尺；(3) 局限——错误坐标一致性有可验证收缩危害（0.715/0.337/0.116 定律+2B 模型 0.18 塌缩）、真实世界需同步多相机配对、全部闭环证据仿真、精细抓取几何分量负收益（object −11.6/复合 −40.4）；(4) 鱼眼边界——全部相机扰动为透视相机外参级四轴（C15 gap 卡），镜头类型/畸变替换未测；对综述的价值是把'多相机训练帮助什么'的证据分档（分布内/插值/外推）与'文献数字可比性'（腕部协议混杂）两条方法论判据带进综述。与 2608.06965 的关系：同一作者组的姊妹篇（[7]），VLA 流匹配版与 WAM 去噪版共享配对机制；本文的 carve-and-hold-out 分析直接回应 2608.06965 的'分布族内新采样泛化'边界。"
+}

@@ -1,0 +1,354 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.05804",
+  "title": "CDF-Glove: A Cable-Driven Force Feedback Glove for Dexterous Teleoperation",
+  "published": "2026-03-06",
+  "url": "https://arxiv.org/abs/2603.05804",
+  "authors": [
+   "Huayue Liang",
+   "Ruochong Li",
+   "Yaodong Yang",
+   "Long Zeng",
+   "Yuanpei Chen",
+   "Xueqian Wang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "绳驱传感手套路线（16 主动 DoF 编码器直接测量 + 4 被动耦合），是本批次中视觉追踪之外的对照传感路线；其 DIP 关节重复定位 <0.4° 的定量传感保真度、200ms 力反馈延迟的准静态可接受边界、以及作者自认的编码器漂移/零偏误差来源，直接命中综述的『可接受阈值』与『误差来源』两问。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题定位：IL 依赖高质量高维手部数据；触觉反馈闭环提升演示质量；0.4° 重复性与 200ms 延迟的核心声明。"
+   },
+   {
+    "locator": "A. General Demonstration Teleoperation",
+    "role": "relevant-core",
+    "purpose": "对 VR 与动捕路线误差来源的批评（动态性能差、延迟、数据丢失、手部姿态映射精度不足）。"
+   },
+   {
+    "locator": "B. Wearable Devices for Teleoperation",
+    "role": "relevant-core",
+    "purpose": "可穿戴路线权衡：外骨骼笨重影响数据精度；部分绳驱外骨骼缺准确位置传感。"
+   },
+   {
+    "locator": "B. Measurement System",
+    "role": "method-or-design",
+    "purpose": "16 主动+4 被动 DoF 的编码器-绳驱测量架构；PTFE 套管减摩、弹簧防松弛保测量精度。"
+   },
+   {
+    "locator": "C. Force Feedback System",
+    "role": "method-or-design",
+    "purpose": "LRA 振动 + 绳驱力觉双模触觉；力阈值触发表（Table I）。"
+   },
+   {
+    "locator": "A. Kinematic Model of Finger Joint",
+    "role": "method-or-design",
+    "purpose": "编码器读数→关节角的运动学模型；PIP 由 DIP 经验公式 (2) 推算（误差引入点）。"
+   },
+   {
+    "locator": "V. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "实验总览：RY-H1/RY-H2/SDH 三本体、Vive Tracker 3.0 腕部追踪、100Hz 采集。"
+   },
+   {
+    "locator": "A. CDF-Glove Performance Validation",
+    "role": "results-or-analysis",
+    "purpose": "重复定位实验（DIP <0.4°）、200ms 力反馈延迟归因、触觉抓瓶消融（10%→50%）。"
+   },
+   {
+    "locator": "B. CDF-Glove System Modeling Validation",
+    "role": "results-or-analysis",
+    "purpose": "跨三本体（6/15/24 DoF）的运动学模型定性验证。"
+   },
+   {
+    "locator": "C. Bimanual CDF-Glove Teleoperation Data Collection",
+    "role": "results-or-analysis",
+    "purpose": "双臂数据采集管线（30Hz，AGIBOT，双 tracker 腕部追踪）。"
+   },
+   {
+    "locator": "D. Diffusion Policy on Collected Data",
+    "role": "results-or-analysis",
+    "purpose": "CDF vs 动觉示教（KT）的下游 DP 策略对照（+55pp 成功率、-47.2% 时间）。"
+   },
+   {
+    "locator": "VI. CONCLUSION AND FUTURE WORK",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与 limitation：编码器信号漂移、零偏波动、PCB 控制延迟。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "III. MECHANICAL DESIGN 引言段; A. Design Requirements and Approach",
+    "role": "method-or-design",
+    "reason": "设计目标概述段，与 B/C 小节内容重复，略读细节。"
+   },
+   {
+    "locator": "B. Force-feedback Cable Following Calculation; REFERENCES",
+    "role": "method-or-design",
+    "reason": "力觉缆绳跟随的几何推导细节与参考文献，对追踪精度问题仅间接相关，略读。"
+   }
+  ]
+ },
+ "research_question": "如何设计轻量低成本（$230）的高 DoF 绳驱力反馈手套，以高保真捕获手部关节数据并提供触觉闭环，从而提升遥操作演示质量与下游模仿学习效果？",
+ "contributions": [
+  "CDF-Glove 硬件：绳驱测量+力反馈一体，16 主动 DoF + 4 被动耦合 DoF，DIP 重复定位 0.4°，力反馈响应 200ms，成本约 $230。",
+  "缆绳位移→手指关节角的运动学模型与力反馈缆绳跟随模型。",
+  "双臂遥操作数据集 + Diffusion Policy 验证：较动觉示教成功率 +55pp、完成时间 -47.2%。"
+ ],
+ "method": {
+  "summary": "测量链：每个手指 DIP/MCP 关节经 1mm 钢缆（PTFE 套管减摩）带动齿条-齿轮驱动 RDC506018A 编码器，直接测量 16 DoF；PIP 角由 DIP 角经实验拟合公式 θ2=θ3+0.230/0.989 推算（4 个被动 DoF）。腕部由 HTC Vive Tracker 3.0 + Lighthouse 2.0（SteamVR 6D 位姿）追踪。触觉链：RY-H1 电机电流估计接触力，<1N 触发 LRA 振动（两段波形），>1N 触发伺服收缆产生阻力觉。重定向：关节角直接映射到 RY-H1/RY-H2/SDH。",
+  "assumptions": [
+   "PIP-DIP 关节耦合经验公式（常数 0.230/0.989 引自 [23]）对不同操作者手部成立——个体解剖差异未标定。",
+   "缆绳预紧后整个作业会话无需再调整（弹簧防松弛假设）。",
+   "Vive Tracker 3.0 + Lighthouse 的腕部追踪精度未在本文测量，视为基础设施可靠。",
+   "电机电流可作为接触力的有效代理（未与力传感器对标）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "双臂遥操作数据集：叠纸杯、转移塑料膜卷各 200 条演示（CDF 采集），配套 KT 对照数据集各 200 条"
+  ],
+  "tasks": [
+   "水瓶抓取（触觉消融）",
+   "可乐瓶转运、勺子+方块转移、弹钢琴、拧灯泡（RY-H1 验证）",
+   "叠纸杯、塑料膜卷转移（双臂数据采集）",
+   "SDH 仿真手势演示"
+  ],
+  "embodiments": [
+   "RY-H1（15 主动 DoF）",
+   "RY-H2（6 DoF，双臂 AGIBOT 平台）",
+   "Shadow Dexterous Hand（24 DoF，仿真）"
+  ],
+  "sample_or_scale": "重复定位：单指 3 次重复；抓瓶实验：4 条件 × 10 试次；DP 评估：2 任务 × 2 数据集 × 1000 epochs，每配置 10 次执行。"
+ },
+ "evaluation": {
+  "design": "传感保真度：DIP/MCP/PIP 重复定位标准差；触觉有效性：有/无触觉 × 有/无遮蔽视听 2×2 抓瓶实验；下游可用性：同任务同训练量的 CDF vs KT 数据集训练 Diffusion Policy 对照。",
+  "baselines": [
+   "无触觉反馈（抓瓶）",
+   "动觉示教 KT 数据集（下游策略）",
+   "DOGlove/GEX 成本对照"
+  ],
+  "metrics": [
+   "重复定位标准差（°）",
+   "力反馈响应时间（ms）",
+   "抓取成功率与完成时间",
+   "DP 策略成功率与完成时间"
+  ],
+  "ablations": [
+   "触觉 × 视听遮蔽 2×2",
+   "CDF vs KT 数据来源"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "DIP 关节重复定位：3 次重复均值 63.15°、标准差 0.29°，DIP/MCP/PIP 标准差均 <0.4°。",
+   "scope": "食指 DIP 单指 3 次重复实验，Fig. 9",
+   "locator": "A. CDF-Glove Performance Validation"
+  },
+  {
+   "finding": "绳驱力反馈响应时间约 200ms，归因于 RS485 串行通信瓶颈与伺服机械响应；对高速交互偏高但对数据集内准静态任务足够。",
+   "scope": "RY-H1 食指刚性球接触实验，Fig. 10",
+   "locator": "A. CDF-Glove Performance Validation"
+  },
+  {
+   "finding": "触觉反馈使蒙眼堵耳条件抓瓶成功率 10%→50%（4x），正常条件 70%→90%。",
+   "scope": "4 条件×10 试次，Table IV",
+   "locator": "A. CDF-Glove Performance Validation, Table IV"
+  },
+  {
+   "finding": "CDF 数据集训练的 DP 策略较 KT：叠纸杯 10/10 vs 4/10、膜卷转移 8/10 vs 3/10，平均成功率 +55pp、完成时间 -15.2s（-47.2%）。",
+   "scope": "2 任务各 200 条演示，每配置 10 次执行，Table V",
+   "locator": "D. Diffusion Policy on Collected Data, Table V"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前局限包括：受限的力输出、缺乏复杂触觉反馈、编码器信号漂移与零偏波动、PCB 引起的控制延迟；后续将优化 PCB 并集成绳驱控制策略以进一步降低追踪误差。",
+    "locator": "VI. CONCLUSION AND FUTURE WORK"
+   },
+   {
+    "limitation": "200ms 力反馈延迟对高速交互偏高，仅对数据集内准静态任务足够。",
+    "locator": "A. CDF-Glove Performance Validation"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "0.4° 重复性是关节角传感的一致性指标而非绝对精度：无外部光学基准对标，且仅 3 次重复、单指报告（MCP/PIP 仅口头声称一致），不能作为关节角绝对误差的证据。",
+    "basis": "V.A.3 全文：实验为接触角重复性（finger reset to zero → flex to touch → return），无 ground-truth 角度测量设备。"
+   },
+   {
+    "boundary": "PIP 角由 DIP 经验公式推算（4/20 DoF 被动），该耦合模型的个体泛化误差未评估；腕部 Vive Tracker 精度完全依赖基础设施而未实测。",
+    "basis": "IV.A 公式 (2) 常数引自 [23]；V 章仅声明使用 SteamVR 6D 位姿，无精度验证段。"
+   },
+   {
+    "boundary": "触觉消融与下游策略对照的试次数小（10 试次/条件、10 次执行/配置），55pp/4x 等大数字的统计稳健性未检验（无置信区间或显著性检验）。",
+    "basis": "Table IV/V 均为 10 次试次的原始计数，全文无统计推断。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：灵巧手遥操作中指级关节角直接传感的保真度参照（重复性 <0.4° 量级），准静态接触任务的力反馈延迟可接受边界（~200ms），以及『高保真传感+触觉闭环→更高质量演示→更强下游策略』路线的支持证据。不适用于：关节角绝对精度声明（无外部基准）；高速动态任务（作者自认 200ms 延迟偏高）；视觉手部追踪场景的直接对比（传感原理不同，仅可作路线级参照）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "传感链误差控制有明确工程设计对应：PTFE 减摩、弹簧防松弛、预紧免调——针对绳驱测量的已知误差源（摩擦、松弛）逐项设防。",
+   "罕见的传感重复性定量报告（<0.4°）与延迟归因（RS485+伺服→200ms），比本批次多数系统论文的纯任务级评估更接近可接受阈值证据。",
+   "下游 DP 对照控制变量严格（同任务、同 200 条、同 1000 epochs），数据来源是唯一变量。"
+  ],
+  "design_risks": [
+   "重复性≠绝对精度：无光学/编码器基准对标，0.4° 只是一致性下界，系统性零偏（作者自认存在零偏波动）不在该指标内。",
+   "所有用户级实验试次数极小（10/条件），大百分比数字（4x、55pp）无统计检验。",
+   "PIP 被动推算与 Vive Tracker 未实测，手部 20 DoF 中 4 DoF 的误差完全未表征。"
+  ],
+  "baseline_fairness": "下游策略对照（CDF vs KT）设计公平（同规模同训练量）；但 KT 本身不含触觉，混淆了『传感保真度』与『触觉闭环』两个因素，作者将增益全部归于数据质量而未分解。",
+  "metric_validity": "重复定位标准差是有效的传感一致性指标；力反馈延迟用电流-响应曲线测量合理；但均不直接度量手部→末端轨迹误差，对综述问题的贡献是阈值参照点而非传导模型。",
+  "reproducibility": "BOM 到螺丝级成本表（Table III）、运动学参数（有效半径、连杆长）、通信协议（RS485 0.5Mbit/s）全披露且开源，可复现性高。",
+  "external_validity": "结论限于准静态双臂任务与三款手机器人本体；200ms 延迟边界对动态任务的外推被作者自行排除；手套传感路线对视觉 ego 追踪场景仅有间接参照价值。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.05804-C01",
+   "claim": "CDF-Glove 的绳驱-编码器手部关节传感在食指 DIP 关节重复定位实验中达到标准差 <0.4°（3 次重复：接触角均值 63.15°、标准差 0.29°），作者称 MCP/PIP 关节同类测试标准差同样低于 0.4°，表明其手部追踪一致性在亚度量级。",
+   "stance": "support",
+   "relation": "支持『可接受阈值』问题的一个参照点：手套式直接传感的关节角重复性可达亚度量级（<0.4° std），为视觉追踪路线提供传感保真度的对照基准——但注意这是一致性（repeatability）而非绝对精度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V.A.3 逐字报告 DIP 三次重复的均值/标准差与 <0.4° 结论，并声称 MCP/PIP 同类结果。",
+   "locator": "A. CDF-Glove Performance Validation",
+   "source_context": "This process repeats three times. We calculate the mean and standard deviation of the contact angle, resulting in an average value of 63.15°, with standard deviations of 0.29°, respectively. As shown in Fig. 9, the standard deviation of repeated positioning for the index finger distal joint (DIP) using CDF-Glove is less than 0.4°, indicating high accuracy and stability.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "repeated positioning standard deviation 重复定位标准差（contact angle 接触角）",
+    "value_or_direction": "mean 63.15°, std 0.29°; DIP <0.4°, MCP/PIP 同样 below 0.4°",
+    "comparator": "zero-position reset baseline 零位复位基准（3 repeated trials 三次重复）",
+    "task_or_sample": "index finger DIP reset-flex-return repeated positioning, 3 trials; similar tests on MCP/PIP of index and middle fingers",
+    "locator": "A. CDF-Glove Performance Validation"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 V.A.3；数值 63.15°/0.29°/<0.4° 与原文一致；claim 明确将指标定性为重复性/一致性（亚度量级），并指出 MCP/PIP 仅为作者口头声称，未夸大为绝对精度。"
+   }
+  },
+  {
+   "card_id": "2603.05804-C02",
+   "claim": "CDF-Glove 的绳驱力反馈响应时间约 200ms，作者将其归因于 RS485 串行通信瓶颈与绳驱伺服的机械响应时间，并明确划定可接受边界：该延迟对高速交互偏高，但对数据集内的准静态操作任务是足够的。",
+   "stance": "conditional",
+   "relation": "条件性回答『可接受阈值』：触觉闭环遥操作中 ~200ms 的反馈延迟在准静态任务下被任务成功所容忍，高速交互则越界——给出延迟阈值的任务依赖性判据（准静态可行/高速不可行），而非通用数字。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V.A.2 逐字给出 200ms 测量值、RS485+伺服的归因与『高速偏高/准静态足够』的边界陈述。",
+   "locator": "A. CDF-Glove Performance Validation",
+   "source_context": "The experimental results indicate that the response time for cable-driven force feedback, based on current information from the RY-H1, is nearly 200 ms. The 200 ms force-feedback latency is primarily attributed to the serial communication bottleneck (RS485) and the mechanical response time of the cable-driven servos. While relatively high for high-speed interactions, it proved sufficient for the quasi-static manipulation tasks in our datasets.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "force-feedback response time 力反馈响应时间",
+    "value_or_direction": "nearly 200 ms 约 200ms",
+    "comparator": "quasi-static tasks tolerated vs high-speed interactions excessive 准静态可容忍 vs 高速交互偏高",
+    "task_or_sample": "RY-H1 index finger rigid-sphere contact, current-based feedback triggering (Fig. 10)",
+    "locator": "A. CDF-Glove Performance Validation"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 V.A.2；200ms、RS485 瓶颈归因与准静态/高速边界均为作者原文；claim 保留『对高速偏高』的自限，未将 200ms 表述为通用可接受值。"
+   }
+  },
+  {
+   "card_id": "2603.05804-C03",
+   "claim": "CDF-Glove 作者明确承认其手部传感链存在编码器信号漂移与零偏波动、PCB 引起的控制延迟等误差来源，并将『集成绳驱控制策略以进一步降低追踪误差』列为在途工作——即手套式直接传感的追踪误差并未被消除，而是以漂移/零偏/延迟形态持续存在。",
+   "stance": "limit",
+   "relation": "限定『手套直接传感可规避视觉追踪误差』的推定：传感路线从视觉换为编码器后，误差来源并未消失而是换为漂移、零偏、控制延迟等形态；误差来源枚举应覆盖传感原理特异性误差。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VI 章 limitation 段逐字列出编码器信号漂移、零偏波动、PCB 控制延迟，并给出以降低追踪误差为目标的后续工作。",
+   "locator": "VI. CONCLUSION AND FUTURE WORK",
+   "source_context": "Current limitations include restricted force output, lack of complex haptic feed- back, encoder signal drift and zero-offset fluctuation, as well as PCB-induced control latency. Ongoing work will focus on enhancing the force output, optimizing the PCB design to minimize latency, and integrating cable-driven control strategies [25] to further reduce tracking errors.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 VI 章（feed- back 断词按原文保留）；漂移/零偏/PCB 延迟三项与『降低追踪误差』的在途工作均出自该段；claim 未给出漂移幅度等原文没有的量化。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": null,
+   "reference": "[23] Y. Park, J. Lee, and J. Bae. Development of a wearable sensing glove for measuring the motion of fingers using linear potentiometers and flexible wires. IEEE TII 11(1), 2015.",
+   "reason": "PIP-DIP 耦合经验公式 (2) 的常数来源，PIP 被动推算的误差根源可追溯到该外部位标定。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[4] H. Zhang et al. DOGlove: Dexterous manipulation with a low-cost open-source haptic force feedback glove. arXiv:2502.07730, 2025.",
+   "reason": "Table III 成本对照基线（$600 vs $230），同属绳驱力反馈手套路线。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[6] C. Chi et al. Diffusion Policy: Visuomotor policy learning via action diffusion. IJRR 2024.",
+   "reason": "下游可用性验证所用的策略方法。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "T5",
+   "caption": "Success Rate and Completion Time for the Two Tasks",
+   "section": "D. Diffusion Policy on Collected Data",
+   "rows": [
+    [
+     "Condition",
+     "Success Rate",
+     "Average Completion Time (s)"
+    ],
+    [
+     "CDF (Cup Stacking)",
+     "10/10",
+     "14.74"
+    ],
+    [
+     "KT (Cup Stacking)",
+     "4/10",
+     "28.91"
+    ],
+    [
+     "CDF (Film Roll Transfer)",
+     "8/10",
+     "19.49"
+    ],
+    [
+     "KT (Film Roll Transfer)",
+     "3/10",
+     "35.70"
+    ]
+   ],
+   "usage": "支撑『高保真传感+触觉闭环采集的演示较动觉示教显著提升下游 DP 策略』的下游可用性论证（findings 引用；因 ID 预算未单独成卡）。"
+  }
+ ],
+ "notes": "对综述问题的定位：本批次中唯一的手套式直接传感路线，与视觉追踪路线形成原理级对照。核心价值：(1) 提供稀缺的传感层定量参照（重复性 <0.4° std、力反馈延迟 200ms 及准静态边界）；(2) limitation 自证手套路线并非无误差——漂移/零偏/PCB 延迟是传感原理特异性误差来源。注意红线：0.4° 是重复性不是绝对精度，下游 +55pp 混淆了触觉闭环与传感保真度两个因素。ID 预算限制：下游 DP-vs-KT 证据留于 findings/tables 未单独成卡。"
+}

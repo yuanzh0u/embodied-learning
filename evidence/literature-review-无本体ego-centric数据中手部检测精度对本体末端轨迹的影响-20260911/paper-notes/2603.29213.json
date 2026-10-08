@@ -1,0 +1,245 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.29213",
+  "title": "Kilohertz-Safe: A Scalable Framework for Constrained Dexterous Retargeting",
+  "published": "2026-03-31",
+  "url": "https://arxiv.org/abs/2603.29213",
+  "authors": [
+   "Yinxiao Tian",
+   "Ziyi Yang",
+   "Zinan Zhao",
+   "Zhen Kan"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "约束化（QP+CBF）灵巧手重定向框架，直接以单目相机/RealSense+MediaPipe 视觉手部关键点为输入，提供约束层对上游检测/时延误差的吸收证据与安全阈值量化，命中综述问题的误差缓解与最低输入要求子问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认问题设定：高频实时 + 异构约束下的灵巧手重定向，及作者宣称贡献"
+   },
+   {
+    "locator": "II. PRELIMINARIES",
+    "role": "method-or-design",
+    "purpose": "理解关键点型重定向优化问题（式1）与 CBF 安全集定义"
+   },
+   {
+    "locator": "III. METHOD",
+    "role": "method-or-design",
+    "purpose": "精读 QP 线性化、关节微分空间约束统一表达、CBF 安全约束的仿射化，以及 Remark 1 对输入跟踪频率/质量的假设"
+   },
+   {
+    "locator": "IV. EXPERIMENT",
+    "role": "results-or-analysis",
+    "purpose": "提取延迟 Table I、运动保持、碰撞安全分数、CBF 消融（0.01m 阈值/0.011m 激活距离）与实机定性评估的精确定位"
+   },
+   {
+    "locator": "V. CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认结论与作者所述未来工作（触觉阻抗约束、力矩饱和）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表与综述问题无关；本文无独立附录，参考文献仅用于核对被引方法身份"
+   }
+  ]
+ },
+ "research_question": "如何将非线性灵巧手重定向问题重构为关节微分空间上的凸二次规划，使运动学/几何/安全约束在千赫兹级控制频率下被统一、形式化地满足？",
+ "contributions": [
+  "提出 Kilohertz-Safe：将非线性重定向局部线性化为关节速度空间上的凸 QP，统一承载运动学、几何与安全约束",
+  "将胶囊体碰撞模型与 CBF 安全条件线性化为仿射不等式并入 QP，提供前向不变性的形式安全保证",
+  "在 Wuji 灵巧手仿真与实机（RealSense+MediaPipe 输入）上验证，平均延迟 9.05ms，>95% 帧满足安全准则"
+ ],
+ "method": {
+  "summary": "以 AnyTeleop 式关键点匹配误差 + 时序平滑为目标，对前向运动学做一阶泰勒展开，把重定向写成关于关节增量 Δq 的凸 QP；关节限位改写为 Δq 的线性不等式；胶囊体间距离构造 CBF h(q)，经 Danskin 定理得距离雅可比，将 h-dot ≥ -γh 离散化为关于 Δq 的仿射约束并入 QP，100Hz 固定频率闭环执行。",
+  "assumptions": [
+   "Remark 1：假设视觉追踪/VR/数据手套能以高频率可靠获取人手运动，使相邻时间步关节变化很小，一阶线性化有效",
+   "人-机关键点对应关系（witness points、关键点语义对应）预先给定",
+   "安全集用胶囊体近似，阈值为几何近似而非完整物理安全模型"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无公开数据集；仿真实验使用 SAPIEN 中 Wuji 手 URDF，输入为单目笔记本相机采集的人手关键点"
+  ],
+  "tasks": [
+   "灵巧手遥操作重定向（抓取、手指交叉、并指等易自碰撞手势序列）"
+  ],
+  "embodiments": [
+   "Wuji 灵巧手（仿真 SAPIEN + 实机固定平台）",
+   "人体输入：单目相机（仿真）/ Intel RealSense + MediaPipe（实机）"
+  ],
+  "sample_or_scale": "单一本体；仿真定量评估（约 240-300 帧交互序列），实机仅定性评估"
+ },
+ "evaluation": {
+  "design": "仿真内与 Dex-Retargeting、GeoRT 在相同任务设置下对比逐帧延迟、运动保持（方向一致性）与碰撞安全分数；CBF 消融；实机仅做定性可行性与安全性展示",
+  "baselines": [
+   "Dex-Retargeting (AnyTeleop 系)",
+   "GeoRT"
+  ],
+  "metrics": [
+   "计算延迟（mean/std/99%ile, RT@100Hz）",
+   "Motion Preservation（锚点方向差异）",
+   "Collision Safety Score（D_self/D_safe 截断到 [0,1]，D_safe=0.01m）"
+  ],
+  "ablations": [
+   "去除 CBF 安全项的消融（安全分数频繁跌破阈值 vs 启用后持续高位）",
+   "激活距离 0.011m vs 增大激活距离的提前干预效果"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "QP+CBF 管线在仿真 Wuji 手上平均延迟 9.05ms（std 2.29，99%ile 13.42ms），85.82% 控制步满足 100Hz；Dex-Retargeting 15.59ms/34.41%，GeoRT 34.49ms/0.19%",
+   "scope": "仿真 Wuji 手、相机关键点输入",
+   "locator": "A. Experimental Setup, Table I"
+  },
+  {
+   "finding": ">95% 控制步安全分数高于 0.8；CBF 消融显示去掉安全项后安全分数频繁跌破阈值；仅有个别帧出现毫米级阈值违例（离散控制与系统时延所致）",
+   "scope": "仿真交互序列，D_safe=0.01m、激活距离 0.011m",
+   "locator": "B. Simulation Evaluation"
+  },
+  {
+   "finding": "实机实验（RealSense+MediaPipe 输入）为纯定性评估，无检测噪声到轨迹误差的定量传播分析",
+   "scope": "实机 Wuji 手",
+   "locator": "C. Real-World Evaluation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "结论指出未来需集成触觉阻抗控制约束并解决电机力矩饱和问题，即当前框架不处理接触力/力矩层面的安全",
+    "locator": "V. CONCLUSIONS"
+   },
+   {
+    "limitation": "安全分数是基于胶囊体几何的相对指标，作者明言其并非完整物理安全模型",
+    "locator": "A. Experimental Setup"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "框架有效性依赖 Remark 1 的高频可靠手部追踪假设；对 ego-centric 单目视频中常见的遮挡、关键点跳变、低频（<100Hz）输入下线性化是否仍成立，论文无任何扰动/噪声实验",
+    "basis": "Remark 1 明确以高频可靠输入为一阶线性化前提，而实机部分仅有定性展示（C. Real-World Evaluation）"
+   },
+   {
+    "boundary": "所有定量安全/保真结果来自仿真单一本体（Wuji），未跨本体验证；CBF 约束保证的是几何安全而非任务轨迹精度",
+    "basis": "IV. EXPERIMENT 的定量表均在 SAPIEN 仿真；实机无定量指标"
+   }
+  ]
+ },
+ "transfer_boundary": "结论仅适用于：以关键点型视觉手部追踪为输入、单自由度级别灵巧手（Wuji）在 100Hz 闭环下的遥操作重定向；安全保证是胶囊体几何意义下的碰撞避免，不代表任务空间轨迹精度；对低帧率、遮挡严重或系统性偏差的手部检测输入未经验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "将安全从软惩罚提升为 QP 硬约束并给出 CBF 前向不变性论证",
+   "CBF 消融与阈值/激活距离参数（0.01m/0.011m）报告完整",
+   "延迟统计含 std 与 99 分位，比单报均值更可信"
+  ],
+  "design_risks": [
+   "实机评估纯定性，无成功率或误差数值",
+   "运动保持指标为方向一致性代理量，未直接报告末端位置误差",
+   "单一本体、单一感知管线（MediaPipe）"
+  ],
+  "baseline_fairness": "与 Dex-Retargeting、GeoRT 在相同任务设置与环境条件下对比，但基线超参数调优程度未报告",
+  "metric_validity": "延迟与安全分数测量定义清晰；Motion Preservation 是方向代理指标，不能直接读作轨迹精度",
+  "reproducibility": "QP/CBF 公式、阈值参数完整；未声明代码/数据发布",
+  "external_validity": "对其它灵巧手与其它手部检测器（尤其 ego-centric 视频下的弱检测条件）的外推未验证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.29213-C01",
+   "claim": "在以单目相机采集的人手关键点为输入的仿真 Wuji 手遥操作中，Kilohertz-Safe 的 QP+约束管线平均逐帧计算延迟 9.05ms（std 2.29ms，99%ile 13.42ms），85.82% 控制步满足 100Hz；同设置下 Dex-Retargeting 为 15.59ms/34.41%，GeoRT 为 34.49ms/0.19%。",
+   "stance": "support",
+   "relation": "支持综述中“约束投影类重定向可实时承接视觉手部检测输入”的命题：带安全硬约束的重定向不必牺牲实时性，可作为下游误差缓解层的计算预算证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 直接在相同仿真平台上列出三种方法的延迟均值/标准差/99 分位与 RT@100Hz，本文方法全面最优；实验设置（IV-A）说明仿真输入来自单目相机关键点。",
+   "locator": "A. Experimental Setup, Table I",
+   "source_context": "Ours 9.05 2.29 13.42 85.82\nDex-Retargeting 15.59 12.50 32.82 34.41\nGeoRT 34.49 4.28 49.90 0.19",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "per-step computation latency (mean ms) / RT@100Hz (%)",
+    "value_or_direction": "9.05 ms mean, 85.82% steps <10 ms",
+    "comparator": "Dex-Retargeting 15.59 ms / 34.41%; GeoRT 34.49 ms / 0.19%",
+    "task_or_sample": "simulated Wuji hand teleoperation sequences with monocular-camera hand keypoints",
+    "locator": "IV-A Experimental Setup, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表格行与表注（simulated Wuji hand platform、RT@100Hz 定义）在 IV-A 原文中逐字核对，数值、单位与对照方法与声明确认一致；声明限定在仿真单本体的延迟结论，未外推到轨迹精度。"
+   }
+  },
+  {
+   "card_id": "2603.29213-C02",
+   "claim": "在帧对齐跟踪相机采集的人手输入下，启用 CBF 安全约束时超过 95% 的控制步碰撞安全分数高于 0.8（阈值 D_safe=0.01m，激活距离 0.011m），仅个别帧因离散控制与系统时延出现毫米级阈值违例；去除安全项的消融中安全分数频繁跌破阈值。",
+   "stance": "conditional",
+   "relation": "为“约束层可吸收上游检测/时延小误差的安全后果”提供条件性证据：CBF 以 1mm 提前激活余量抑制了时延引发的碰撞风险，但该保证只覆盖几何安全，不覆盖末端轨迹精度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B 安全分析段落与 Fig.5 消融说明直接给出 >95%/0.8 的定量结论、毫米级违例归因（离散控制与时延）以及 0.01m/0.011m 的参数设定。",
+   "locator": "B. Simulation Evaluation",
+   "source_context": "Quantitatively, more than 95%\nof control steps achieve a safety score above 0.8, indicating\nsustained collision clearance without sacrificing real-time\nperformance or motion fidelity.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "share of control steps with collision safety score > 0.8",
+    "value_or_direction": ">95% of control steps above 0.8; only millimeter-scale threshold violations in a few frames",
+    "comparator": "ablation without CBF safety terms (safety score frequently drops below threshold)",
+    "task_or_sample": "simulated Wuji hand retargeting of camera-captured human motion; D_safe=0.01 m, activation 0.011 m",
+    "locator": "IV-B Simulation Evaluation, Fig. 4-5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": ">95%/0.8 结论与 Fig.5 图注中“minor millimeter-scale threshold violations ... due to discrete-time control and system latency”及正文 0.01m/0.011m 参数逐字核对一致；声明严格限定在几何碰撞安全维度，未宣称轨迹精度收益，故为 conditional。"
+   }
+  },
+  {
+   "card_id": "2603.29213-C03",
+   "claim": "该框架的一阶线性化建立在 Remark 1 的假设上：视觉追踪/数据手套能以高频率可靠获取人手运动，使相邻步关节变化足够小；论文未对检测噪声、遮挡或低帧率输入做扰动实验，实机验证仅为定性，检测精度到重定向轨迹误差的传播未被量化。",
+   "stance": "gap",
+   "relation": "标定了约束化重定向对输入手部追踪质量的最低假设（高频、小步长），并指出其在 ego-centric 噪声输入下有效性的证据空白。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Remark 1 原文将“高频可靠获取人手运动”作为高频率闭环与小步长线性化的前提；C 节实机实验自述为定性评估，全文无输入噪声敏感性分析。",
+   "locator": "A. Quadratic Programming Formulation of Hand Pose Re-; C. Real-World Evaluation",
+   "source_context": "Remark 1: With the availability of virtual reality inter-\nfaces, vision-based tracking, and data gloves, human hand\nmotion can now be acquired reliably at high frequency.\nThis enables dexterous-hand teleoperation to be executed\nwithin a high-rate control loop, where the variation in joint\nconfigurations between consecutive time steps is inherently\nsmall.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Remark 1 原文逐字引用，假设内容与声明一致；“实机仅定性”由 C 节首句“In hardware experiments, we focus on qualitative evaluation”直接确认；“无噪声扰动实验”为全文结构核查后的缺席性陈述，限定为 gap 而非否定性结论。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "管线输入与 ego-centric 视频检测同源（MediaPipe 关键点），但本文从离线优化转向 100Hz 在线约束控制；对综述的价值在于约束层作为检测误差的下游安全网，而非检测误差本身的量化。表 I 与 Fig.4/5 的数值均取自仿真。"
+}

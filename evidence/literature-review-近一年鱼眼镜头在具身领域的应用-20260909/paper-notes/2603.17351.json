@@ -1,0 +1,545 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.17351",
+  "title": "OmniVLN: Omnidirectional 3D Perception and Token-Efficient LLM Reasoning for Visual-Language Navigation across Air and Ground Platforms",
+  "published": "2026-03",
+  "url": "https://arxiv.org/abs/2603.17351",
+  "authors": [
+   "Zhongyuang Liu",
+   "Min He",
+   "Shaonan Yu",
+   "Xinhang Xu",
+   "Muqing Cao",
+   "Jianping Li",
+   "Jianfei Yang",
+   "Lihua Xie"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "全景鱼眼相机在具身 VLN 中的系统性应用证据：(1) 应用方式——panoramic fisheye cameras 与旋转 LiDAR 融合为跨空中/地面平台的 360° 语义建图前端（Fig. 2 明确标注 panoramic fisheye cameras），全景流经 equirectangular 投影赋予 3D 点语义；(2) 效果——全景+分层表示使 REG 准确率 77.27%→93.18%、D9 场景 SR 80% vs 平铺 16%、单步决策延迟 12.4s→3.8s；(3) 局限——作者自认全景 3D 建图引发 token 爆炸（需 DSG+octant 压缩应对）、动态环境为未来工作；读者边界——定量导航结论仅来自自建合成场景、鱼眼相机本身当黑盒（无标定/畸变细节）。直接回答综述问题中'全景感知如何用于具身导航、哪些环节获益、哪些代价'。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, I Introduction",
+    "role": "problem",
+    "purpose": "确认双问题定义：窄 FoV 感知导致重复旋转/侧后方目标发现延迟/拓扑碎片化；全景 3D 建图引发 LLM prompt token 爆炸。提取四项贡献主张与 RA-L 投稿背景。"
+   },
+   {
+    "locator": "page 2, II Related Work (A. Omnidirectional Perception and Embodied Datasets)",
+    "role": "relevant-core",
+    "purpose": "定位全向感知相关工作：现有具身系统视觉中心（度量保真度有限）或 LiDAR 中心（方向盲区），主流导航基准假设窄 FoV RGB-D，本文以旋转 LiDAR+全景视觉补位。"
+   },
+   {
+    "locator": "page 2-4, III OmniVLN (A. Omnidirectional Multimodal Perception; B. Online 3D Scene Graph Construction; C. Hierarchical Egocentric Reasoning)",
+    "role": "method-or-design",
+    "purpose": "精读方法：FAST-LIO 运动补偿+640×1920 全景流+Grounded SAM/SAM2 mask+equirectangular 投影的语义点云；五层 DSG（Mesh/Object/Place/Room/Building）与持久同调房间划分、几何剪枝+Qwen2.5-VL 边验证；agent 中心 3D octant、H-CoT（房间过滤→定向→功能组推断→目标定位）、Actor-Critic+工具调用。"
+   },
+   {
+    "locator": "page 5, IV-A Spatial Reasoning and Referring Expression Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "核对 REG 实验：真实三房间 IoT 实验室、44 测试对象、VI/VD 双指标、分层 vs 非分层平铺对比（Table I：77.27%→93.18% overall、VD +22.73pp）与空间幻觉分析。"
+   },
+   {
+    "locator": "page 5-7, IV-B Token Efficiency Analysis",
+    "role": "results-or-analysis",
+    "purpose": "核对 token 压力测试：自建合成生成器 9 数据集（10m×10m 四房间、三 tier×三密度 5-50 对象）、Qwen2.5-VL-Instruct 计 token（Table II：D9 3555.98→1067.62、-69.98%）、SR 对比（Fig. 7：D9 80% vs 16%）、延迟（12.4s→3.8s）。"
+   },
+   {
+    "locator": "page 6-7, IV-C Real-world Aerial and Ground Platform Deployment",
+    "role": "results-or-analysis",
+    "purpose": "核对真实部署设置：FAST-LIO 定位、机载感知+DSG、LLM 经 WiFi 离机；PX4+MINCO 无人机与 Unitree 四足（SDK+FAR）共享统一推理管线；确认真实导航仅 Fig. 8 定性演示。"
+   },
+   {
+    "locator": "page 7, IV-D Influence of Rotating LiDAR Scanning",
+    "role": "results-or-analysis",
+    "purpose": "核对感知端唯一消融：同一轨迹/环境/管线下旋转 LiDAR 85 个对象节点 vs 固定 LiDAR 61 个，侧向与部分遮挡区域覆盖改善。"
+   },
+   {
+    "locator": "page 8, V Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与未来工作边界：动态环境（实时行人跟踪与预测）与空地协作多智能体为未来工作，当前评估针对静态室内环境。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（SpatialNav、SG-Nav、FAST-LIO2）条目，不逐条精读。"
+   },
+   {
+    "locator": "appendix/supplementary material",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 正文 8 页含参考文献，论文无附录或补充材料。"
+   }
+  ]
+ },
+ "research_question": "如何为真实多房间室内环境中的零样本语言引导导航构建跨空中/地面平台统一系统：以旋转 LiDAR+全景（鱼眼）相机的全向感知替代窄 FoV 感知消除重复旋转与拓扑碎片化，同时用五层动态场景图+agent 中心 3D octant 多分辨率表示压缩世界模型，使 LLM 推理在严格 prompt 预算内完成跨房间目标搜索与动作生成？",
+ "contributions": [
+  "跨平台全向感知前端：旋转 LiDAR+全景相机融合的硬件无关 360° 语义 3D 建图，同时部署于空中与地面机器人。",
+  "分层场景表示与推理管线：五层 DSG（Mesh/Object/Place/Room/Building）+持久同调房间划分+几何/VLM 混合边验证+agent 中心 3D octant 观测模型。",
+  "token 高效提示策略：多分辨率空间注意力（中央/周边/全局记忆三级分辨率），避免稠密地图与穷举对象列表的直接文本化。",
+  "开源多模态数据集与可部署系统框架（承诺发布，正文未见链接）。"
+ ],
+ "method": {
+  "summary": "OmniVLN 是零样本 VLN 系统：(1) 感知层用 FAST-LIO 后端对旋转 LiDAR 点云做扫描周期内运动补偿，640×1920 全景（鱼眼）流经 Grounded SAM/SAM2 提取开放词汇 mask，3D 点经 equirectangular 投影到全景像素坐标查询 mask 标签并按 T 帧多数投票去噪，输出语义点云；(2) 表示层增量构建五层 DSG（L1 TSDF Mesh、L2 SAM2 实例对象、L3 GVD 拓扑地点、L4 持久同调 β0 平台期确定的房间、L5 建筑），短程边（<1m）经几何剪枝+Qwen2.5-VL 全景帧验证，序列化为 JSON/PLY 持久数字孪生；(3) 推理层将 DSG 节点坐标变换到 agent 中心八分区（octant，以相机高度分上下），近处节点保留实例级细节、远处压缩为房间/功能组摘要（多分辨率三级：Foveal<3m / Peripheral 同房间 / Global Memory 跨房间），H-CoT 依次做房间过滤→octant 定向→功能组推断→目标定位，Actor-Critic 闭环（Critic 校验 DSG 一致性与可通行性，不一致则拒绝重规划），输出符号原语（go to room(id)、turn to(octant)、go near(id)、stop(id)）由确定性局部策略（空中 MINCO、地面 FAR）执行。LLM 推理离机经 WiFi 进行。",
+  "assumptions": [
+   "输入全景流已是 equirectangular 展开的 640×1920 图像；鱼眼相机的原始畸变校正/标定流程不在论文范围内（未报告）。",
+   "环境为静态室内多房间场景；动态行人未建模（列为未来工作）。",
+   "离机 LLM（Qwen2.5-VL）经 WiFi 通信可用且延迟可接受。",
+   "LLM 在结构化 octant+DSG 提示下的空间推理足以支撑零样本跨房间导航，无需下游微调。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "真实 IoT 实验室：三房间，44 个测试对象（REG 评估）",
+   "自建合成场景生成器：9 个数据集 D1-D9，10m×10m 四互联房间，三空间 tier（Foveal<3m / Peripheral 同房间 / Global Memory 跨房间）×三密度（低 5 / 中 10-30 / 高 15-50 对象），对象含椅子/桌子/柜子/屏幕四类，视觉描述 20-40 词模拟 VLM 输出",
+   "承诺发布的全向多模态数据集（正文未见链接）"
+  ],
+  "tasks": [
+   "指称表达生成（REG）：描述对象固有属性与相对空间关系（44 对象，VI/VD 双指标）",
+   "零样本 object-referential VLN：如 'go to the nearest chair'（合成场景定量 SR + 真实平台定性演示）"
+  ],
+  "embodiments": [
+   "空中平台：PX4 自驾仪 + MINCO 轨迹优化",
+   "地面平台：Unitree 四足 + Unitree SDK + FAR 局部规划器",
+   "共享：旋转 LiDAR + 全景鱼眼相机 + FAST-LIO 定位 + 统一 DSG/LLM 推理栈"
+  ],
+  "sample_or_scale": "REG 44 对象；token/SR 测试 9 合成数据集（5-50 对象）；延迟测试高密度场景；真实部署为单场景定性演示（Fig. 8）；LiDAR 消融单轨迹对比（85 vs 61 节点）。"
+ },
+ "evaluation": {
+  "design": "四段评估：(1) REG 真实环境对比（分层 DSG+元数据 vs 平铺对象 JSON 列表，VI/VD/Overall 三指标）；(2) 合成 token 压力测试（三 tier×三密度，Qwen2.5-VL-Instruct 计累积 token，Table II）；(3) 合成场景导航 SR（九数据集，Fig. 7）与高密度延迟测试；(4) 真实空中+地面跨平台定性部署（Fig. 8）与感知端 LiDAR 配置消融（旋转 vs 固定，Fig. 9）。无外部 VLN 基准或 SOTA 系统对比。",
+  "baselines": [
+   "Non-Hierarchical (Uniform Flat) 表示（REG）",
+   "Uniform Flat-List 提示（token 与 SR）",
+   "flat-prompt 基线（延迟）",
+   "固定 LiDAR 配置（感知消融）"
+  ],
+  "metrics": [
+   "REG 准确率（View-Independent / View-Dependent / Overall）",
+   "端到端累积 token 消耗",
+   "导航成功率 SR",
+   "平均单步决策响应时间",
+   "语义图实例化对象节点数"
+  ],
+  "ablations": [
+   "分层 DSG vs 平铺对象列表（REG：77.27%→93.18%）",
+   "多分辨率 octant 提示 vs Uniform Flat-List（token：D9 -69.98%；SR：D9 80% vs 16%）",
+   "旋转 LiDAR vs 固定 LiDAR（85 vs 61 对象节点）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "窄 FoV 感知的问题动机：作者指出受限视角设置常导致重复旋转、侧方/后方目标发现延迟、探索搜索中拓扑理解碎片化，且小可见性间隙在跨房间累积为大导航误差——这是引入 360° 全向感知的直接动机。",
+   "scope": "真实室内 VLN 的问题定义（作者论断，无对照实验）",
+   "locator": "page 1, I Introduction"
+  },
+  {
+   "finding": "全景感知的代价与应对：感知扩展到全向 3D 建图后，更密集语义地图/更多候选对象/长程空间关系若直接文本化供 LLM 会 token 爆炸（超 prompt 预算、降推理稳定性、增延迟）；OmniVLN 用五层 DSG+agent 中心 octant 多分辨率表示压缩世界模型。",
+   "scope": "全景感知与 LLM 推理的接口设计",
+   "locator": "page 2, I Introduction; page 4, III-C"
+  },
+  {
+   "finding": "REG 定量：真实三房间 IoT 实验室 44 对象上，分层 DSG 表示相对平铺列表将 overall 准确率 77.27%→93.18%（VD 68.18%→90.91%，+22.73pp）；作者归因于 DSG 剪枝搜索空间、消除跨房间边界推理错误（平铺基线常现空间幻觉）。",
+   "scope": "真实环境 REG 任务",
+   "locator": "page 5, Table I, IV-A.2"
+  },
+  {
+   "finding": "token 与 SR 定量：合成压力测试中九数据集 token 全部下降且随密度增大（D9 全局记忆层 3555.98→1067.62、-69.98%）；SR 上 D9 场景平铺基线退化至 16% 而分层方法保持 80%；高密度场景平均单步决策延迟 12.4s→3.8s（约 3 倍）。",
+   "scope": "合成场景（10m×10m 四房间，5-50 对象），Qwen2.5-VL-Instruct",
+   "locator": "page 6, IV-B.2/IV-B.3/IV-B.4; page 7, Table II, Fig. 7"
+  },
+  {
+   "finding": "感知端唯一消融是 LiDAR 配置：同一轨迹/环境/管线下旋转 LiDAR 实例化 85 个对象节点 vs 固定 61 个，侧面与部分遮挡区域覆盖改善；作者据此确认全向主动扫描缓解感知滞后、减少有限视场导致的拓扑碎片化。全景（鱼眼）视觉本身无单独消融。",
+   "scope": "单轨迹对照（LiDAR 配置，非相机配置）",
+   "locator": "page 7, IV-D, Fig. 9"
+  },
+  {
+   "finding": "跨平台部署：PX4+MINCO 无人机与 Unitree 四足（SDK+FAR）共享统一推理管线，平台差异仅限低层控制与局部规划；LLM 推理离机经 WiFi，机载模块负责感知与 DSG 构建；真实导航仅 Fig. 8 定性演示（'go to the nearest chair'），无真实环境定量 SR。",
+   "scope": "真实部署（定性）",
+   "locator": "page 6-7, IV-C"
+  },
+  {
+   "finding": "摘要与正文数字存在口径差：摘要称 token 缩减至多 61.7%、导航成功率提升至多 11.68%，而正文 Table II 最大缩减为 69.98%（D9）、Fig. 7 最大 SR 差距为 D9 的 80% vs 16%；61.7% 与 11.68% 在正文无直接对应表格或计算。",
+   "scope": "报告一致性核查（读者交叉核对）",
+   "locator": "page 1, Abstract; page 6-7, Table II, Fig. 7"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前框架面向静态环境；扩展到动态环境（将实时行人跟踪与预测纳入场景图层级）与空地协作多智能体系统被列为未来工作。",
+    "locator": "page 8, V Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "定量导航 SR 与 token 结论全部来自自建合成场景生成器（10m×10m 四互联房间、5-50 对象、模拟 VLM 视觉描述），真实世界部署仅为 Fig. 8 单命令定性演示，未报告真实环境定量导航成功率；合成对象分布与真实室内语义分布的距离未讨论。",
+    "basis": "page 6 IV-B.1 'we developed a synthetic scene generator to produce nine distinct datasets'；page 7 IV-C 'The robustness ... is qualitatively validated in Fig. 8'。"
+   },
+   {
+    "boundary": "全景鱼眼相机被当作黑盒输入：全文未报告鱼眼相机型号、数量、安装布局、内参标定或畸变校正流程；语义投影假设输入已是 equirectangular 展开的 640×1920 全景流，鱼眼成像的畸变/分辨率/极点处理细节不在论文范围，无法评估其对该表示的影响。",
+    "basis": "page 3 III-A 仅有 'a 640 × 1920 panoramic stream' 与 equirectangular 投影公式（Fig. 3）；全文检索无 fisheye 标定/去畸变描述。"
+   },
+   {
+    "boundary": "无全景视觉净贡献的消融：感知端唯一对照是旋转 vs 固定 LiDAR（85 vs 61 节点），鱼眼全景视觉相对窄 FoV 相机的增益（如侧后方目标发现速度）未被单独量化；'减少重复旋转'的收益停留在设计论证与 octant 表示的定性说明。",
+    "basis": "page 7 IV-D 为唯一感知消融；page 4 III-C.1 octant 收益为作者论断。"
+   },
+   {
+    "boundary": "全部对比基线为论文内自建 flat-list/flat-prompt 变体，无外部 VLN 系统（如 SG-Nav、SpatialNav）或基准（R2R/HM3D ObjectNav）对照，结论仅支持'分层表示优于平铺表示'，不能证明优于现有 VLN SOTA。",
+    "basis": "page 5-7 IV-A/IV-B 各对比均为 Non-Hierarchical (Uniform Flat) / Uniform Flat-List。"
+   },
+   {
+    "boundary": "摘要关键数字与正文结果面不一致：摘要 'up to 61.7%' token 缩减与 'up to 11.68%' SR 提升在正文无对应计算（正文最大 token 缩减为 Table II D9 的 69.98%，最大 SR 差距为 Fig. 7 D9 的 80% vs 16%）；引用本文数字时应以正文表格为准。",
+    "basis": "page 1 Abstract 与 page 7 Table II、page 6 Fig. 7/IV-B.3 交叉核对。"
+   },
+   {
+    "boundary": "token/SR/延迟结论绑定单一模型 Qwen2.5-VL-Instruct，未验证其他 LLM/VLM 下的稳健性；SR 的成功判据由作者自定义且未报告试验次数/方差。",
+    "basis": "page 6 IV-B.2 'evaluated using Qwen2.5-VL-Instruct'；Fig. 7 无误差条或 trial 数说明。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：静态多房间室内环境、旋转 LiDAR+全景（鱼眼）相机双模态感知、LLM 离机（WiFi）推理条件下的零样本 object-referential VLN 与空间指称描述；空中（PX4+MINCO）与四足（Unitree+FAR）平台经低层适配复用同一 DSG/octant 推理栈。定量边界：REG 结论来自单一真实实验室 44 对象；token/SR/延迟结论来自 10m×10m 四房间合成场景（≤50 对象、Qwen2.5-VL-Instruct）；真实部署仅定性。不适用/未验证：动态行人环境（作者列为未来工作）、无 LiDAR 的纯视觉平台（感知栈依赖 LiDAR 几何）、鱼眼标定与畸变敏感的应用（相机当黑盒）、与外部 VLN SOTA 的相对性能。对综述的接口：本文代表'全景鱼眼作为具身导航感知前端、但必须配套分层压缩表示才能落入 LLM 上下文预算'的应用范式——全景收益（减少旋转、侧后方可见性、跨房间拓扑）与全景代价（token 爆炸）在同一系统中被显式权衡。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "动机-机制-评估链条完整：窄 FoV 问题（Introduction）→ 全向感知+DSG/octant 压缩（III）→ REG/token/SR/延迟四段评估，每段有定量锚点。",
+   "合成压力测试的因子设计干净：三空间 tier（Foveal/Peripheral/Global Memory）×三对象密度，隔离空间注意力对 prompt 预算的影响；Table II 九条件全覆盖。",
+   "感知消融（IV-D）控制了轨迹/环境/管线三变量，仅变 LiDAR 配置，归因清楚。",
+   "跨平台模块化：DSG 推理与低层控制解耦，两平台共享推理栈的设计有可复用性。"
+  ],
+  "design_risks": [
+   "定量导航证据全部来自合成场景且 SR 无 trial 数/方差报告；真实部署仅一条命令的定性演示，外部效度弱。",
+   "基线均为论文内自建 flat-list 变体，无外部 VLN 系统/基准对照，不能支撑'优于现有方法'的主张。",
+   "摘要数字（61.7% token、11.68% SR）与正文表格（69.98%、D9 80 vs 16）口径不一致且 11.68% 无处可查，提示结果叙述与表格校对不严。",
+   "全景鱼眼相机无标定/畸变/布局细节，感知前端的关键工程参数不可复现；无鱼眼视觉单独贡献的消融。",
+   "单一 LLM（Qwen2.5-VL-Instruct）承载全部 token/SR/延迟结论，模型间稳健性未知；离机 WiFi 推理的通信依赖在部署叙述中被弱化。"
+  ],
+  "baseline_fairness": "对比基线（Non-Hierarchical 平铺列表 / Uniform Flat-List / flat-prompt / 固定 LiDAR）均为论文内消融变体，与本文方法共享数据与管线，内部效度好；但缺少外部 VLN SOTA 与标准基准对照，比较范围仅限'分层 vs 平铺'这一表示维度，不能外推为系统级优势。",
+  "metric_validity": "REG 准确率（VI/VD）直接度量空间指称能力且判据明确（逻辑自洽+物理准确）；累积 token 与响应时间直接度量部署成本；SR 为任务效用指标但基于合成场景、成功判据作者自定义、无 trial 数与方差；对象节点数（85 vs 61）是感知覆盖的代理指标。",
+  "reproducibility": "承诺开源代码与全向多模态数据集但正文无链接；方法细节较全（投影公式、DSG 层级、octant 划分、H-CoT 步骤、平台栈），但缺鱼眼相机参数/标定、LLM 提示模板全文、SR 判据与 trial 协议、合成生成器随机种子，复现门槛中等偏高。",
+  "external_validity": "结论限定于静态多房间室内环境、LiDAR+全景双模态感知栈、离机 LLM 推理与合成场景定量评估；对动态环境（作者自认未来工作）、纯视觉平台、其他 LLM、更大尺度/更杂乱真实场景的迁移未验证；真实平台演示仅覆盖单一简单命令。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.17351-C01",
+   "claim": "OmniVLN 的多模态感知模块通过融合旋转 LiDAR 与全景鱼眼相机（panoramic fisheye cameras）的数据实现 360° 时空一致的感知，生成跨机器人平台的高保真语义点云，作为其空中与地面 VLN 框架的感知前端。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼全景相机与 LiDAR 融合是具身导航中全向感知前端的典型应用方式——本文把全景鱼眼流作为 360° 语义来源接入跨平台 VLN 系统。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "框架总览图（Fig. 2）说明多模态感知模块融合旋转 LiDAR 与全景鱼眼相机数据实现 360° 时空一致性，生成跨平台高保真语义点云；引言与贡献 1 同样以旋转 LiDAR+全景相机为跨平台全向感知前端。",
+   "locator": "page 3, Fig. 2 caption, Section III",
+   "source_context": "The Multimodal Perception module (left) achieves 360 ◦ spatio-temporal consistency by fusing data from a rotating LiDAR and panoramic fisheye cameras, enabling the generation of high-fidelity semantic point clouds across robotic platforms.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Fig. 2 caption 逐字给出 rotating LiDAR + panoramic fisheye cameras 融合、360° spatio-temporal consistency、high-fidelity semantic point clouds across robotic platforms；page 2 贡献 1 'combines rotating LiDAR and panoramic cameras ... for both aerial and ground robots'（已核对）同向；claim 未附加定量断言。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C02",
+   "claim": "作者指出，窄视场感知在实际中每步只暴露局部场景，受限视角设置常导致重复旋转、侧方或后方目标发现延迟、以及探索搜索中的拓扑理解碎片化——这是本文引入全向感知的直接动机。",
+   "stance": "support",
+   "relation": "支持命题：全景/超广角相机在具身导航中的核心收益主张（减少重复旋转、加快侧后方目标发现、维持拓扑完整性）在方法论文中的标准表述，为综述的'哪些任务获益'提供动机层证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言第一挑战：现有 VLN 系统基于窄 FoV 观测，受限视角导致重复旋转、侧/后方目标发现延迟与拓扑碎片化，在杂乱遮挡室内更严重并跨房间累积误差。",
+   "locator": "page 1, I Introduction",
+   "source_context": "In practice, this limited-view setting often causes repeated rotations, delayed discovery of side- or rear-located targets, and fragmented topological understanding during exploration and search.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 引言逐字给出 limited-view setting 的三项后果（repeated rotations / delayed discovery of side- or rear-located targets / fragmented topological understanding）；claim 忠实复述为作者论断，未附加论文未做的对照实验断言（该动机的量化验证论文未提供，已记入 reader_inferred）。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C03",
+   "claim": "作者指出：感知扩展到全向 3D 建图后，更密集的语义地图、更多候选对象与更多长程空间关系若被直接文本化供 LLM 规划，会迅速导致 token 爆炸——穷举对象列表或稠密地图描述会超出 prompt 预算、降低推理稳定性并增加推理延迟。",
+   "stance": "conditional",
+   "relation": "限定命题：全向（鱼眼/全景）感知在 LLM 驱动的具身系统中的收益是有条件的——全景观测使世界模型变大，必须配套分层/多分辨率压缩表示才能落入 LLM 上下文预算；这是全景相机与 LLM 推理接口的核心代价。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言第二挑战：更丰富的观测改善全局态势感知的同时产生更密集语义地图/更多候选对象/长程关系，直接文本化会 token 爆炸、超出 prompt 预算、降低推理稳定性、增加推理延迟。",
+   "locator": "page 2, I Introduction",
+   "source_context": "semantic maps, more candidate objects, and more long-range spatial relations that must be reasoned over during naviga- tion. Directly verbalizing such information for LLM-based planning quickly leads to a token explosion problem, where exhaustive object lists or dense semantic map descriptions exceed the prompt budget, reduce reasoning stability, and increase inference latency [3], [6].",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 引言第二挑战逐字给出 denser semantic maps/more candidate objects/long-range relations 与 token explosion problem 的三项后果（exceed the prompt budget、reduce reasoning stability、increase inference latency）；claim 未超出该论断范围（其定量支撑见 C06）。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C04",
+   "claim": "全景语义的获取方式：640×1920 全景流经 Grounded SAM 与 SAM2 提取开放词汇分割 mask，3D 点经等距柱状（equirectangular）投影映射到全景像素坐标并查询 mask 获得标签，从而把全景图像语义与 LiDAR 几何耦合为 DSG 构建的输入。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼/全景相机在具身系统中的具体接入工程——全景流不是直接喂给策略，而是经分割模型+球面投影转成 3D 语义点云，是全景视觉与 3D 建图融合的代表性管线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-A 说明全向语义感知使用 640×1920 全景流，Open-vocabulary mask 由 Grounded SAM/SAM2 提取，3D 点经 equirectangular 投影到全景像素坐标 (u,v) 查询 mask 标签。",
+   "locator": "page 3, III-A, Fig. 3",
+   "source_context": "For omnidirectional semantic awareness, we utilize a 640 × 1920 panoramic stream I t . Open-vocabulary masks M t are extracted via Grounded SAM [22] and SAM2. As shown in Fig. 3, each point P t = (x, y, z) ∈ P map is mapped to panoramic pixel coordinates (u, v) through equirectangular projection:",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 III-A 逐字给出 640×1920 panoramic stream、Grounded SAM/SAM2 mask 提取、equirectangular 投影到 (u,v) 像素坐标；后续公式 (4) 的 T 帧多数投票（已核对）补充去噪步骤；claim 未附加投影精度或相机参数断言（相机细节论文未报告）。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C05",
+   "claim": "在真实三房间 IoT 实验室 44 个测试对象的指称表达生成（REG）任务上，分层 DSG 表示相对非分层平铺对象列表将整体准确率从 77.27% 提升至 93.18%（+15.91 个百分点），其中视角相关（VD）空间关系推理从 68.18% 提升至 90.91%（+22.73 个百分点）。",
+   "stance": "support",
+   "relation": "支持命题：全向感知产出的场景经分层场景图表示后，LLM 空间指称能力显著获益——空间指称/描述任务是从全景建图中获益的具身任务类型的定量证据（真实环境）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I：Non-Hierarchical (Uniform Flat) VI 86.36%/VD 68.18%/Overall 77.27%；Hierarchical (Ours) VI 95.45%/VD 90.91%/Overall 93.18%；Improvement +9.09%/+22.73%/+15.91%。作者归因于 DSG 剪枝搜索空间、消除平铺基线的跨房间空间幻觉。",
+   "locator": "page 5, Table I, Section IV-A.2",
+   "source_context": "Non-Hierarchical (Uniform Flat) 86.36% 68.18% 77.27% Hierarchical (Ours) 95.45% 90.91% 93.18% Improvement +9.09% +22.73% +15.91%",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "overall referring-expression generation (REG) accuracy (VI/VD sub-metrics)",
+    "value_or_direction": "77.27% -> 93.18% overall (+15.91 pp); VD 68.18% -> 90.91% (+22.73 pp)",
+    "comparator": "Non-Hierarchical (Uniform Flat) object-list representation",
+    "task_or_sample": "REG on 44 test objects in a real three-room IoT laboratory",
+    "locator": "page 5, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Table I 三行数据逐字给出 77.27%/93.18%/+15.91% 与 68.18%/90.91%/+22.73%；'44 test objects in the IoT laboratory' 与 'real-world IoT laboratory consisting of three rooms'（page 5 IV-A，已核对）限定任务与样本；claim 未超出该单一环境 44 对象范围。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C06",
+   "claim": "在 50 对象的全局记忆层合成场景 D9 中，基于 DSG 的分层摘要将累积 token 消耗从 3555.98 降至 1067.62（缩减 69.98%），作者称该缩减通过防止上下文溢出同时保持必要拓扑感知来支撑建筑级可扩展性。",
+   "stance": "support",
+   "relation": "支持命题：全向感知引发的 token 爆炸（C03）可被分层压缩表示系统性缓解——多分辨率提示使全景世界模型在 LLM 上下文预算内可扩展，是'全景+LLM'组合可行的关键量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B.2：50 对象密度下基线需 3555.98 token，DSG 摘要仅 1067.62 token，69.98% 缩减；Table II 显示九个数据集全部缩减且随密度增大（D1 0.25% 到 D9 69.98%）。",
+   "locator": "page 6, Section IV-B.2; page 7, Table II",
+   "source_context": "At a density of 50 objects, the baseline requires 3555.98 tokens, whereas our DSG-based summary uses only 1067.62 tokens. This 69.98% reduction facilitates building-scale scalability by preventing context overflow while preserving essential topological awareness.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "cumulative end-to-end token consumption",
+    "value_or_direction": "3555.98 -> 1067.62 tokens (-69.98%)",
+    "comparator": "Uniform Flat-List baseline (raw object enumeration)",
+    "task_or_sample": "D9 global-memory-tier synthetic scene, 50 objects, evaluated with Qwen2.5-VL-Instruct",
+    "locator": "page 6, Section IV-B.2; page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 IV-B.2 逐字给出 3555.98/1067.62/69.98% 与 building-scale scalability 论断；page 7 Table II 数据行（3555.98 与 1067.62、Reduction 69.98%，已核对）一致；'Qwen2.5-VL-Instruct' 出自 page 6 IV-B.2（已核对）；claim 限于合成场景。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C07",
+   "claim": "在全局记忆层最高密度合成场景 D9 中，平铺列表基线的导航成功率退化至 16%，而分层方法通过把远端房间摘要为拓扑节点保持 80% 的 SR；周边层（D4-D6）两种方法均达 100%，中央层（D1-D3）分层方法 100% vs 基线 D3 降至 80%。",
+   "stance": "support",
+   "relation": "支持命题：在跨房间长视野导航（全局记忆层）任务上，全景感知+分层压缩相对平铺信息接口带来最大成功率差距——跨房间目标搜索是从全向感知与分层表示中获益最多的任务条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B.3 与 Fig. 7：foveal tier 分层 100% vs 基线 D3 80%；peripheral tier 两者 100%；global memory tier 差距最大，D9 平铺基线 16% vs 分层 80%，作者归因于长坐标列表消歧复杂性。",
+   "locator": "page 6, Section IV-B.3, Fig. 7",
+   "source_context": "The global memory tier (D7-D9) exhibits the largest performance gap. The flat-list baseline degrades to 16 percent SR in D9 due to the complexity of disambiguating long co- ordinate lists. By summarizing distant rooms into topological nodes, our method maintains an 80% SR in D9, validating hierarchical abstraction as a reliable cognitive heuristic for long-horizon navigation.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "navigation success rate (SR)",
+    "value_or_direction": "80% (hierarchical) vs 16% (flat-list baseline) in D9; both 100% in peripheral tier D4-D6",
+    "comparator": "Uniform Flat-List baseline",
+    "task_or_sample": "synthetic navigation across nine datasets D1-D9 (global-memory tier D9: 50 objects in distant rooms)",
+    "locator": "page 6, Section IV-B.3, Fig. 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 IV-B.3 逐字给出 D9 16 percent SR（基线）与 80% SR（ours）；foveal/peripheral tier 数字（100% vs D3 80%、both 100%，已核对）与 claim 前半段一致；样本限于合成九数据集，成功判据作者自定义且无 trial 数（已记入 reader_inferred）。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C08",
+   "claim": "在高密度场景的实证测试中，多分辨率提示把平均单步决策响应时间从 12.4s 降至 3.8s（作者称约 3 倍加速），并称该加速对四足部署至关重要——过慢的推理会导致里程计漂移与安全风险。",
+   "stance": "support",
+   "relation": "支持命题：全景感知系统的 token 压缩不仅省上下文，还直接转化为具身平台的推理延迟收益——延迟是四足等移动平台使用 LLM 推理的硬约束，全景数据量的控制因此关乎实时的感知-动作闭环。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B.4：把空间排序交给 10ms 内零 token 的 Python 几何引擎后，高密度场景平均响应时间从 12.4s 降到 3.8s，约 3 倍加速，对四足部署（延迟致里程计漂移与安全风险）关键。",
+   "locator": "page 6, Section IV-B.4",
+   "source_context": "Empirical tests in high-density scenarios demonstrate a reduction in average response time from 12.4s to 3.8s per decision compared to the flat-prompt baseline. This 3x speedup is critical for quadruped deployment, where excessive latency causes odometry drift and safety hazards.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "average response time per decision",
+    "value_or_direction": "12.4s -> 3.8s (about 3x speedup)",
+    "comparator": "flat-prompt baseline",
+    "task_or_sample": "high-density scenarios in the token stress tests",
+    "locator": "page 6, Section IV-B.4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 IV-B.4 逐字给出 12.4s/3.8s/3x speedup 与 quadruped deployment 的里程计漂移安全论断；'high-density scenarios' 为作者原表述，测试属 token 压力测试语境（合成），claim 未宣称真实机器人上的延迟数字。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C09",
+   "claim": "作者强调：octant 表示构建自全向感知与持久 DSG 记忆而非单一窄 FoV 图像，因此邻近的侧向与后方候选对象无需重复探索性旋转即可持续供规划器使用。",
+   "stance": "support",
+   "relation": "支持命题：全向（鱼眼/全景）感知在具身导航中的差异化收益机制——侧后方候选保持在规划器可及范围内、免去窄 FoV 系统的重复旋转，是全景相机区别于常规相机的任务级优势表述。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-C.1 说明 octant 表示基于全向感知+持久 DSG 记忆而非单张窄 FoV 图像，侧/后方候选无需重复探索旋转即可供规划器使用；近处节点保留实例级细节，远处压缩为房间/功能组摘要。",
+   "locator": "page 4, Section III-C.1",
+   "source_context": "Importantly, the octant representation is built from omnidi- rectional perception and persistent DSG memory rather than a single narrow-FoV image, so nearby side and rear candidates remain available to the planner without requiring repeated ex- ploratory rotations.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 III-C.1 逐字给出 octant 表示的来源（omnidirectional perception + persistent DSG memory 而非单一窄 FoV 图像）与后果（侧后方候选无需重复旋转即可用）；claim 为作者设计论断，未附加论文未提供的旋转次数量化（该量化论文未做）。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C10",
+   "claim": "在同一机器人轨迹、环境与语义建图管线下，旋转 LiDAR 配置在语义图中实例化 85 个对象节点，固定 LiDAR 配置仅 61 个；作者将差距归因于旋转扫描对侧向与部分遮挡区域覆盖的改善，并确认全向主动扫描缓解感知滞后、减少有限传感器视场导致的拓扑碎片化。",
+   "stance": "support",
+   "relation": "支持命题：全向感知覆盖对下游语义建图完整性的量化收益（对象节点 +24）——注意该消融针对 LiDAR 扫描配置而非鱼眼相机本身，但支撑'全向传感减轻侧向盲区与拓扑碎片化'的综述命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D：同一轨迹/环境/管线对比旋转 vs 固定 LiDAR，85 vs 61 对象节点；Fig. 9 显示旋转配置在侧向与部分遮挡区域覆盖显著改善；作者据此确认全向主动扫描缓解感知滞后与拓扑碎片化。",
+   "locator": "page 7, Section IV-D, Fig. 9",
+   "source_context": "Under the same robot trajectory, environment, and semantic mapping pipeline, the rotating LiDAR configuration provides substantially more complete omnidirectional observa- tions than the fixed LiDAR setting. Specifically, the rotating system instantiates 85 object nodes in the resulting semantic map, whereas the fixed LiDAR configuration identifies only 61 object nodes along the same path.",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "object nodes instantiated in the semantic map",
+    "value_or_direction": "85 (rotating LiDAR) vs 61 (fixed LiDAR)",
+    "comparator": "fixed LiDAR configuration",
+    "task_or_sample": "same robot trajectory, environment, and semantic mapping pipeline",
+    "locator": "page 7, Section IV-D, Fig. 9"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 IV-D 逐字给出 same trajectory/environment/pipeline 前提与 85/61 节点；后续句 'rotating LiDAR significantly improves coverage in side-facing and partially occluded regions' 与 'omnidirectional active scanning alleviates perception lag and reduces topological fragmentation'（page 7，已核对）支撑归因与结论部分；claim 明示这是 LiDAR 配置消融。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C11",
+   "claim": "该框架在空中与地面机器人上验证：定位使用 FAST-LIO，机载模块负责感知与 DSG 构建，而 LLM 推理经 WiFi 离机（offboard）进行——全向感知与建图在机载，重推理在云端。",
+   "stance": "support",
+   "relation": "支持命题：全景+LiDAR 全向感知栈在真实具身平台上的部署形态——机载感知/离机 LLM 的算力分工是此类系统落地的现实约束（板载算力不足以承载 360° 感知+LLM 推理全栈）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-C 开头说明验证设置：FAST-LIO 定位覆盖空中与地面机器人，机载模块管理感知与 DSG 构建，LLM 推理经 WiFi 离机处理，分层提示传输给远端模型、返回命令解析为平台特定 setpoint。",
+   "locator": "page 6, Section IV-C",
+   "source_context": "OmniVLN validation uses FAST-LIO [28] for localization across aerial [29] and ground robots. Onboard modules man- age perception and DSG construction, while LLM reasoning is handled offboard via WiFi.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 IV-C 首段逐字给出 FAST-LIO、aerial and ground robots、onboard 感知/DSG 与 offboard via WiFi 的 LLM 分工；后续 'Hierarchical prompts ... are transmitted to the remote model, with returned commands parsed into platform-specific setpoints'（page 6-7，已核对）补充传输机制；claim 未附加定量断言。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C12",
+   "claim": "空中平台集成 PX4 自驾仪与 MINCO 轨迹优化器，四足平台使用 Unitree SDK 与 FAR 局部规划器做避碰运动；两个平台共享统一推理管线，平台特定修改仅限于低层控制与局部规划模块。",
+   "stance": "support",
+   "relation": "支持命题：全向感知+分层推理栈的硬件无关性主张——同一鱼眼全景+LiDAR 感知与 DSG/octant 推理栈可跨空中/地面异构本体复用，是全景感知前端'hardware-agnostic'应用方式的证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV-C 平台细节：PX4+MINCO（空中）、Unitree SDK+FAR（四足），共享统一推理管线，平台差异限于低层控制与局部规划；作者称此模块化设计使异构机器人以最小改动复用推理栈。",
+   "locator": "page 7, Section IV-C",
+   "source_context": "The aerial platform integrates the PX4 autopilot [30], and MINCO [31] trajectory optimizer. The quadruped uses the Unitree SDK and FAR local planner [32] for collision-aware motion. Both systems share a unified reasoning pipeline, with platform-specific modifications limited to low-level control and local planning modules.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 IV-C 逐字给出 PX4/MINCO、Unitree SDK/FAR 与 unified reasoning pipeline、platform-specific modifications limited to low-level control and local planning；claim 未附加跨平台性能对比断言（论文未提供两平台定量对比）。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C13",
+   "claim": "作者把扩展到动态环境（将实时行人跟踪与预测纳入场景图层级）与空地协作多智能体系统列为未来工作，表明当前 OmniVLN 框架与评估不覆盖动态行人场景。",
+   "stance": "limit",
+   "relation": "限定命题：全景鱼眼+DSG 导航框架的适用边界——静态室内环境假设是此类全向感知 VLN 系统的共性限制，动态行人/移动障碍场景超出当前验证范围。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节未来工作：扩展 OmniVLN 到动态环境（实时行人跟踪与预测进入场景图层级），并研究共享表示支撑的空地协作多智能体系统。",
+   "locator": "page 8, V Conclusion",
+   "source_context": "Future research will extend OmniVLN to dynamic environ- ments by incorporating real-time pedestrian tracking and pre- diction into the scene graph hierarchy. Furthermore, we aim to investigate collaborative air-ground multi-agent systems where shared representations facilitate decentralized exploration and coordinated task allocation.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 结论逐字给出 dynamic environments 扩展（pedestrian tracking and prediction 纳入 scene graph hierarchy）与空地多智能体两项未来工作；'当前不覆盖动态行人场景'由 future-work 措辞直接蕴含（需扩展才支持）；claim 未附加其他限制断言。"
+   }
+  },
+  {
+   "card_id": "2603.17351-C14",
+   "claim": "导航成功率与 token 消耗的定量评估使用作者自建的合成场景生成器（九个数据集 D1-D9、可控空间条件），理由是 MP3D 等现有基准的对象密度固定不适用；真实机器人上的导航仅为定性演示，论文未报告真实环境的定量导航成功率。",
+   "stance": "limit",
+   "relation": "限定命题：全景 VLN 系统的效果证据强度——核心定量结论（token/SR/延迟）基于合成场景而非真实环境或标准基准，综述引用其效果数字时应标注合成来源与真实部署仅定性的边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-B.1：因 MP3D 等基准对象密度固定，作者开发合成场景生成器产出九个数据集（D1-D9）做可控空间条件评估；IV-C 的真实部署验证为 Fig. 8 定性演示（'go to the nearest chair' 命令的执行与场景图同步）。",
+   "locator": "page 6, Section IV-B.1; page 7, Section IV-C",
+   "source_context": "Since existing benchmarks like MP3D [18] often feature fixed object den- sities, we developed a synthetic scene generator to produce nine distinct datasets (D 1 to D 9 ) with controllable spatial con- ditions.",
+   "evidence_type": "experiment-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 IV-B.1 逐字给出 MP3D 密度固定的理由与合成生成器九数据集；'真实部署仅定性、无真实定量 SR'由 page 7 IV-C 'The robustness of this hierarchical reasoning process is qualitatively validated in Fig. 8'（已核对）与全文无真实 SR 表格支撑；claim 的'未报告'为全文核查结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "SpatialNav: Leveraging Spatial Scene Graphs for Zero-Shot Vision-and-Language Navigation",
+   "arxiv_id": "2601.06806",
+   "reason": "引文 [3]：octant 表示所扩展的 2D 空间离散化来源与 3 米感知瓶颈论断出处，同为场景图+LLM 零样本导航系工作。"
+  },
+  {
+   "title": "SG-Nav: Online 3D Scene Graph Prompting for LLM-based Zero-Shot Object Navigation",
+   "arxiv_id": null,
+   "reason": "引文 [5]：在线 3D 场景图提示 LLM 导航的代表性前作，也是本文持久同调房间划分与场景图层级对比的参照系。"
+  },
+  {
+   "title": "FAST-LIO2: Fast Direct LiDAR-Inertial Odometry",
+   "arxiv_id": null,
+   "reason": "引文 [28]：本文跨平台定位后端，全向感知栈的运动补偿与位姿来源。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文代表'全景鱼眼作为具身 VLN 感知前端'的应用范式。关键判断：(1) 应用方式——panoramic fisheye cameras 与旋转 LiDAR 融合做 360° 语义建图，全景流经 equirectangular 投影+SAM mask 赋语义，octant 表示消费全向观测使侧后方候选免旋转可及；(2) 获益——空间指称 REG 真实环境 77.27%→93.18%、跨房间 SR 80% vs 16%、延迟 12.4s→3.8s（后两者为合成场景）；(3) 代价/条件——全向建图直接文本化会 token 爆炸，必须配 DSG+多分辨率压缩（D9 -69.98% token），即全景收益以表示压缩为前提；(4) 推论边界——定量 SR/token 全部来自自建合成场景、真实部署仅定性、鱼眼相机无标定/畸变细节且无相机侧消融（唯一感知消融是 LiDAR 旋转 vs 固定）、摘要 61.7%/11.68% 与正文 69.98%/D9 80-16 口径不一致。页面定位器按 extraction 8 页文本层（RA-L 双栏排版）。"
+}

@@ -1,0 +1,350 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.10106",
+  "title": "EgoHumanoid: Unlocking In-the-Wild Loco-Manipulation with Robot-Free Egocentric Demonstration",
+  "published": "2026-02-10",
+  "url": "https://arxiv.org/abs/2602.10106",
+  "authors": [
+   "Modi Shi",
+   "Shijia Peng",
+   "Jin Chen",
+   "Haoran Jiang",
+   "Tianyu Li",
+   "Di Huang",
+   "Ping Luo",
+   "Hongyang Li",
+   "Li Chen"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "无本体 ego-centric（VR 追踪 + 头戴 ZED 相机）人类演示到人形机器人全身移动操作的共同训练框架；附录明确讨论手部遮挡→追踪退化→动作标签缺失/错误的传播链，以及腕部姿态噪声、朝向歧义、触觉/SLAM 补偿等，正中综述问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "人形 loco-manipulation 的数据瓶颈与人-机本体鸿沟"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "ego 数据采集系统与跨本体对齐的定位"
+   },
+   {
+    "locator": "III. EGOHUMANOID FRAMEWORK",
+    "role": "method-or-design",
+    "purpose": "数据采集硬件、视图对齐、动作对齐（平滑/滤波/量化）与共同训练"
+   },
+   {
+    "locator": "IV. EVALUATIONS",
+    "role": "results-or-analysis",
+    "purpose": "共同训练主结果、子技能迁移分析、精度关键阶段失效"
+   },
+   {
+    "locator": "A. Real-world Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "任务设计、20 次试验与评分口径"
+   },
+   {
+    "locator": "V. DISCUSSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "delta 末端朝向歧义与数据规模需求"
+   },
+   {
+    "locator": "VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与作者自述局限"
+   },
+   {
+    "locator": "APPENDIX",
+    "role": "appendix-or-supplement",
+    "purpose": "附录 B 采集准则（遮挡/腕部一致性/躯干稳定）与附录 A Q4-Q5（手部 inpainting 误差、触觉/SLAM 补偿）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "not-applicable: 参考文献仅用于核对引文身份"
+   },
+   {
+    "locator": "F. License of Assets",
+    "role": "appendix-or-supplement",
+    "purpose": "许可信息与综述问题无关"
+   }
+  ]
+ },
+ "research_question": "能否用无本体 ego-centric 人类演示与少量机器人遥操作数据共同训练人形机器人 VLA，使其在室内外真实环境完成全身移动操作并泛化到机器人数据未覆盖的场景？",
+ "contributions": [
+  "首次验证人→人形机器人全身 loco-manipulation 迁移：共同训练在泛化场景较纯机器人基线提升 51%",
+  "系统化本体对齐管线：基于 MoGe 深度重投影+扩散 inpainting 的视图对齐；delta 末端位姿+离散移动指令的统一动作空间",
+  "便携采集系统与实用采集协议（手部可见性、腕-手一致性、躯干稳定）",
+  "子技能级迁移分析：导航几乎完美迁移，精细操作迁移随精度要求下降"
+ ],
+ "method": {
+  "summary": "人类佩戴 PICO VR 头显+5 个 Motion Tracker（24 身体关键点、每手 26 手部关键点），头戴 ZED X Mini 录 ego 视频；机器人经 VR 遥操作采集。视图对齐用 MoGe 深度重投影到机器人相机高度+扩散 inpainting；动作对齐将腕部位姿表达到骨盆坐标系、Savitzky-Golay 平滑平移、SO(3) 切空间滤波旋转，输出 6-DoF delta 末端位姿；下半身骨盆轨迹量化为离散移动指令；手部曲率阈值化出二值抓取状态。共同训练 π0.5 VLA。",
+  "assumptions": [
+   "VR tracker 提供的人体/手部姿态为'粗'（coarse）但够用，需滤波平滑",
+   "放弃腕部相机，纯 ego 视角",
+   "不使用本体感知输入以避免人-机分布不一致",
+   "delta 末端位姿可绕开人-机基座系不对齐问题"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "每任务 100 条机器人遥操作 episode；共同训练再加 300 条人类演示（多场景）"
+  ],
+  "tasks": [
+   "Pillow Placement",
+   "Trash Disposal",
+   "Toy Transfer",
+   "Cart Stowing"
+  ],
+  "embodiments": [
+   "Unitree G1 人形（1.3m，29 DoF，Dex3 三指手）"
+  ],
+  "sample_or_scale": "4 任务 × 2 环境（域内/泛化）× 每设置 20 次试验"
+ },
+ "evaluation": {
+  "design": "分阶段二元成功判定，报告平均阶段完成率（Average Score）；域内与泛化两种设置",
+  "baselines": [
+   "Robot-only（100 episode/任务）",
+   "Human-only（仅人类数据）"
+  ],
+  "metrics": [
+   "Average Score（%）",
+   "子步成功率（Table I）"
+  ],
+  "ablations": [
+   "视图对齐",
+   "人类数据规模 0-300",
+   "人:机采样比 1:2/1:1/2:1",
+   "场景多样性 1-3"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "共同训练域内 78% vs 纯机器人 59%；泛化场景 82% vs 31%（+51%）",
+   "scope": "4 任务平均",
+   "locator": "B. Will human data improve humanoid loco-manipulation?, Fig. 5"
+  },
+  {
+   "finding": "Human-only 在导航主导子步达 100%，但精度关键操作子步 Cart Stowing s2 仅 5%（Robot-only 15%，Co-training 60%）",
+   "scope": "子技能迁移",
+   "locator": "C. Which subskill benefits most from the data transfer?, Table I"
+  },
+  {
+   "finding": "场景多样性 1→3 时零样本新场景得分 75.0→82.5",
+   "scope": "Trash Disposal",
+   "locator": "F. Scene Diversity in Human Data, Table II"
+  },
+  {
+   "finding": "人类演示采集约比遥操作快 2 倍（39.7s vs 62.1s/episode）",
+   "scope": "4 任务",
+   "locator": "G. Data Collection Efficiency, Table III"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "delta 末端位姿表示中手部朝向→夹爪朝向的对应关系有歧义，无本体感知时精确旋转迁移仍困难，限制精细旋转控制",
+    "locator": "V. DISCUSSIONS"
+   },
+   {
+    "limitation": "loco-manipulation 因导航带来的视角变化需要比固定基座多 2-3 倍演示",
+    "locator": "V. DISCUSSIONS"
+   },
+   {
+    "limitation": "离散移动指令限制可表达行为",
+    "locator": "VI. CONCLUSION / A. Motivating Questions Q5"
+   },
+   {
+    "limitation": "手部遮挡或高速运动下估计误差需更高级传感（触觉、SLAM）补偿",
+    "locator": "A. Motivating Questions Q5"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部姿态来自 VR tracker（Fig. 2 自述 coarse），并非单目视觉检测；结论不能直接外推到纯视觉手部估计管线",
+    "basis": "III.B 与 Fig. 2 说明"
+   },
+   {
+    "boundary": "全文未报告 tracker 关键点误差或手部追踪精度数值，仅给出定性退化描述与采集准则",
+    "basis": "通读全文无追踪精度指标"
+   },
+   {
+    "boundary": "有意去掉腕部相机；附录承认手部遮挡在该配置下是主要退化源",
+    "basis": "III.B 与 Appendix B"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：VR tracker 级（非视觉检测级）手部姿态、delta 末端位姿动作空间、人形 loco-manipulation、纯 ego 相机；粗操作可仅靠人类数据迁移，精度关键操作必须混入机器人数据；结论不支持'无本体数据足以完成精细旋转/精密操作'。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "子技能级分解（Table I + Fig. 6 Sankey 失败分析）能定位迁移失效的具体阶段",
+   "域内/泛化双设置直接检验人类数据的泛化价值",
+   "采集准则把追踪质量与数据有效性显式挂钩"
+  ],
+  "design_risks": [
+   "每设置仅 20 次试验",
+   "评分含人工判定成分",
+   "VR tracker 精度未量化，'coarse' 仅定性",
+   "人类演示者需遵守非自然的采集准则，可能引入分布偏移"
+  ],
+  "baseline_fairness": "Robot-only 与 Co-training 共享 π0.5 与训练配置；Human-only 提供有用参照；但无与其他手部估计管线的对比",
+  "metric_validity": "阶段完成率是任务级代理指标；无末端轨迹误差或姿态误差指标",
+  "reproducibility": "硬件（PICO 4 Ultra、ZED X Mini、G1）、滤波参数（SG 窗 11/阶 3）、训练超参齐全，承诺开源",
+  "external_validity": "人形 1.3m 与人类 1.6-1.8m 差距大；作者认为全尺寸人形差距更小、迁移更直接"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.10106-C01",
+   "claim": "在纯 ego（头戴）相机、无腕部相机的采集中，手部被物体或环境遮挡会使手部追踪质量显著退化，产生缺失或错误的动作标签；作者因此要求演示者调整接近角度与操作方式以保持手部全程可见（即使偏离自然行为）。",
+   "stance": "support",
+   "relation": "支持命题：遮挡是 ego-centric 手部追踪误差的首要来源，该误差直接进入动作标签（重定向前监督信号），是误差传播路径的起点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 B 手部可见性准则明确指出遮挡→追踪退化→缺失/错误动作标签的因果链。",
+   "locator": "B. Practical Guidelines for Data Collection",
+   "source_context": "Hand Visibility Maintenance. Reliable hand pose estimation requires minimizing occlusion during manipulation, particularly\nwhen ego-centric (head) cameras are used only without wrist cameras. When hands are obscured by manipulated objects or\nenvironmental elements, tracking quality degrades substantially, resulting in missing or inaccurate action labels.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 B 原文逐句核对；claim 保持作者定性表述，未附加量化含义。"
+   }
+  },
+  {
+   "card_id": "2602.10106-C02",
+   "claim": "由于动作表示采用 delta 末端位姿，微小的腕部旋转即可在视觉几乎相同的操作场景中产生截然不同的动作标签；此类不一致会给训练数据引入显著噪声——近似相同的视觉观测配上了冲突的动作目标，最终降低策略学习效果。",
+   "stance": "support",
+   "relation": "支持命题：腕部/手部姿态检测的小误差经动作标签化被放大为监督信号冲突，是检测精度→策略可用性的具体传播机制。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 B 腕-手一致性准则直接陈述小腕部旋转→动作标签剧变→观测-动作冲突→策略退化。",
+   "locator": "B. Practical Guidelines for Data Collection",
+   "source_context": "Since our action representation uses delta end-effector poses, small wrist rotations can produce dramatically different\naction labels even for visually similar manipulation scenarios. Such inconsistencies introduce significant noise into the training\ndata, as nearly identical visual observations become paired with conflicting action targets, ultimately degrading policy learning\neffectiveness.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文一致；claim 限于 delta EE 表示下的标签噪声机制，未泛化到其他表示。"
+   }
+  },
+  {
+   "card_id": "2602.10106-C03",
+   "claim": "迁移有效性随操作精度要求上升而下降：在精度关键子步 Cart Stowing s2，Human-only 仅 5%，低于 Robot-only 的 15%；共同训练达 60%，说明人类数据提供的有用先验需与机器人演示结合才在精密阶段生效。",
+   "stance": "limit",
+   "relation": "限制命题：无本体手部追踪轨迹可直接支撑精细操作——在精度关键阶段，粗精度的人类轨迹单独不足，机器人数据不可缺省；这界定了'可接受阈值'的经验形态。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.C 正文给出 5%/15%/60% 三个数字，Table I 同行数据一致。",
+   "locator": "C. Which subskill benefits most from the data transfer?",
+   "source_context": "However, for precision-critical\nphases such as Cart Stowing s2, Human-only achieves only 5%\nversus Robot-only’s 15%. Notably, Co-training reaches 60%\non this subtask, indicating that human data provides useful\npriors that become effective when combined with robot demos.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "子步成功率",
+    "value_or_direction": "Human-only 5% vs Robot-only 15%；Co-training 60%",
+    "comparator": "Human-only / Robot-only / Co-training 三种训练数据配置",
+    "task_or_sample": "Cart Stowing s2（释放推车把手并以左手建立对玩具的稳定抓取），真实世界 20 次试验/设置",
+    "locator": "C. Which subskill benefits most from the data transfer?, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "正文 5%/15%/60% 与 Table I 行（Robot-only …100 15 5 5；Human-only …100 5 0 0；Co-training …100 60 50 50）交叉核对一致；claim 限定精度关键子步。"
+   }
+  },
+  {
+   "card_id": "2602.10106-C04",
+   "claim": "作者自述 delta 末端位姿的根本局限：人手朝向与机器人夹爪朝向的对应关系有歧义、难以仅凭视觉观测推断；无本体感知输入时精确旋转迁移仍然困难，策略无法从 ego 图像可靠区分期望末端朝向，限制精细旋转控制。",
+   "stance": "limit",
+   "relation": "限制命题：即使追踪位置足够准，朝向通道仍是检测/表示误差传播到末端轨迹的薄弱环节；旋转精度是末端轨迹可用性的瓶颈维度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec V Action Representation 段落与 Sec VI 局限均明确陈述朝向歧义问题。",
+   "locator": "V. DISCUSSIONS",
+   "source_context": "However, delta end-effector poses present a fundamental\nlimitation: the correspondence between human hand orien-\ntation and robot gripper orientation is ambiguous. While\nwe define explicit pose correspondences, these mappings are\ndifficult to infer from visual observations alone. Consequently,\nwithout proprioceptive input, precise rotation transfer remains\nchallenging—the policy cannot reliably disambiguate intended\nend-effector orientations from egocentric images, limiting fine-\ngrained rotational control in manipulation tasks.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Sec V 原文逐句核对；与 Sec VI 'Limitations and Future Work' 表述一致。"
+   }
+  },
+  {
+   "card_id": "2602.10106-C05",
+   "claim": "为抑制追踪噪声，管线将腕部位姿表达到骨盆坐标系、用 Savitzky-Golay 滤波平滑平移、在 SO(3) 切空间以 log/exp 映射滤波旋转；抓取状态则经低通+SG 平滑后按指级曲率阈值化为二值标签，作者称该曲率表示可缓解噪声并实现可靠的监督提取。",
+   "stance": "support",
+   "relation": "支持命题：时间滤波与几何参数化（骨盆坐标系、SO(3) 滤波、曲率阈值化）是手部追踪误差进入动作标签前的标准缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III.C 动作对齐与 Gripper 段落给出完整滤波/平滑/阈值化链。",
+   "locator": "C. Human-to-Humanoid Alignment",
+   "source_context": "Explicitly, we\nexpress human wrist poses in a pelvis-centric frame, then\nsmooth translations with a Savitzky-Golay filter [52]. For\nrotations, we filter in the SO(3) tangent space using log/exp\nmaps to prevent quaternion interpolation ambiguities.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "III.C 原文核对；曲率句 'This curvature-based representation mitigates noise and enables reliable supervision extraction' 亦在同一节核实。"
+   }
+  },
+  {
+   "card_id": "2602.10106-C06",
+   "claim": "作者指出：对于手部被遮挡的随机人体运动或高速运动变化，需要更高级的传感配置——如触觉与 SLAM 技术——来补偿估计误差。",
+   "stance": "conditional",
+   "relation": "条件性支持：触觉/SLAM 被视为视觉（或 tracker）手部估计误差在遮挡/高速条件下的补偿通道；但本文未实现或验证，属方向性声明。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 A Q5 局限讨论中提出触觉+SLAM 补偿估计误差的方向。",
+   "locator": "A. Motivating Questions",
+   "source_context": "Random human motion with occluded hands or high-speed motion changes would require more advanced\nsensor setups, such as tactile and SLAM techniques, to compensate for the estimation error.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 A Q5 原文核对；claim 明确标注为作者提出的未来方向而非本文验证结果。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[26] Physical Intelligence, π0.5, CoRL 2025",
+   "why": "共同训练的 VLA 骨干"
+  },
+  {
+   "ref": "[58] Wang et al., MoGe, CVPR 2025",
+   "why": "视图对齐的单目几何估计器"
+  }
+ ],
+ "notes": "注意本文手部姿态来自 PICO VR tracker（Fig. 2 称 coarse），不是单目视觉检测；其误差讨论以定性准则形式出现。Human-only 在导航子步 100% 成功率说明粗轨迹对移动足够、对精密操作不足。"
+}

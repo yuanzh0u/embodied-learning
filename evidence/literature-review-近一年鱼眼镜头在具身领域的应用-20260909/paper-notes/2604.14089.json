@@ -1,0 +1,532 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.14089",
+  "title": "UMI-3D: Extending Universal Manipulation Interface from Vision-Limited to 3D Spatial Perception",
+  "published": "2026-04",
+  "url": "https://arxiv.org/abs/2604.14089",
+  "authors": [
+   "Ziming Wang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "论文是 UMI 鱼眼腕装数据采集接口的直接后继系统：采用约 185° 超广角鱼眼相机（直接使用未去畸变原图像）作为策略观察接口，并与 LiDAR 组成多模态采集套件；其方法设计、真机结果、失败模式与作者声明限制对“鱼眼在具身操作中的应用方式、获益任务（大变形/铰接物体）与局限（无深度估计、视觉歧义、推理纯视觉）”均提供可定位证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：UMI 单目视觉 SLAM 在遮挡/弱纹理/动态场景的不可靠性限制可采集任务分布，定位 LiDAR-centric 动机。"
+   },
+   {
+    "locator": "page 2-4, II Related Works",
+    "role": "relevant-core",
+    "purpose": "梳理 UMI 变体两条改进路线（外部追踪 vs. 视觉 SLAM 工程化）与视觉 SLAM→LiDAR SLAM 谱系，提取三设计原则。"
+   },
+   {
+    "locator": "page 4-10, III Method (III-A hardware, III-B SLAM & data processing, III-C policy learning)",
+    "role": "method-or-design",
+    "purpose": "精读鱼眼相机选型（185°、原始图像不去畸变）、LiDAR-鱼眼标定（equidistant 内参、livox2cam 外参）、硬件同步、LiDAR-惯性里程计与策略接口。"
+   },
+   {
+    "locator": "page 10-11, IV Evaluations",
+    "role": "data-or-setting",
+    "purpose": "确认三个评估维度（SLAM 鲁棒性/能力与泛化/跨具身）与四任务设计。"
+   },
+   {
+    "locator": "page 11-15, V Capability Experiments (A-D)",
+    "role": "results-or-analysis",
+    "purpose": "提取四任务的定量结果、失败分析与讨论，核对其样本量与评分协议。"
+   },
+   {
+    "locator": "page 15, VI Limitations and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者声明限制：硬件增重、单臂、3D 感知未进策略、移动操作未扩展。"
+   },
+   {
+    "locator": "page 17-18, Appendix A Task Scoring Protocol",
+    "role": "appendix-or-supplement",
+    "purpose": "核对四任务分阶段评分细则，验证 normalized score 的含义。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "论文自身问题：如何在保持 UMI 便携性的前提下，解决腕装单目视觉 SLAM 在遮挡、弱纹理与动态场景下位姿估计不可靠的问题，从而扩展可采集的操作任务分布（大变形物体、铰接物体），并使采集质量的提升转化为下游策略性能？",
+ "contributions": [
+  "提出 UMI-3D：在 UMI 机械设计上集成硬件同步的腕装 LiDAR+鱼眼相机+IMU 多模态传感套件（传感器 BoM 650 美元、夹爪 50 美元、整机 1120g），实现 LiDAR-centric 的自包含位姿估计。",
+  "统一时空标定与同步框架：STM32 硬件级时间同步（1Hz PPS + 20Hz 相机触发）、鱼眼 equidistant 内参标定、面向固态 LiDAR-超广角鱼眼的 livox2cam 外参标定模块。",
+  "基于 ESIKF 与体素化概率平面特征的 LiDAR-惯性里程计管线，输出与视频帧对齐的相机轨迹并打包为 Zarr 回放缓冲。",
+  "真机实证：标准任务高泛化（杯碟 0.863/0.788/0.736）、大变形物体（拉窗帘 0.88-0.96）与铰接物体长时序任务可学习，且原 UMI 策略可零微调迁移到 UMI-3D 硬件（0.73-1.00）。"
+ ],
+ "method": {
+  "summary": "UMI-3D 保留 UMI 的手持并行夹爪与腕装传感范式，把传感套件替换为硬件同步的 Livox MID-360 LiDAR + 约 185° 超广角鱼眼工业相机（Hikrobot，M12 镜头）+ IMU：鱼眼相机提供策略学习用的原始（不去畸变）RGB 观察，LiDAR 承担位姿估计与几何感知（LiDAR-惯性里程计：ESIKF + 体素化概率平面特征）。数据管线完成时间同步、LiDAR-相机时空标定、帧级对齐后打包为 Zarr 缓冲；策略沿用 UMI 的扩散策略与相对 SE(3) 末端位姿表示，推理时仅用视觉与本体状态。设计原则包括：自包含位姿估计、多模态时空一致、跨环境定位精度一致。",
+  "assumptions": [
+   "腕装传感器与夹爪刚性连接，人演示与机器人部署共享观察几何（跨具身观察一致）。",
+   "原始鱼眼图像（约 185°）直接作为策略输入，不做去畸变；中心分辨率保留、周边上下文紧凑编码。",
+   "策略推理仅用 RGB 观察与本体状态；LiDAR 只作用于演示采集阶段的位姿估计与数据对齐。",
+   "LiDAR-惯性里程计依赖可观测几何结构（体素化平面特征），SLAM 假设基本静态的周围几何。",
+   "演示动作可行域与部署机器人运动学可行域的匹配由数据分布保证（未做显式运动学过滤）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自采集：3,500 条杯碟摆放演示（UMI-3D）",
+   "自采集：769 条拉窗帘演示（三种窗帘材质/外观）",
+   "自采集：340 条开门-取杯-放置演示",
+   "外部：数据 scaling laws 工作（arXiv:2410.18647）的 UMI 预训练策略（鼠标放置跨具身评估）"
+  ],
+  "tasks": [
+   "杯碟摆放（pick-and-place 与物体泛化，8 杯×8 碟）",
+   "拉窗帘（大型可变形物体，强光照/背光）",
+   "滑门开启+柜内取杯+放置（长时序、铰接物体）",
+   "鼠标放置（原 UMI 策略零微调跨具身部署）"
+  ],
+  "embodiments": [
+   "手持 UMI-3D 夹爪（腕装 LiDAR+185° 鱼眼相机+IMU）采集；部署于带兼容夹爪与相机安装的机械臂（具体型号未报告）"
+  ],
+  "sample_or_scale": "真机评估共 880 trials（杯碟 640 + 窗帘 120 + 门 40 + 鼠标 80）；演示规模 3,500/769/340 条；策略为扩散策略（CLIP ViT-L/14 或 DINOv2 ViT-L/14 编码器）。"
+ },
+ "evaluation": {
+  "design": "三维度评估：(1) SLAM 鲁棒性——三个挑战场景的定性展示（无定量误差对比）；(2) 能力/泛化/任务覆盖——四个真机任务，分阶段评分协议（每阶段 0-2 或 0-3 分，报告 normalized score），杯碟与鼠标任务在未见环境评估；(3) 跨具身兼容——原 UMI 预训练策略零微调部署到 UMI-3D 硬件。",
+  "baselines": [
+   "无外部基线：任务 1-3 未与原版 UMI 或其他系统做 head-to-head 定量对照；任务 4 为部署兼容性评估（先前工作的策略）而非性能对照；SLAM 鲁棒性无视觉 SLAM 定量对照"
+  ],
+  "metrics": [
+   "normalized score（分阶段评分协议：杯碟/鼠标每 trial 满分 6、窗帘满分 4、门任务满分 6）",
+   "阶段成功率（门任务：开门/取杯/放置）"
+  ],
+  "ablations": [
+   "无系统消融：无 LiDAR vs. 视觉 SLAM 的定位精度定量对比、无鱼眼 FoV 或去畸变消融、无模态消融"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "腕装约 185° 鱼眼相机 + 原始未去畸变图像作为策略观察接口在 UMI-3D 中沿用并加宽；宽 FoV 同时保证与 LiDAR 视场重叠以支撑多模态对齐。",
+   "scope": "系统设计声明",
+   "locator": "page 5, Section III-A, HD2"
+  },
+  {
+   "finding": "作者声明宽 FoV 成像本身不提供可靠深度/运动估计，LiDAR 被引入承担度量尺度位姿与深度。",
+   "scope": "设计边界声明",
+   "locator": "page 5, Section III-A, HD2-HD3"
+  },
+  {
+   "finding": "LiDAR-centric SLAM 在白墙、强光照窗帘、动态遮挡三个视觉 SLAM 挑战场景保持稳定位姿估计（定性）。",
+   "scope": "定性 SLAM 评估",
+   "locator": "page 12, Section V"
+  },
+  {
+   "finding": "杯碟摆放：seen/partially unseen/fully unseen 平均归一化分数 0.863/0.788/0.736（3,500 演示、640 未见环境评估）。",
+   "scope": "真机定量结果",
+   "locator": "page 13, Section V-A"
+  },
+  {
+   "finding": "拉窗帘（大变形物体）：三种窗帘归一化分数 0.88/0.90/0.96（769 演示、120 trials），推理纯视觉；该任务对纯视觉 SLAM 位姿估计不可行。",
+   "scope": "真机定量结果",
+   "locator": "page 13, Section V-B"
+  },
+  {
+   "finding": "长时序门任务：开门 97.5%/取杯 47.5%/放置 5.0%，32.5% trials 因违反机器人逆运动学约束在放置阶段失败。",
+   "scope": "真机定量结果与失败分析",
+   "locator": "page 14, Section V-C"
+  },
+  {
+   "finding": "原 UMI 策略零微调部署于 UMI-3D 硬件：16 组合归一化分数 0.73-1.00（80 trials，未见环境）——两代鱼眼腕视角接口观察空间对齐。",
+   "scope": "跨具身定量结果",
+   "locator": "page 14-15, Section V-D"
+  },
+  {
+   "finding": "低对比度棕色碟子导致放置犹豫/放偏（视觉歧义）；作者承认精确放置仍受感知质量限制，且 LiDAR 采集的 3D 几何未进入策略学习。",
+   "scope": "失败模式与作者声明限制",
+   "locator": "page 13 Section V-A; page 15 Section VI"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "硬件与人体工学：集成 LiDAR 与支撑组件带来额外重量（整机 1120g），长时间数据采集会导致用户疲劳；未来需轻量化材料与更紧凑的传感器集成。",
+    "locator": "page 15, Section VI"
+   },
+   {
+    "limitation": "单臂系统限制：当前只支持单臂构型，无法完成需要双臂协调或复杂物体稳定的任务。",
+    "locator": "page 15, Section VI"
+   },
+   {
+    "limitation": "策略学习对 3D 感知利用有限：LiDAR 关键作用在 SLAM 鲁棒性与数据质量，但本文策略推理时主要依赖视觉观察；把演示中同步采集的 3D 几何信息直接纳入策略学习是未来方向。",
+    "locator": "page 15, Section VI"
+   },
+   {
+    "limitation": "尚未扩展到移动操作：当前为固定基座操作，移动操作（locomotion+manipulation 统一管线）留待未来工作。",
+    "locator": "page 15, Section VI"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "“拉窗帘/开门等任务对纯视觉 UMI 不可行（infeasible）”的核心论断依赖引文（UMI 原文 [4] 与大规模 UMI 数据收集研究 [15]）与定性 SLAM 展示，本文未运行原版 UMI 在这些任务上的对照实验来直接验证不可行性。",
+    "basis": "page 2 引言的引用论证 + page 12 仅定性 SLAM 展示 + 任务 1-3 无 vision-only UMI 基线（page 11-15 全部结果节）"
+   },
+   {
+    "boundary": "SLAM 鲁棒性主张没有定量支撑：未报告相对真值的定位误差、漂移或成功率，也未与任何视觉 SLAM（如原 UMI 的 ORB-SLAM/VIO 管线）做数值对比；“优于视觉 SLAM”不可量化复核。",
+    "basis": "page 12 Section V 仅 Fig. 10 定性三场景；全文无 SLAM 误差表格"
+   },
+   {
+    "boundary": "推理时感知瓶颈仍在 2D 鱼眼视觉端：低对比度棕色碟子的放置失败与强背光下窗帘边缘抓取失败均源于视觉歧义，LiDAR 数据质量改进无法缓解推理阶段的视觉模糊。",
+    "basis": "page 13 Section V-A Failure Analysis 与 V-B Failure Analysis"
+   },
+   {
+    "boundary": "传感成本与便携性代价：LiDAR+相机 650 美元、整机 1120g、含 LiDAR 的腕装布局，相对 GoPro 版 UMI 的成本/重量/标定复杂度（livox2cam、equidistant 标定）显著上升；对非专家大规模采集的可及性影响未评估。",
+    "basis": "page 5 “Putting everything together”（1120g、BoM 650+50 美元）+ page 6 SP2 标定管线"
+   },
+   {
+    "boundary": "长时序任务的失败主要来自非感知因素（32.5% IK 约束违反、抓取归因于数据量少），说明采集接口改进对多阶段任务的提升存在天花板。",
+    "basis": "page 14 Section V-C Failure Analysis 与 Discussion"
+   },
+   {
+    "boundary": "部署机器人型号、计算资源、SLAM 运行时长与数据处理耗时未报告；单作者系统论文，外部复现性待验证。",
+    "basis": "全文未报告机器人型号/计算细节；作者列表仅 Ziming Wang（page 1）"
+   }
+  ]
+ },
+ "transfer_boundary": "适用范围：手持腕装（eye-in-hand）演示采集→固定基座单臂桌面/家庭场景操作；任务为桌面 pick-and-place、大变形布料（窗帘）、单一滑门类铰接结构与跨具身鼠标放置；传感为腕装 185° 鱼眼原始图像（不去畸变）+ LiDAR/IMU（仅采集期位姿估计）；策略为扩散策略（RGB+本体状态），推理纯视觉、无 3D 输入；评估为分阶段 normalized score 与阶段成功率，SLAM 鲁棒性仅定性。不适用/未验证：动态接触后阶段的 3D 重建、双臂协调、移动操作、推理期几何感知、视觉 SLAM 不可行性论断的定量复核、以及 SLAM 定位精度本身。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "硬件级时间同步（STM32 PPS + 20Hz 相机硬触发）与统一时空标定链（IMU-LiDAR-Cam-TCP）设计明确，直接针对“观察-动作对齐”这一数据质量根源。",
+   "评估规模较大且贴近部署：880 次真机 trials，杯碟/鼠标任务在完全未见环境评估，含 seen/partial/fully unseen 分层。",
+   "任务设计有诊断性：从标准 pick-and-place 到视觉 SLAM 难以支撑的变形/铰接任务，再到跨具身零微调迁移，逐层暴露系统收益与边界。",
+   "分阶段评分协议（附录 A）公开且单调，可区分抓取/放置等不同失败类型。"
+  ],
+  "design_risks": [
+   "缺少与原版 UMI（视觉 SLAM）或其他 UMI 变体的 head-to-head 定量对照，“使不可行任务变得可采集”的核心主张依赖引文与定性证据。",
+   "SLAM 鲁棒性无定量误差指标（漂移/ATE/成功率），无法与其他 SLAM 系统比较。",
+   "单作者论文；部署机器人型号、计算与耗时细节缺失，影响复现评估。",
+   "门任务评估在与训练相同的环境进行（仅随机化初始状态），长时序结论的环境泛化性未测试。"
+  ],
+  "baseline_fairness": "不适用/缺失：任务 1-3 无外部基线，任务 4 为兼容性部署而非性能对照。摘要中“significantly improves the quality and reliability of collected data, which directly translates into enhanced policy performance”的因果链缺少同任务、同策略、仅换采集系统的对照实验支撑。",
+  "metric_validity": "normalized score 用部分得分制（分阶段 0-2/0-3）比二元成功率更细粒度，评分细则公开（附录 A）；但阈值人为设定（如窗帘拉开 >30cm 记满分），且不同任务分数不可横向比较。门任务用阶段成功率呈现失败传播是恰当的。",
+  "reproducibility": "硬件 BoM（650+50 美元）、传感器型号（Livox MID-360、Hikrobot MV-CB013-A0UC-S）与开源承诺（umi-3d.github.io）提供复现基础；SLAM 数学框架完整但实现细节引用外部工作（FAST-LIO2 系列）；策略超参（训练轮数、推理延迟对齐细节）未完整报告。",
+  "external_validity": "结论限于：腕装手持演示、单臂固定基座、室内桌面/家庭场景、静态为主的周围几何、四类任务（变形物体仅窗帘、铰接物体仅滑门）。对双臂、移动操作、动态场景、工业环境及其他铰接结构（把手/旋钮）的泛化未验证；跨具身结论仅覆盖 UMI→UMI-3D 一对硬件。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.14089-C01",
+   "claim": "UMI-3D 沿用 UMI 的腕装鱼眼相机方案并把视场进一步加宽到约 185°（M12 镜头系统），并直接使用未经去畸变的原始鱼眼图像作为策略观察输入，以在腕部快速运动与视角持续变化下扩大可观察区域，同时保留中心分辨率、紧凑编码周边上下文。",
+   "stance": "support",
+   "relation": "支持命题：超广角鱼眼相机适合作为腕装（eye-in-hand）具身操作的数据采集与策略观察接口。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "硬件设计原则 HD2 明确说明：UMI-3D 跟随 UMI 已验证的宽 FoV 鱼眼成像方案，采用更宽的约 185° 鱼眼相机与 M12 镜头，并像 UMI 一样直接使用原始鱼眼图像（不去畸变），在扩大可观察区域的同时保留中心分辨率并紧凑编码周边上下文。",
+   "locator": "page 5, Section III-A, design principle HD2",
+   "source_context": "In UMI-3D, we further extend this approach by using a wider FoV fisheye camera (approximately 185°) through an M12 lens system, expanding the observable region (see Fig. 2). As in UMI, we directly use raw fisheye im- ages without undistortion, preserving central resolution while compactly encoding peripheral context.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 HD2 段落逐字给出 approximately 185°、M12 lens system、raw fisheye images without undistortion、preserving central resolution 与 compactly encoding peripheral context；claim 仅复述该设计声明，未附加任何性能或对比断言，作用域限于该系统的腕装相机设计。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C02",
+   "claim": "UMI-3D 的宽 FoV 鱼眼设计使相机视场与腕装 LiDAR 视场大幅重叠，确保视觉与几何观测对应于工作区的重叠区域，从而为一致的 LiDAR-相机多模态感知提供基础。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼超广角在鱼眼+LiDAR 多模态具身传感中的价值——提供与深度/几何传感器重叠的视场以支撑跨模态对齐。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者把“与 LiDAR 视场大幅重叠”列为宽 FoV 设计的直接收益之一：视觉与几何观测覆盖重叠的工作区区域，为一致多模态感知（LiDAR-相机融合）奠定基础。",
+   "locator": "page 5, Section III-A, design principle HD2",
+   "source_context": "Beyond improving visual coverage, the wide-FoV design also enables substantial overlap with the LiDAR field of view, providing a foundation for consistent multimodal perception by ensuring that visual and geometric observations correspond to overlapping regions of the workspace.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 HD2 段落逐字陈述 wide-FoV design enables substantial overlap with the LiDAR field of view 及其作为 consistent multimodal perception 基础的作用；claim 未超出该设计声明，也未断言重叠带来的定量性能收益。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C03",
+   "claim": "作者明确声明宽 FoV 成像本身不提供显式、可靠的深度或运动估计，并以此作为引入直接几何传感（LiDAR）的动机。",
+   "stance": "limit",
+   "relation": "限定命题：超广角鱼眼相机单独不足以支撑腕装接口中可靠的深度与运动（位姿）估计，需要 LiDAR 等主动几何传感补充。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "这是对鱼眼超广角观察的关键能力边界声明：宽 FoV 提高视觉覆盖但不提供深度/运动估计。结合 HD3（page 5）：UMI 用侧镜构造隐式立体深度，UMI-3D 改用 LiDAR 直接几何感知获得度量尺度深度与鲁棒 SE(3) 状态估计。",
+   "locator": "page 5, Section III-A, design principles HD2-HD3",
+   "source_context": "However, wide-FoV imaging alone does not provide explicit and reliable depth or motion estimation, motivating the use of direct geometric sensing.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 HD2 段末句逐字陈述 wide-FoV imaging alone does not provide explicit and reliable depth or motion estimation 与 motivating the use of direct geometric sensing；claim 逐点对应，无扩展。summary 中关于 HD3 侧镜/LiDAR 的补充同样位于 page 5 且已核对原文。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C04",
+   "claim": "原始 UMI 依赖单目视觉 SLAM：原始工作自述需要视觉特征足够丰富的环境、在白墙/弱光等弱纹理区域可能失败；后续大规模 UMI 数据收集研究进一步表明视觉 SLAM 对遮挡与动态场景变化高度敏感——开门/抽屉等大物体部分或完全遮挡相机视野的任务会使 SLAM 误判运动甚至完全丢失跟踪，从而限制可采集的任务范围。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼腕装相机的视觉 SLAM 在遮挡、弱纹理与动态场景下不可靠，约束具身数据采集的任务分布（这正是 UMI-3D 引入 LiDAR 的动机）。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "论文在引言中综述了 UMI 视觉 SLAM 的两类失败模式：弱纹理环境（引原始 UMI [4]）与遮挡/动态场景（引大规模 UMI 数据收集研究 [15]），并指出这些限制使数据采集偏向对视觉 SLAM 友好的场景。",
+   "locator": "page 2, Section I",
+   "source_context": "As acknowledged in the original work, the system requires environments with sufficiently rich visual features to maintain stable tracking, and may fail in textureless regions such as blank walls or poorly lit scenes [4]. More critically, subsequent empirical studies on large-scale UMI data collection further reveal that visual SLAM is highly sensitive to occlusions and dynamic scene changes. For instance, during the ma- nipulation of large objects that partially or fully block the camera view, such as opening doors or drawers, the SLAM system may misinterpret motion or even lose tracking entirely, thereby limiting the range of feasible tasks [15].",
+   "evidence_type": "cited-work",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 引言段落逐字包含弱纹理失败（[4]）与开门/抽屉遮挡导致跟踪失败（[15]）的全部表述；claim 的两部分分别由句中两处引文支撑，故标 citation-supported，且未加入引文之外的断言。core_citations 已登记 [4] UMI 与 [15] data scaling laws。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C05",
+   "claim": "在三个对视觉 SLAM 高度挑战的代表性场景（无纹理白墙、强光照变化下的可变形窗帘、含铰接物体与动态遮挡的长时序操作）中，UMI-3D 的 LiDAR-centric SLAM 在全部场景下保持稳定、抗漂移的位姿估计并产生一致的 3D 地图重建（论文为定性展示，未报告相对真值或视觉 SLAM 的定位误差定量对比）。",
+   "stance": "support",
+   "relation": "支持命题：LiDAR-centric 位姿估计可在视觉（鱼眼）SLAM 失效的弱纹理/动态/强光照变化条件下支撑具身数据采集。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者用 Fig. 10 的三个场景定性评估 SLAM 鲁棒性，声明在所有场景中保持稳定与抗漂移的位姿估计及一致地图重建；正文未给出定位误差数值，也未与视觉 SLAM 做定量对照。",
+   "locator": "page 12, Section V, Robust SLAM for Reliable Data Collection",
+   "source_context": "As shown in Fig. 10, we evaluate SLAM performance in three representative challenging scenarios: a textureless white wall, a deformable curtain under strong lighting variation, and a long-horizon manipulation task in- volving articulated objects and dynamic occlusions. These conditions are known to be highly challenging for vision- based SLAM due to lack of texture, large non-rigid motion, and drastic illumination changes. Across all scenarios, UMI- 3D maintains stable and drift-resistant pose estimation while producing consistent 3D map reconstruction.",
+   "evidence_type": "qualitative-evaluation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 段落逐字列出三个场景（textureless white wall、deformable curtain under strong lighting variation、articulated objects and dynamic occlusions）并给出 Across all scenarios 的定性结论；claim 中“未报告定量对比”的限定与该页仅含定性表述一致（已检查 page 10-15 全部结果文本，无 SLAM 误差数值）。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C06",
+   "claim": "在拉窗帘任务（大型可变形物体；769 条 UMI-3D 演示训练的扩散策略，DINOv2 ViT-L/14 编码器；评估覆盖强光照与背光条件）上，策略在三种窗帘类型上分别取得 0.88、0.90、0.96 的归一化分数（共 120 次评估 trials），并在显著的光照与外观变化下保持稳健的抓取与拉拽行为。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼观察 + LiDAR 位姿估计采集的数据可训练出完成大变形物体任务的视觉运动策略——此类任务中腕装相机视野大部分被动态低纹理物体占据，纯视觉 SLAM 难以采集。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 12 及正文给出三种窗帘的归一化分数 0.88/0.90/0.96 与稳健性结论。作者在 Discussion（page 13）进一步说明：该任务中腕装相机视野大部分被动态、低纹理的窗帘运动与强光照变化占据，使纯视觉 SLAM 的位姿估计不可行，而学到的策略在训练与部署时都只依赖视觉输入。",
+   "locator": "page 13, Section V-B, Performance (Fig. 12)",
+   "source_context": "As shown in Fig. 12, the policy achieves strong performance across all curtain types, with normalized scores of 0.88, 0.90, and 0.96, respectively. The system remains robust under significant variations in lighting and appearance, demonstrating reliable grasping and pulling be- haviors for deformable objects.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "normalized score",
+    "value_or_direction": "0.88, 0.90, and 0.96 for the three curtain types",
+    "comparator": "two-stage scoring protocol with maximum 4 per trial; no external baseline reported",
+    "task_or_sample": "curtain pulling (large deformable object); 769 UMI-3D demonstrations; 120 evaluation trials under strong illumination and backlit conditions",
+    "locator": "page 13, Section V-B, Fig. 12"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 Performance 段逐字给出 normalized scores of 0.88, 0.90, and 0.96 与三窗帘类型下的稳健结论；769 条演示、DINOv2 ViT-L/14 编码器与 120 trials 见同页 Experimental Setup 段（已核对原文）；comparator 如实标注为评分协议上限、无外部基线。summary 中 Discussion 段的“视觉 SLAM 位姿估计不可行”亦逐字位于 page 13。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C07",
+   "claim": "在杯碟摆放任务（3,500 条 UMI-3D 演示；评估全部在未见环境，8 杯×8 碟共 64 个物体组合、每组合 10 trials、共 640 次评估）上，已见物体对的平均归一化分数为 0.863，部分未见（杯或碟未见）降至 0.788，完全未见组合为 0.736，呈平缓的性能退化。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼接口采集数据训练的扩散策略在标准 pick-and-place 任务上对未见物体与未见环境具有泛化能力。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "作者报告了按物体组合可见性分层的泛化结果：seen 0.863、partially unseen 0.788、fully unseen 0.736，并据此认为策略泛化超出对特定物体实例的记忆。",
+   "locator": "page 13, Section V-A, Generalization Performance (Fig. 11)",
+   "source_context": "For seen object pairs, the average normalized score reaches 0.863. Under partial distribution shift (either cup or saucer unseen), performance decreases moderately to 0.788, and further to 0.736 in fully unseen scenarios.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average normalized score",
+    "value_or_direction": "0.863 seen; 0.788 partially unseen; 0.736 fully unseen",
+    "comparator": "seen vs partially unseen vs fully unseen object combinations",
+    "task_or_sample": "cup arrangement; 3,500 UMI-3D demonstrations; 640 evaluation runs (64 object combinations × 10 trials) in unseen environments",
+    "locator": "page 13, Section V-A, Fig. 11"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 Generalization Performance 段逐字给出 0.863/0.788/0.736 与分层定义（either cup or saucer unseen / fully unseen）；3,500 条演示、8×8 组合、10 trials、640 次评估与“评估完全在未见环境”均见 page 12 Experimental Setup 段与 Fig. 11 caption（已核对原文），claim 的每个数字与样本量都有原文对应。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C08",
+   "claim": "杯碟摆放的失败分析显示：低对比度且偏离训练分布的棕色碟子持续取得最低分——策略在多数情况下能成功抓杯并到达正确放置区域，却犹豫释放物体或将杯子放到碟外；作者将此归因于视觉歧义，并在讨论中总结精确放置仍从根本上受感知质量限制、需要更几何感知或多模态的表示。",
+   "stance": "limit",
+   "relation": "限定命题：推理时仅用 2D 鱼眼视觉的策略在低对比度/分布外物体上的精细放置仍受视觉感知质量限制——LiDAR 只改善采集阶段位姿估计，不解决推理时的视觉模糊。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "该失败模式表明系统瓶颈转移到了推理时的 2D 视觉感知：抓取与接近动作正确，但放置目标定位受低对比度影响；作者据此提出需要 geometry-aware 或多模态表示。",
+   "locator": "page 13, Section V-A, Failure Analysis and Discussion",
+   "source_context": "A notable failure mode is observed for the brown saucer (seventh row in Fig. 11), which consistently yields the lowest scores. In many cases, the policy successfully grasps the cup and reaches the correct placement region, but hesitates to release the object or places it outside the saucer. We attribute this behavior to visual ambiguity. The brown saucer exhibits low contrast with the surrounding environment and deviates from the training data distribution, making it difficult for the policy to reliably localize the placement target. This leads to uncertainty in fine-grained placement decisions, even when the overall task structure is correctly executed. Discussion These results demonstrate that UMI-3D enables robust manipulation and strong generalization across object variations and unseen environments. At the same time, the observed failure cases highlight that precise placement remains fundamentally limited by perceptual quality, motivating the need for more geometry-aware or multimodal representations in challenging scenarios.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 Failure Analysis 段逐字描述棕色碟子最低分、抓取成功但犹豫释放/放偏与 visual ambiguity 归因，紧随其后的 Discussion 段逐字给出 precise placement remains fundamentally limited by perceptual quality 与 geometry-aware or multimodal representations 的结论；source_context 连续覆盖两段，claim 与之一一对应。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C09",
+   "claim": "在长时序任务（顺序完成滑门开启、柜内取杯、放置到碟；340 条 UMI-3D 演示、40 trials）上，门开阶段成功率达 97.5%（表明策略可可靠学习铰接物体交互），但错误沿阶段累积：杯抓取成功率 47.5%，最终放置仅 5.0%。",
+   "stance": "conditional",
+   "relation": "条件性命题：LiDAR 增强采集使铰接物体交互（视觉 SLAM 下因大物体遮挡难以采集的任务类别）可被学习，但多阶段长时序任务的整体成功率随阶段累积急剧下降——数据采集质量改进是必要而非充分条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 13 的 Sankey 图展示失败传播：门开 97.5%、杯抓取 47.5%、放置 5.0%。作者在 Discussion 中指出多阶段任务还需数据分布、机器人具身与控制可行性之间的一致性。",
+   "locator": "page 14, Section V-C, Performance and Failure Propagation (Fig. 13)",
+   "source_context": "As shown in Fig. 13, the door opening stage achieves a high success rate of 97.5%, indicating that the policy reliably learns articulated object interaction. However, performance decreases in subsequent stages, with cup grasping success at 47.5% and final placement success at only 5.0%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "stage success rate",
+    "value_or_direction": "97.5% door opening; 47.5% cup grasping; 5.0% final placement",
+    "comparator": "across three sequential stages of the same task (no external baseline)",
+    "task_or_sample": "door opening + cup retrieval + placement (long-horizon); 340 UMI-3D demonstrations; 40 trials",
+    "locator": "page 14, Section V-C, Fig. 13"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Performance and Failure Propagation 段逐字给出 97.5%/47.5%/5.0% 与 articulated object interaction 的解读；340 条演示与 40 trials 见同页 Experimental Setup 段（已核对原文）。stance 取 conditional：同一证据既支持铰接任务可学、又显示长时序整体成功率急剧下降，relation 已同时记录两面。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C10",
+   "claim": "同一长时序任务中，32.5% 的 trials 成功完成门开与取杯、却在放置阶段因违反机器人逆运动学约束而失败；作者认为这是演示动作与机器人可行构型空间不匹配的表现，需要更严格的运动学过滤或具身感知的策略约束。",
+   "stance": "limit",
+   "relation": "限定命题：数据采集阶段位姿估计质量的改进不能解决下游执行阶段的具身运动学约束问题——鱼眼/LiDAR 采集接口收益的边界在执行可行性处。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "这是感知之外的主要失败来源：演示动作超出机器人可行构型空间，属于数据-具身不匹配而非感知失败；与第二失败来源（训练数据少导致的抓取成功率低）并列。",
+   "locator": "page 14, Section V-C, Failure Analysis",
+   "source_context": "First, a significant portion (32.5%) of trials successfully complete door opening and cup grasping but fail during place- ment due to violations of the robot’s inverse kinematics con- straints. This suggests a mismatch between the demonstrated motions and the robot’s feasible configuration space, indicating the need for stricter kinematic filtering or embodiment-aware policy constraints.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "proportion of trials failing at the placement stage",
+    "value_or_direction": "32.5%",
+    "comparator": "within the 40-trial long-horizon evaluation after successful door opening and cup grasping",
+    "task_or_sample": "door opening + cup retrieval + placement; 40 trials",
+    "locator": "page 14, Section V-C, Failure Analysis"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Failure Analysis 段逐字给出 32.5% of trials、fail during placement due to violations of the robot’s inverse kinematics constraints 及 mismatch between the demonstrated motions and the robot’s feasible configuration space 的归因；claim 逐点对应，未附加引文之外的解释。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C11",
+   "claim": "用原始 UMI 系统训练的预训练策略（来自数据 scaling laws 的先前工作）未经任何微调直接部署到 UMI-3D 硬件上，在未见环境的 4 鼠标×4 鼠标垫共 16 个物体组合、每组合 5 trials（共 80 trials）上取得 0.73–1.00 的归一化分数。",
+   "stance": "support",
+   "relation": "支持命题：两代腕装鱼眼相机接口（GoPro 鱼眼 UMI 与 185° 鱼眼工业相机的 UMI-3D）的视觉观察空间足够对齐，腕装鱼眼视角可作为跨硬件/跨具身策略迁移的稳定接口。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 14 及正文给出 0.73–1.00 的分数范围。紧接着的句子（跨 page 14-15）说明：尽管硬件配置与传感模态不同，策略在未见环境保持稳定的抓取与放置；作者在 page 15 Discussion 据此认为 UMI-3D 与原 UMI 保持紧密对齐的视觉观察空间，并推测两代数据可联合训练以通过数据 scaling 提升策略性能。",
+   "locator": "page 14, Section V-D, Cross-Embodiment Performance (Fig. 14)",
+   "source_context": "the policy achieves consistently strong performance across all object combinations, with normalized scores ranging from 0.73 to 1.00.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "normalized score range",
+    "value_or_direction": "0.73 to 1.00 across all object combinations",
+    "comparator": "original UMI-trained policy deployed on UMI-3D hardware without finetuning",
+    "task_or_sample": "mouse placement; 16 object combinations (4 mice × 4 pads) × 5 trials (80 trials) in unseen environments",
+    "locator": "page 14, Section V-D, Fig. 14"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Cross-Embodiment Performance 段逐字给出 normalized scores ranging from 0.73 to 1.00；预训练策略来源、无微调部署、16 组合×5 trials=80 trials 及未见环境设置见同页 Experimental Setup 段（已核对原文）。summary 中“硬件/传感模态不同仍保持稳定行为”与“对齐观察空间/联合训练”结论分别位于 page 14 末-15 初与 page 15 Discussion（跨页已逐字核对），不进入 claim 主张。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C12",
+   "claim": "作者承认本文训练的策略在推理时主要依赖视觉观察，系统在演示中同步采集的 3D 几何信息（物体结构、空间关系、交互动态）未被纳入策略学习；将 3D 信息直接引入策略学习被列为重要未来方向。",
+   "stance": "gap",
+   "relation": "缺口命题：腕装多模态（鱼眼+LiDAR）系统中采集到的 3D 几何尚未进入策略学习——鱼眼视觉仍是策略推理的唯一观察接口，几何增强只作用于数据质量。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "限制章节明确区分了 LiDAR 在数据采集（SLAM 鲁棒性/数据质量）中的作用与策略推理（纯视觉）的现状，并把 geometry-aware manipulation 列为未来方向。",
+   "locator": "page 15, Section VI, Limitations and Future Work",
+   "source_context": "While LiDAR plays a critical role in improving SLAM robust- ness and data quality, the learned policies in this work rely primarily on visual observations at inference time. However, the system inherently captures synchronized 3D geometric information during demonstrations, including object structure, spatial relationships, and interaction dynamics.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 15 限制章节逐字陈述 policies in this work rely primarily on visual observations at inference time 与系统同步采集的 3D geometric information 内容；claim 与原文一一对应，且未把“未来方向”表述为已实现能力。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C13",
+   "claim": "UMI-3D 的宽 FoV 鱼眼设计直接沿袭 UMI 及其引用的鱼眼相机经验研究（arXiv:2603.02139）——两者被引证为“宽 FoV 鱼眼成像能在操作中维持任务相关观测”的设计依据。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼成像在具身操作数据采集中的有效性有既往实证研究支撑（UMI 与专门的鱼眼相机经验研究），鱼眼选型并非孤立工程选择。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "该引用关系表明 UMI 生态中“腕装宽 FoV 鱼眼”已成为被显式经验研究支撑的设计惯例，UMI-3D 是其延续与加宽（185°）。",
+   "locator": "page 5, Section III-A, design principle HD2",
+   "source_context": "Following UMI, which demonstrates the effectiveness of wide-FoV fisheye imaging for maintaining task-relevant observations during manipulation [4, 33], we adopt a similar design.",
+   "evidence_type": "cited-work",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 HD2 段逐字给出 Following UMI, which demonstrates the effectiveness of wide-FoV fisheye imaging for maintaining task-relevant observations during manipulation [4, 33]，其中 [33] 为鱼眼相机经验研究（arXiv:2603.02139，见 page 17 参考文献）；claim 仅陈述该引用关系与设计依据，不替引文背书具体实验结论。"
+   }
+  },
+  {
+   "card_id": "2604.14089-C14",
+   "claim": "UMI-3D 为腕装 LiDAR-鱼眼多模态感知开发了专门的 LiDAR-相机外参标定模块 livox2cam，其设计（扫描模式无关的边缘提取、补偿光斑边缘膨胀的椭圆拟合、多帧联合优化）被作者称为应对固态 LiDAR 不规则采样与鱼眼光学强非线性畸变的关键。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼超广角相机与 LiDAR 融合需要专门的外参标定工程来处理鱼眼强畸变——这是鱼眼进入多模态具身采集系统的工程成本与配套需求。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "该标定模块基于带四个圆孔与基准标记的标定板提取跨模态 3D-3D 对应，SVD 闭式解外参；鱼眼内参另用 equidistant 投影模型标定（page 6, SP2.1），支撑像素-射线映射、ArUco 检测与空间一致裁剪。",
+   "locator": "page 6, Section III-B, SP2.2",
+   "source_context": "To further improve robustness under practical sensing con- ditions, the proposedlivox2cammodule incorporates (i) scan- pattern-agnostic edge extraction for sparse and non-repetitive LiDAR measurements, (ii) ellipse-based fitting to compensate for spot-induced edge dilation, and (iii) multi-frame joint optimization for enhanced geometric consistency. These de- signs are critical for handling the irregular sampling of solid- state LiDAR (Fig. 5C(ii)) and the strong nonlinear distortion introduced by fisheye optics.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 SP2.2 段逐字列出 livox2cam 的三项设计与 critical for handling the irregular sampling of solid-state LiDAR and the strong nonlinear distortion introduced by fisheye optics 的结论；claim 与原文一一对应。summary 中 equidistant 内参标定细节逐字位于同页 SP2.1（已核对）。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Universal Manipulation Interface: In-the-wild Robot Teaching Without In-the-wild Robots",
+   "arxiv_id": "2402.10329",
+   "reason": "被评论文的直接前继系统：腕装鱼眼相机数据采集接口与扩散策略管线的来源；其视觉 SLAM 弱纹理限制的自述是 C04 的第一支撑。"
+  },
+  {
+   "title": "Rethinking camera choice: An empirical study on fisheye camera properties in robotic manipulation",
+   "arxiv_id": "2603.02139",
+   "reason": "被评论文引用的鱼眼相机经验研究（参考文献 [33]），为“宽 FoV 鱼眼成像维持操作中任务相关观测”提供实证依据（C13）。"
+  },
+  {
+   "title": "Data Scaling Laws in Imitation Learning for Robotic Manipulation",
+   "arxiv_id": "2410.18647",
+   "reason": "被评论文引用的大规模 UMI 数据收集研究（参考文献 [15]）：视觉 SLAM 遮挡/动态场景敏感性的证据来源（C04），并提供跨具身评估所用预训练策略（C11）。"
+  }
+ ],
+ "notes": "ICRA/会议风格单作者系统论文（HKU/USTC）。与鱼眼综述的接口点：(1) 185° 超广角鱼眼作为腕装策略观察接口、原始图像不去畸变（延续 UMI 惯例）；(2) 鱼眼+LiDAR 视场重叠与 livox2cam 畸变感知标定是多模态融合的工程前提；(3) 宽 FoV 不提供深度/运动估计是作者明确的鱼眼能力边界；(4) 推理纯视觉，视觉歧义（低对比度/背光）失败仍然存在；(5) 跨具身零微调迁移表明鱼眼腕视角接口的观察空间兼容性。原文页眉标题为“3D Spatial Perception”，arXiv 标题为“3D Spatial Intelligence”（以精读包全文为准）。所有 source_context 均逐字取自 pdf-text 提取页。"
+}

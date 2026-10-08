@@ -1,0 +1,146 @@
+{
+  "sources": [
+    {
+      "source": "web-calibration",
+      "confidence": "medium",
+      "notes": "2026-09-03 校准：发现 SLAM-as-VLA-infrastructure（From Pixels to Actions: The Hidden Role of SLAM in VLA）、SLAM as embodied operator、3DGS-SLAM（GaussLite/LEG-SLAM/compact 3DGS SLAM）、mapless/implicit-memory 反方路线（SRU mapless RL、LAMP implicit language map、Target-Bench mapless world-model planning、PanoNav）等术语簇，均不在静态分类法中。"
+    },
+    {
+      "source": "llm",
+      "confidence": "medium",
+      "notes": "主题为辩论型（SLAM 是否核心），需要同时覆盖正方（SLAM 作为位姿/地图基础设施）与反方（端到端隐式空间能力替代显式地图）术语。"
+    }
+  ],
+  "knowledge_ids": ["EA-VLOC", "EA-HARDWARE", "EA-4D", "EA-MODEL"],
+  "families": [],
+  "queries": [
+    {
+      "label": "dynamic-slam-vla-intersection",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:\"vision-language-action\"",
+      "why": "近一年出现直接讨论 SLAM 与 VLA 关系的论文（SLAM 作为 VLA 训练/评测/部署的隐形底座），静态分类法没有该交集。",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-gaussian-slam",
+      "tier": "dynamic-association",
+      "query": "all:\"Gaussian splatting\" AND all:SLAM",
+      "why": "3DGS-SLAM 是近一年 SLAM 前沿主线之一（compact 3DGS dense SLAM、Splat-SLAM、LEG-SLAM），用于机器人实时建图。",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-gaussian-robotic-mapping",
+      "tier": "dynamic-association",
+      "query": "all:\"Gaussian splatting\" AND all:mapping AND all:robot",
+      "why": "GaussLite 等任务条件化在线 3DGS 建图把地图与具身任务耦合，是 SLAM 在具身侧的新形态。",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-mapless-navigation",
+      "tier": "dynamic-association",
+      "query": "all:mapless AND all:navigation AND all:robot",
+      "why": "mapless/map-free 导航是显式地图路线的主要反方证据来源。",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-spatial-memory-robot",
+      "tier": "dynamic-association",
+      "query": "all:\"spatial memory\" AND all:robot",
+      "why": "隐式/结构化空间记忆（SRU、稀疏记忆导航）被提出替代显式 SLAM 地图，是核心作用之争的关键邻接家族。",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-language-map-navigation",
+      "tier": "dynamic-association",
+      "query": "all:\"language map\" AND all:navigation",
+      "why": "LAMP 等隐式语言场地图把语义地图神经化，覆盖 semantic SLAM 与语言导航的交叉。",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-slam-teleoperation",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:teleoperation",
+      "why": "SLAM 在数据采集侧（遥操作位姿恢复、手持采集器）的隐形角色，静态分类法仅从 UMI 角度覆盖。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-slam-manipulation",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:manipulation",
+      "why": "操作任务中 SLAM 的作用（物体级地图、位姿跟踪支撑抓取）是核心作用之争的操作侧证据。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-endtoend-slam",
+      "tier": "dynamic-association",
+      "query": "all:\"end-to-end\" AND all:SLAM",
+      "why": "端到端/深度 SLAM 路线检验学习化是否正在替代模块化 SLAM 栈。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-worldmodel-pathplanning",
+      "tier": "dynamic-association",
+      "query": "all:\"world model\" AND all:\"path planning\" AND all:robot",
+      "why": "Target-Bench 等工作直接评测世界模型能否做 mapless 路径规划，是地图替代路线的评测证据。",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-spatial-intelligence",
+      "tier": "dynamic-association",
+      "query": "all:\"spatial intelligence\" AND all:robot",
+      "why": "spatial intelligence 是近一年把定位建图能力重新包装进具身基础模型话语的术语。",
+      "source": "llm",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-vo-foundation",
+      "tier": "dynamic-association",
+      "query": "all:\"visual odometry\" AND all:\"foundation model\"",
+      "why": "基础模型化视觉里程计（学习化前端）检验 SLAM 前端是否被大模型吸收。",
+      "source": "llm",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-slam-vla-browser",
+      "query": "SLAM \"vision-language-action\" robot pose",
+      "why": "SLAM×VLA 交集在 arXiv 元数据中可能稀疏，浏览器检索覆盖博客与项目页。",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-slam-dead-debate-browser",
+      "query": "\"SLAM\" \"embodied AI\" role debate 2026",
+      "why": "核实辩论双方近一年的公开措辞，仅作术语校准。",
+      "source": "llm",
+      "confidence": "low"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-slam-embodied-web",
+      "query": "SLAM embodied AI \"core role\" 2026",
+      "why": "校准正方措辞。",
+      "source": "llm",
+      "confidence": "low"
+    },
+    {
+      "label": "dynamic-mapless-web",
+      "query": "mapless navigation \"spatial memory\" robot 2026",
+      "why": "校准反方措辞。",
+      "source": "web-calibration",
+      "confidence": "low"
+    }
+  ]
+}

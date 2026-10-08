@@ -2,26 +2,35 @@
 id: KB-LIT-REVIEWS
 title: 文献综述成果目录
 type: evidence-routing-index
-updated: 2026-09-18
+updated: 2026-09-27
 tags: [literature-review, evidence-routing, paper-reading, provenance]
 ---
 
 # 文献综述成果目录
 
-本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 22 个 paper-reader-backed 基础 run、14 个跨 run 主题综合与 2 项引文图派生综述；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。
+本目录连接主题卡与论文级证据，不重复存放论文摘要。当前有效版本包含 28 个 paper-reader-backed 基础 run、14 个跨 run 主题综合与 2 项引文图派生综述；早期、未完成 paper-reader 审计的 `reader-v1` 保留为历史产物，但不作为知识卡的当前证据入口。目录中明确列出的新 `reader-v1` 是按 append-only 规则重建并通过完整审计的替代版本。另有 3 个覆盖门未过的 run（见专门小节），其成稿与证据已沉淀但覆盖面有限。
+
+## 智驾模型与团队专项
+
+本专项按用户明确要求交付单篇科研备忘录、三张对照表与关系图；理想增补提供同文体专章，不计入下方基础三文体 run 统计。论文与工业披露分别登记；Tesla、Waymo、理想系统案例不抵扣论文门槛。规模依次为发现候选 / 完整全文恢复 / 正式接纳论文；发现池不代表已全量人工筛选。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 阅读与审计入口 |
+|---|---|---|---:|---|
+| LR-AVMODEL-TEAM | 智驾 VLA、驾驶基础模型与关键团队（含理想系列论文） | EA-MODEL, EA-ALIGN, EA-EVAL | 1,876 / 48 / 30 | [科研备忘录](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/scientific-memo_keyan.md) · [理想研究思路专章](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/liauto-research-program.md) · [核心论文与系统](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/core-papers-systems.md) · [技术栈](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/technology-stack.md) · [组织人员](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/organization-people.md) · [关系图](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/relationships.md) · [run](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/run.json) · [审计](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-理想增补-20260927/final-review-audit.json) |
+
+派生阅读：[Mind-Omni 六模块图解 Reader](https://yuanzh0u.github.io/embodied-learning/research/autonomous-driving-vla-models-teams/mind-omni/)。Reader 从上述当前 run 生成，不作为独立证据源。
+
+历史版本：[2026-09-27 基础版科研备忘录（20篇论文）](../evidence/literature-review-智驾模型-vla-驾驶基础模型与关键团队-20260927/scientific-memo_keyan.md)。当前增补版追加10篇正式论文，保留原论文证据与Tesla主线；研究关系与量产披露分别记录。
 
 ## 批次概况
 
-- Review mode：22 项基础 run 均为 `scoping`。
-- 检索池：基础 run 每项 172–1,409 篇候选论文。
-- 全文层：基础 run 每项 20–162 篇具有可读全文。
-- 精读层：除 loco-manipulation run 按论证覆盖选取 21 篇外，其余 21 项基础 run 每项选取 15–30 篇核心论文，均完成 paper note 与 claim-support audit。
-- 基础 run 总量：341 个任务—论文精读实例，223 篇不重复论文，371 条全局唯一正式证据事件。
+- Review mode：基础 run 以 `scoping` 为主。LR-ALLO-YEAR 候选池（18）与全文层（15）低于 scoping floor，且使用旧证据 schema 并存在未覆盖的正文引文；原始成果保留为兼容归档，不选作当前发布 run。
 - 跨 run 综合：14 项。除原有 11 项外，新增“具身导航是否有效解决”、“具身感知是否有效解决”和“触觉—视觉联合训练”三项审计综合；它们分别在 511 / 39、903 / 130 与 1,789 / 247 的候选 / 可读全文范围中接纳 15、19 与 27 篇完整全文论文。
 - 全文边界：只接收完整、可解析的非 OCR 全文；扫描论文不在当前探索范围。
 - 成稿：每项均包含科研备忘录、知乎解释稿和小红书稿，三者共享证据层但独立组织表达。
+- bundle 规范演变：2026-07-20 前沉淀的 bundle 不含独立 `paper-notes/` 与 `claim-support-audits/` 子目录——早期 run（`-reader-v1/v2` 结构）的精读产物在平行工作区目录中，另有部分 run 以 evidence.jsonl 内嵌事件（paper + locator）承载精读定位；这是当时规范，不构成追溯缺口。legacy/ 子目录为 writer 迁移前旧版成稿，git 可追溯。
 
-## 22 项成果
+## 28 项成果
 
 “规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
 
@@ -49,6 +58,12 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | LR-PNAV | 近一年具身感知与导航是否已解决 | EA-SENSOR, EA-EVAL, ERR-EMBODIED | 511 / 39 / 15 | [run](../evidence/literature-review-近一年具身感知与导航是否已解决-20260714-reader-v1/run.json) · [packet](../evidence/literature-review-近一年具身感知与导航是否已解决-20260714-reader-v1/review-packet.md) |
 | LR-WM-SUP | 世界模型训练是否有必要接监督信号还是走纯端到端 | EA-EVAL, EA-MODEL, EA-4D | 519 / 30 / 30 | [run](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/run.json) · [packet](../evidence/literature-review-世界模型训练是否有必要接监督信号还是走纯端到端-20260808/review-packet.md) |
 | LR-EMB-SUP | 具身端到端模型除动作监督外还需要哪些监督信号 | EA-MODEL, EA-EVAL, EA-ALIGN, EA-SENSOR, EA-4D | 558 / 20 / 20 | [run](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/run.json) · [packet](../evidence/literature-review-具身端到端模型除动作监督外还需要哪些监督信号-20260809/review-packet.md) |
+| LR-BRAIN-YEAR | 近一年类脑模型的发展 | EA-MODEL | 1,280 / 45 / 20 | [run](../evidence/literature-review-近一年类脑模型的发展-20260822/run.json) · [packet](../evidence/literature-review-近一年类脑模型的发展-20260822/review-packet.md) |
+| LR-ALLO-YEAR | 近一年 allocentric representation 在具身领域的应用 | EA-DATA, EA-MODEL, EA-XEMBODIMENT, EA-SENSOR | 18 / 15 / 15 | [兼容归档 run](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/run.json) · [packet](../evidence/literature-review-近一年allocentric-representation在具身领域的应用-20260813/review-packet.md) |
+| LR-SLAMCORE | 近一年SLAM技术在具身智能领域是否有核心作用 | EA-VLOC, EA-HARDWARE, EA-4D, EA-MODEL | 141 / 48 / 39 | [run](../evidence/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/run.json) · [packet](../evidence/literature-review-近一年slam技术在具身智能领域是否有核心作用-20260903/review-packet.md) |
+| LR-TRAJACC-YEAR | 近一年机器人末端轨迹精度的解决方案与痛点 | EA-MODEL, EA-SENSOR, EA-EVAL, EA-BIZ | 206 / 62 / 25 | [run](../evidence/literature-review-近一年机器人末端轨迹精度的解决方案与痛点-20260903/run.json) · [packet](../evidence/literature-review-近一年机器人末端轨迹精度的解决方案与痛点-20260903/review-packet.md) |
+| LR-EGOHAND-TRAJ | 无本体ego-centric数据中手部检测精度对本体末端轨迹的影响 | EA-DATA, EA-XEMBODIMENT, EA-SENSOR, EA-MODEL | 540 / 87 / 86 | [run](../evidence/literature-review-无本体ego-centric数据中手部检测精度对本体末端轨迹的影响-20260911/run.json) · [packet](../evidence/literature-review-无本体ego-centric数据中手部检测精度对本体末端轨迹的影响-20260911/review-packet.md) |
+| LR-FISHEYE-YEAR | 近一年鱼眼镜头在具身领域的应用 | EA-SENSOR, EA-HARDWARE | 119 / 51 / 51 | [run](../evidence/literature-review-近一年鱼眼镜头在具身领域的应用-20260909/run.json) · [packet](../evidence/literature-review-近一年鱼眼镜头在具身领域的应用-20260909/review-packet.md) |
 
 ## 引文图派生与问题相关性综述
 
@@ -58,6 +73,16 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 |---|---|---|---:|---|
 | LR-EGO-EXO-INFL | Ego-Exo 后继研究：第三人称→第一人称视觉表征迁移的演进 | EA-XEMBODIMENT, EA-MODEL, EA-DATA | 246 / 11 / 11 | [run](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/run.json) · [packet](../evidence/literature-review-ego-exo-后继研究-第三人称-第一人称视觉表征迁移的演进-20260813/review-packet.md) |
 | LR-EGO-EXO-CAMALIGN | Ego-Exo 相机配置与视角对齐：第三人称相机如何初始化/标定、第一↔第三人称视角如何对齐、多台第三人称相机如何对齐 | EA-SENSOR, EA-DATA, EA-XEMBODIMENT | 80 / 14 / 14 | [run](../evidence/literature-review-ego-exo-相机配置与视角对齐-20260814/run.json) · [memo](../evidence/literature-review-ego-exo-相机配置与视角对齐-20260814/scientific-memo_keyan.md) · [appendix](../evidence/literature-review-ego-exo-相机配置与视角对齐-20260814/evidence-appendix.md) |
+
+## 覆盖门未过的补沉淀 run（2026-08-23 登记）
+
+以下两个 run 产出了完整三类成稿并已沉淀入 evidence/，但 coverage/saturation 审计门未全过（候选池、饱和轮数或个别维度不足）。按"未完成 run 必须声明"红线登记于此：其证据可被引用，但结论覆盖面有限，引用时应注明；若后续续作同主题 run，应优先补齐所列缺口。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 未过的审计门 | 审计入口 |
+|---|---|---|---:|---|---|
+| LR-EXO-VIDEO | 第三视角视频数据对 ego 数据采集和预训练的帮助 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 16 / — / 48 events | candidate_floor, full_text_floor, mechanisms 维度 0 候选, saturation（仅 1 轮） | [补沉淀 run](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/run.json) · [packet](../evidence/literature-review-第三视角视频数据对ego数据采集和预训练的帮助-20260812/review-packet.md) |
+| LR-EXO-YEAR | 近一年 exocentric 人类数据的发展 | EA-DATA, EA-XEMBODIMENT, EA-MODEL, EA-SENSOR | 29 / — / 126 events | candidate_floor, full_text_floor, accepted_paper_floor, saturation（仅 1 轮） | [补沉淀 run](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/run.json) · [packet](../evidence/literature-review-近一年exocentric人类数据的发展-20260813/review-packet.md) |
+| LR-DIT-WM-YEAR | 近两年 Diffusion Transformer 在视频生成与世界模型中的发展 | EA-4D, EA-EVAL, EA-MODEL | 1,566 / 70 / 16 events | saturation（活跃领域，末两轮新增率未收敛） | [补沉淀 run](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/run.json) · [packet](../evidence/literature-review-近两年-diffusion-transformer-在视频生成与世界模型中的发展-20260823/review-packet.md) |
 
 ## 跨 run 综合专题
 
@@ -73,7 +98,6 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 | ID | 综合问题 | 主要知识卡 | 规模 | 审计入口 |
 |---|---|---|---:|---|
 | LR-VLA-WM-SHIFT | 近一年为何说反应式 VLA 已死、世界模型当立 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,547 / 175 / 28 | [run](../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/run.json) · [packet](../evidence/literature-review-近一年为何说反应式vla已死世界模型当立-20260717/review-packet.md) |
-| LR-VLA-DEAD-DEBATE | VLA 已死之辩：反应式 VLA 的能力边界与世界模型融合栈（复用 LR-VLA-WM-SHIFT 证据的科研备忘录单风格 run） | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,547 / 175 / 28 | [run](../evidence/literature-review-vla已死之辩-反应式vla的能力边界与世界模型融合栈-20260918/run.json) · [memo](../evidence/literature-review-vla已死之辩-反应式vla的能力边界与世界模型融合栈-20260918/scientific-memo_keyan.md) · [appendix](../evidence/literature-review-vla已死之辩-反应式vla的能力边界与世界模型融合栈-20260918/evidence-appendix.md) |
 | LR-WM-TASKS | 近一年世界视频模型最可靠的应用任务 | EA-MODEL, EA-EVAL, EA-4D | 1,589 / 175 / 30 | [run](../evidence/literature-review-近一年世界视频模型最可靠的应用任务-20260719/run.json) · [packet](../evidence/literature-review-近一年世界视频模型最可靠的应用任务-20260719/review-packet.md) |
 | LR-VLA-BREAKTHROUGH-HY1 | 近半年 VLA 在具身领域最大的技术突破 | EA-MODEL, EA-EVAL, EA-4D, EA-ALIGN | 1,246 / 161 / 27 | [run](../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/run.json) · [packet](../evidence/literature-review-近半年vla在具身领域最大的技术突破-20260719/review-packet.md) |
 | LR-MULTIMODAL-TRAINING-YEAR | 近一年触觉、力觉、视觉、语言等多模态数据在具身机器人训练方法中的演进 | EA-SENSOR, EA-MODEL, EA-ALIGN, EA-XEMBODIMENT, EA-DATA | 1,789 / 247 / 42 | [run](../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/run.json) · [packet](../evidence/literature-review-近一年触觉-力觉-视觉-语言等多模态数据在具身机器人训练方法中的演进-20260720/review-packet.md) |
@@ -128,5 +152,10 @@ tags: [literature-review, evidence-routing, paper-reading, provenance]
 - ACT/RoboTwin 2.0 证据表明，动作块预测长度、实际执行前缀和重规划频率必须分账；多任务动作表示、自适应执行时机与动作更新的跨块场景状态共同决定闭环表现，且比较必须控制策略调用、墙钟与执行步数预算。
 - 世界模型训练中"监督 vs 端到端"是伪二元对立：纯端到端存在表征坍缩、物理幻觉和视觉—动作分裂三类系统性失败，但外部监督不对齐时比无监督更危险；当前最有说服力的范式是"特权监督"——训练时注入结构化外部信号（几何先验、可微物理、语义标注）塑造表征，推理时丢弃监督分支零开销运行。
 - 具身端到端模型除动作监督外至少需要七类非动作监督：触觉/力觉（解决力觉盲和接触感知）、几何/3D（解决空间推理和视图泛化）、物理（弥补演示数据的物理无知）、语义/中间表征（提供结构化任务理解）、奖励/RL（超越静态演示的闭环优化）、对比/表征学习（跨模态对齐）、安全/纠正（防止信用分配偏差）；这些信号具有维度互补性、特权范式（训练时注入推理时丢弃）和生命周期依赖三个共同特征，且监督施加位置和任务对齐性决定有效性。
+- 近一年类脑模型第一次跨入大模型规模（76B 脉冲模型、免乘法推理、多模态与具身脉冲化），但其形态是 ANN-to-SNN 转换路线寄生于成熟 ANN 生态，而非替代；几乎所有能耗优势数字来自突触操作数×单位能耗系数的折算口径，不是神经形态芯片实测，GPU 上仿真 SNN 反而更慢更耗电——这是"算法先行、硬件欠账"的进展，兑现以真实芯片部署为前置条件。
+- 近一年 SLAM 对具身智能是“职能核心、形态迁移”而非被替代：遥操作与演示数据采集链路依赖其提供位姿真值，VLA 类基础模型自身的空间能力短板需要显式几何先验补足，宣称 map-free 的隐式导航方法内部仍保留几何估计与回环修正；被替代的是传统特征点建图的表征形态——正迁移到 3D 高斯泼溅与开放词汇语义地图，而定位—建图职能仍在数据生产、操作与导航链条中承担基础设施角色。
+- 近一年末端轨迹精度的证据把误差归因分层化：推理—执行时序错位（同一策略同步评测 98.58% vs 异步部署 75.48%）、动作块边界不连续（边界 jerk 为块内部 2 倍以上）、控制模型失配与感知/测量歧义各自独立贡献；对应四族修法——控制层补偿、块边界解析平滑、训练期延迟适配、感知伺服与力控评测——均带作者自述的硬边界，执行层修法救不了策略能力缺失；测量层存在高重复性与分米级粗大偏差共存于同一系统的元问题，应先分层定位误差、再选对应层修法。
+- 近一年鱼眼/全景光学的证据把"宽视场收益"条件化：任务关键信息在针孔视锥之外时收益从无到有（视野外任务基线 0/20、全景方案达可用），信息在视锥内时增益压缩到噪声级，动态物体密集时甚至为负；其代价是光学与几何层面的——鱼眼像素面积仅针孔约 15% 且成像期不可逆、单目深度误差随视场角扩到 195° 恶化 166%、多鱼眼标定在 240° 失败率达 59-88%——工程优化不能消除；方法学主轴因此从图像空间矫正转向表示空间适配：极坐标位置编码、校准 token 与位置编码残差以万级参数把透视预训练模型调回宽 FoV 域，且辅助监督的视角域必须与动作观测域匹配（标准透视图辅助监督反而伤害鱼眼策略）；位置分工上腕装鱼眼固化为 UMI 系数据接口、头装全景承担全局上下文通道，但腕装鱼眼-only 对环境分布偏移最脆弱，部署侧需补非腕装视觉通道。
+- 无本体 ego 视频路线中，手部检测/追踪误差沿"逐帧检测→世界系定位→重定向→策略训练"链传导，但每站都有吸收手段、传导非单调放大：剂量-响应证据显示注入 1× 单目噪声使迁移成功率从 48.3% 单调降至 20.0%，而 HaWoR 级单目标签（W-MPJPE≈162mm）仍有正迁移（24.7% vs 纯机器人 11.9%）——"可接受阈值"无通用毫米数，由任务几何与吸收机制决定；遮挡/出画至今无软件解，重定向质量差异可被回放指标掩盖而到策略学习阶段才显形；采集端硬件谱系（UMI 8.9mm / EgoMI 2.1mm / 外骨骼 1.7mm）表明工程上已能把 robot-free 采集精度压进毫米级，纯视觉方案的替代路径是时序平滑、结构先验、渲染数据编辑、噪声门控共训练、表示相对化与必要时的硬件绕行。
 
-这些结论来自 22 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。
+这些结论来自 28 项基础综述与 14 项跨 run 主题综合，属于知识库层面的 synthesis；具体论文支持应回到相应主题卡的证据锚点和 paper-reader-backed evidence event。

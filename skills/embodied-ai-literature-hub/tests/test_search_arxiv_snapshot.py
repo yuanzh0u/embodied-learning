@@ -67,7 +67,9 @@ def run_search(records: list[dict], query: str, **overrides) -> dict:
         return json.load(handle)
 
 
-def run_query_batch(queries: list[dict[str, str]]) -> dict:
+def run_query_batch(queries: list[dict[str, str]]) -> tuple[int, dict]:
+    """Returns (exit_code, batch). Exit 1 = partial batch (a query failed, hits
+    saved) — the run() contract shared by all searchers (report_partial_batch)."""
     records = [make_record(title="Egocentric Activity Understanding")]
     path = write_snapshot(records)
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
@@ -79,9 +81,9 @@ def run_query_batch(queries: list[dict[str, str]]) -> dict:
         output=output,
     )
     code = search.run(queries)
-    assert code == 0
+    assert code in (0, 1), code
     with open(output) as handle:
-        return json.load(handle)
+        return code, json.load(handle)
 
 
 class QueryParserTest(unittest.TestCase):
@@ -131,10 +133,12 @@ class QueryParserTest(unittest.TestCase):
     def test_malformed_group_query_degrades_to_error_meta(self) -> None:
         # A single malformed query must not kill the batch: it becomes an
         # errored per-query entry while the other queries still return hits.
-        result = run_query_batch([
+        code, result = run_query_batch([
             {"label": "bad", "query": "ti:(unbalanced"},
             {"label": "good", "query": "all:egocentric"},
         ])
+        # Non-zero exit flags the hole WITHOUT discarding the good query's hits.
+        self.assertEqual(1, code)
         metas = {q["label"]: q for q in result["queries"]}
         self.assertIn("error", metas["bad"])
         self.assertEqual(metas["bad"]["result_count"], 0)

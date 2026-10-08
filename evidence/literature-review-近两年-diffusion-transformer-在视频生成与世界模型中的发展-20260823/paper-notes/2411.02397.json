@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2411.02397",
+    "title": "Adaptive Caching for Faster Video Generation with Diffusion Transformers",
+    "published": "2024-11-04",
+    "url": "https://arxiv.org/abs/2411.02397",
+    "authors": ["Kumara Kahatapitiya", "Haozhe Liu", "Sen He", "Ding Liu", "Menglin Jia", "Chenyang Zhang", "Michael S. Ryoo", "Tian Xie"]
+  },
+  "review": {
+    "question": "近两年（2024-08 至 2026-08）Diffusion Transformer 在视频生成与世界模型方向：能力演进、向世界模型转型机制、物理/时序一致性限制、评测方法与基准、以及部署/加速（缓存/蒸馏/稀疏化/量化）。关注质量为部署/加速所给的证据。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "提出训练无关的带宽缓存（AdaCache+MoReg）加速视频 DiT，给出质量-延迟权衡与 'not all videos are created equal' 的内容自适应依据；是综述中 '部署/加速（缓存）' 方向的核心实证。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确立问题：DiT 推理计算/显存开销大、长视频尤甚，需内容自适应的缓存加速。给出 'not all videos are created equal' 动机。"},
+      {"locator": "4.2 Adaptive Caching", "role": "method-or-design", "purpose": "Adaptive Caching：按残差距离自适应选择缓存率，训练无关、即插即用。"},
+      {"locator": "4.3 Motion Regularization", "role": "method-or-design", "purpose": "MoReg：以运动内容正则化缓存调度（视频特定信息）。"},
+      {"locator": "5.2 Main results", "role": "results-or-analysis", "purpose": "在 Open-Sora/Open-Sora-Plan/Latte 上用 VBench/PSNR/LPIPS/SSIM、FLOPs/延迟/加速比与 -DiT/T-GATE/PAB 对比；含用户研究。"},
+      {"locator": "5.3 Ablation study", "role": "results-or-analysis", "purpose": "质量-延迟曲线与 MoReg 对时间不一致（伪影/颜色）的缓解。给出 4.7x vs 4.5x 加速下的质量权衡。"},
+      {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "结论：即插即用加速、可比质量、讨论对长视频生成的民主化意义。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否用训练无关的内容自适应缓存（而非重训或蒸馏）在保持生成质量的同时大幅加速视频 DiT 推理，并获得更好的质量-延迟权衡？",
+  "contributions": [
+    "提出 AdaCache（Adaptive Caching），一种训练无关、即插即用的视频 DiT 加速方法：缓存 transformer 块内残差计算并按视频内容自适应决定何时重算。",
+    "引入内容自适应缓存调度（基于残差表示间距离度量与 codebook 缓存率），体现 '不是所有视频都一样'（not all videos are created equal）的思想。",
+    "提出 Motion Regularization (MoReg)，利用运动内容分配计算，缓解高加速下的时间不一致/伪影。",
+    "在 Open-Sora/Open-Sora-Plan/Latte 上实证：可比质量下显著更快的推理，并通过用户研究验证偏好。"
+  ],
+  "method": {
+    "summary": "AdaCache：在 DiT 各块/扩散步间复用残差（attention/MLP）输出。用 L1 距离度量当前与先前存储表示的 rate-of-change，依据预定义 codebook（缓存率集合+阈值）选择下一步缓存率：距离大→缓存率小（更频繁重算）。为稳定性所有层共用同一缓存率（常见运动正则化）。MoReg 在噪声 latent 上估计 motion-score/motion-gradient，随运动增强距离度量从而减少缓存，在扩散早期用 motion-gradient 提供趋势预测。全程无训练、无额外架构参数，只改推理调度。",
+    "assumptions": [
+      "视频生成质量主要取决于计算量/去噪步数分配，且简单/静态视频在更少步数下仍可达标（质量-延迟存在显著冗余）。",
+      "残差表示间的距离（L1）能可靠刻画去噪收敛/复用兼容性，故可据此调度缓存。",
+      "不同 DiT 块可共享统一缓存率以保稳定（不接受逐层独立调度）。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["Open-Sora (Zheng et al. 2024) 480p-2s@30步", "Open-Sora-Plan 512x512-2.7s@150步", "Latte 512x512-2s@50步", "VBench benchmark prompts", "Open-Sora 720p-2s qualitative (见 Intro/图1)"],
+    "tasks": ["文本到视频短片段生成（质量+延迟评测）", "用户 A/B 偏好评测视觉质量"],
+    "embodiments": ["无真实实体/机器人；评测本体为文生视频（不成对自回归/世界模型），不涉及 action-conditioned 具身。"],
+    "sample_or_scale": "Open-Sora/Open-Sora-Plan/Latte 三基线；加速对比 1.0-4.7x；用户研究 50 题 x36 用户=1800 回应"
+  },
+  "evaluation": {
+    "design": "在三个开源视频 DiT 基线上把 AdaCache 与训练无关加速方法（-DiT/T-GATE/PAB）比较，测生成质量（VBench/PSNR/LPIPS/SSIM）与开销（FLOPs/延迟/加速比，单 A100）；做质量-延迟曲线与 MoReg 消融；另做 1800 例用户偏好研究。",
+    "baselines": ["-DiT (Chen 2024d)", "T-GATE (Zhang 2024a)", "PAB-fast/-slow (Zhao 2024c)", "原始无加速 Open-Sora/Open-Sora-Plan/Latte"],
+    "metrics": ["VBench (human-preference-aligned)", "PSNR / LPIPS / SSIM", "FLOPs (T), 延迟 (s), Speedup", "用户偏好率 (%)"],
+    "ablations": ["AdaCache-fast vs AdaCache-slow vs AdaCache-fast w/ MoReg（表1）", "质量-延迟曲线（图6，Open-Sora 720p-2s，对比 PAB）", "MoReg 对时间伪影的影响（图7，100步，4.7x→4.5x）", "用户研究 AdaCache vs PAB、w/ vs w/o MoReg"]
+  },
+  "findings": [
+    {"finding": "AdaCache-fast 在 Open-Sora 上取得最高 2.24x 加速（VBench 79.48 vs 基线 79.22，几乎无质量损失），AdaCache-slow 在全部质量指标上取最好质量同时仍较 PAB 快（1.46 vs 1.20）。", "scope": "Open-Sora 480p-2s@30步，单 A100", "locator": "5.2 Main results"},
+    {"finding": "用户研究：AdaCache vs PAB 在相近加速下有 70% 偏好；且与基线不可区分超过一半时间（41%）；w/ MoReg 变体更受偏好（25% vs 14%）。", "scope": "50 题 x36 用户共 1800 回应", "locator": "5.2 Main results"},
+    {"finding": "高加速下 AdaCache 可引入时间不一致（伪影/运动/颜色），MoReg 通过按运动分配计算避免大部分，且在 100 步 720p-2s 下从 4.7x 降到 4.5x 加速即显著改善。", "scope": "Open-Sora 720p-2s@100步定性消融", "locator": "5.3 Ablation study"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "高加速下缓存复用会带来时间一致性伪影（artifacts/motion/color），需 MoReg 缓解；极端降低率下参考指标（PSNR/SSIM）下降。", "locator": "5.3 Ablation study"},
+      {"limitation": "Sora 等模型因高资源/慢推理未被公开服务（引言引述对社区的解释），加速意在弥合该差距。", "locator": "1 Introduction"}
+    ],
+    "reader_inferred": [
+      {"boundary": "优化目标为推理延迟/质量，不涉及模型能力（物理/时序一致性正确性）本身；加速不改变生成的语义/物理正确性边界，只能以相近质量更快。", "basis": "评测指标全是质量-延迟；无物理/实体一致性评测；作为 '部署/加速' 证据而非 '能力提升' 证据。"},
+      {"boundary": "只在 2s 级短片段文生视频上验证；时间不一致随片段延长可能累积，不足以直接外推到分钟级自回归/世界模型。", "basis": "实验集中于 2-2.7s 片段；作者建议扩展到长视频但未给出分钟级证据。"},
+      {"boundary": "单位视频的缓存调度基于残差距离启发式，无理论最优保证；quality-latency 权衡依赖 codebook 阈值选择（有调参空间）。", "basis": "缓存率经 codebook+阈值挑选，具启发式属性（方法部分未给收敛/最优性论证）。"}
+    ]
+  },
+  "transfer_boundary": "本文证据限定在离线较短片段（2-2.7s）文生视频 DiT 上的推理加速（缓存/训练无关），约 1.0-4.7x 加速、可比质量；其对物理/实体一致性的影响、对分钟级/自回归世界模型的可迁移，以及质量-延迟权衡对更长影片的累积效应均未验证，不能直接外推到世界模型能力或长时一致性。",
+  "critical_appraisal": {
+    "design_strengths": ["训练无关、即插即用，可套到多个开源基线，可复现性好", "探索内容自适应（每视频不同缓存率）而非单一缓存策略，体现视频间差异", "含质量-延迟曲线与大规模用户研究（1800 回应）"],
+    "design_risks": ["缓存率 codebook/阈值依赖人工设计，存在过拟合基准风险", "部分数量指标（PSNR/SSIM）质量胜出在极端降低率下下降，而 VBench 等参考无关指标更偏好", "未覆盖分钟级/自回归/世界模型场景，域内结论"],
+    "baseline_fairness": "用多个官方开源基线（Open-Sora/Open-Sora-Plan/Latte）与同属训练无关加速的 -DiT/T-GATE/PAB 对齐比较，并报告统一单 A100 延迟，较公平。",
+    "metric_validity": "VBench 与用户研究贴近人类偏好（作者也强调 reference-free 与 preference 一致性）；PSNR/SSIM 等参考指标在极端缓存下失真，需以偏好为核心解读。",
+    "reproducibility": "实现/超参与 codebook 描述较具体，开源基线均可获取，复现条件一般认为充足。",
+    "external_validity": "作为综述 '部署/加速（缓存）' 的高价值正/负并存证据；对能力/一致性评估的外部价值有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2411.02397_C01",
+      "claim": "训练无关缓存 AdaCache-fast 在 Open-Sora 文生视频基线上取得最高 2.24x 推理加速（VBench 79.48 vs 基线 79.22，几乎无质量下降），优于 T-GATE 1.10x、PAB 1.34x 等既有训练无关方法。",
+      "stance": "support",
+      "relation": "支持综述命题：缓存/训练无关加速能显著提升视频 DiT 部署效率而几乎不掉质量，为 '部署/加速（缓存）' 提供实测证据。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者在 5.2 记录 AdaCache-fast 于 Open-Sora 上最高加速 2.24，质量 VBench 79.48 接近基线 79.22；与引言图1 '4.7 speedup (720p-2s)' 互补。",
+      "locator": "5.2 Main results",
+      "source_context": "AdaCache-fast gives the highest acceleration of 2.24 with a slight drop in quality.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "End-to-end inference speedup (vs Open-Sora baseline, single A100)",
+        "value_or_direction": "2.24x (AdaCache-fast), 2.10x (w/ MoReg), 1.46x (AdaCache-slow)",
+        "comparator": "T-GATE 1.10x, PAB-fast 1.34x; VBench 79.48 vs baseline 79.22",
+        "task_or_sample": "Open-Sora 480p-2s @30 steps, VBench benchmark prompts",
+        "locator": "5.2 Main results (Table 1)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.2 Main results 全文含 verbatim 'AdaCache-fast gives the highest acceleration of 2.24 with a slight drop in quality.'，且 Table 1 给出 VBench 79.48(base 79.22)、2.24x/2.10x/1.46x 与 T-GATE/PAB 对照，逐字一致，断言限定于 Open-Sora 基线。"
+      }
+    },
+    {
+      "card_id": "2411.02397_C02",
+      "claim": "高加速下 AdaCache 可引入时间不一致（伪影、运动、颜色），引入 Motion Regularization（按运动分配计算）在几乎不变加速（4.7x→4.5x）下显著缓解该类伪影。",
+      "stance": "limit",
+      "relation": "限制综述命题：缓存/加速带来推理效率；但质量-延迟增益伴随时间一致性伪影风险，需运动感知补偿，构成 '加速方法存在一致性-质量权衡' 的负向边界。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.3 报告 AdaCache 高加速（4.7x，720p-2s@100步）可引入 over-time 不一致（artifacts/motion/color），MoReg 通过按运动比例分配计算避免大部分，代价为加速降至 4.5x。",
+      "locator": "5.3 Ablation study",
+      "source_context": "Despite giving a 4.7 speedup, AdaCache can also introduce some inconsistencies over time ( e.g . artifacts, motion, color).",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.3 Ablation study 全文含 verbatim 'Despite giving a 4.7 speedup, AdaCache can also introduce some inconsistencies over time ( e.g . artifacts, motion, color).'，且该图注给出 MoReg 缓解且 4.5x 加速；断言限定于 720p-2s@100 步 Open-Sora 定性场景。"
+      }
+    },
+    {
+      "card_id": "2411.02397_C03",
+      "claim": "用户 A/B 研究中，AdaCache 相对 PAB 在相近加速下获得更高偏好率（70%），且与未加速基线不可区分超过一半时间（41%）；运动正则化变体更受偏好（25% vs 14%）。",
+      "stance": "support",
+      "relation": "补充支持综述关于缓存方法的'质量-延迟权衡'证据：不只速度，也在人类感知上保持质量，且为正/负并存的部署加速表述。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 的用户研究（50 题 x 36 用户共 1800 回应）报告 AdaCache 对 PAB 有 70% 偏好、41% 判定为与基线不可区分；w/ MoReg 偏好 25% vs 14%。",
+      "locator": "5.2 Main results",
+      "source_context": "Between AdaCache and PAB, we see a clear win for our method (70%) while being extremely-similar to the baseline more than half the time (41%).",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Human A/B preference rate over PAB at matched speedup",
+        "value_or_direction": "70% prefer AdaCache; 41% judged indistinguishable from baseline; MoReg preferred 25% vs 14%",
+        "comparator": "AdaCache vs PAB; AdaCache vs AdaCache w/ MoReg",
+        "task_or_sample": "50-question A/B study x 36 users = 1800 responses (Open-Sora videos)",
+        "locator": "5.2 Main results"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.2 Main results 全文含 verbatim 'Between AdaCache and PAB, we see a clear win for our method (70%) while being extremely-similar to the baseline more than half the time (41%).'，并随后给出 (60%) 平分与 25% vs 14% MoReg 偏好数，逐字一致。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "论文为推理加速（缓存）为主的实证方法工作；证据类型 experiment，全部为质量-延迟与用户偏好，不评测物理/一致性正确性本身。定量数值均能在 Table 1 与其正文中对齐，故除 MoReg 伪影定性外普遍按定量记录。"
+}

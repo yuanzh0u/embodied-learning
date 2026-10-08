@@ -1,0 +1,358 @@
+{
+  "generated_at": "2026-09-27T06:33:19.266167+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "智驾模型 VLA 驾驶基础模型与关键团队",
+  "start_date": "2024-09-27",
+  "end_date": "2026-09-27",
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-ALIGN",
+    "EA-EVAL"
+  ],
+  "families": [
+    "vla"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 100,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 100,
+  "coverage_dimensions": [
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "direct-driving-vla",
+        "direct-driving-llm"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "mechanism-driving-reasoning",
+        "mechanism-language-training"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "limit-language-driving"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "evaluation-and-validation",
+      "query_labels": [
+        "evaluation-language-driving"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "deployment-and-practice",
+      "query_labels": [
+        "deployment-driving-model"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "adjacent-end-to-end",
+        "adjacent-driving-language-data"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "agent dynamic expansion (high): User-approved driving-specific scope; overrides robot-heavy search queries, retaining planner floors."
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "direct-driving-vla",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "(all:\"autonomous driving\" OR all:\"self-driving\") AND (all:\"vision language action\" OR all:\"VLA\")",
+      "why": "direct-driving-vla"
+    },
+    {
+      "label": "direct-driving-llm",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"autonomous driving\" AND (all:\"large language model\" OR all:\"vision language model\")",
+      "why": "direct-driving-llm"
+    },
+    {
+      "label": "mechanism-driving-reasoning",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"driving\" AND (all:\"chain of thought\" OR all:\"reasoning action\" OR all:\"dual system\")",
+      "why": "mechanism-driving-reasoning"
+    },
+    {
+      "label": "mechanism-language-training",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"driving\" AND (all:\"distillation\" OR all:\"language supervision\" OR all:\"language teacher\")",
+      "why": "mechanism-language-training"
+    },
+    {
+      "label": "limit-language-driving",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"driving\" AND (all:\"language model\") AND (all:\"failure\" OR all:\"hallucination\" OR all:\"limitations\")",
+      "why": "limit-language-driving"
+    },
+    {
+      "label": "evaluation-language-driving",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"driving\" AND (all:\"language\" OR all:\"VLA\") AND (all:\"benchmark\" OR all:\"closed-loop\" OR all:\"evaluation\")",
+      "why": "evaluation-language-driving"
+    },
+    {
+      "label": "deployment-driving-model",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"driving\" AND (all:\"foundation model\" OR all:\"VLA\") AND (all:\"real-time\" OR all:\"deployment\" OR all:\"real-world\")",
+      "why": "deployment-driving-model"
+    },
+    {
+      "label": "adjacent-end-to-end",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"autonomous driving\" AND (all:\"end-to-end\" OR all:\"foundation model\")",
+      "why": "adjacent-end-to-end"
+    },
+    {
+      "label": "adjacent-driving-language-data",
+      "channel": "arxiv_api",
+      "source": "agent",
+      "confidence": "high",
+      "query": "all:\"driving\" AND all:\"language\" AND (all:\"dataset\" OR all:\"annotation\")",
+      "why": "adjacent-driving-language-data"
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "direct-driving-vla",
+      "tier": "dynamic-association",
+      "query": "(all:\"autonomous driving\" OR all:\"self-driving\") AND (all:\"vision language action\" OR all:\"VLA\")",
+      "why": "direct-driving-vla",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "direct-driving-llm",
+      "tier": "dynamic-association",
+      "query": "all:\"autonomous driving\" AND (all:\"large language model\" OR all:\"vision language model\")",
+      "why": "direct-driving-llm",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "mechanism-driving-reasoning",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"chain of thought\" OR all:\"reasoning action\" OR all:\"dual system\")",
+      "why": "mechanism-driving-reasoning",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "mechanism-language-training",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"distillation\" OR all:\"language supervision\" OR all:\"language teacher\")",
+      "why": "mechanism-language-training",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "limit-language-driving",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"language model\") AND (all:\"failure\" OR all:\"hallucination\" OR all:\"limitations\")",
+      "why": "limit-language-driving",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "evaluation-language-driving",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"language\" OR all:\"VLA\") AND (all:\"benchmark\" OR all:\"closed-loop\" OR all:\"evaluation\")",
+      "why": "evaluation-language-driving",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "deployment-driving-model",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"foundation model\" OR all:\"VLA\") AND (all:\"real-time\" OR all:\"deployment\" OR all:\"real-world\")",
+      "why": "deployment-driving-model",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "adjacent-end-to-end",
+      "tier": "dynamic-association",
+      "query": "all:\"autonomous driving\" AND (all:\"end-to-end\" OR all:\"foundation model\")",
+      "why": "adjacent-end-to-end",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "adjacent-driving-language-data",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND all:\"language\" AND (all:\"dataset\" OR all:\"annotation\")",
+      "why": "adjacent-driving-language-data",
+      "source": "agent",
+      "confidence": "high"
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "direct-driving-vla",
+      "tier": "dynamic-association",
+      "query": "(all:\"autonomous driving\" OR all:\"self-driving\") AND (all:\"vision language action\" OR all:\"VLA\")",
+      "why": "direct-driving-vla",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "direct-driving-llm",
+      "tier": "dynamic-association",
+      "query": "all:\"autonomous driving\" AND (all:\"large language model\" OR all:\"vision language model\")",
+      "why": "direct-driving-llm",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "mechanism-driving-reasoning",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"chain of thought\" OR all:\"reasoning action\" OR all:\"dual system\")",
+      "why": "mechanism-driving-reasoning",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "mechanism-language-training",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"distillation\" OR all:\"language supervision\" OR all:\"language teacher\")",
+      "why": "mechanism-language-training",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "limit-language-driving",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"language model\") AND (all:\"failure\" OR all:\"hallucination\" OR all:\"limitations\")",
+      "why": "limit-language-driving",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "evaluation-language-driving",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"language\" OR all:\"VLA\") AND (all:\"benchmark\" OR all:\"closed-loop\" OR all:\"evaluation\")",
+      "why": "evaluation-language-driving",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "deployment-driving-model",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND (all:\"foundation model\" OR all:\"VLA\") AND (all:\"real-time\" OR all:\"deployment\" OR all:\"real-world\")",
+      "why": "deployment-driving-model",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "adjacent-end-to-end",
+      "tier": "dynamic-association",
+      "query": "all:\"autonomous driving\" AND (all:\"end-to-end\" OR all:\"foundation model\")",
+      "why": "adjacent-end-to-end",
+      "source": "agent",
+      "confidence": "high"
+    },
+    {
+      "label": "adjacent-driving-language-data",
+      "tier": "dynamic-association",
+      "query": "all:\"driving\" AND all:\"language\" AND (all:\"dataset\" OR all:\"annotation\")",
+      "why": "adjacent-driving-language-data",
+      "source": "agent",
+      "confidence": "high"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "browser-vla-named-models",
+      "query": "site:arxiv.org/abs (\"vision-language-action\" OR OpenVLA OR \"RT-X\" OR Octo) robot",
+      "why": "Find VLA and named robot foundation model papers when acronym or model names are sparse in API results.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-data-mixtures",
+      "query": "site:arxiv.org/abs (\"Open X-Embodiment\" OR \"robot foundation model\" OR VLA) (\"data mixture\" OR \"fine-tuning\" OR \"large-scale robot data\")",
+      "why": "Find VLA data-layer, data-mixture, and fine-tuning discussions likely to mention data quality or scaling limits.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-vla-transfer-limits",
+      "query": "site:arxiv.org/abs (VLA OR \"vision-language-action\" OR OpenVLA) (\"negative transfer\" OR embodiment OR \"action representation\" OR \"closed-loop\")",
+      "why": "Find VLA limitation discussions around embodiment, action spaces, transfer, and closed-loop deployment.",
+      "source_key": "vla",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "web-topic-calibration",
+      "query": "\"智驾模型 VLA 驾驶基础模型与关键团队\" \"robot\" \"arXiv\"",
+      "why": "Find paper-facing terminology for the requested topic.",
+      "source_key": "generic",
+      "source_type": "web",
+      "channel": "web_calibration"
+    }
+  ],
+  "scope_adaptation": "Driving-specific labels replace robot taxonomy; floors and stopping rule preserved; original planner output retained.",
+  "liauto_extension": "十篇新增论文（含一篇机器人训练机制延伸），七轮定向交叉检索；以公开公司相关研究构成专题，不声称穷尽理想全部论文。",
+  "incremental_query_files": [
+    "liauto-query-plan.json",
+    "liauto-query-2.json",
+    "liauto-query-3.json",
+    "liauto-query-4.json",
+    "liauto-query-5.json",
+    "liauto-query-6.json",
+    "liauto-query-7.json"
+  ]
+}

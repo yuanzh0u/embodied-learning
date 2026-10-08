@@ -1,0 +1,200 @@
+{
+  "topic": "近一年SLAM技术在具身智能领域是否有核心作用",
+  "topic_cards": [
+    {
+      "id": "EA-4D",
+      "title": "4D 时空推理与世界动态",
+      "file": "knowledge/embodied-ai/4d-spatiotemporal-reasoning.md",
+      "matched_by": "knowledge-id",
+      "aliases": [
+        "4D 时空推理",
+        "4D 世界模型",
+        "3D point tracks",
+        "时空场景图",
+        "动态世界",
+        "后果预演",
+        "动作条件未来",
+        "稀疏未来",
+        "训练期几何教师"
+      ],
+      "key_judgments": [
+        "动作标签说明“机器人怎么动”，但不完整说明“世界会怎样变化”；跨帧 3D point tracks 能补充世界动态监督。",
+        "视频未来即使视觉合理，只要同一物理点跨帧漂移、接触关系不稳定，就难以抽取可靠动作。",
+        "人类视频、UMI、真实机器人、失败 rollout 和伪 4D 标注能监督的字段不同，必须用 supervision mask 或字段白名单分级。",
+        "世界模型从预测器走向部署时推理模块时，应执行候选动作生成、未来想象、进度/奖励估计和低质量动作修正。",
+        "4D 场景图适合长期动态记忆和结构化查询，但受 SLAM、相似物体歧义、长序列成本和局部形变限制。",
+        "接触、力、被遮挡几何和可变形物状态常无法从纯视觉历史恢复，需要触觉、力/力矩或深度补充。",
+        "世界模型作为后果预演层时，4D 表征的价值在于保持对象身份、几何、接触和动作响应，而不是单独提高视频观感。",
+        "几何可作为训练期 privileged teacher 或蒸馏目标，不必一律增加部署时输入；是否保留显式 4D 模块取决于排序增益、延迟和失败拒识价值。"
+      ]
+    },
+    {
+      "id": "EA-HARDWARE",
+      "title": "采集硬件与设备路线",
+      "file": "knowledge/embodied-ai/hardware-collection-devices.md",
+      "matched_by": "knowledge-id",
+      "aliases": [
+        "采集硬件",
+        "单目",
+        "双目",
+        "ARKit",
+        "SLAM",
+        "Tracking",
+        "UMI",
+        "指套",
+        "手套",
+        "定位地图",
+        "SCR",
+        "3DGS"
+      ],
+      "key_judgments": [
+        "具身采集不必须双目，关键看任务是否依赖稳定几何、相对深度和遮挡恢复。",
+        "行业偏好单目来自工程经济性：便宜、易标定、低带宽、易维护、适配视觉预训练。",
+        "双目落地瓶颈是标定同步、弱纹理/反光匹配失败、深度噪声融合和系统成本。",
+        "ARKit 可用于低成本 VIO、位姿跟踪和快速原型，但不适合作唯一计量真值。",
+        "VR/AR tracking 是低成本人机输入，需记录置信度、丢踪事件和时间戳质量。",
+        "UMI 的核心价值是把自然场景人类示教转成机器人可学习的数据闭环。",
+        "视觉/轨迹型 UMI 对接触丰富任务通常缺力、触觉、内部抓力和外部 wrench，应按任务补充物理模态。",
+        "单目 SLAM 型 UMI 在遮挡、动态、弱纹理和 tracking failure 场景风险高，LiDAR-centric 3D sensing 可扩展可采任务分布。"
+      ]
+    },
+    {
+      "id": "EA-MODEL",
+      "title": "模型与预训练",
+      "file": "knowledge/embodied-ai/models-pretraining.md",
+      "matched_by": "knowledge-id",
+      "aliases": [
+        "机器人基础模型",
+        "Unified Model",
+        "VLA",
+        "反应式VLA",
+        "VLA—世界模型融合栈",
+        "分层世界模型",
+        "稀疏未来",
+        "世界模型权限阶梯",
+        "latent planning",
+        "Action Chunking Transformer",
+        "自适应执行视界",
+        "RoboTwin 2.0",
+        "Octo",
+        "OpenVLA",
+        "RT-X",
+        "预训练",
+        "微调",
+        "模型供应链",
+        "持久后门",
+        "数据投毒",
+        "Ego-centric预训练",
+        "类脑模型",
+        "脉冲神经网络",
+        "脉冲大模型",
+        "SpikingBrain",
+        "SpikeLLM",
+        "神经形态计算"
+      ],
+      "key_judgments": [
+        "VLA/RT-X/Octo/OpenVLA/π0 等说明视觉-语言-动作统一建模有迁移潜力。",
+        "Unified Scaling 的挑战在于数据、本体、动作空间、奖励和评估都不统一。",
+        "Benchmark 好成绩不等于真实世界鲁棒性，真实部署会遇到分布偏移和闭环误差累积。",
+        "场景微调不理想时，可能是数据、动作接口、控制器、标定和失败恢复共同问题。",
+        "预训练评估应做 ablation：从零训练、只用目标数据、预训练 + 微调、不同预训练来源。",
+        "仿真可降低筛选成本，但真实机器人评测仍是最终证据。",
+        "语言、视觉和动作的主要矛盾是粒度与物理接口错配，不是简单缺少更大的 VLM。",
+        "action module 可通过 motion prior、flow/diffusion 或状态条件 tokenizer 独立学习连续动作结构。"
+      ]
+    },
+    {
+      "id": "EA-VLOC",
+      "title": "图像视觉定位",
+      "file": "knowledge/embodied-ai/visual-localization.md",
+      "matched_by": "knowledge-id",
+      "aliases": [
+        "图像定位",
+        "视觉定位",
+        "VPR",
+        "视觉地点识别",
+        "相机重定位",
+        "场景坐标回归",
+        "3DGS定位"
+      ],
+      "key_judgments": [
+        "“认出地点”只是定位前端；高 Recall@K 不保证二维—三维对应、PnP 或位姿细化成功。",
+        "3DGS 的照片真实度不等于几何可定位性；冗余高斯和多对一像素—高斯关系可能破坏对应唯一性。",
+        "3DGS 位姿细化通常是局部优化，高度依赖检索初值和局部几何质量，不能视为全局纠错器。",
+        "前馈组合地图和重建先验降低逐场景训练或查询成本，但分别依赖相关参考召回和先验的场景分布。",
+        "视觉、共视几何和深度先验的融合能缓解感知别名；骨干选择仍受实时预算和困难场景类型约束。",
+        "多参考地点压缩只有在参考变化覆盖查询变化时可靠；极端新视角可能需要保留原始参考。",
+        "定位安全必须同时报告错误风险与接受覆盖；全局拒识可以低风险但零效用。",
+        "固定地理半径真值可能忽略视觉重叠并高估 VPR，尤其在高度或地形变化显著的场景。"
+      ]
+    }
+  ],
+  "related_runs": [
+    {
+      "id": "LR-4D",
+      "topic": "4D 时空推理",
+      "knowledge_ids": [
+        "EA-4D",
+        "EA-MODEL",
+        "EA-EVAL"
+      ],
+      "scale": "915 / 128 / 15"
+    },
+    {
+      "id": "LR-PRETRAIN-DATA-SOURCES-YEAR",
+      "topic": "近一年具身智能预训练模型对数据源与采集参数的要求",
+      "knowledge_ids": [
+        "EA-DATA",
+        "EA-HARDWARE",
+        "EA-SENSOR",
+        "EA-MODEL",
+        "EA-XEMBODIMENT"
+      ],
+      "scale": "1,398 / 40 / 20"
+    },
+    {
+      "id": "LR-VLA-BREAKTHROUGH-HY1",
+      "topic": "近半年 VLA 在具身领域最大的技术突破",
+      "knowledge_ids": [
+        "EA-MODEL",
+        "EA-EVAL",
+        "EA-4D",
+        "EA-ALIGN"
+      ],
+      "scale": "1,246 / 161 / 27"
+    },
+    {
+      "id": "LR-VLA-WM-SHIFT",
+      "topic": "近一年为何说反应式 VLA 已死、世界模型当立",
+      "knowledge_ids": [
+        "EA-MODEL",
+        "EA-EVAL",
+        "EA-4D",
+        "EA-ALIGN"
+      ],
+      "scale": "1,547 / 175 / 28"
+    },
+    {
+      "id": "LR-VLOC",
+      "topic": "近一年图像视觉定位方法的发展与挑战",
+      "knowledge_ids": [
+        "EA-VLOC",
+        "EA-SENSOR",
+        "EA-EVAL",
+        "EA-HARDWARE"
+      ],
+      "scale": "321 / 53 / 15"
+    },
+    {
+      "id": "LR-DIT-WM-YEAR",
+      "topic": "近两年 Diffusion Transformer 在视频生成与世界模型中的发展",
+      "knowledge_ids": [
+        "EA-4D",
+        "EA-EVAL",
+        "EA-MODEL"
+      ],
+      "scale": "1,566 / 70 / 16 events"
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,535 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.04609",
+  "title": "SEAM: Smooth Execution of Action-Chunked Motion for Vision-Language-Action Policies",
+  "published": "2026-07-06",
+  "url": "https://arxiv.org/abs/2607.04609",
+  "authors": [
+   "Dijia Zhan",
+   "Xuemiao Xu",
+   "Jinyi Li",
+   "Jie Tang"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本族'推理时跨块一致性'分支核心文献：论文把动作分块的边界不连续归因于独立噪声采样×多峰动作分布的'多峰分叉'，提出免训练、零反传的 VLS 闭式修正（以前一预测块未执行尾部为解析一致性参照），在 LIBERO-10+π_0.5 上以 1.01× 去噪成本降低边界 jerk 27.7%、块转换不连续 26.7% 且保持成功率；与同族 RTC/BID/ACT-TE 的对比给出成本-平滑度-成功率三角，λ/引导维度/窗口 M 消融完整，对本综述的方案族对比（推理时分支内部的权衡刻画）价值高。注意仅 LIBERO-10 仿真 + π_0.5 单一骨干验证。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "获取问题定义（多峰分叉）、既有方案代价谱（每步反传/拒绝采样/重训练）与 SEAM 一句话结果（BJ −28%、CD −27%、成功率保持、近基线去噪成本）"
+   },
+   {
+    "locator": "Introduction",
+    "role": "problem",
+    "purpose": "确认同步分块执行下块边界 artifact 的机制根源、ACT-TE/RTC/BID/Legato 成本谱、被忽视的同步执行结构与三项贡献"
+   },
+   {
+    "locator": "Related Work: Cross-Chunk Consistency and Inference-Time Steering",
+    "role": "relevant-core",
+    "purpose": "定位 SEAM 在推理时引导谱系（分类器/无分类器引导、逆问题方法、ΠGDM、拒绝采样、重训练）中的解析零反传生态位"
+   },
+   {
+    "locator": "Preliminaries",
+    "role": "method-or-design",
+    "purpose": "理解流匹配 ODE 形式化（Eq.1-2）、动作分块/重叠区 L=H−K 的定义与多峰动作分布下块间不一致（multimodal bifurcation）的来源"
+   },
+   {
+    "locator": "SEAM: Overview and Aligned Prior Construction",
+    "role": "method-or-design",
+    "purpose": "理解对齐先验 a_al 的构造（未执行尾部末动作重复填充到块长 H，Eq.3）及其保守性设计（不外推未来、不施加终点路点）"
+   },
+   {
+    "locator": "SEAM: Velocity-Guided Loss Steering (VLS)",
+    "role": "method-or-design",
+    "purpose": "理解时间插值一致性目标 r_{i+1}=(1−t_{i+1})·a_al[1:M]（Eq.4）、局部二次一致性损失与闭式梯度（Eq.6-7）、λ(1−t) 修正调度（Eq.8）与 Table 1 单块推理流程"
+   },
+   {
+    "locator": "SEAM: Design choices and efficiency",
+    "role": "method-or-design",
+    "purpose": "获取引导维度集/引导窗口两个设计自由度与 O(N·M·D_g) 标量运算复杂度、无策略反传无激活存储的成本论证"
+   },
+   {
+    "locator": "Experiments: Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "获取 LIBERO-10/π_0.5 配置（H=50、K=10、L=40、N=10）、SEAM 设置（λ=0.1、M=20、全物理维度）、基线官方配置、四运动指标定义（Eq.9-13）、130 episodes/任务与 RTX 3090 计时协议"
+   },
+   {
+    "locator": "Experiments: Main Results (Table 2, Table 3, Figure 3)",
+    "role": "results-or-analysis",
+    "purpose": "提取主结果四指标改善与成功率保持（95.7% vs 94.8%）、成本三方对比（RTC 1.22×/ACT-TE 82.7%/SEAM 1.01×）与逐任务成功率的非均匀性"
+   },
+   {
+    "locator": "Experiments: Ablation Study (Table 4, Table 5, Figure 4)",
+    "role": "results-or-analysis",
+    "purpose": "提取 λ 强度-可靠性权衡、全维度 vs 仅位置引导对比、窗口 M 全扫描（2-20）与 T1 定性失败模式分析"
+   },
+   {
+    "locator": "Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "核对结论表述：免训练推理时方法、未执行尾部作一致性参照、ODE 求解器内 VLS 修正、保持任务成功率与近基线去噪成本"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "reason": "仅用于引文登记（RTC/BID/Legato/π_0.5/ACT 等 arXiv ID），无综述问题所需的额外证据"
+   }
+  ]
+ },
+ "research_question": "论文自问：流匹配 VLA 的固定长度动作分块为何在块边界产生突变（多峰分叉），能否不重训练策略、不在推理时对策略网络反向传播、不依赖拒绝采样，仅在去噪 ODE 循环内用解析闭式修正实现相邻块的一致过渡，同时保持任务成功率与近基线推理成本？",
+ "contributions": [
+  "把同步分块执行下的跨块一致性形式化为解析的 overlap 对齐目标，并识别被忽视的结构：机器人执行完前缀后，前一预测块的未执行尾部（L=H−K 步）在下一块生成时已可用作解析一致性参照",
+  "提出 VLS（Velocity-guided Loss Steering）：由对齐先验构造时间插值一致性目标 r_{i+1}=(1−t_{i+1})·a_al[1:M]，在每个 Euler 步后对引导窗口施加闭式负梯度修正，λ(1−t) 调度实现早期弱引导、近动作流形强修正；无策略网络反传、无激活存储，每块查询仅增加 O(N·M·D_g) 标量运算",
+  "LIBERO-10 + π_0.5 验证：边界 jerk −27.7%、内部 jerk −21.3%、块转换不连续 −26.7%、边界 jerk 方差 −43.0%，任务成功率保持基线水平（95.7% vs 94.8%），去噪循环成本 1.01×（每 10 步块仅 +3.8ms）",
+  "系统刻画成本-平滑度-成功率三维权衡：RTC 平滑更强（BJ −54%）但需每步反传（1.22× 延迟）、ACT-TE 最平滑但成功率掉至 82.7%，SEAM 定位'近基线成本+保持成功率'生态位；配 λ/引导维度/窗口 M 三类消融与 T1 失败模式定性分析"
+ ],
+ "method": {
+  "summary": "SEAM 是流匹配 VLA 的免训练推理时方法，作用于同步分块执行的块生成循环。给定前一解码块 c_n，取其未执行尾部 a_tail=c_n[K+1:H]（长度 L=H−K），用末动作重复填充到块长 H 得对齐先验 a_al（保守填充：不外推未来轨迹、不施加终点路点，避免引入额外外推器或学习式连续模型）。下一块仍从标准高斯噪声初始化；在其 N 步反向 Euler 去噪的每一步，VLS 先计算标准 Euler 候选，再按流匹配线性插值构造时间相关一致性目标 r_{i+1}=(1−t_{i+1})·a_al[1:M]（M≤L 为引导窗口，主设置 M=20），对引导窗口上的局部二次一致性损失取闭式负梯度 g=−2(x̃[1:M]−r_{i+1})，以步长 λ(1−t_{i+1}) 仅覆写引导窗口位置，未引导位置保留 Euler 候选。λ(1−t) 调度使修正早期（高噪声态）弱、接近动作流形时强，避免过度约束早期去噪状态；λ=0.1 为主设置。一致性目标是局部代理而非精确条件后验，任务条件动态留给策略自身。每块查询额外 O(N·M·D_g) 标量运算（切片/减法/标量加权/覆写），无需反传或激活存储。",
+  "assumptions": [
+   "策略为流匹配 VLA 且推理用 Euler ODE 积分（VLS 嵌入每步 Euler 更新之后，依赖 Eq.1 线性插值形式构造目标）",
+   "同步分块执行：执行 K 步后才请求下一块，使前一预测块的未执行尾部在下一块生成时完整可得（异步/实时推理设置不满足该前提）",
+   "一致性目标只需局部代理：弱闭式修正足以降低边界 artifact，策略自身保留任务条件动态与多峰表达",
+   "超参（λ、引导维度集、窗口 M）需按部署场景调定；激进引导（大 λ）会侵蚀任务成功率"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "LIBERO-10 训练集（微调 π_0.5）"
+  ],
+  "tasks": [
+   "LIBERO-10：10 个长时程桌面操作任务（拾取、放置、开合等，多步推理与多样物体）"
+  ],
+  "embodiments": [
+   "π_0.5 VLA（PaliGemma-2B 视觉语言主干 + SigLIP 视觉编码器 + Gemma-300M 动作专家）；动作块 H=50、每块执行 K=10（重叠 L=40）、N=10 Euler ODE 步",
+   "LIBERO 仿真环境（无真机实验）"
+  ],
+  "sample_or_scale": "每任务 130 episodes × 10 任务（所有方法一致）；计时在本地 RTX 3090 上以缓存前缀去噪循环（N=10 Euler 步）单独测量"
+ },
+ "evaluation": {
+  "design": "匹配评测设置下与基线 π_0.5、ACT-TE、RTC 三方对比，联合报告任务成功率、四个运动质量指标（BJ/IJ/CD/AV_b）与去噪循环计时（每步额外毫秒、每块毫秒、相对成本倍数）；消融覆盖引导强度 λ（0.05–0.2，全维度/仅位置两设置）、引导维度选择与引导窗口 M（2–20 全扫描）；对逐任务差距最大的 T1 做失败模式定性分析",
+  "baselines": [
+   "π_0.5 基线（无跨块处理，Succ 94.8%，D-Cost 1.00×）",
+   "ACT-TE 时序集成（标准系数 k=0.01，每环境步查询）",
+   "RTC（ΠGDM 推荐配置，最大引导权重 β=5，指数前缀注意力衰减）——均用官方或作者推荐推理设置"
+  ],
+  "metrics": [
+   "任务成功率（每任务 130 episodes）",
+   "边界 jerk BJ：边界集 B={t|t mod K=0} 上平均 per-step jerk ‖a_{t+1}−2a_t+a_{t−1}‖₂（Eq.9-10）",
+   "内部 jerk IJ：非边界步平均 jerk（Eq.11）",
+   "块转换不连续 CD：边界处平均 ‖a_t−a_{t−1}‖₂（Eq.12）",
+   "AV_b：边界 jerk 方差 Var{j_t|t∈B}（Eq.13；注意 Table 2 表注称'边界加速度方差'，公式实为 jerk 方差，命名与公式不一致）",
+   "去噪循环计时：每步额外毫秒、每 10 步块毫秒、D-Cost 相对倍数（RTX 3090，缓存前缀）"
+  ],
+  "ablations": [
+   "引导强度 λ ∈ {0.05,0.1,0.15,0.2} × 引导维度（all/pos），固定 M=20（Table 4）",
+   "引导窗口 M ∈ {2,4,...,20} 全扫描，全维度、λ=0.1（Table 5）",
+   "T1 定性失败模式对比：基线/ACT-TE/RTC/SEAM 代表性 rollout（Figure 4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "机制根源（多峰分叉）：相邻动作块由独立高斯噪声潜变量生成，可收敛到不相容轨迹模态——意图冲突（下一块反向运动）或位置间隙（保向但起点偏移）两类边界 artifact；根源是 contact-rich 任务动作分布多峰×独立噪声采样，属跨块不一致而非块内问题",
+   "scope": "问题刻画（作者主张，π_0.5/LIBERO-10 基线测量佐证）",
+   "locator": "Abstract; Preliminaries"
+  },
+  {
+   "finding": "痛点量化定位：基线 π_0.5 边界 jerk 0.195 超过内部 jerk 0.094 的两倍，说明运动不规则性集中于块边界而非沿轨迹均匀分布——块边界 artifact 是可被 BJ/IJ 类指标分离的独立痛点",
+   "scope": "LIBERO-10 基线测量，10 任务 × 130 episodes",
+   "locator": "Introduction; Table 2"
+  },
+  {
+   "finding": "核心机制：同步执行洞察（执行完前缀后未执行尾部已可用作解析参照）+ VLS 闭式修正——对齐先验由尾部末动作重复填充构造，时间插值目标随 ODE 时间演化，λ(1−t) 调度仅对引导窗口施加闭式负梯度修正，无反传、无重训练、无辅助网络",
+   "scope": "方法设计（π_0.5 上验证）",
+   "locator": "Abstract; SEAM Method (Eq.3-8, Table 1)"
+  },
+  {
+   "finding": "主结果：四项运动指标全面改善——边界 jerk −27.7%（0.195→0.141）、内部 jerk −21.3%、块转换不连续 −26.7%（0.172→0.126）、边界 jerk 方差 −43.0%，任务成功率保持基线水平（95.7% vs 94.8%）",
+   "scope": "LIBERO-10 + π_0.5，10 任务 × 130 episodes",
+   "locator": "Main Results, Table 2"
+  },
+  {
+   "finding": "成本：SEAM 去掉反向传后每 10 步块去噪循环仅 +3.8ms（286.0 vs 282.2ms，1.01×）；对照 RTC 每步反传致 344.6ms（1.22×）——零反传闭式修正在延迟敏感部署中成本可行",
+   "scope": "RTX 3090 缓存前缀去噪循环计时（N=10）",
+   "locator": "Main Results, Table 2"
+  },
+  {
+   "finding": "跨方法权衡：RTC 平滑更强（BJ −54% 至 0.090、CD −48%、成功率 95.1%）但每步自动微分反传推高延迟至 1.22×；ACT-TE 最平滑（BJ 0.031、−84%）但每步查询下成功率掉至 82.7%；SEAM 占据'近基线成本+成功率保持'生态位——方法选择取决于延迟预算与平滑需求的权衡",
+   "scope": "LIBERO-10 三方对比（官方/作者推荐设置）",
+   "locator": "Main Results, Table 2; Figure 3"
+  },
+  {
+   "finding": "逐任务成功率非均匀：SEAM 在 T1–T3、T5 最强（T1: 91.5→99.2）、T6 并列最佳，但 T7–T10 低于最佳对比（T7: 90.8 vs RTC 99.2）；聚合成功率保持≠逐任务改进，作者主张任务成功/平滑度/成本三维联合评估",
+   "scope": "LIBERO-10 逐任务成功率（Table 3）",
+   "locator": "Main Results, Table 3"
+  },
+  {
+   "finding": "消融-强度权衡：λ=0.1 为最佳平衡（95.7%、BJ 0.141、CD 0.126），更大强度仅边际改善部分 jerk 指标却快速侵蚀成功率（λ=0.15→92.8%、λ=0.2→89.5%），支持弱闭式修正而非激进压制去噪轨迹",
+   "scope": "λ 扫描（M=20、全维度/仅位置），Table 4",
+   "locator": "Ablation Study, Table 4"
+  },
+  {
+   "finding": "消融-维度与窗口：全维度引导优于仅位置（BJ 0.141 vs 0.162、成功率 95.7% vs 94.0%）；窗口 M∈{2..20} 全部降低 BJ/CD 且成功率稳定在 94.7%–96.3%，M=20 平滑最强——M 是平滑度旋钮而非成功率风险因子，与 λ 的敏感性形成对照",
+   "scope": "Table 4 下半区与 Table 5 全扫描",
+   "locator": "Ablation Study, Tables 4-5"
+  },
+  {
+   "finding": "定性失败模式：未引导基线切换意图搬运中掉物、ACT-TE 过度平滑接触时序延迟抓取、RTC 强连续性约束锁定失败抓取；SEAM 用弱重叠一致性而非硬连续性，保留纠正自由度——为'过平滑牺牲接触时序''强约束锁定失败'提供机理证据",
+   "scope": "T1 代表性 rollout 定性分析（Figure 4）",
+   "locator": "Ablation Study, Qualitative T1 Failure Patterns (Figure 4)"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "任务成功率非逐任务均匀改进：SEAM 在 T7–T10 上低于最佳对比方法，作者据此主张把任务成功、平滑度与去噪成本联合评估而非单指标排名",
+    "locator": "Main Results, Table 3"
+   },
+   {
+    "limitation": "平滑度上限不及 RTC：作者明示 RTC 达到更低边界 jerk 与块不连续，SEAM 的预期运行区间是'保持小开销与任务成功下改善跨块运动质量'而非最强平滑",
+    "locator": "Introduction; Main Results"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "仅 LIBERO-10 仿真验证，无真机实验；真实控制带宽、传感噪声与推理延迟下的有效性未知",
+    "basis": "Experimental Setup 节仅报告 LIBERO-10 仿真与 RTX 3090 计时，全文无真机结果"
+   },
+   {
+    "boundary": "仅流匹配 VLA（π_0.5 单一骨干）验证；VLS 依赖 Euler ODE 积分形式与流匹配线性插值目标，扩散策略或其他非流匹配动作模型未测试",
+    "basis": "方法节以 flow matching ODE 推导（Eq.1/2/4），实验仅用 π_0.5 一种骨干"
+   },
+   {
+    "boundary": "仅覆盖同步分块执行设置；异步/实时推理（推理延迟超过执行窗口）下请求下一块时前一块尾部不完整可得，SEAM 前提不成立，需 RTC 实时模式或训练侧延迟适配方案",
+    "basis": "Aligned Prior Construction 依赖'执行 K 步后请求下一块时未执行尾部完整可用'的同步结构"
+   },
+   {
+    "boundary": "AV_b 指标命名与公式不一致（Table 2 表注称'边界加速度方差'，Eq.13 实为边界 jerk 方差），跨论文对比该指标时需统一口径",
+    "basis": "Table 2 表注与 Eq.13 定义的直接对照"
+   },
+   {
+    "boundary": "成功率差异（95.7 vs 94.8，每任务 130 episodes）在统计噪声范围内，应表述为'保持基线水平'而非'提升'；运动指标改善到物理可执行性/接触质量的因果链仅有 T1 定性分析支撑",
+    "basis": "Table 2/3 数值与 Figure 4 定性分析；无逐任务显著性检验"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：流匹配 + 动作分块 + 同步执行的 VLA 部署，希望在近基线推理成本（约 +1%）下降低块边界 jerk/不连续、且不重训练策略的场景；π_0.5 类流匹配 VLA 上有 LIBERO-10 仿真证据。不适用/未验证：(1) 非流匹配策略或非 Euler 求解器（机制依赖流匹配线性插值目标）；(2) 异步/实时执行（推理延迟超过执行窗口、请求下一块时前一块尾部不完整）；(3) 追求最强平滑且可承受约 22% 去噪延迟的场景（RTC 更优）；(4) 真机与高动态接触任务（未验证）。增益条件：λ 需保持弱修正区间（0.1 附近），激进引导侵蚀成功率；窗口 M 在 2–20 范围内可按平滑需求调节。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同 checkpoint 匹配设置下的三方对比，同时报告成功率、四项运动指标与计时，显式呈现成本-平滑度-成功率三角（Figure 3）",
+   "计时协议隔离缓存前缀去噪循环的算法开销（RTX 3090、N=10），成本口径可复现",
+   "消融覆盖全部关键超参（λ×维度、M 全扫描），T1 定性失败分析为指标差异提供机制解释",
+   "基线用官方/作者推荐设置（ACT-TE k=0.01、RTC β=5）而非为本文有利挑选"
+  ],
+  "design_risks": [
+   "单基准（LIBERO-10）、单骨干（π_0.5）、纯仿真；每任务 130 episodes 的统计功效有限，95.7 vs 94.8 的成功率差异在噪声范围内",
+   "ACT-TE 的 every-step 查询设置改变查询频率，其 per-chunk 成本口径与实际总推理量（每步查询）不完全可比",
+   "未与 BID、Legato、FASTER 实证对比（仅相关工作定性讨论），跨族成本-效果结论不完整",
+   "AV_b 命名与公式不一致（表注'加速度方差' vs Eq.13 jerk 方差）"
+  ],
+  "baseline_fairness": "ACT-TE 用标准系数 k=0.01 且每步查询、RTC 用推荐 ΠGDM 配置（β=5、指数前缀注意力衰减），均为官方或作者推荐设置；但 ACT-TE 的 every-step 设置天然提高查询频率，其 82.7% 成功率部分归因于过平滑接触时序（作者 T1 定性解释），不同方法的执行/查询频率差异未完全归一化",
+  "metric_validity": "BJ/IJ/CD 直接度量执行动作序列在块边界的二阶/一阶差分不规则性，与轨迹精度痛点直接对应；边界集 B={t|t mod K=0} 定义明确，逐任务累计后跨 10 任务平均。局限：AV_b 表注称'边界加速度方差'而 Eq.13 实为边界 jerk 方差（命名与公式不一致）；运动指标改善到物理可执行性/接触质量的因果链仅 T1 定性分析支撑，无真机验证",
+  "reproducibility": "公式闭式（Eq.3-8）且超参全公开（λ=0.1、M=20、N=10、H=50/K=10），评测协议（130 episodes/任务、指标定义 Eq.9-13）与计时协议（RTX 3090、缓存前缀、N=10）明确，可复现；未提及代码或 checkpoint 发布",
+  "external_validity": "结论限定于 LIBERO-10 仿真 + π_0.5 流匹配 VLA + 同步分块执行设置；真机、其他任务域、扩散策略、异步执行场景均未验证；与 BID/Legato 的跨族对比缺实证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.04609-C01",
+   "claim": "动作分块 VLA 的核心痛点机制是'多峰分叉'：相邻动作块由独立高斯噪声潜变量生成，可收敛到不相容的轨迹模态（如一块从一侧接近物体、下一块改从另一侧），在块边界产生突变不连续；这是跨块不一致而非块内问题，源于流匹配策略用不同噪声样本表达多峰动作分布的固有特性。",
+   "stance": "support",
+   "relation": "支撑综述问题中'动作分块边界不连续的机制根源'命题：块间不一致的根源是独立噪声采样×多峰动作分布，为'推理时跨块一致性'方案族（ACT-TE/RTC/BID/SEAM）提供共同的问题定义。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要与 Preliminaries 的 Multimodal action distributions 段给出定义：contact-rich 任务动作分布多峰（引 Shafiullah et al. 2022），流匹配把不同初始噪声映射到不同模态；相邻块独立采样 z_n, z_{n+1}∼N(0,I)，即使观测相近，重叠区预测仍可分歧，产生意图冲突（Mode C 反向）与位置间隙（Mode B 偏移）两类边界 artifact（Figure 1a）。",
+   "locator": "Abstract; Preliminaries",
+   "source_context": "Vision-Language-Action (VLA) policies that execute fixed- length action chunks can exhibit multimodal bifurcation: a cross-chunk inconsistency in which adjacent chunks gener- ated from independent Gaussian latents can converge to in- compatible trajectory modes, producing abrupt discontinu- ities at chunk boundaries.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对摘要（fixed- length / gener- ated / in- compatible / discontinu- ities 等连字符断行为提取原文原样）与 Preliminaries 的 'we refer to as multimodal bifurcation' 段；问题定义为作者主张，π_0.5/LIBERO-10 基线 BJ 0.195>2×IJ 0.094 的测量（C02）为其佐证。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C02",
+   "claim": "痛点量化定位：在 LIBERO-10 + π_0.5 上，基线策略的边界 jerk（0.195）超过内部 jerk（0.094）的两倍，说明运动不规则性集中在块边界而非沿轨迹均匀分布——块边界 artifact 是可被指标分离量化的独立痛点，而非整体轨迹质量问题的副产品。",
+   "stance": "support",
+   "relation": "支撑综述问题中'量化痛点'命题：块边界不连续可用 BJ/IJ 类指标分离量化，边界处 jerk 约为内部 2 倍以上，为该族方案的效果度量提供基线参照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Introduction 与 Table 2 报告同一测量：基线 BJ 0.195、IJ 0.094、CD 0.172、AV_b 0.165，在执行后处理动作序列上按 Eq.9-13 计算（边界集 B={t|t mod K=0}），10 任务 × 130 episodes 平均。",
+   "locator": "Introduction; Table 2",
+   "source_context": "On LIBERO-10 with π 0.5 , the baseline boundary jerk is more than twice its interior jerk (0.195 vs. 0.094), indicating that motion irregularity is concentrated at chunk boundaries rather than uniformly distributed across the tra- jectory.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "boundary jerk (BJ) vs interior jerk (IJ): per-step jerk averaged over boundary set B vs interior steps",
+    "value_or_direction": "baseline BJ 0.195 vs IJ 0.094 (BJ more than twice IJ); also CD 0.172, AV_b 0.165",
+    "comparator": "π_0.5 baseline policy boundary steps vs interior steps, same rollouts",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes, executed post-processed action sequences",
+    "locator": "Introduction; Table 2 (metrics Eq.9-13)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Introduction 该句（0.195 vs. 0.094、more than twice）与 Table 2 基线行（94.8 / 0.195 / 0.094 / 0.172 / 0.165）；指标定义与边界集 B 的口径见 Experimental Setup Eq.9-13。主张限定 LIBERO-10 仿真与 π_0.5。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C03",
+   "claim": "既有跨块一致性补救分布在一个成本-平滑度谱上且各有代价：RTC 用 ΠGDM 梯度条件 inpainting，一致性强但需在每个 ODE 步对策略网络反向传播，显著增加去噪延迟；BID 靠拒绝采样提高推理成本；Legato 需重训练动作模型（ACT-TE 对不相容模态取平均会产生无效中间动作，见同段前文）——共同缺口是缺少计算轻量、免训练的解析一致性机制。",
+   "stance": "support",
+   "relation": "支撑综述问题中'方案族与未解痛点'命题：给出推理时跨块一致性族的成本谱刻画（梯度引导/拒绝采样/重训练/平均化四条路径及代价），界定 SEAM 的零反传解析生态位。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 与 Related Work 的作者刻画：段落前句给出 ACT-TE 时序集成的平均化缺陷（'can create invalid intermediate actions when adjacent chunks choose incompatible modes''cannot select between incompatible modes'），本卡引文聚焦 RTC（反传+延迟）、BID（拒绝采样成本）与 Legato（重训练）三条路径。",
+   "locator": "Introduction; Related Work",
+   "source_context": "RTC (Black, Galliker, and Levine 2025) treats continuation as conditional inpaint- ing and applies ΠGDM gradients inside the denoising ODE; this strongly improves consistency, but the required policy- network backpropagation at each ODE step substantially in- creases denoising latency. BID (Liu et al. 2025) searches for consistent continuations by rejection sampling, increas- ing inference cost, while Legato (Liu et al. 2026) learns continuation-aware dynamics during training and therefore requires retraining the action model.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Introduction 的 cost–smoothness spectrum 段（inpaint- ing、policy- network、increas- ing 等连字符断行原样）；ACT-TE 平均化缺陷在同段前两句，RTC 1.22× 延迟的成本数值由本实验 Table 2 独立佐证（见 C06）。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C04",
+   "claim": "SEAM 核心机制：利用同步分块执行的结构——机器人执行完前缀后，前一块的未执行尾部已可用作解析一致性参照；VLS 从该尾部导出时间相关目标，并在每个 Euler 步后施加闭式修正，不需对策略网络反向传播、不需重训练、不加辅助网络。",
+   "stance": "support",
+   "relation": "支撑综述问题中'核心机制'命题：推理时跨块一致性族的零反传解析分支——以未执行尾部为对齐先验、闭式修正嵌入去噪循环，区别于 RTC 的梯度 inpainting 与 BID 的拒绝采样。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要概述与方法节细节：对齐先验 a_al 由尾部 a_tail=c_n[K+1:H] 以末动作重复填充到 H（Eq.3，保守填充不外推、不设终点路点）；目标 r_{i+1}=(1−t_{i+1})·a_al[1:M]（Eq.4）；每步 Euler 候选后对引导窗口施加闭式负梯度 g=−2(x̃[1:M]−r_{i+1})（Eq.6-7），更新 x[1:M]=x̃[1:M]+λ(1−t_{i+1})g（Eq.8），未引导位置保留候选；λ(1−t) 调度早期弱、近动作流形强，避免过度约束早期去噪状态。",
+   "locator": "Abstract; SEAM Method, VLS (Eq.3-8, Table 1)",
+   "source_context": "We propose SEAM (Smooth Execution of Action- chunked Motion), a training-free inference-time method for flow matching VLAs. SEAM exploits a simple synchronous- execution insight: after the robot consumes the executed pre- fix, the previous chunk’s unexecuted tail is already avail- able as an analytic consistency reference. Its core mecha- nism, Velocity-guided Loss Steering (VLS), derives a time- dependent target from this tail and applies a closed-form cor- rection after each Euler step without backpropagating through the policy network.",
+   "evidence_type": "method-description",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对摘要（Action- chunked、synchronous- execution、pre- fix、avail- able、mecha- nism、time- dependent、cor- rection 等断行原样）；机制细节（Eq.3-8、Table 1 流程、O(N·M·D_g) 复杂度）与 Method 节逐条对应，λ(1−t) 调度句见 VLS 节尾。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C05",
+   "claim": "主结果：LIBERO-10 + π_0.5 上，SEAM 把边界 jerk 从 0.195 降到 0.141（−27.7%）、内部 jerk 0.094→0.074（−21.3%）、块转换不连续 0.172→0.126（−26.7%）、边界 jerk 方差 0.165→0.094（−43.0%），同时任务成功率保持基线水平（95.7% vs 94.8%）。",
+   "stance": "support",
+   "relation": "支撑综述问题中'量化效果'命题：推理时零反传方案在四项运动指标上全面改善且不牺牲任务成功率，为执行侧方案族的量化效果区间提供数据点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Main Results 正文与 Table 2：π_0.5 基线 BJ/IJ/CD/AV_b=0.195/0.094/0.172/0.165、成功率 94.8%；+SEAM=0.141/0.074/0.126/0.094、95.7%。摘要用四舍五入口径（28%/27%）；成功率差异在 130 episodes/任务的噪声范围内，宜表述为'保持'而非'提升'。",
+   "locator": "Main Results, Table 2",
+   "source_context": "SEAM reduces boundary jerk by 27.7% (0.195 → 0.141), interior jerk by 21.3% (0.094 → 0.074), chunk transition discontinuity by 26.7% (0.172 → 0.126), and AV b by 43.0% (0.165 → 0.094), while preserving baseline-level task suc- cess (95.7% vs. 94.8%).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "boundary jerk (BJ), interior jerk (IJ), chunk transition discontinuity (CD), AV_b, task success rate",
+    "value_or_direction": "BJ 0.195 → 0.141 (−27.7%), IJ 0.094 → 0.074 (−21.3%), CD 0.172 → 0.126 (−26.7%), AV_b 0.165 → 0.094 (−43.0%); success 94.8% → 95.7%",
+    "comparator": "π_0.5 + SEAM vs π_0.5 baseline, same checkpoint and matched evaluation settings",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes per method",
+    "locator": "Main Results, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Main Results 首段（四个百分比与括号内数值对）与 Table 2 的 SEAM 行（95.7 / 0.141 / 0.074 / 0.126 / 0.094）及基线行（94.8 / 0.195 / 0.094 / 0.172 / 0.165），数值逐项一致；主张限定 LIBERO-10 仿真与 π_0.5。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C06",
+   "claim": "跨方法权衡：RTC 平滑更强（边界 jerk −54% 至 0.090、块不连续 −48% 至 0.089、成功率 95.1%、AV_b 与 SEAM 相同 0.094）但 ΠGDM 每步自动微分反传使每块去噪延迟 282.2→344.6ms（1.22×）；ACT-TE 平滑最激进（BJ 0.031、−84%、AV_b 0.006）但每步查询下成功率掉至 82.7%。方法选择取决于延迟预算与平滑需求的权衡，SEAM 定位近基线成本而非最强平滑。",
+   "stance": "conditional",
+   "relation": "支撑综述问题中'适用条件'命题：推理时一致性族内部存在成本-平滑度-成功率三角——可承受约 22% 延迟的强平滑需求选 RTC，延迟敏感部署选 SEAM，ACT-TE 的过平滑会牺牲任务可靠性与接触时序。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Main Results 正文与 Table 2/Figure 3 三方对比；ACT-TE 的 82.7% 部分归因于 every-step 查询下的过平滑接触时序（T1 定性分析 Figure 4：'ACT-TE can over- smooth contact timing and delay accurate grasping'）。",
+   "locator": "Main Results, Table 2; Figure 3",
+   "source_context": "RTC reaches stronger boundary jerk reduction (−54%, to 0.090) and chunk discontinuity re- duction (−48%, to 0.089) with 95.1% success and the same AV b as SEAM (0.094), but its ΠGDM guidance requires one automatic-differentiation backward pass per ODE step and increases per-chunk denoising latency from 282.2 ms to 344.6 ms (1.22×). ACT-TE achieves the most aggressive smoothing (BJ 0.031, −84%, AV b 0.006) under its every-step query setting, but drops to 82.7% success.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "boundary jerk, chunk discontinuity, task success rate, per-chunk denoising latency",
+    "value_or_direction": "RTC: BJ 0.090 (−54%), CD 0.089 (−48%), success 95.1%, latency 344.6 ms (1.22×); ACT-TE: BJ 0.031 (−84%), AV_b 0.006, success 82.7%; SEAM: BJ 0.141, success 95.7%, latency 286.0 ms (1.01×)",
+    "comparator": "RTC / ACT-TE / SEAM vs π_0.5 baseline (BJ 0.195, success 94.8%, latency 282.2 ms)",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes; timing on RTX 3090",
+    "locator": "Main Results, Table 2; Figure 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Main Results 对比段（re- duction 断行、−54%/−48%/−84% 用 U+2212 减号、AV b 下标断行均原样）与 Table 2 各行数值（RTC 95.1/0.090/0.075/0.089/0.094/6.236/34.460/344.6/1.22×；ACT-TE 82.7/0.031/0.031/0.062/0.006）；ACT-TE 失败机理由 Figure 4 定性分析佐证。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C07",
+   "claim": "SEAM 去掉反向传播后成本近基线：每 10 步块查询去噪循环仅增加 3.8ms，总延迟保持 1.01× 基线（286.0 vs 282.2ms，每步额外仅 0.371ms 对照 RTC 的 6.236ms），同时降低边界 artifact 并保持可比任务成功率——零反传闭式修正在延迟敏感部署中成本可行。",
+   "stance": "support",
+   "relation": "支撑综述问题中'量化效果（成本维度）'命题：免训练+零反传方案的部署开销接近无处理基线（+1%），与 RTC 的 1.22× 形成同族成本对照，是执行侧方案选型的关键数据点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Main Results 正文与 Table 2 计时列：SEAM 每步额外 0.371ms、每 10 步块 286.0ms、D-Cost 1.01×；RTC 每步额外 6.236ms、344.6ms、1.22×；计时协议为 RTX 3090 上缓存前缀去噪循环（N=10 Euler 步）单独测量。",
+   "locator": "Main Results, Table 2",
+   "source_context": "In contrast, SEAM removes the backward pass, adds only 3.8 ms to the denois- ing loop per 10-step chunk, and keeps denoising-loop latency at 1.01× the baseline while reducing boundary artifacts and preserving comparable task success.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "cached-prefix denoising-loop timing (RTX 3090, N = 10 Euler steps per chunk)",
+    "value_or_direction": "SEAM extra 0.371 ms per step, 286.0 ms per 10-step chunk vs baseline 282.2 ms (1.01×, +3.8 ms); RTC extra 6.236 ms per step, 344.6 ms (1.22×)",
+    "comparator": "SEAM vs π_0.5 baseline vs RTC, same denoising-loop timing protocol",
+    "task_or_sample": "single chunk generation timing under LIBERO-10 settings (H=50, N=10)",
+    "locator": "Main Results, Table 2; Experimental Setup Timing Protocol"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Main Results 'In contrast' 句（denois- ing 断行、3.8 ms、1.01×）与 Table 2 SEAM 行（Extra 0.371 / Step 28.595 / Chunk 286.0 / D-Cost 1.01×）及 RTC 行（6.236 / 34.460 / 344.6 / 1.22×）；计时口径见 Experimental Setup 的 Timing Protocol 段。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C08",
+   "claim": "逐任务成功率非均匀：SEAM 在 T1–T3、T5 上最强、T6 并列最佳，但在 T7–T10 上低于最佳对比方法（如 T7：SEAM 90.8% vs RTC 99.2%）；聚合成功率保持（95.7%）不等于逐任务改进，作者因此主张任务成功、平滑度与去噪循环成本应联合评估而非单指标排名。",
+   "stance": "limit",
+   "relation": "限制综述中'推理时一致性方案提升部署可靠性'命题的适用范围：SEAM 的运动质量增益不保证逐任务成功率改进（T7–T10 低于最佳对比），跨任务部署需逐任务验证而非依赖聚合指标。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Main Results 的 Table 3 段（该句在提取文本中被 Figure 3 说明与 Table 3 隔断，引文取图后连续部分）与 Table 3 逐任务数值：T1 基线 91.5→SEAM 99.2（ACT-TE 58.5，最大差距任务）；T7 SEAM 90.8 vs RTC 99.2；T10 SEAM 93.8 vs RTC 95.4；Overall 94.8/95.7/95.1/82.7。",
+   "locator": "Main Results, Table 3",
+   "source_context": "it is strongest on several tasks (T1–T3 and T5), ties the best comparison on T6, and remains below the best comparison method on some tasks (T7–T10). We therefore treat task success, smoothness, and denoising- loop cost jointly rather than as a single-metric ranking.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "per-task success rates on LIBERO-10 (T1–T10, 130 episodes per task)",
+    "value_or_direction": "SEAM strongest on T1–T3, T5 (T1: 99.2 vs baseline 91.5, ACT-TE 58.5); ties best on T6; below best comparison on T7–T10 (T7: 90.8 vs RTC 99.2; T10: 93.8 vs RTC 95.4); overall 94.8 / 95.7 / 95.1 / 82.7",
+    "comparator": "SEAM vs π_0.5 baseline / RTC / ACT-TE, per task",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes per method",
+    "locator": "Main Results, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 Table 3 说明与表格之后连续的原文（'formly improving every task: it is strongest...' 被图表隔断，取冒号后连续部分，逐字核对 T1–T3/T5/T6/T7–T10 与 denoising- loop 断行）；逐任务数值与 Table 3 行（T1 91.5 99.2 90.8 58.5；T7 93.8 90.8 99.2 80.0；T10 96.2 93.8 95.4 87.7；Overall 94.8 95.7 95.1 82.7）一致。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C09",
+   "claim": "引导强度 λ 存在可靠性-平滑度权衡：λ=0.1 是最佳平衡（成功率 95.7%、BJ 0.141、CD 0.126），增大强度只边际改善部分 jerk 指标却快速侵蚀任务成功率（λ=0.15→92.8%、λ=0.2→89.5%），支持用弱闭式修正而非激进地把去噪轨迹压向前一块。",
+   "stance": "conditional",
+   "relation": "支撑综述问题中'适用条件'命题：推理时一致性方案的增益依赖弱引导超参区间——λ 是成功率风险因子，部署需调参且存在明确的代价边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Ablation Study 的 λ 扫描（固定 M=20，全维度/仅位置两设置）：λ=0.05 时 94.8%/BJ 0.162/CD 0.145；λ=0.15/0.2 的 92.8%/89.5% 见 Table 4 行（all 0.15 20 92.8；all 0.20 20 89.5）与表后句（'92.8% at λ=0.15 and 89.5% at λ=0.2. This supports using a weak closed-form correction rather than forcing the denois- ing trajectory toward the previous chunk too aggressively.'）。",
+   "locator": "Ablation Study, Table 4",
+   "source_context": "We first sweep the guidance strength λ at fixed M =20 for both all-dimension and position-only guidance, with the results shown in Table 4. In the all-dimension rows, increasing λ generally strengthens smoothing but quickly erodes task reliability. λ=0.05 reaches 94.8% success with moderate smoothing, while the main λ=0.1 setting gives the best balance: 95.7% success with BJ 0.141 and CD 0.126.",
+   "evidence_type": "ablation",
+   "quantitative": {
+    "metric": "task success rate, BJ, CD (guidance strength λ sweep, M = 20, all dimensions)",
+    "value_or_direction": "λ=0.05: 94.8%, BJ 0.162, CD 0.145; λ=0.1: 95.7%, BJ 0.141, CD 0.126 (best balance); λ=0.15: 92.8%, BJ 0.140, CD 0.127; λ=0.2: 89.5%, BJ 0.147, CD 0.135",
+    "comparator": "SEAM at varying λ vs π_0.5 baseline (94.8%, BJ 0.195, CD 0.172)",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes per configuration",
+    "locator": "Ablation Study, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Ablation Study 首段（M =20、λ=0.05/λ=0.1 数值）；λ=0.15/0.2 的 92.8%/89.5% 逐值核对 Table 4 行（all 0.15 20 92.8 0.140 0.071 0.127；all 0.20 20 89.5 0.147 0.067 0.135）及表后句，与引文主张（增大强度侵蚀可靠性、弱修正最佳）一致。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C10",
+   "claim": "引导维度选择影响效果：仅引导位置维度（pos-only）比全维度更保守但平滑效果更差——λ=0.1、M=20 下 pos-only 为 BJ 0.162、CD 0.143、成功率 94.0%，全维度为 BJ 0.141、CD 0.126、成功率 95.7%；主结果因此采用有界窗口全维度设置。",
+   "stance": "support",
+   "relation": "支撑综述问题中'核心机制'命题：VLS 的修正足迹（哪些动作维度接受引导）是机制设计自由度，全维度引导在该设置下平滑与成功率兼得。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Ablation Study 的维度对比（Table 4 下半区 pos 行 vs 上半区 all 行，λ 与 M 匹配扫描）：pos 行在全部 λ 上成功率与平滑均劣于匹配的 all 行（如 pos 0.2: 88.2%）。",
+   "locator": "Ablation Study, Table 4",
+   "source_context": "Restricting guidance to position dimensions (“pos-only”) is more con- servative but less effective at smoothing than the matched all-dimension setting. At λ=0.1 and M =20, pos-only guid- ance yields BJ 0.162 and CD 0.143 with 94.0% success, whereas all-dimension guidance yields BJ 0.141 and CD 0.126 while preserving task success at 95.7%, supporting the bounded-window all-dimension setting",
+   "evidence_type": "ablation",
+   "quantitative": {
+    "metric": "BJ, CD, task success rate (guided dimension selection, λ=0.1, M = 20)",
+    "value_or_direction": "pos-only: BJ 0.162, CD 0.143, 94.0% success; all dimensions: BJ 0.141, CD 0.126, 95.7% success",
+    "comparator": "position-dimensions-only guidance vs all action dimensions guidance, matched λ and M",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes per configuration",
+    "locator": "Ablation Study, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Dimension selection matters 段（“pos-only” 弯引号、con- servative/guid- ance 断行原样；引文止于 all-dimension setting，句尾 used in the main results 在提取文本中被 '## results' 断行截断）与 Table 4 的 pos 0.10 行（94.0 0.162 0.085 0.143）及 all 0.10 行（95.7 0.141 0.074 0.126），数值一致。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C11",
+   "claim": "引导窗口 M 主要充当平滑度旋钮：测试的全部 M∈{2,...,20} 都相对基线降低 BJ 与 CD，任务成功率稳定在 94.7%–96.3%；更大窗口对 CD 降低更强，M=20 平滑最强（BJ 0.141、CD 0.126）——窗口长度在测试范围内不构成成功率风险，与 λ 的敏感性形成对照。",
+   "stance": "support",
+   "relation": "支撑综述问题中'适用条件'命题：SEAM 的一个关键超参（M）在宽范围内安全可调，部署时可按平滑需求调节窗口而不牺牲成功率。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Ablation Study 的 M 全扫描（Table 5，全维度、λ=0.1）：M=2..20 的 BJ 0.147–0.156、CD 0.134–0.146 均低于基线 0.195/0.172，成功率 94.7%（M=16）至 96.3%（M=6）；段落尾部（提取文本中被 Figure 4 说明隔断的后续句）把 M 总结为 smoothness knob。",
+   "locator": "Ablation Study, Table 5 / results",
+   "source_context": "Window length controls boundary smoothing. The Ta- ble 5 shows that every tested M reduces BJ and CD relative to the baseline, while task success remains broadly stable from 94.7% to 96.3%. Larger windows tend to reduce CD more strongly, and M =20 gives the strongest smoothing (BJ 0.141, CD 0.126).",
+   "evidence_type": "ablation",
+   "quantitative": {
+    "metric": "BJ, CD, task success rate (guided window M sweep, all dimensions, λ=0.1)",
+    "value_or_direction": "every tested M ∈ {2,...,20} reduces BJ and CD vs baseline; success stable 94.7% to 96.3%; M=20 strongest smoothing (BJ 0.141, CD 0.126); baseline BJ 0.195, CD 0.172",
+    "comparator": "SEAM at varying guided window M vs π_0.5 baseline",
+    "task_or_sample": "LIBERO-10, 10 tasks × 130 episodes per configuration",
+    "locator": "Ablation Study, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Window length controls boundary smoothing 段首两句（Ta- ble 5 断行、94.7% to 96.3%、M =20）；该段在提取文本中位于 Ablation Study 节被 '## results' 断行切出的后续片段；Table 5 各行（M=2: 95.5/0.148/0.142 至 M=20: 95.7/0.141/0.126，Baseline 94.8/0.195/0.172）与'全部 M 均降低 BJ/CD、成功率稳定'的主张逐值一致。"
+   }
+  },
+  {
+   "card_id": "2607.04609-C12",
+   "claim": "T1 失败模式定性对比揭示各方法失败机理：未引导基线会切换意图并在搬运中掉落物体；ACT-TE 过度平滑接触时序导致准确抓取延迟；RTC 的强连续性约束会把早期失败抓取锁定延续；SEAM 用弱重叠一致性而非硬连续性，在改善跨块一致性的同时保留纠正自由度。",
+   "stance": "support",
+   "relation": "支撑综述问题中'机制-效果因果链'命题：为'过平滑牺牲接触时序''强连续性约束锁定失败模式'提供定性机理证据，解释平滑指标差异的任务级后果，界定弱引导设计的价值。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Ablation Study 的定性分析（Figure 4 代表性 T1 rollout）：与 Table 3 中 T1 的最大方法间差距一致（基线 91.5 / SEAM 99.2 / RTC 90.8 / ACT-TE 58.5）；该段前句说明 T1 是逐任务差距最大任务。",
+   "locator": "Ablation Study, Qualitative T1 Failure Patterns (Figure 4) / results",
+   "source_context": "The unguided baseline can switch intent and drop the object during transfer; ACT-TE can over- smooth contact timing and delay accurate grasping; RTC can preserve a failed early grasp through its stronger continuation constraint. SEAM avoids these failure modes by using weak overlap consistency rather than hard continuation, preserv- ing corrective freedom while improving cross-chunk consis- tency.",
+   "evidence_type": "analysis",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 Qualitative T1 failure patterns 段（over- smooth、preserv- ing、consis- tency 断行原样；该段在提取文本中位于 Ablation Study 节被 '## results' 断行切出的后续片段）；四方法失败模式与 Table 3 T1 行（91.5/99.2/90.8/58.5）及 Figure 4 说明一致；定性结论为作者对代表性 rollout 的解释，非统计推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2504.16054",
+  "2410.24164",
+  "2304.13705",
+  "2303.04137",
+  "2506.07339",
+  "2506.18088",
+  "2602.12978",
+  "2603.19199",
+  "2603.11642",
+  "2210.02727",
+  "2306.03310"
+ ],
+ "notes": "家族定位：本篇属于本综述'推理时跨块一致性'族（执行侧生成引导分支），与 RTC（梯度 inpainting，1.22× 成本）、BID（拒绝采样）同族但以零反传闭式修正换取近基线成本（1.01×）；与 PACE（执行时域选择，决定何时重规划）正交互补——PACE 管重查询时机、SEAM 管新块与旧块尾部的对齐；与 REMAC（训练侧延迟适配）解决不同痛点（异步推理延迟 vs 同步边界不连续）；与 SmoothVLA（RL 训练侧平滑正则）亦正交。引用注意三点：(1) AV_b 命名与公式不一致（表注'加速度方差' vs Eq.13 jerk 方差），跨论文对比需统一口径；(2) 成功率 95.7 vs 94.8 在 130 episodes/任务噪声范围内，应表述为'保持'而非'提升'；(3) 仅 LIBERO-10 仿真 + π_0.5 单骨干证据，逐任务成功率非均匀（T7–T10 低于最佳对比）。提取文本中图/表说明嵌在段落中间（Figure 3/4 隔断 Main Results 与 Ablation 段落），引用连续句时需注意。"
+}

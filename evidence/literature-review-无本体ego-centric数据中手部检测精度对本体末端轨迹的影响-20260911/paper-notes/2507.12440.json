@@ -1,0 +1,376 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2507.12440",
+  "title": "EgoVLA: Learning Vision-Language-Action Models from Egocentric Human Videos",
+  "published": "2025-07-16",
+  "url": "https://arxiv.org/abs/2507.12440",
+  "authors": [
+   "Ruihan Yang",
+   "Qinxi Yu",
+   "Yecheng Wu",
+   "Rui Yan",
+   "Borui Li",
+   "An-Chieh Cheng",
+   "Xueyan Zou",
+   "Yunhao Fang",
+   "Hongxu Yin",
+   "Sifei Liu",
+   "Song Han",
+   "Yao Lu",
+   "Xiaolong Wang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "核心系统论文：直接用带腕部/手部姿态标注的 ego-centric 人类视频预训练 VLA，再经 IK 与 MANO 重定向迁移到人形机器人；明确讨论了标注噪声（HoloAssist）、相机运动补偿与重定向误差，直接对应综述问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题设定：用人类 ego 视频训练 VLA 并经几何变换转到机器人动作空间"
+   },
+   {
+    "locator": "3.1 Ego-Centric Human Manipulation Dataset",
+    "role": "data-or-setting",
+    "purpose": "手腕/手部轨迹来源（HOI4D/HOT3D/HoloAssist/TACO 标注）与噪声处理、相机运动补偿"
+   },
+   {
+    "locator": "3.2 EgoVLA Model",
+    "role": "method-or-design",
+    "purpose": "动作空间（腕部 6D 姿态+MANO PCA15）、损失与训练配置"
+   },
+   {
+    "locator": "3.3 Transferring EgoVLA to Humanoid Robot",
+    "role": "method-or-design",
+    "purpose": "人-机坐标变换、MANO 重定向优化与指尖误差报告"
+   },
+   {
+    "locator": "4 Ego Humanoid Manipulation Benchmark",
+    "role": "data-or-setting",
+    "purpose": "下游评估平台、演示采集方式（Quest 3 遥操作）"
+   },
+   {
+    "locator": "5 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "人类腕部预测误差、下游成功率、zero-shot 失败、数据混合消融"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论"
+   },
+   {
+    "locator": "7 Limitation",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：依赖手部/腕部标注、无法零样本部署"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "训练细节、MANO 参数化、重定向 MLP 结构、任务成功定义"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "背景综述，与综述问题的直接证据无关，略读"
+   }
+  ]
+ },
+ "research_question": "能否用带腕部/手部姿态标注的 ego-centric 人类视频预训练 VLA，并通过统一动作空间与少量机器人演示微调，得到可泛化的人形双臂灵巧操作策略？",
+ "contributions": [
+  "提出 EgoVLA：在 ego-centric 人类操作视频上预训练的 VLA，动作空间为人腕部 6D 姿态与 MANO 手部参数",
+  "构建约 50 万图像-动作对的 Ego-Centric Human Manipulation Dataset（HOI4D/HOT3D/HoloAssist/TACO 混合）",
+  "提出统一动作空间：机器人手部经 MANO 参数拟合对齐人类表示，部署时经 IK 与重定向 MLP 映射回机器人关节",
+  "发布基于 Isaac Lab 的 Ego Humanoid Manipulation Benchmark（12 任务、Unitree H1+Inspire 手）"
+ ],
+ "method": {
+  "summary": "以 NVILA-2B 为骨干，输入 ego 视频历史、语言指令与人类本体感觉（腕部平移/旋转+MANO 手参数），由 300M transformer 动作头预测 30Hz 下 1 秒窗口的双手腕部姿态与手部 PCA 参数。机器人迁移时：机器人演示先经 3D 变换与 MANO 拟合（最小化指尖位置误差）转成人类表示用于微调；部署时预测的腕部姿态经 3D 变换+IK 得手臂关节，MANO 关键点经轻量 MLP 得机器人手指关节命令。",
+  "assumptions": [
+   "训练用人类视频必须带有腕部与手部姿态标注（来自数据集而非作者自建检测器）",
+   "人-机器人动作空间差异可用少量几何变换近似",
+   "使用 MANO 平均手型，忽略个体手型差异",
+   "仿真评估（Isaac Lab）与现实表现相关（引 SIMPLER）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HOI4D",
+   "HOT3D",
+   "HoloAssist",
+   "TACO",
+   "Ego Humanoid Manipulation Benchmark（仿真演示，每任务 100 条，Quest 3 + OpenTelevision 遥操作）"
+  ],
+  "tasks": [
+   "7 个短程原子任务（Push-Box/Flip-Mug/Pour-Balls/Close-Drawer/Open-Drawer/Open-Laptop/Stack-Can）",
+   "5 个长程任务（Sort-Cans/Insert-Cans/Unload-Cans/Insert-And-Unload-Cans/Stack-Can-Into-Drawer）"
+  ],
+  "embodiments": [
+   "Unitree H1 人形机器人 + 双手 Inspire 灵巧手（每手 12 DoF，6 主动+6 联动）"
+  ],
+  "sample_or_scale": "约 500,000 图像-动作对；每任务 100 条机器人演示；Seen 每任务 27 次、Unseen 每任务 66 次 rollout"
+ },
+ "evaluation": {
+  "design": "仿真基准对照实验：Seen/Unseen 视觉配置下评估成功率（SR）与进度率（PSR）；含人类运动建模定量评估（腕部预测误差）、zero-shot 对照、机器人数据规模消融、预训练数据混合消融",
+  "baselines": [
+   "EgoVLA-NoPretrain（无人类视频预训练）",
+   "ACT（每任务专家策略，DinoV2 骨干）",
+   "EgoVLA(50%)（机器人数据减半消融）"
+  ],
+  "metrics": [
+   "Success Rate (SR)",
+   "Progress Rate (PSR)",
+   "人类腕部平移预测误差（cm）与 2D 归一化误差",
+   "重定向指尖位置误差"
+  ],
+  "ablations": [
+   "机器人演示规模（100% vs 50%）",
+   "预训练数据混合（HOI4D / +HOT3D / +TACO / +HoloAssist）",
+   "zero-shot（无机器人数据后训练）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "EgoVLA 预测人类腕部平移的平均未来误差约 8 cm，2D 归一化误差约 0.13，与 HOI-forecast 报告的 SOTA 相当",
+   "scope": "HOI4D 评估集上的人类运动建模",
+   "locator": "5.1 Human Manipulation Modeling"
+  },
+  {
+   "finding": "重定向 MLP 达到 5×10^-5 m 的平均指尖位置误差，且经该管线回放原始演示保持任务有效性",
+   "scope": "人-机器人手部表示映射（仿真基准内）",
+   "locator": "3.3 Transferring EgoVLA to Humanoid Robot"
+  },
+  {
+   "finding": "zero-shot 部署（不经机器人数据微调）在所有任务上成功率为 0%，失败源于外观、感知与运动学失配",
+   "scope": "Ego Humanoid Manipulation Benchmark 全部 12 任务",
+   "locator": "5.2 Humanoid Robot Evaluation"
+  },
+  {
+   "finding": "人类视频预训练使短程任务 Seen 配置平均 SR 从 64.55%（NoPretrain）提升至 77.78%，Unseen 配置 NoPretrain 下降 23% 而 EgoVLA 仅轻微下降",
+   "scope": "仿真基准短程任务",
+   "locator": "5.2 Humanoid Robot Evaluation"
+  },
+  {
+   "finding": "预训练数据越多样下游越好；尽管 HoloAssist 手部标注有噪声、HOT3D 缺语言标签，仍观察到正向迁移",
+   "scope": "数据混合消融（Fig. 7，Unseen 短程任务）",
+   "locator": "5.2 Humanoid Robot Evaluation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "预训练框架要求人类数据带有手部和腕部姿态标注，可能限制数据可用性；作者寄望 AR/VR 设备（Quest 3、Vision Pro、Aria）缓解",
+    "locator": "7 Limitation"
+   },
+   {
+    "limitation": "尽管使用统一动作空间预训练，EgoVLA 不经一定量机器人数据微调无法直接部署于操作任务",
+    "locator": "7 Limitation"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "腕部/手部轨迹全部来自既有数据集的标注管线（HOI4D/HOT3D 为高精度标注，HoloAssist 为带噪标注），论文未自研或量化手部检测器精度，无法直接读出检测精度-轨迹精度的剂量关系",
+    "basis": "3.1 节仅描述数据来源与下采样策略，无检测器误差测量"
+   },
+   {
+    "boundary": "全部下游评估在仿真中进行，重定向 5×10^-5 m 指尖误差是参数拟合误差而非真实传感/检测误差；真实 ego 视频管线中的检测误差传播未实测",
+    "basis": "4 节明确基准不用于 sim-to-real；5.2 全部为仿真 rollout"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：带腕部/手部姿态标注的 ego 视频 + 仿真人形双臂平台（H1+Inspire）+ 每任务约 100 条遥操作演示微调的设置；不外推到无标注的纯视频检测管线、真实机器人硬件或零样本跨本体部署。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "将标注质量差异显式纳入数据混合设计（对噪声标注的 HoloAssist 仅取 1/10）并做混合消融",
+   "报告了人类腕部预测误差与重定向指尖误差两个关键中间量",
+   "zero-shot 负结果完整报告，划定方法边界"
+  ],
+  "design_risks": [
+   "未测量所依赖数据集标注本身的绝对精度，'noisier' 仅为相对定性表述",
+   "8 cm 腕部预测误差与下游成功率之间未建立定量关联（非剂量-响应分析）",
+   "仿真成功阈值（如 EE-物体距离 <0.12 m）相对宽松，可能掩盖轨迹精度不足的效应"
+  ],
+  "baseline_fairness": "ACT 基线按推荐设置并加强（DinoV2 骨干、随机片段采样）；NoPretrain 与完整模型仅差预训练阶段，对比公平。",
+  "metric_validity": "SR/PSR 是任务级代理指标，未直接测量末端轨迹误差；重定向指尖误差是拟合优度指标，非检测精度指标。",
+  "reproducibility": "训练超参（表 3-5）、任务成功定义、随机化范围均在附录给出；基准基于 Isaac Lab 可复现；人类数据集为公开数据集混合。",
+  "external_validity": "外部效度受限于纯仿真评估与单一机器人平台；作者引 SIMPLER 支持仿真-现实相关性但未自验。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2507.12440-C01",
+   "claim": "在 EgoVLA 的 ego 视频预训练混合中，手部姿态标注较噪的 HoloAssist 被刻意下采样至 1/10，以避免噪声标注源过度代表；即标注噪声通过降权而非清洗来缓解。",
+   "stance": "conditional",
+   "relation": "缓解手段：对噪声手部标注源做数据混合降权是 ego 视频→策略管线中控制检测/标注误差传播的实际做法。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者在数据集构建中明确说明 HoloAssist 手部标注更噪，并因此均匀下采样至 1/10 以平衡任务与来源。",
+   "locator": "3.1 Ego-Centric Human Manipulation Dataset",
+   "source_context": "To avoid overrepresentation of HoloAssist, which has noisier labels, we uniformly sampled 1/10 of it to balance tasks and sources.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.1 节原文逐字包含该句；claim 限定于本文数据混合设计，未外推降噪效果的量。"
+   }
+  },
+  {
+   "card_id": "2507.12440-C02",
+   "claim": "在预训练数据混合消融中，尽管 HoloAssist 手部标注有噪声、HOT3D 缺语言标签、TACO 视觉多样性有限，加入这些源仍带来正向迁移，未见噪声标注导致负迁移。",
+   "stance": "support",
+   "relation": "可接受阈值：ego 手部标注的中等噪声在与高质量标注混合、并经机器人数据微调时，不破坏下游策略；标注精度不是二元门槛。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 7 显示数据多样性增加持续提升 Unseen 短程任务的 SR 与 PSR；正文明确将 HoloAssist 标注噪声列为仍获正迁移的瑕疵之一。",
+   "locator": "5.2 Humanoid Robot Evaluation",
+   "source_context": "we still observe positive transfer, highlighting the robustness of our approach to dataset imperfections.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Unseen 短程任务平均 Success Rate / Progress Rate（数据混合消融）",
+    "value_or_direction": "随预训练数据混合多样性增加单调提升",
+    "comparator": "HOI4D 单源 vs HOI4D+HOT3D vs +TACO vs +HoloAssist",
+    "task_or_sample": "Ego Humanoid Manipulation Benchmark 短程任务，Unseen 视觉配置",
+    "locator": "5.2 Humanoid Robot Evaluation, Figure 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "5.2 节消融段与 Fig. 7 图注均支持多样性增加提升性能；'noisy hand annotations in HoloAssist' 字样在同段出现（因换行连字符未纳入 context，但同段核对无误）。"
+   }
+  },
+  {
+   "card_id": "2507.12440-C03",
+   "claim": "EgoVLA 的人-机手部表示重定向（MANO 拟合+MLP）引入的平均指尖位置误差为 5×10^-5 m，且经该管线回放原始演示仍保持任务有效性，作者据此判断重定向误差对控制性能影响不显著。",
+   "stance": "support",
+   "relation": "误差来源与阈值：在 ego→机器人链路的末端映射环节，几何重定向本身贡献的误差可忽略（微米级），误差预算主要由上游姿态估计与策略预测决定。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.3 节给出指尖拟合误差数值与回放有效性检验；附录 3.3 给出重定向 MLP 结构。",
+   "locator": "3.3 Transferring EgoVLA to Humanoid Robot",
+   "source_context": "replaying raw demonstrations through this retargeting pipeline preserves task validity, indicating that the small errors introduced during retargeting do not significantly affect control performance.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean fingertip position error of the retargeting mapping",
+    "value_or_direction": "5 × 10^-5 m",
+    "comparator": "replaying raw demonstrations through this retargeting pipeline preserves task validity",
+    "task_or_sample": "机器人演示的人-机手部表示互转（仿真基准演示）",
+    "locator": "3.3 Transferring EgoVLA to Humanoid Robot"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.3 节原文给出 5×10^-5 m 数值（因 LaTeX 上标换行未纳入 context 原文，但同节核对无误）与回放有效性结论；claim 未超出仿真演示范围。"
+   }
+  },
+  {
+   "card_id": "2507.12440-C04",
+   "claim": "EgoVLA 在人类视频评估集上预测未来腕部平移的平均误差约 8 cm（2D 归一化误差约 0.13），与 HOI-forecast 报告的 SOTA 相当；该量级误差经机器人微调后仍得到 77.78% 的短程任务平均成功率。",
+   "stance": "support",
+   "relation": "可接受阈值：ego 管线腕部轨迹的厘米级（约 8 cm）预测误差在经本体数据微调后仍可支撑仿真双臂任务成功，给出误差容忍的量级参考。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节给出腕部预测误差数值；5.2 节表 1 给出 Seen 配置短程任务平均 SR=77.78%。两者是同一系统的上游预测精度与下游成功率。",
+   "locator": "5.1 Human Manipulation Modeling",
+   "source_context": "the average future prediction error for the human wrist translation is approximately 8, cm. When projected onto the 2D image plane, the normalized error is around 0.13",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "人类腕部平移未来预测误差（及 2D 归一化误差）",
+    "value_or_direction": "约 8 cm（2D 归一化约 0.13）",
+    "comparator": "HOI-forecast 报告的 SOTA 结果（相当）",
+    "task_or_sample": "HOI4D 评估集人类运动预测",
+    "locator": "5.1 Human Manipulation Modeling"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "5.1 节原文含 8 cm 与 0.13 两数值；将预测误差与下游成功率并置是系统内两个分别报告的结果，claim 未断言因果关系，仅作量级参照。"
+   }
+  },
+  {
+   "card_id": "2507.12440-C05",
+   "claim": "仅在 ego 人类视频上预训练的 EgoVLA，不经机器人数据微调直接部署时，在基准全部任务上成功率为 0%；失败源于外观、感知与运动学失配。",
+   "stance": "limit",
+   "relation": "传播路径：即使手部/腕部轨迹标注可用，人-机本体差异使轨迹无法零样本复用；标注精度之外，本体失配是独立的失败源，需机器人数据后训练阻断。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节 zero-shot 段落明确报告 0% 成功率与失配归因。",
+   "locator": "5.2 Humanoid Robot Evaluation",
+   "source_context": "zero-shot deployment on humanoid robots without fine-tuning on robot data results in 0% success across all tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Success Rate（zero-shot 部署）",
+    "value_or_direction": "0%（全部任务）",
+    "comparator": "经机器人演示微调的 EgoVLA（短程 Seen 平均 SR 77.78%）",
+    "task_or_sample": "Ego Humanoid Manipulation Benchmark 12 任务",
+    "locator": "5.2 Humanoid Robot Evaluation"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "5.2 节原文逐字支持 0% 结论；对照值取自表 1 同节结果，claim 限定于仿真基准。"
+   }
+  },
+  {
+   "card_id": "2507.12440-C06",
+   "claim": "针对 ego 视频连续相机运动这一误差源，EgoVLA 利用世界系相机位姿将未来腕部位置投影到当前相机系进行监督，以保证监督信号一致性。",
+   "stance": "conditional",
+   "relation": "误差来源与缓解：ego 场景中相机自运动会污染腕部轨迹的坐标一致性；世界系-相机系投影是必要的前置几何补偿。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3.1 节 Data Processing 段落明确描述该补偿及其动机。",
+   "locator": "3.1 Ego-Centric Human Manipulation Dataset",
+   "source_context": "Egocentric videos introduce challenges for learning due to continuous camera motion. To mitigate this, we use world-frame camera poses to project future wrist positions into the current camera frame, ensuring consistent supervision.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.1 节原文逐字包含该两句；claim 仅为方法描述，未声称补偿精度的量。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Wang et al., HoloAssist (ICCV 2023)",
+   "reason": "噪声手部标注来源数据集，支撑 C01/C02 的噪声设定"
+  },
+  {
+   "citation": "Banerjee et al., HOT3D (2024)",
+   "reason": "高精度手部/相机姿态标注来源，构成混合中的高质量锚点"
+  },
+  {
+   "citation": "Liu et al., HOI4D (CVPR 2022)",
+   "reason": "腕部预测误差评估集与主要预训练来源"
+  },
+  {
+   "citation": "Liu et al., HOI-forecast (CVPR 2022)",
+   "reason": "8 cm/0.13 误差的可比基线"
+  }
+ ],
+ "notes": "六遍式完成；scoping 深度。该文手部轨迹来自数据集标注而非作者检测器，对综述问题的价值在于：标注噪声的混合降权策略、重定向环节误差的量化、zero-shot 负结果。"
+}

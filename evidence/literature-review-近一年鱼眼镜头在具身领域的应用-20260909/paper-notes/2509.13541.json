@@ -1,0 +1,562 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2509.13541",
+  "title": "PERSEUS: Perception with Semantic Endoscopic Understanding and SLAM",
+  "published": "2025-09",
+  "url": "https://arxiv.org/abs/2509.13541",
+  "authors": [
+   "Ayberk Acar",
+   "Fangjie Li",
+   "Susheela Sharma Stern",
+   "Lidia Al-Zogbi",
+   "Hao Li",
+   "Kanyifeechukwu Jane Oguine",
+   "Dilara Isik",
+   "Brendan Burkhart",
+   "Jesse F. d'Almeida",
+   "Robert J. Webster III",
+   "Ipek Oguz",
+   "Jie Ying Wu"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是综述\"内窥镜鱼眼在具身（手术机器人）领域应用\"的直接证据：(1) 应用方式——内窥镜因鱼眼效应增大 FoV（天然孔道狭窄解剖内导航的刚需），工程消费路线=去畸变+中心裁剪去黑边+缩放后转入针孔模型空间（DROID-SLAM），全程不做鱼眼原生建模——与 DirectFisheye-GS 的原生鱼眼 3DGS 路线构成综述内鱼眼处理两路线对照；(2) 效果——去畸变鱼眼流上实时 SLAM 达亚毫米重建（CAO CD 0.66mm/BPH 0.65mm）、post-BA 每帧 0.28-0.46s（SfM 6.39-16.76s）、尺度误差 2% 内、位姿 RMSE 0.67-1.12mm；(3) 局限——实时分割投影精度低于离线 SfM（88-91% vs 96%）、水下域间隙反转 MDE 收益、软组织形变未建模、实时跟踪恢复难于离线 SfM；(4) 任务轴获益/受限——刚性解剖（气管 CAO）获益最大，形变显著软组织（BPH 术中）受限。以 EA-SENSOR/EA-HARDWARE 视角覆盖综述\"医疗具身/手术机器人\"应用域。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract; Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：NOTES 减少切口但可视化/空间定向/深度感知/解剖识别困难；前作离线 SfM 感知不可实时复用；本文目标=实时分割、带尺度、配准到手术场景的 3D 重建；代码开源地址。"
+   },
+   {
+    "locator": "page 2-3, Section 2 Background and Related Work",
+    "role": "relevant-core",
+    "purpose": "定位临床问题（CAO 经口/BPH 经尿道）与相关work 谱系：SLAM 用于鼻窦/结肠/输尿管镜的可行性、深度先验改进 SLAM、Semantic-SuPer 仅腹腔镜开集未及内窥镜——本文空白位（首个实时 SLAM 用于 CAO/BPH）。"
+   },
+   {
+    "locator": "page 3-6, Section 3 Methods (3.1 Phantom; 3.2 Segmentation and MDE; 3.3 Real time 3D Reconstruction; 3.4 Segmented Reconstructions; 3.5 Registration and Scaling)",
+    "role": "method-or-design",
+    "purpose": "精读管线五模块：体模制备与 CT 金标准；SAM2+adapter 分割与三阶段 MDE（Unity 渲染→域适应→DepthAnythingV2）；DROID-SLAM+针孔逆投影+鱼眼去畸变/裁剪预处理（核心鱼眼证据）；逐帧 mask 索引点云；机器人运动学+eye-in-hand+Umeyama 尺度配准。"
+   },
+   {
+    "locator": "page 6-8, Section 4.1 Reconstruction Quality",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1 两解剖全指标（MCP/CD/HD/时间/分割精度/点数/覆盖）、SfM 基线同口径预处理、分割精度重投影评估方法及其遮挡投影 caveat、coverage 依赖探索范围、水下/cadaver/术中视频排除出对比分析的原因。"
+   },
+   {
+    "locator": "page 8-9, Section 4.2 Registration Accuracy",
+    "role": "results-or-analysis",
+    "purpose": "核对配准/尺度评估协议（各解剖 1 段带机器人位姿序列；RMSE 对机器人持镜位姿；5 对烧灼点 caliper 尺度比）与 Table 2 数字（98.17±3.49%/0.67mm；98.23±5.88%/1.12mm）及机械臂运动学/标定质量 caveat。"
+   },
+   {
+    "locator": "page 9-10, Section 5 Discussion; Section 6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取解释与自述局限：SLAM vs SfM 速度/精度/密度权衡归因；实时分割投影精度代价；学习组件依赖+水下域间隙；实时恢复难；形变未建模（CAO 刚性缓解）；结论主张 plug-and-play 跨术式扩展与域移位无关性。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 11-13, References; page 10, Declarations",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表与声明（资助/利益冲突），仅按需核对核心引文（DROID-SLAM [28]、SAM2 [21]、MDE 框架 [24]、Semantic-SuPer [18]、前作 [3]）条目。"
+   }
+  ]
+ },
+ "research_question": "如何为经自然孔道手术（NOTES）构建实时语义 3D 感知：在内窥镜鱼眼光学（为增大 FoV）经去畸变+中心裁剪转入针孔模型空间后，用 DROID-SLAM（预训练权重）+定制 in-domain MDE 先验（伪 RGB-D）+SAM2 分割生成实时分割点云，再用机器人运动学+eye-in-hand+Umeyama 配准解决单目尺度模糊，实现亚毫米级、配准到手术场景的语义地图以支撑手术自动化/外科引导？",
+ "contributions": [
+  "模块化实时语义感知管线：分割（SAM2+adapter）+MDE（CT 渲染域适应 DepthAnythingV2）+DROID-SLAM（伪 RGB-D）+尺度配准（机器人位姿 Umeyama）四件套，输出分割、带尺度、配准到手术场景的实时 3D 重建。",
+  "鱼眼内窥镜流的工程消费路线：棋盘格标定→去畸变（随 DROID-SLAM）→中心裁剪去黑边→缩放，重建全程用矫正相机矩阵的针孔逆投影。",
+  "免 fiducials 的单目尺度治理：机器人运动学+eye-in-hand 位姿与 SLAM 位姿（后 BA 平移分量）Umeyama 配准，即时缩放对齐物理场景，可推广到光学跟踪器。",
+  "跨解剖实证：CAO（羊pluck/鸡胸体模）与 BPH（患者 CT 建模水凝胶体模）两域均实现实时+精度双收益（post-BA 每帧 0.28-0.46s vs SfM 6.39-16.76s；CD 0.65-0.66mm），并给出水下/cadaver/术中定性扩展；据作者所知为首个实时 SLAM 用于 CAO/BPH。"
+ ],
+ "method": {
+  "summary": "PERSEUS = 四模块管线：(1) 采集与预处理——Virtuoso Surgical 内窥镜（鱼眼效应增大 FoV）由机械臂持镜（eye-in-hand），棋盘格标定后去畸变+中心裁剪去黑边+缩放至 SLAM 输入，全程针孔模型空间；(2) SLAM——DROID-SLAM 预训练权重（无再训练），单目流+定制 in-domain MDE 先验构成伪 RGB-D（RGB-D SLAM）；MDE 三阶段：Unity 渲染 CT 绝对深度→渲染↔真实无监督域适应→DepthAnythingV2 微调（CAO/BPH 独立模型）；(3) 分割——U-Net 式+SAM2 encoder+adapter 微调（CAO 肿瘤/BPH 叶，BPH 约 3300 图），逐帧推理，mask 重采样后索引 3D 点云生成分割点云；(4) 尺度配准——机械臂位姿+eye-in-hand 标定得持镜位姿，Umeyama 配准 SLAM（后 BA）位姿平移分量→即时缩放对齐物理场景（免 fiducials，可换光学跟踪器）。",
+  "assumptions": [
+   "内窥镜鱼眼经去畸变+中心裁剪后针孔模型足够近似（未量化去畸变残差或 FoV/边缘分辨率损失）；DROID-SLAM 预训练权重对内窥镜域泛化（无 in-domain 再训练）。",
+   "MDE 输出绝对深度但存在不完美（尺度差需机器人位姿校正）；解剖近刚性（形变未建模，术中场景变化靠中间重建更新）。",
+   "评估以 CT 手工分割为金标准；体模（羊pluck/鸡胸/水凝胶）近似人类解剖的视觉与材料特性。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "CAO 体模：羊pluck 气管+鸡胸块（约 50% 阻塞），3 体模 5 段探索视频（每段 512-1114 帧）",
+   "BPH 体模：患者 CT 建模水凝胶手术训练体模，2 体模 2 段视频",
+   "扩展数据（定性，排除出对比分析）：水下前列腺体模 1 术中+2 探索视频、1 段 cadaver 中央气道探索（因 SfM 重建缺配准视觉线索）",
+   "金标准：体模 CT 扫描+手工解剖分割；BPH 分割训练集约 3300 图"
+  ],
+  "tasks": [
+   "实时分割 3D 重建（CAO 肿瘤/BPH 前列腺叶的语义点云）",
+   "单目重建的尺度配准到手术场景（机器人位姿锚定）"
+  ],
+  "embodiments": [
+   "Virtuoso Surgical 内窥镜系统（鱼眼光学，机械臂持镜，eye-in-hand 标定；RTX 4090 推理）"
+  ],
+  "sample_or_scale": "7 段对比视频（5 CAO+2 BPH，512-1114 帧/段）+水下/cadaver/术中定性；尺度评估各解剖 1 段+5 对标记点"
+ },
+ "evaluation": {
+  "design": "体模定量对比：RGB-D SLAM（+MDE 先验，本文完整管线）vs RGB SLAM（无先验消融）vs DISK+LightGlue SfM（HLoc，前作管线，同口径去畸变+中心裁剪预处理）；CT 金标准三距离指标+时间+分割投影精度+点数+覆盖；独立配准/尺度评估（机器人位姿 RMSE+caliper 尺度比）；水下/cadaver/术中定性扩展；RTX 4090。",
+  "baselines": [
+   "SfM：DISK+LightGlue 特征+HLoc（前作 [3] 管线，同口径预处理）",
+   "RGB SLAM：DROID-SLAM 无 MDE 先验（消融）"
+  ],
+  "metrics": [
+   "Median Closest Point / One-sided Chamfer / One-Sided Hausdorff 距离（mm，重建→CT 金标准）",
+   "Pre-/Post-BA 每帧处理时间（sec）",
+   "分割投影精度（%）：分割点云按估计位姿+针孔模型重投影落 mask 比例",
+   "重建点数（×1000）与覆盖率（%）（CT 点 1mm 内有重建对应点）",
+   "配准 pose RMSE（mm）与尺度比（%）"
+  ],
+  "ablations": [
+   "MDE 先验有无：RGB SLAM vs RGB-D SLAM（精度↑密度/覆盖↓）",
+   "跨解剖：CAO（气管，刚性）vs BPH（前列腺尿道）",
+   "域外条件（定性）：水下（空气-水域域间隙）、cadaver、术中（切除一叶后）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "鱼眼应用方式：内窥镜因增大 FoV 而带鱼眼效应；管线以去畸变（随 DROID-SLAM 实现）+中心裁剪去黑边+缩放消费鱼眼流，重建用矫正相机矩阵的针孔逆投影——鱼眼不进入原生建模。",
+   "scope": "工程路线描述（单内窥镜系统，无 FoV 数值/畸变模型细节）",
+   "locator": "page 5-6, Section 3.3"
+  },
+  {
+   "finding": "实时 SLAM 同时优于离线 SfM 的速度与精度：CAO post-BA 0.42-0.46 s/帧 vs SfM 6.39 s、BPH 0.26-0.28 vs 16.76 s；CD 0.66/0.65mm vs 0.90/2.25mm；HD 大幅改善（CAO 6.92 vs 100.96mm）。",
+   "scope": "体模定量（5 CAO+2 BPH 视频，CT 金标准）",
+   "locator": "page 7, Table 1"
+  },
+  {
+   "finding": "单目尺度由机器人位姿闭环解决：eye-in-hand+Umeyama 配准免 fiducials；尺度比 98.17±3.49%/98.23±5.88%（2% 内）、位姿 RMSE 0.67/1.12mm。",
+   "scope": "各解剖 1 段带机器人位姿序列+5 对烧灼点 caliper 实测",
+   "locator": "page 6, Section 3.5; page 9, Table 2"
+  },
+  {
+   "finding": "MDE 先验的条件性：RGB-D SLAM 噪声更低（HD 6.92 vs 15.10mm CAO）但点数/覆盖低于 RGB SLAM（588.1k/35.55% vs 1021.2k/43.84%）；水下域间隙反转收益（减噪但 CD 更大）。",
+   "scope": "体模消融+水下定性",
+   "locator": "page 7, Table 1; page 9-10, Section 5"
+  },
+  {
+   "finding": "实时语义投影的精度代价：分割精度 SfM 96.69/96.23% vs RGB-D SLAM 88.07/90.87%（实时 mask 投影无加权修改所致）。",
+   "scope": "体模定量（重投影一致性口径）",
+   "locator": "page 7, Table 1; page 9, Section 5"
+  },
+  {
+   "finding": "任务轴获益/受限分层：刚性解剖（气管 CAO）获益最大且形变限制不明显；软组织术中形变未建模（BPH 切除中场景显著变化，靠中间重建更新）；实时跟踪恢复难于离线 SfM，临床血液/碎屑条件未测试。",
+   "scope": "作者讨论+定性证据（Fig. 5/6）",
+   "locator": "page 10, Section 5"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "未建模场景形变：随手术进行手术场景显著变化，需中间重建更新场景表示；该限制在 CAO 因气管刚性较不明显；未来工作含形变建模与超声模态集成。",
+    "locator": "page 10, Section 5 Discussion"
+   },
+   {
+    "limitation": "实时 SLAM 跟踪恢复难于离线 SfM（暂时遮挡等致重初始化因素），可能影响分割精度与重建精度；临床血液/碎屑更明显的场景可能需要修改实时重建管线。",
+    "locator": "page 10, Section 5 Discussion"
+   },
+   {
+    "limitation": "管线性能重度依赖学习组件；水下空气-水域域间隙使 MDE 增大 Chamfer 距离、不一定改善重建。",
+    "locator": "page 10, Section 5 Discussion"
+   },
+   {
+    "limitation": "配准与尺度精度受持镜工业机械臂运动学精度与标定质量影响。",
+    "locator": "page 9, Section 4.2 Registration Accuracy"
+   },
+   {
+    "limitation": "分割精度评估方法可能受遮挡区域点的投影影响（各方法一致评估）；coverage 依赖视频探索范围、仅适合作方法间比较。",
+    "locator": "page 8, Section 4.1 Reconstruction Quality"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "鱼眼处理仅到工程层：全文未报告内窥镜 FoV 数值、鱼眼畸变模型类型（等距/多项式）、去畸变残差或中心裁剪造成的 FoV/边缘分辨率损失——\"去畸变税\"无法量化，也无法与原生鱼眼建模路线做同任务对照。",
+    "basis": "page 5-6 Section 3.3 仅一句 fisheye effect + undistort/crop/scale 流程；全文 fisheye 仅出现 1 次。"
+   },
+   {
+    "boundary": "证据等级为体模级：全部定量结论来自离体体模（羊pluck/鸡胸/水凝胶）+CT 金标准；cadaver/水下/术中视频因 SfM 缺配准视觉线索被排除出对比分析（仅定性）；临床在体（湿润组织反光、血液、呼吸形变）未测试，作者列为未来工作。",
+    "basis": "page 4 Section 3.1；page 8 Section 4.1 \"This data is excluded from the comparative analysis due to a lack of registration visual cues in SfM reconstructions\"；page 10 \"clinical videos\" 为未来工作。"
+   },
+   {
+    "boundary": "尺度评估样本极小：尺度比仅基于 5 对烧灼标记点（caliper 实测 vs 估计距离），配准 RMSE 各解剖仅 1 段序列；结论对小样本敏感且依赖机械臂运动学精度（作者自认）。",
+    "basis": "page 9 Section 4.2 \"compare the real distances measured by calipers vs. estimated distances for 5 point pairs\"、\"one more exploration sequence with robot camera poses for each anatomy\"。"
+   },
+   {
+    "boundary": "分割精度评估的帧选择不对齐：SfM 用成功配准帧、SLAM 用 keyframes，两方法的评估帧集合不同，可能引入选择偏差；且无与 Semantic-SuPer 等语义手术感知系统的直接实证对比（仅引文定位）。",
+    "basis": "page 8 Section 4.1 \"We analyze the successfully registered frames for SfM, and keyframes for SLAM\"；page 3 Section 2 Semantic-SuPer 仅引文对比。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：经自然孔道手术（NOTES：支气管/尿道入路）的实时语义 3D 重建与配准，前提=近刚性解剖（气管类）、机器人持镜（eye-in-hand 位姿可得）、CT/训练数据可用于 MDE 域适应；plug-and-play 换分割/深度模型即可换术式（作者主张，CAO/BPH 两域验证）。不适用/未验证：形变显著的软组织术式（术中场景变化，需形变建模——作者未来工作）、临床在体条件（血液/碎屑/湿润反光）、无机器人位姿的非机器人场景（作者建议光学跟踪器替代但未实现）、鱼眼 FoV/边缘分辨率损失敏感的任务（去畸变+裁剪路线的隐含代价未量化）。对综述接口：本文代表\"内窥镜鱼眼为增大 FoV 而存在、以去畸变+裁剪转入针孔空间消费\"的工程路线——与原生鱼眼建模（DirectFisheye-GS 类）构成综述中鱼眼处理两路线对照；亚毫米重建+2% 内尺度+毫米级配准是矫正鱼眼前置管线可支撑手术自动化下游任务的量化证据；获益任务=刚性解剖实时语义建图，受限任务=形变软组织/域外介质（水下）/实时语义精度敏感场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "评估矩阵完整：CT 金标准三距离指标+速度+分割精度+密度+覆盖，CAO/BPH 两解剖交叉验证泛化，趋势一致。",
+   "公平对比：SfM 基线做同口径预处理（去畸变+中心裁剪），隔离 SLAM/SfM 算法差异而非预处理差异。",
+   "消融干净：RGB vs RGB-D SLAM 隔离 MDE 先验贡献；尺度/配准评估独立于重建质量（机器人位姿 RMSE+caliper 尺度比双口径）。",
+   "域外压力测试（水下/cadaver/术中）虽被排除出对比但提供了定性边界证据；SfM 在水下配准失败而 SLAM 成功是鲁棒性反向证据。",
+   "模块化 plug-and-play 设计（换分割/深度模型换术式）有跨解剖实证支撑；代码开源。"
+  ],
+  "design_risks": [
+   "全部定量结论为体模级，cadaver/水下/术中仅定性且排除出对比分析；临床在体未测试——外部效度受限（作者部分自认）。",
+   "鱼眼预处理（去畸变+裁剪）无 FoV 损失/残差量化，\"去畸变税\"不可评估；单内窥镜系统（Virtuoso）无跨硬件验证。",
+   "尺度评估仅 5 对标记点、配准 RMSE 各解剖 1 段；分割精度评估的帧集合（SfM 成功帧 vs SLAM keyframes）不对齐，或有选择偏差。",
+   "SfM CAO HD 100.96±127.29 的巨大方差提示少数序列的离群主导，均值比较稳健性存疑；无统计显著性检验。",
+   "无与 Semantic-SuPer 等语义手术感知方法的直接对比（仅引文定位），\"首个/更好\"主张的横向定位弱。"
+  ],
+  "baseline_fairness": "SfM 基线（DISK+LightGlue/HLoc，前作管线）做同口径去畸变+中心裁剪预处理，比较公平；RGB/RGB-D SLAM 消融共享全部其他组件；但无其他 SLAM 系统（如 OneSLAM/SuPer 系）与语义手术感知方法（Semantic-SuPer）实证对比，\"SLAM 优于 SfM\"仅限这一对基线。",
+  "metric_validity": "CT 金标准三距离指标客观、方向明确（重建→CT 单向）；coverage 定义明确（1mm 对应）但依赖探索范围（作者自认仅作方法间比较）；分割精度为重投影一致性代理（受遮挡投影影响，作者自认）；尺度比与位姿 RMSE 有明确物理单位，是下游自动化效用的直接度量，但样本量小。",
+  "reproducibility": "代码开源（github.com/vu-maple-lab/perseus）；体模制备、MDE 三阶段、分割训练规模、DROID-SLAM 权重来源、硬件（Virtuoso/RTX 4090）均交代；但内窥镜光学参数/FoV/标定细节简略、CT 手工分割金标准无协议细节、逐段视频与参数配置未随代码发布说明——复现门槛中等。",
+  "external_validity": "结论限于离体体模+单 cadaver 定性；水下仅 3 段定性且域间隙显著；临床在体（血液/碎屑/形变）未测试（作者列为未来工作）；对其他内窥镜硬件/其他术式的迁移由 plug-and-play 设计主张+两解剖验证支撑，但均为非活体、近刚性场景。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2509.13541-C01",
+   "claim": "内窥镜鱼眼的应用动机与处理路线：内窥镜因鱼眼效应（fisheye effect）获得增大的视场（increased field of view）；管线在探索前做棋盘格标定获取 SLAM 所需相机参数，随后按 DROID-SLAM 原实现对相机流去畸变（undistort），围绕图像中心裁剪以去除内窥镜视野周围的黑边，再缩放到 SLAM 模型输入尺寸；重建逆投影使用标定所得、对应去畸变图像的矫正相机矩阵（rectified camera matrix）。",
+   "stance": "support",
+   "relation": "应用方式证据（综述核心接口）：鱼眼在内窥镜具身平台上的存在理由=增大 FoV（受天然孔道约束的狭窄解剖内导航），工程消费方式=去畸变+中心裁剪转入针孔模型空间——与原生鱼眼建模路线（如 DirectFisheye-GS）构成综述中鱼眼处理两路线的对照端。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 5-6 Section 3.3：checkerboard 标定→undistort（following the original DROID-SLAM implementation）→中心裁剪去黑边→缩放→rectified camera matrix 逆投影；跨页 5→6 断行（\"fisheye effect\" 在 page 5 末、\"for an increased field of view\" 在 page 6 首）。",
+   "locator": "page 5-6, Section 3.3 Real time 3D Reconstruction",
+   "source_context": "We perform a checkerboard calibration before explorations to obtain the camera parameters required by the SLAM framework. Since the endoscope has a fisheye effect 5 ## page 6 for an increased field of view, following the original DROID-SLAM implementation, we undistort the camera stream. We crop the images around the image center to remove the black mask around the endoscope view. Then, we scale these preprocessed images to match SLAM’s model input size. During the reconstruction, for the inverse projection, we use the estimated rectified camera matrix acquired from the camera calibration for the corresponding undistorted images.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5-6 Section 3.3 逐字核对：\"Since the endoscope has a fisheye effect for an increased field of view\"、\"we undistort the camera stream\"、\"remove the black mask around the endoscope view\"、\"the estimated rectified camera matrix acquired from the camera calibration for the corresponding undistorted images\" 均为原文（含跨页分页标记）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C02",
+   "claim": "管线全程在针孔模型空间运行且不依赖深度相机硬件：DROID-SLAM 把修正后的逐像素深度经逆投影函数+针孔相机模型映射为 3D 点云；为增强单目视频，作者集成定制 in-domain MDE 模型为 SLAM 创建先验，构成伪 RGB-D 管线（称 RGB-D SLAM），免去笨重昂贵的深度相机；DROID-SLAM 权重取自原作不做额外训练，以检验重建算法的泛化能力。",
+   "stance": "support",
+   "relation": "应用方式证据：内窥镜鱼眼平台无法携带深度传感的约束下，深度信息以\"CT 渲染域适应 MDE\"替代硬件——综述中\"鱼眼内窥镜的无深度相机实时 3D 感知\"路线的机理卡；同时确认鱼眼畸变不进入模型原生建模（针孔逆投影）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 5 Section 3.3：pinhole camera model 逆投影、pseudo-RGB-D（without the bulky and expensive depth cameras）、DROID-SLAM 权重无再训练。",
+   "locator": "page 5, Section 3.3 Real time 3D Reconstruction",
+   "source_context": "The corrected depth values are later mapped to a point cloud in 3D using an inverse projection function and the pinhole camera model. DROID-SLAM supports multiple input modes, such as RGB- D or stereo. To augment our monocular video, we integrate our customized in-domain MDE model to create priors for the SLAM algorithm. This results in a pseudo-RGB-D pipeline (referred to as RGB-D SLAM), without the bulky and expensive depth cam- eras. We use the DROID-SLAM model weights from [28] without additional training, testing the generalization capability of the reconstruction algorithm.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section 3.3 逐字核对：\"using an inverse projection function and the pinhole camera model\"、\"a pseudo-RGB-D pipeline (referred to as RGB-D SLAM), without the bulky and expensive depth cameras\"、\"without additional training, testing the generalization capability\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C03",
+   "claim": "临床动机：NOTES（经自然孔道手术）经口、尿道、肛门或阴道等自然孔道操作、免额外切口，但以增加复杂性为代价——可视化、空间定向、深度感知与解剖识别的困难使这类手术具有挑战性、抑制专业掌握与实用推广；这些限制显示了对更好场景理解（引导外科医生与自动化）的显著需求。",
+   "stance": "support",
+   "relation": "应用域证据：鱼眼内窥镜所在的具身任务域（NOTES 手术感知）的问题定义——窄孔道内导航依赖大 FoV 视觉，但深度感知/空间定向受限，回答综述\"为什么用鱼眼+为什么需要 3D 语义感知\"。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 2 Section 1 Introduction：NOTES 自然孔道列表 + 四类困难（visualization, spatial orientation, depth perception, anatomy recognition）+ 场景理解需求。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "NOTES allow operating through natural orifices such as the mouth, urethra, anus, or vagina, without additional inci- sions; however, at the cost of increasing complexity. Difficulties in visualization, spatial orientation, depth perception, and anatomy recognition make these procedures chal- lenging, throttling expertise and practical applicability [2]. These limitations show the significant need for better scene understanding to guide surgeons and automation.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Introduction 逐字核对：\"through natural orifices such as the mouth, urethra, anus, or vagina\"、\"Difficulties in visualization, spatial orientation, depth perception, and anatomy recognition\"、\"better scene understanding to guide surgeons and automation\" 均为原文（\"inci- sions\" 断行连字符按折叠形态保留）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C04",
+   "claim": "空白定位：Semantic-SuPer 等把深度估计、语义分割与工具位姿信息结合创建分割手术场景的方法只在开集（open access）腹腔镜设置测试、未实现于内窥镜；本文把实时 3D 重建与深度学习模型获取的语义目标信息结合，实现内窥镜手术中快速准确的场景理解、支撑手术自动化等下游任务；据作者所知，本研究是首个将实时 SLAM 方法用于 CAO（中央气道阻塞）与 BPH（良性前列腺增生）的工作。",
+   "stance": "gap",
+   "relation": "空白命题：经天然孔道内窥镜（鱼眼）场景的\"实时语义 SLAM\"在近一年文献中是空白位——Semantic-SuPer 仅限腹腔镜开集设置；本文填补 CAO/BPH 两个术式的实时 SLAM 首次应用，为综述\"鱼眼在医疗具身场景的应用版图\"补一域。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 3 Section 2 末段：Semantic-SuPer 仅 open access laparoscopy 未用于 endoscopy；\"the first to use real-time SLAM methods for CAO and BPH\"。",
+   "locator": "page 3, Section 2 Background and Related Work",
+   "source_context": "Methods such as Semantic-SuPer bring together information from depth estimation, semantic segmentation, and tool poses to create segmented surgical scenes [18]. This method is tested only on an open access laparoscopy setup and not implemented for endoscopy. In this study, we combine the real-time 3D reconstructions with semantic target information acquired from a deep learning model. This allows fast and accurate scene understanding in endoscopic surgeries, enabling downstream tasks such as surgical automation. To the best of our knowledge, this study is the first to use real-time SLAM methods for CAO and BPH, creating new possibilities for surgical approaches.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Section 2 逐字核对：\"tested only on an open access laparoscopy setup and not implemented for endoscopy\"、\"To the best of our knowledge, this study is the first to use real-time SLAM methods for CAO and BPH\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C05",
+   "claim": "CAO 重建定量结果：RGB-D SLAM 距离指标全面优于或持平 SfM——中位最近点距离 0.53±0.32 vs 0.63±0.13 mm、单侧 Chamfer 0.66±0.40 vs 0.90±0.17 mm、单侧 Hausdorff 6.92±2.24 vs 100.96±127.29 mm；速度优势巨大：post-BA 每帧 0.46±0.07 s vs SfM 6.39±1.98 s（pre-BA 0.29±0.02 s）；RGB SLAM 为 0.52±0.23 / 0.67±0.30 / 15.10±5.27 mm、post-BA 0.42±0.07 s——实时化同时提升精度。",
+   "stance": "support",
+   "relation": "效果证据（CAO 域）：去畸变鱼眼流+MDE 先验的实时 SLAM 在精度（亚毫米 CD）与速度（约 14× 每帧提速 post-BA）上同时超过离线 SfM——综述\"鱼眼前置管线可支撑实时下游任务\"的量化支撑。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 7 Table 1 CAO 块全行：MCP/CD/HD/Pre-BA/Post-BA 时间、分割精度、点数、覆盖；SfM 基线为 DISK+LightGlue（HLoc，同口径去畸变+裁剪预处理）。",
+   "locator": "page 7, Table 1 (Central Airway Obstruction)",
+   "source_context": "Central Airway Obstruction SfM RGB SLAM RGB-D SLAM Median Closest Point Dist. (mm) ↓ 0.63 ± 0.13 0.52 ± 0.23 0.53 ± 0.32 One-sided Chamfer Dist. (mm) ↓ 0.90 ± 0.17 0.67 ± 0.30 0.66 ± 0.40 One-Sided Hausdorff Dist. (mm) ↓ 100.96 ± 127.29 15.10 ± 5.27 6.92 ± 2.24 Pre-BA Time Per Frame (sec) ↓ - 0.26 ± 0.02 0.29 ± 0.02 Post-BA Time Per Frame (sec) ↓ 6.39 ± 1.98 0.42 ± 0.07 0.46 ± 0.07 Segmentation Precision (%) ↑ 96.69 ± 1.59 85.48 ± 5.09 88.07 ± 2.56 # Reconstruct. Points (x1000) ↑ 121.6 ± 44.6 1021.2 ± 259.3 588.1 ± 130.0 Coverage (%) ↑ 27.76 ± 11.97 43.84 ± 5.97 35.55 ± 6.14",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "对 CT 金标准的重建距离误差（MCP/单侧 Chamfer/单侧 Hausdorff，mm）与每帧处理时间（post-BA，sec）",
+    "value_or_direction": "RGB-D SLAM：MCP 0.53±0.32、CD 0.66±0.40、HD 6.92±2.24 mm；post-BA 0.46±0.07 s/帧",
+    "comparator": "SfM：0.63±0.13 / 0.90±0.17 / 100.96±127.29 mm、6.39±1.98 s；RGB SLAM：0.52±0.23 / 0.67±0.30 / 15.10±5.27 mm、0.42±0.07 s",
+    "task_or_sample": "CAO：3 个体模 5 段探索视频（每段 512-1114 帧），CT 手工分割金标准",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 CAO 块逐行核对：MCP 0.63/0.52/0.53、CD 0.90/0.67/0.66、HD 100.96/15.10/6.92、Pre-BA -/0.26/0.29、Post-BA 6.39/0.42/0.46、分割精度 96.69/85.48/88.07、点数 121.6/1021.2/588.1、覆盖 27.76/43.84/35.55 均与表行一致；SfM 同口径预处理见 page 7 正文（\"we also undistorted the images and center-cropped the endoscope mask same way as the SLAM pipeline input\"）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C06",
+   "claim": "BPH 跨解剖定量结果：RGB-D SLAM 中位最近点 0.52±0.15 vs SfM 1.86±0.30 mm、单侧 Chamfer 0.65±0.19 vs 2.25±0.40 mm、单侧 Hausdorff 9.95±1.78 vs 31.63±13.95 mm；post-BA 每帧 0.28±0.05 s vs SfM 16.76±8.70 s；RGB SLAM 为 0.63±0.19 / 0.89±0.19 / 21.25±14.61 mm、0.26±0.05 s——换解剖（气管→前列腺尿道）后仍维持亚毫米级 Chamfer 精度与实时速度。",
+   "stance": "support",
+   "relation": "效果证据（泛化）：同一去畸变鱼眼 SLAM 管线在第二个解剖域（BPH/经尿道）复现实时+精度收益，支撑作者\"换分割/深度模型即可扩展到其他解剖\"的 plug-and-play 主张（结论 page 10）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 7 Table 1 BPH 块全行；与 CAO 块趋势一致（\"In both the CAO and the BPH cases, error metrics show similar trends\"，page 9）。",
+   "locator": "page 7, Table 1 (Benign Prostatic Hyperplasia)",
+   "source_context": "Benign Prostatic Hyperplasia SfM RGB SLAM RGB-D SLAM Median Closest Point Dist. (mm) ↓ 1.86 ± 0.30 0.63 ± 0.19 0.52 ± 0.15 One-sided Chamfer Dist. (mm) ↓ 2.25 ± 0.40 0.89 ± 0.19 0.65 ± 0.19 One-Sided Hausdorff Dist. (mm) ↓ 31.63 ± 13.95 21.25 ± 14.61 9.95 ± 1.78 Pre-BA Time Per Frame (sec) ↓ - 0.21 ± 0.05 0.23 ± 0.05 Post-BA Time Per Frame (sec) ↓ 16.76 ± 8.70 0.26 ± 0.05 0.28 ± 0.05 Segmentation Precision (%) ↑ 96.23 ± 2.64 89.71 ± 5.18 90.87 ± 5.40 # Reconstruct. Points (x1000) ↑ 84.3 ± 50.7 467.5 ± 236.3 288.3 ± 134.6 Coverage (%) ↑ 20.85 ± 2.53 23.52 ± 4.21 20.13 ± 2.65",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "对 CT 金标准的重建距离误差（MCP/单侧 Chamfer/单侧 Hausdorff，mm）与每帧处理时间（post-BA，sec）",
+    "value_or_direction": "RGB-D SLAM：MCP 0.52±0.15、CD 0.65±0.19、HD 9.95±1.78 mm；post-BA 0.28±0.05 s/帧",
+    "comparator": "SfM：1.86±0.30 / 2.25±0.40 / 31.63±13.95 mm、16.76±8.70 s；RGB SLAM：0.63±0.19 / 0.89±0.19 / 21.25±14.61 mm、0.26±0.05 s",
+    "task_or_sample": "BPH：2 个体模 2 段探索视频，患者 CT 建模水凝胶体模，CT 手工分割金标准",
+    "locator": "page 7, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 BPH 块逐行核对：MCP 1.86/0.63/0.52、CD 2.25/0.89/0.65、HD 31.63/21.25/9.95、Pre-BA -/0.21/0.23、Post-BA 16.76/0.26/0.28、分割精度 96.23/89.71/90.87、点数 84.3/467.5/288.3、覆盖 20.85/23.52/20.13 均与表行一致。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C07",
+   "claim": "尺度配准方法：尽管 MDE 输出绝对深度，其不完美仍会造成单目重建的尺度差，而正确尺度是自动化与测量类应用的必要条件。作者用相机运动的机器人运动学数据克服尺度模糊并配准估计地图到手术场景：读取机械臂位姿并施加 eye-in-hand 标定获得机器人持镜位姿读数，用 Umeyama 算法把 SLAM（后 bundle adjustment）估计相机位姿的平移分量配准到机器人持镜位姿——两条独立获取的位姿链配准免除了前作所需的 fiducials，可即时缩放对齐分割 3D 地图到物理场景；该方法可通过光学跟踪器等手段推广到非机器人应用。",
+   "stance": "support",
+   "relation": "应用方式证据（尺度治理）：单目鱼眼内窥镜的尺度模糊由机器人本体感知（运动学+eye-in-hand）闭环解决——综述中\"鱼眼单目平台的尺度锚定\"工程范式；免 fiducials 降低临床部署摩擦。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 6 Section 3.5：MDE 不完美→尺度差动机；robot kinematics + eye-in-hand + Umeyama（平移分量）配准；免 fiducials；光学跟踪器推广路径。",
+   "locator": "page 6, Section 3.5 Registration and Scaling the Reconstruction",
+   "source_context": "Although we use an MDE model that outputs absolute depth estimation, imperfec- tions in this model can still cause scale differences in the monocular reconstruction. While these reconstructions are still useful as a 3D map, correct scale is required for applications such as automation and measurements. To overcome the scale ambigu- ity and register the estimated map onto the surgical scene, we use robot kinematics data of the camera motion. By reading the robot arm poses and applying an eye- in-hand calibration [29], we acquire the robot-held-camera pose readings. We use the Umeyama [30] algorithm to register the translation components of estimated camera poses from SLAM (post bundle adjustment) to robot-held-camera pose readings. Reg- istration of these two independently-acquired poses avoids the fiducials required in our previous work [3] and allows immediate scaling and alignment of the segmented 3D maps to the physical scene. This method can be generalized to non-robotic applications by acquiring the camera poses using means such as optical trackers.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Section 3.5 逐字核对：\"To overcome the scale ambigu- ity and register the estimated map onto the surgical scene, we use robot kinematics data of the camera motion\"、\"applying an eye-in-hand calibration\"、\"Umeyama [30] algorithm to register the translation components\"、\"avoids the fiducials required in our previous work\"、\"optical trackers\" 均为原文（断行连字符按折叠形态保留）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C08",
+   "claim": "配准与尺度精度：Central Airway（中央气道）尺度比 98.17±3.49%、位姿 RMSE 0.67 mm；Prostate（前列腺）尺度比 98.23±5.88%、位姿 RMSE 1.12 mm——尺度估计误差约在 2% 以内，位姿配准残差为毫米级（摘要口径：平均位姿配准 RMSE 0.9 mm、估计尺度在真值 2% 以内）。",
+   "stance": "support",
+   "relation": "效果证据（尺度/配准）：去畸变鱼眼单目 SLAM + 机器人位姿配准达到 2% 内尺度与毫米级位姿精度——综述\"鱼眼前置管线满足手术自动化测量需求\"的量化上限证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 9 Table 2：两解剖的 Scale Ratio 与 Pose RMSE；测量协议见 page 9 Section 4.2（机器人持镜位姿 vs 配准后估计位姿的 RMSE；5 对烧灼点 caliper 实测 vs 估计距离的尺度比）。",
+   "locator": "page 9, Table 2; Section 4.2 Registration Accuracy",
+   "source_context": "Table 2 Evaluation of registration and scaling accuracy. Scale Ratio (%) Pose RMSE (mm) Central Airway 98.17 ± 3.49 0.67 Prostate 98.23 ± 5.88 1.12",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "尺度比（估计距离/卡尺实测距离，理想 100%）与位姿配准 RMSE（mm）",
+    "value_or_direction": "Central Airway：尺度比 98.17±3.49%、RMSE 0.67 mm；Prostate：98.23±5.88%、1.12 mm（尺度误差约 2% 以内）",
+    "comparator": "理想值：尺度比 100%、RMSE 0 mm",
+    "task_or_sample": "各解剖 1 段带机器人相机位姿的探索序列；尺度用 5 对烧灼标记点卡尺实测对照",
+    "locator": "page 9, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 2 行逐字核对：Central Airway 98.17 ± 3.49 / 0.67、Prostate 98.23 ± 5.88 / 1.12 与表行一致；\"约 2% 以内\"为 98.17/98.23 的直接算术蕴含；摘要 0.9 mm 口径为两值平均（page 1 Abstract，已核对）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C09",
+   "claim": "MDE 深度先验的密度-精度权衡：SLAM 依赖深度估计的稠密重建特性把覆盖扩展到观测次数更少的区域并增加重建点数；两种 SLAM 的重建密度与覆盖均高于 SfM；但 RGB-D SLAM 相对 RGB SLAM 的平均重建点数与覆盖率下降，作者将其归因于 RGB-D 重建中更低的噪声——该噪声水平差异用 Hausdorff 距离指标可以更好理解。",
+   "stance": "conditional",
+   "relation": "条件命题：MDE 先验的收益是有条件的——以重建密度/覆盖（CAO：588.1k 点/35.55% vs RGB SLAM 1021.2k/43.84%）换取精度（HD 6.92 vs 15.10 mm）；综述引用\"伪 RGB-D 鱼眼管线\"效果时应同时报告两端。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 9 Section 5 Discussion：dense reconstruction 扩覆盖增点数；RGB-D vs RGB 点数/覆盖下降归因 lower noise；Hausdorff 更好理解噪声差异。Table 1 数字见 page 7。",
+   "locator": "page 9, Section 5 Discussion; page 7, Table 1",
+   "source_context": "The dense reconstruction nature of the SLAM algorithm, which relies on depth esti- mation, helps extend coverage to areas with a smaller number of observations and increases the number of reconstructed points. While both SLAM methods have higher reconstruction density and coverage compared to SfM algorithm, a decrease in average number of reconstruction points and coverage in the RGB-D SLAM compared to the RGB SLAM can be attributed to lower noise in the RGB-D reconstruction. This lower noise level can be understood better using the Hausdorff distance metric.",
+   "evidence_type": "ablation-result",
+   "quantitative": {
+    "metric": "重建点数（×1000）、覆盖率（%）与单侧 Hausdorff 距离（mm）",
+    "value_or_direction": "RGB-D SLAM（CAO）：588.1±130.0k 点、35.55±6.14% 覆盖、HD 6.92±2.24 mm（更少点/覆盖但噪声更低）",
+    "comparator": "RGB SLAM：1021.2±259.3k 点、43.84±5.97%、HD 15.10±5.27 mm；SfM：121.6±44.6k、27.76±11.97%、HD 100.96±127.29 mm",
+    "task_or_sample": "CAO 3 体模 5 段视频（MDE 先验有无消融）",
+    "locator": "page 7, Table 1; page 9, Section 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Discussion 逐字核对：\"a decrease in average number of reconstruction points and coverage in the RGB-D SLAM compared to the RGB SLAM can be attributed to lower noise in the RGB-D reconstruction\"、\"This lower noise level can be understood better using the Hausdorff distance metric\" 为原文；权衡两端数字取自 page 7 Table 1（已逐行核对）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C10",
+   "claim": "分割投影精度的实时代价：SfM 基线在两个解剖上分割精度均最高——CAO 96.69±1.59% vs RGB SLAM 85.48±5.09%、RGB-D SLAM 88.07±2.56%；BPH 96.23±2.64% vs 89.71±5.18%、90.87±5.40%——实时 SLAM 管线的分割投影精度系统性低于离线 SfM（作者归因：未做前作 [3] 中加权不同 mask 等修改的实时 mask 投影导致精度下降，page 9）。",
+   "stance": "limit",
+   "relation": "限制命题：鱼眼前置实时管线的语义投影付出分割精度代价（约 6-11 个百分点）——综述\"哪些任务受限\"轴：实时语义分割点云的精度上限低于离线管线，下游自动化需权衡。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "page 7 Table 1 两块 Segmentation Precision 行 + page 9 Discussion 归因句（\"real-time projection of segmentation masks without additional modification, such as weighting different masks as in [3], causes a lower segmentation precision\"）。",
+   "locator": "page 7, Table 1; page 9, Section 5 Discussion",
+   "source_context": "Table 1 Average quantitative evaluation results for 3D reconstruction methods. ↑ indicates higher is better, ↓ indicates lower is better. Best results in the category are given bold and the second best is underlined. SLAM processing times are reported before and after bundle adjustment (BA). Central Airway Obstruction SfM RGB SLAM RGB-D SLAM Median Closest Point Dist. (mm) ↓ 0.63 ± 0.13 0.52 ± 0.23 0.53 ± 0.32 One-sided Chamfer Dist. (mm) ↓ 0.90 ± 0.17 0.67 ± 0.30 0.66 ± 0.40 One-Sided Hausdorff Dist. (mm) ↓ 100.96 ± 127.29 15.10 ± 5.27 6.92 ± 2.24 Pre-BA Time Per Frame (sec) ↓ - 0.26 ± 0.02 0.29 ± 0.02 Post-BA Time Per Frame (sec) ↓ 6.39 ± 1.98 0.42 ± 0.07 0.46 ± 0.07 Segmentation Precision (%) ↑ 96.69 ± 1.59 85.48 ± 5.09 88.07 ± 2.56 # Reconstruct. Points (x1000) ↑ 121.6 ± 44.6 1021.2 ± 259.3 588.1 ± 130.0 Coverage (%) ↑ 27.76 ± 11.97 43.84 ± 5.97 35.55 ± 6.14 Benign Prostatic Hyperplasia SfM RGB SLAM RGB-D SLAM Median Closest Point Dist. (mm) ↓ 1.86 ± 0.30 0.63 ± 0.19 0.52 ± 0.15 One-sided Chamfer Dist. (mm) ↓ 2.25 ± 0.40 0.89 ± 0.19 0.65 ± 0.19 One-Sided Hausdorff Dist. (mm) ↓ 31.63 ± 13.95 21.25 ± 14.61 9.95 ± 1.78 Pre-BA Time Per Frame (sec) ↓ - 0.21 ± 0.05 0.23 ± 0.05 Post-BA Time Per Frame (sec) ↓ 16.76 ± 8.70 0.26 ± 0.05 0.28 ± 0.05 Segmentation Precision (%) ↑ 96.23 ± 2.64 89.71 ± 5.18 90.87 ± 5.40 # Reconstruct. Points (x1000) ↑ 84.3 ± 50.7 467.5 ± 236.3 288.3 ± 134.6 Coverage (%) ↑ 20.85 ± 2.53 23.52 ± 4.21 20.13 ± 2.65",
+   "evidence_type": "reported-statistic",
+   "quantitative": {
+    "metric": "分割投影精度（重投影到 mask 的点比例，%）",
+    "value_or_direction": "SfM：CAO 96.69±1.59%、BPH 96.23±2.64%（两解剖均最高）；RGB-D SLAM：88.07±2.56% / 90.87±5.40%",
+    "comparator": "RGB SLAM：85.48±5.09% / 89.71±5.18%；SfM 离线基线",
+    "task_or_sample": "CAO 5 段 + BPH 2 段视频的分割点云重投影评估（SfM 成功配准帧 vs SLAM keyframes）",
+    "locator": "page 7, Table 1; page 9, Section 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Table 1 两块 Segmentation Precision 行逐字核对：96.69±1.59/85.48±5.09/88.07±2.56（CAO）与 96.23±2.64/89.71±5.18/90.87±5.40（BPH）与表行一致；归因句在 page 9 Discussion（已核对，置于 summary）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C11",
+   "claim": "学习组件依赖与域间隙：管线性能重度依赖其学习组件；水下场景中深度模型降低噪声（更小 Hausdorff 距离），但因水下视图受空气-水域图像域间隙影响，MDE 的使用导致更大 Chamfer 距离、不一定改善重建；整体管线可容易适配不同场景或术式，并在 cadaver 实验中无任何修改即显示有前景的表现；DROID-SLAM 对内窥镜案例显示良好泛化，但通过 SLAM 管线内网络的 in-domain 训练与更好的深度估计模型，重建质量还可提升。",
+   "stance": "limit",
+   "relation": "限制命题：鱼眼前置管线的 MDE 组件对域偏移敏感（空气→水体即反转收益：减噪但增 CD）——综述\"环境介质变化下的鱼眼感知鲁棒性\"受限面；cadaver 零修改成功是泛化的正向边界证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 10 Section 5 Discussion 第一段：heavily dependent on learning-based components；水下 domain gap；cadaver without any modifications；DROID-SLAM 泛化 + in-domain 训练可改进。",
+   "locator": "page 10, Section 5 Discussion",
+   "source_context": "The performance of this pipeline is heavily dependent on its learning-based com- ponents. For the underwater scenario (Fig. 5), the depth model decreases the noise, leading to a smaller Hausdorff distance. However, since the underwater views are affected by the domain gap between images in air and water, the use of MDE results in larger Chamfer Distance and does not necessarily improve the reconstructions. Nonetheless, the overall pipeline can be easily adapted to different scenarios or pro- cedures, and shows a promising performance in cadaver experiment without any modifications (Fig. 6a). Although DROID-SLAM shows a good generalization for the endoscopic cases, with in-domain training of networks in the SLAM pipeline and better depth estimation models, the reconstruction qualities could be improved.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 Discussion 第一段逐字核对：\"heavily dependent on its learning-based components\"、\"the domain gap between images in air and water\"、\"results in larger Chamfer Distance and does not necessarily improve the reconstructions\"、\"without any modifications\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C12",
+   "claim": "实时恢复鲁棒性局限：具有离线性质的 SfM 对暂时遮挡或其他可致跟踪重初始化的因素更鲁棒，实时 SLAM 的恢复更困难，这也可能影响分割精度与重建精度；尽管 SLAM 算法能够在 SfM 失败的场景中重建（Fig. 5 水下两段），临床场景中血液或碎屑等更明显的因素可能需要对实时重建管线的修改。",
+   "stance": "limit",
+   "relation": "限制命题：实时性以跟踪恢复鲁棒性为代价——临床（血液/碎屑/遮挡）条件下去畸变鱼眼实时 SLAM 的失效模式未被测试，综述引用实时收益时应标注此边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 10 Section 5 Discussion 第二段：SfM offline 更鲁棒 vs SLAM real-time recovery 更难；blood/debris 临床因素；SLAM 在 SfM 失败场景可重建（Fig. 5）。",
+   "locator": "page 10, Section 5 Discussion",
+   "source_context": "While SfM, with its offline nature, is more robust to temporary occlusions or other factors that can cause tracking to reinitialize, recovery in real-time for SLAM is more challenging. This can also affect the segmentation precision and reconstruction accuracy. Even though the SLAM algorithm is able to reconstruct in the scenarios SfM failed (Fig. 5), modifications to real-time reconstruction pipeline may be needed in the clinical scenario where factors such as blood or debris are more apparent.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 Discussion 第二段逐字核对：\"SfM, with its offline nature, is more robust to temporary occlusions\"、\"recovery in real-time for SLAM is more challenging\"、\"the SLAM algorithm is able to reconstruct in the scenarios SfM failed (Fig. 5)\"、\"factors such as blood or debris are more apparent\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C13",
+   "claim": "形变建模缺失（作者自述核心局限）：管线未将场景形变纳入考虑，且随手术进行手术场景显著变化，因此需用中间重建更新场景表示（如 Fig. 6b 切除一叶后的术中重建）；该限制在 CAO 中因气管的刚性而较不明显，且如前作 [3] 所示手术自动化仍然可能；未来工作包括以形变建模改进感知以及超声等其他模态的集成。",
+   "stance": "limit",
+   "relation": "限制命题：刚体假设是本鱼眼 SLAM 管线的硬边界——软组织术中形变（BPH 切除进行中）使静态重建过期，需中间重建/形变建模；综述\"哪些任务受限\"轴：形变显著的软组织术式受限，刚性解剖（气管）获益。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 10 Section 5 Discussion 第三段：\"Finally, as a limitation, this pipeline does not take the scene deformations into account\"；CAO 刚性缓解；未来工作形变建模+超声。",
+   "locator": "page 10, Section 5 Discussion",
+   "source_context": "Finally, as a limitation, this pipeline does not take the scene deformations into account and as the operation progresses, surgical scenes change significantly. There- fore, intermediate reconstructions can be used to update the scene representations (e.g. in Fig. 6b). This limitation is less apparent in CAO due to the rigid nature of the trachea and as can be seen in our previous work [3], surgical automation is still pos- sible. Our future work includes improving the perception with deformation modeling and integration of other modalities, such as ultrasound.",
+   "evidence_type": "author-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 10 Discussion 第三段逐字核对：\"does not take the scene deformations into account\"、\"surgical scenes change significantly\"、\"intermediate reconstructions can be used to update the scene representations\"、\"less apparent in CAO due to the rigid nature of the trachea\"、\"deformation modeling and integration of other modalities, such as ultrasound\" 均为原文（\"pos- sible\" 断行连字符按折叠形态保留）。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C14",
+   "claim": "评估载体与金标准：CAO 用羊pluck+鸡胸制备模拟人类解剖的体模（切小鸡胸块造成气管约 50% 阻塞、经小切口置入并用超级胶固定）；BPH 用最初为手术训练开发的水凝胶体模（按患者 CT 扫描建模、反映人类解剖的视觉与材料特性）；用 Virtuoso Surgical 内窥镜系统在两类体模上录制单目视频；并对体模做 CT 扫描、手工分割解剖结构，作为感知管线评估的金标准几何。",
+   "stance": "support",
+   "relation": "评估设定证据：亚毫米精度结论的载体是离体体模+CT 金标准（可控、可重复），为综述引用该管线量化效果时标注证据等级（体模级而非临床在体）提供依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 4 Section 3.1：羊pluck/鸡胸 CAO 体模（~50% 阻塞）、患者 CT 建模水凝胶 BPH 体模、Virtuoso Surgical 系统、CT 扫描+手工分割金标准。",
+   "locator": "page 4, Section 3.1 Phantom Production and Data Collection",
+   "source_context": "For the CAO case, following our previous work [3], we prepare phantoms using sheep pluck and chicken breast to mimic human anatomy. We separate the trachea from the rest of the pluck for easier handling. We cut small pieces of chicken breast that cause around 50% occlusion in the trachea, place them inside the airway through small incisions, and secure them with super glue (Fig. 2b). For our BPH experiments, we use hydrogel phantoms developed originally for sur- gical training [19]. These phantoms are modeled after patient CT scans, and reflect the visual and material properties of human anatomy (Fig. 2c). We record monocular videos on both phantoms with Virtuoso Surgical (Nashville, TN, USA) endoscopy system (Fig. 2a). Additionally, to acquire ground truth geome- tries for evaluation of our perception pipeline, we take computed tomography (CT) scans of the phantoms and segment the anatomies manually.",
+   "evidence_type": "data-setting",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Section 3.1 逐字核对：\"sheep pluck and chicken breast to mimic human anatomy\"、\"around 50% occlusion in the trachea\"、\"hydrogel phantoms developed originally for sur- gical training\"、\"modeled after patient CT scans\"、\"Virtuoso Surgical (Nashville, TN, USA) endoscopy system\"、\"take computed tomography (CT) scans of the phantoms and segment the anatomies manually\" 均为原文。"
+   }
+  },
+  {
+   "card_id": "2509.13541-C15",
+   "claim": "MDE 三阶段框架解决内窥镜缺乏 GT 深度：(1) 渲染数据生成——在 Unity 中用 CAO/BPH 扫描的 3D CT 分割产生绝对深度图；(2) 渲染与真实内窥镜数据间的无监督域适应——渲染图像被转换为真实内窥镜场景的视觉风格以缩小域间隙；(3) 深度预测——用第 (2) 步配对的转换渲染图像与深度图微调 DepthAnythingV2 模型，实现准确的深度估计；CAO 与 BPH 分别训练了独立模型。",
+   "stance": "support",
+   "relation": "应用方式证据（深度先验来源）：鱼眼内窥镜无深度 GT 的约束下，用\"CT 渲染+域适应+基础模型微调\"合成训练信号——综述中内窥镜鱼眼平台深度估计组件的代表性做法。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "page 5 Section 3.2 末段：MDE 三阶段（Unity 渲染绝对深度→无监督域适应→DepthAnythingV2 微调）；CAO/BPH 独立模型。",
+   "locator": "page 5, Section 3.2 Segmentation and Monocular Depth Estimation",
+   "source_context": "To address the lack of ground truth depth in endoscopic images, we use an MDE framework [24] that integrates 3D CT data and 2D endoscopic video data. Our MDE consists of three main stages: (1) Rendered data generation in Unity using 3D CT segmentations of CAO and BPH scans to produce absolute depth maps [25]; (2) Unsupervised domain adaptation [26] between rendered and real endoscopy data, where rendered images are translated into the visual style of real endoscopic scenes to reduce the domain gap; and (3) Depth prediction by fine-tuning the DepthAny- thingV2 model [27] with paired translated rendered images and depth maps from step (2), achieving accurate depth estimation.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 Section 3.2 逐字核对：三阶段文字（\"Rendered data generation in Unity using 3D CT segmentations\"、\"Unsupervised domain adaptation\"、\"fine-tuning the DepthAnythingV2 model\"）与 \"Separate models were trained for CAO and BPH\" 均为原文。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "DROID-SLAM: Deep Visual SLAM for Monocular, Stereo, and RGB-D Cameras",
+   "arxiv_id": "2108.13569",
+   "reason": "引文 [28]：SLAM 主干——预训练权重直接用于内窥镜场景（无再训练测泛化）、针孔模型逆投影、去畸变预处理所跟随的原实现。"
+  },
+  {
+   "title": "SAM 2: Segment Anything in Images and Videos",
+   "arxiv_id": "2408.00714",
+   "reason": "引文 [21]：分割模型 encoder backbone（U-Net 式解码+adapter 微调，CAO 肿瘤/BPH 叶两模型）。"
+  },
+  {
+   "title": "Monocular absolute depth estimation from endoscopy via domain-invariant feature learning and latent consistency",
+   "arxiv_id": "2511.02247",
+   "reason": "引文 [24]：本文所用 MDE 框架（同组前作），三阶段 CT 渲染→域适应→DepthAnythingV2 微调的来源。"
+  },
+  {
+   "title": "Semantic-SuPer: A Semantic-Aware Surgical Perception Framework for Endoscopic Tissue Identification, Reconstruction, and Tracking",
+   "arxiv_id": null,
+   "reason": "引文 [18]：语义手术感知最近邻前作，仅开集腹腔镜设置测试、未用于内窥镜——本文定位的空白参照。"
+  },
+  {
+   "title": "From Monocular Vision to Autonomous Action: Guiding Tumor Resection via 3D Reconstruction",
+   "arxiv_id": null,
+   "reason": "引文 [3]：同组前作（IROS 2025）离线 SfM 感知管线——本文实时化+免 fiducials 的对照基线与动机来源。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文代表\"内窥镜鱼眼为增大 FoV 而生、以去畸变+中心裁剪转入针孔空间消费\"的工程路线，是综述中医疗具身（手术机器人）域的核心样本。关键判断：(1) 应用方式——鱼眼是天然孔道手术的 FoV 刚需，但消费方式是转针孔（与 DirectFisheye-GS 的原生鱼眼 3DGS 路线构成两路线对照）；(2) 获益任务——刚性解剖（气管）实时语义建图：亚毫米 CD（0.65-0.66mm）、每帧 0.28-0.46s、尺度 2% 内、配准 RMSE 0.67-1.12mm；(3) 受限任务——形变软组织（术中）、域外介质（水下 MDE 反转收益）、实时语义精度敏感场景（分割投影 88-91% vs 离线 96%）；(4) 边界——FoV/畸变模型/去畸变损失全未量化（鱼眼证据只有一句动机+一段预处理流程），全部定量为体模级；(5) 综合定位——该文与 DirectFisheye-GS（原生建模）恰好展示鱼眼处理谱系两端：工程管线选\"矫正到针孔\"以复用成熟 SLAM 栈，代价是无法评估信息损失；研究管线选\"原生建模\"以保信息，代价是重建栈需重写。"
+}

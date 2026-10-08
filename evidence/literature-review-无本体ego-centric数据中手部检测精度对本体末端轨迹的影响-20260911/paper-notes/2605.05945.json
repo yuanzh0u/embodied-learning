@@ -1,0 +1,366 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.05945",
+  "title": "MobileEgo Anywhere: Open Infrastructure for long horizon egocentric data on commodity hardware",
+  "published": "2026-05-07",
+  "url": "https://arxiv.org/abs/2605.05945",
+  "authors": [
+   "Senthil Palanisamy",
+   "Abhishek Anand",
+   "Satpal Singh Rathor",
+   "Pratyush Patnaik",
+   "Shubhanshu Khatana",
+   "Ekaksh Janweja"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "消费级长时 ego 采集基础设施：iPhone ARKit VIO 提供 6DoF 相机位姿锚定 WiLoR+MANO 手部轨迹。论文给出三层误差量化——ARKit 对 Vicon 动捕的 ATE/RPE、长时漂移（ArUco 回访）、无真值手部姿态一致性（骨长 CV/关节角合法性/腕部动力学）——以及下游 VITRA mid-training 的开环可用性证据，直接落在综述问题的误差来源、阈值与可用性链条上。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题：ego 数据集片段短、采集硬件门槛高；用 ARKit 做长时位姿追踪的动机。"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "确认与 EgoDex/EgoExo4D/HOT3D 等在片段时长与硬件可得性上的差异。"
+   },
+   {
+    "locator": "III. SYSTEM OVERVIEW",
+    "role": "method-or-design",
+    "purpose": "精读采集（头戴 iPhone Pro、ARKit RGBD+IMU、MCAP）与 STERA 离线管线：WiLoR+MANO 手部关节经深度采样+外参变换锚定到世界系。"
+   },
+   {
+    "locator": "IV. DATA QUALITY VALIDATION",
+    "role": "results-or-analysis",
+    "purpose": "精读 ARKit 对 Vicon 动捕的 ATE/RPE 与 ArUco 长时漂移评估的数值。"
+   },
+   {
+    "locator": "V. TRAINING SIGNAL VALIDATION",
+    "role": "results-or-analysis",
+    "purpose": "精读 VITRA mid-training 的开环动作预测结果与 wrist 误差校准数字。"
+   },
+   {
+    "locator": "VI. LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：平台依赖、热约束、仅开环验证。"
+   },
+   {
+    "locator": "VII. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认结论边界。"
+   },
+   {
+    "locator": "APPENDIX",
+    "role": "appendix-or-supplement",
+    "purpose": "精读 VIII 手部姿态一致性三项无真值指标（检测率、骨长 CV、关节角合法性、腕部动力学）与 IX 层级标注统计。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表对证据卡无直接贡献，跳过。"
+   },
+   {
+    "locator": "IX. HIERARCHICAL INSTRUCTION QUALITY",
+    "role": "appendix-or-supplement",
+    "purpose": "语言层级标注质量与手部轨迹精度无关，略读确认无相关定量证据后跳过。"
+   },
+   {
+    "locator": "X. MOCAP TRAJECTORIES AND RESULTS",
+    "role": "appendix-or-supplement",
+    "purpose": "仅图 6 的轨迹可视化说明，无数值内容，跳过。"
+   }
+  ]
+ },
+ "research_question": "能否用消费级 iPhone（ARKit VIO+LiDAR）构建开源基础设施，采集小时级长时 ego 轨迹数据，并验证其位姿精度、手部姿态质量与作为 VLA 训练信号的可用性？",
+ "contributions": [
+  "MobileEgo Anywhere 框架：免费采集 App+开源 STERA 处理管线，输出世界系 3D MANO 手部轨迹、原子动作标签与三级层级指令。",
+  "200 小时数据集：584 会话、20 名贡献者、平均 20.5 分钟、最长 108 分钟连续片段。",
+  "三轴验证：ARKit 对 30 相机 Vicon 的 ATE/RPE、ArUco 回访长时漂移、无真值手部姿态一致性；以及 VITRA mid-training 的开环训练信号验证。"
+ ],
+ "method": {
+  "summary": "头戴 iPhone Pro 采集 RGBD+IMU，ARKit 实时视觉惯性融合输出 6DoF 相机位姿；离线 STERA 管线用 WiLoR（MANO 参数化）估计手部关节，在检测到的关节位置采样 ARKit 深度并经外参变换锚定到世界系；VLM 生成原子动作标签、LLM 组织三级指令树；质量验证包括对 Vicon 的 ATE/RPE、ArUco 回访漂移、以及骨长 CV/关节角合法性/腕部动力学三项无真值手部一致性指标。",
+  "assumptions": [
+   "ARKit 世界系位姿精度足以锚定手部轨迹用于 VLA 训练（用手下载体验证）。",
+   "无真值一致性指标（骨长恒定、关节角合法、无瞬移）可代理手部标注质量。",
+   "在 MANO 手部参数空间直接预测可避免人-机重定向问题（沿 VITRA 设定）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "MobileEgo Anywhere 自建 200 小时/584 会话数据集",
+   "98 会话子集（1.19M 帧、25.2 小时）用于手部一致性评估",
+   "27 会话 held-out 集用于 VITRA 评估"
+  ],
+  "tasks": [
+   "日常家务长时活动（烹饪、清洁、缝纫、整理等 9 大类）",
+   "10 条动捕室验证序列（日常活动、慢走、闭环行走、旋转等）",
+   "6 环境 ArUco 漂移回访"
+  ],
+  "embodiments": [
+   "人类（头戴 iPhone Pro）",
+   "VITRA-VLA-3B（MANO 手部空间动作预测，对应拟人机器人手）"
+  ],
+  "sample_or_scale": "200 小时、584 会话、20 人；75,857 条原子动作标签；mid-training 10,000 步；手部一致性评估覆盖 1.19M 帧。"
+ },
+ "evaluation": {
+  "design": "位姿精度：ARKit vs 30 相机 Vicon（ATE RMSE/相对 ATE/RPE）；长时漂移：ArUco 标记回访；手部质量：无真值三指标；可用性：held-out 会话动作预测损失与 best-of-10 腕部 MPJPE。",
+  "baselines": [
+   "Vicon 动捕真值",
+   "未 mid-train 的 VITRA-VLA-3B（554mm best-of-10 腕部误差）",
+   "Ego4D/EgoExo4D/EgoDex 等数据集特性对比（表 I）"
+  ],
+  "metrics": [
+   "ATE RMSE / 相对 ATE / RPE（平移+旋转）",
+   "ArUco 回访漂移（cm 与轨迹长度百分比）",
+   "手部检测率与 WiLoR 置信度",
+   "骨长 CV、关节角合法率、腕部速度/加速度",
+   "held-out 动作预测损失、best-of-10 腕部 MPJPE（mm）"
+  ],
+  "ablations": [
+   "mid-training 前后 wrist/finger 分量损失对比",
+   "左手/右手分组"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "ARKit 对 Vicon：9/10 序列相对 ATE<1%、平移 RPE<5cm、旋转 RPE<4°；唯一例外是快速旋转序列；长时漂移除全屋遍历（1.5cm）外均<1cm。",
+   "scope": "消费级 iPhone Pro 头戴采集",
+   "locator": "IV. DATA QUALITY VALIDATION"
+  },
+  {
+   "finding": "手部检测成功率 86.2%（WiLoR 平均置信度 0.73）；骨长 CV 中位 1.27%/1.43%（约 1mm/7-8cm 骨），小指末节因骨短（约 2cm）CV 升至约 7.5%；关节角 99.99% 在生物力学界限内。",
+   "scope": "98 会话、1.19M 帧",
+   "locator": "APPENDIX"
+  },
+  {
+   "finding": "mid-training 使 held-out 动作预测损失从 0.265 降到 0.214（-19%），降幅集中在手指（-24%）而非腕根（-14%）；未训练模型腕部 best-of-10 误差 554mm（mis-scaled），mid-training 后校准到 70mm。",
+   "scope": "VITRA-VLA-3B 开环动作预测",
+   "locator": "V. TRAINING SIGNAL VALIDATION"
+  },
+  {
+   "finding": "作者明确：验证仅为开环可训练性，无闭环机器人 rollout；且管线依赖 iPhone Pro，Android/ARCore 的 VIO 精度更低且缺 LiDAR。",
+   "scope": "局限声明",
+   "locator": "VI. LIMITATIONS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "平台依赖：STERA 依赖 ARKit VIO 与 LiDAR，目前仅支持 iPhone Pro；Android/ARCore VIO 精度更低且无 LiDAR；ARKit 会话期间超广角镜头不可用。",
+    "locator": "VI. LIMITATIONS"
+   },
+   {
+    "limitation": "热约束：连续录制超过约两小时可能触发 iPhone Pro 热节流。",
+    "locator": "VI. LIMITATIONS"
+   },
+   {
+    "limitation": "下游验证是初步的：开环手部动作预测，无闭环机器人 rollout，证明的是可训练性而非策略级任务成功率。",
+    "locator": "VI. LIMITATIONS"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "ARKit 精度验证在动捕室的代表性运动序列上进行（最长 163.7s），而数据集会话长达 108 分钟；长时真实会话的全程误差仅由 ArUco 回访抽检（每会话约 2 个点）估计，逐帧误差分布未知。",
+    "basis": "IV-A1 表 II 序列时长与 IV-A2 回访方法。"
+   },
+   {
+    "boundary": "手部质量指标全部是无真值代理（骨长/关节角/动力学），无对动捕或人工标注的手部几何真值对比；86.2% 检测率意味着 13.8% 帧无手部监督，其对训练的影响未分析。",
+    "basis": "附录 VIII 首段明确 ground-truth MANO poses 不可得。"
+   },
+   {
+    "boundary": "70mm best-of-10 腕部误差是开环预测指标，不能直接读作重定向后机器人末端执行精度。",
+    "basis": "V 节明确 open-loop trainability 定位。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于：iPhone Pro 头戴采集的家务长时 ego 数据；ARKit VIO+LiDAR 深度锚定的 WiLoR/MANO 手部轨迹；开环手部动作预测验证。不能外推到 Android/无深度传感设备、闭环机器人策略成功率、或毫米级精度要求的接触密集灵巧任务；手部绝对几何精度未经真值验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "相机位姿有 30 相机 Vicon 动捕真值对照，且覆盖 10 种运动剖面（含静止漂移与快速旋转压力测试）。",
+   "长时漂移用 ArUco 回访直接测量，承认并量化了 VIO 的漂移误差源。",
+   "手部质量在缺乏真值时用三项独立一致性指标交叉验证，并诚实报告 86.2% 检测率与 0.73 置信度。",
+   "作者明确区分开环可训练性与闭环策略精度，不过度声称。"
+  ],
+  "design_risks": [
+   "手部轨迹精度无几何真值验证：WiLoR 估计+深度采样的绝对误差未知，一致性≠准确性。",
+   "ATE RMSE 在长序列上为 10-15cm 量级，该全局误差会传入世界系手部轨迹的绝对定位。",
+   "动捕验证序列（≤164s）远短于数据集典型会话（20.5 分钟均值），外推性有限。",
+   "best-of-10 指标取 10 次预测中最优，高估典型性能。"
+  ],
+  "baseline_fairness": "位姿验证对照 Vicon 真值是公平的；数据集对比（表 I）仅列特性不构成性能基线；VITRA mid-training 对比未训练初始化是内部对照，无其他数据集的等训练量对比。",
+  "metric_validity": "ATE/RPE/漂移是轨迹精度的标准 SLAM 度量，与末端轨迹锚定直接相关；骨长 CV 与关节角合法性是合理但间接的手部质量代理；held-out 损失与 best-of-10 MPJPE 只度量开环预测，作者已声明不代表策略成功率。",
+  "reproducibility": "App、STERA SDK、数据集与可视化平台均公开；验证协议（ArUco 回访、三指标）描述完整可复现；ARKit 闭源是外部依赖。",
+  "external_validity": "20 名贡献者、家务场景为主；对手工业场景、强遮挡双手操作、非 iPhone 设备的泛化未验证；EgoDex（AVP）等更高精度采集路线未做同任务对比。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.05945-C01",
+   "claim": "消费级 iPhone Pro 的 ARKit 视觉惯性里程计对 30 相机 Vicon 动捕真值的轨迹精度为：9/10 序列相对 ATE 低于 1%、平移 RPE 全程低于 5cm、旋转 RPE 低于 4°，唯一例外是快速旋转序列；作者据此判断其足以锚定世界系手部姿态。",
+   "stance": "conditional",
+   "relation": "支持综述命题“消费级设备可提供可用的相机位姿锚定”，但附带误差预算：长序列 ATE RMSE 在 10-15cm 量级、快速旋转退化——该相机误差会叠加进世界系手部轨迹。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-A1 表 II 报告 10 条序列的 ATE RMSE/相对 ATE/RPE；正文总结 9/10 相对 ATE<1%、平移 RPE<5cm、旋转 RPE<4°，快速旋转序列例外。",
+   "locator": "IV. DATA QUALITY VALIDATION",
+   "source_context": "Relative ATE stays below 1% for nine of the ten sequences and rotational RPE below 4",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE, relative ATE, translational and rotational RPE",
+    "value_or_direction": "relative ATE below 1% for nine of the ten sequences; translational RPE below 5 cm; rotational RPE below 4°; spinning sequence the lone exception",
+    "comparator": "30-camera Vicon motion capture ground truth",
+    "task_or_sample": "10 条动捕室验证序列（日常 ego 活动、慢走、闭环行走、旋转、静止），单条最长 163.7s/107.3m",
+    "locator": "IV. DATA QUALITY VALIDATION"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "正文结论句与表 II 各行数值核对一致（如序列 1：ATE 15.0cm、相对 0.14%；序列 4 相对 1.47% 为快速旋转例外）；claim 未把受控验证精度等同于全数据集精度。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C02",
+   "claim": "长时 ego 采集的追踪漂移经 ArUco 标记回访实测：六类环境中除全屋遍历（会话末 1.5cm）外漂移均低于 1cm，且所有情况下低于轨迹长度的 0.1%。",
+   "stance": "support",
+   "relation": "回应综述关注点“消费级长时采集如何处理追踪漂移”——给出了小时级会话下漂移的可接受阈值证据（<0.1% 轨迹长度）与测量协议（标记回访）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-A2 表 III：六环境回访漂移 0.1-1.5cm；正文给出 <1cm（除全屋遍历）与 <0.1% 轨迹长度两个汇总口径。",
+   "locator": "IV. DATA QUALITY VALIDATION",
+   "source_context": "drift is below 1 cm in all but the whole-house traversal (1.5 cm end-of-session) and below 0.1% of trajectory length in all cases",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "long-term drift via ArUco marker revisits",
+    "value_or_direction": "drift below 1 cm in all but the whole-house traversal (1.5 cm end-of-session); below 0.1% of trajectory length in all cases",
+    "comparator": "ArUco marker placed at session start, revisited at temporal midpoint and session end",
+    "task_or_sample": "厨房/起居/全屋/叠衣/美甲等六类环境的小时级会话",
+    "locator": "IV. DATA QUALITY VALIDATION"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 IV-A2；表 III 六环境数值（0.4/0.7、0.3/0.4、1.0/1.5、0.3/0.2、0.1/0.1、0.1/0.1）与汇总口径一致；回访为抽检而非逐帧测量这一限度已在 note 的 reader_inferred 记录。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C03",
+   "claim": "在 98 会话（1.19M 帧、25.2 小时）上，WiLoR 手部检测仅覆盖 86.2% 的帧（平均置信度 0.73），另有 0.02% 帧因 LiDAR 零深度返回被阈值过滤丢弃。",
+   "stance": "limit",
+   "relation": "支持综述命题“手部检测覆盖率/遮挡是 ego 数据的基础误差来源”——消费级 ego 采集下 13.8% 帧无手部监督，构成下游训练信号的系统性缺口。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 VIII 首段：检测成功率 86.2%、平均 WiLoR 置信度 0.73；247 帧（0.02%）零深度经 z>0.01m 阈值丢弃。",
+   "locator": "APPENDIX",
+   "source_context": "Hand de- tection succeeds on 86.2% of frames (mean WiLoR confidence 0.73); 247 frames with zero LiDAR depth returns (0.02%) are discarded via a z > 0.01 m threshold before computing metrics",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "hand detection rate and mean WiLoR confidence",
+    "value_or_direction": "detection succeeds on 86.2% of frames (mean WiLoR confidence 0.73); 247 frames with zero LiDAR depth returns (0.02%) discarded",
+    "comparator": "98 sessions, 1.19 M frames, 25.2 hours assessed subset",
+    "task_or_sample": "98 会话、1.19M 帧、25.2 小时手部一致性评估子集",
+    "locator": "APPENDIX"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自附录 VIII（含换行连字符 de- tection 的规范化形式）；13.8% 缺口为 100%-86.2% 的显式算术，未引入外部假设。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C04",
+   "claim": "在无法获得手部几何真值的条件下，MobileEgo 用三项无真值一致性指标验收手部标注：20 根 MANO 骨长的中位变异系数 1.27%（左）/1.43%（右）（典型 7-8cm 骨上约 1mm 稳定性）、15 个屈曲关节角 99.99% 落在已发表生物力学界限内、腕部速度/加速度分布无瞬移级不连续；小指末节因骨长约 2cm 放大了固定绝对噪声，CV 升至约 7.5%。",
+   "stance": "support",
+   "relation": "回应综述命题“数据生态需要手部标注质量验收口径”——给出可复用的无真值代理指标组合与误差结构洞见（短骨放大绝对噪声，末端手指精度最差）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 VIII：骨长 CV 1.27%/1.43%（约 1mm/7-8cm），剔除小指末节后双手 pooled CV<1%；关节角 99.99% 合法；小指末节 CV 约 7.5% 的原因分析；腕部中位速度 0.34/0.27 m/s。",
+   "locator": "APPENDIX",
+   "source_context": "Median coefficient of variation (CV) of the 20 MANO bone lengths is 1.27% (left hand) and 1.43% (right), indicating stability to within roughly 1 mm on a typical 7–8 cm bone",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MANO 骨长变异系数 / 关节角合法率 / 腕部动力学",
+    "value_or_direction": "骨长 CV 中位 1.27%/1.43%（约 1mm/7-8cm 骨）；小指末节 CV 约 7.5%；关节角 >99.99% 合法；腕部中位速度 0.34/0.27 m/s",
+    "comparator": "已发表生物力学界限 [26] 与健康成人饮水任务峰值手速 [27,28]",
+    "task_or_sample": "98 会话、1.19M 帧、25.2 小时",
+    "locator": "APPENDIX"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "骨长 CV、99.99%、7.5%/2cm、0.34/0.27 m/s 均与附录 VIII 正文一致；claim 明确这些是一致性代理而非绝对精度，未与 5mm 级动捕验证混淆。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C05",
+   "claim": "MobileEgo 数据作为训练信号的下游验证：VITRA-VLA-3B mid-training 后 held-out 手部动作预测损失从 0.265 降到 0.214（-19%），降幅集中在手指关节（-24%）而非腕根（-14%）；未训练模型因尺度失配 best-of-10 腕部误差 554mm，mid-training 校准到 70mm。",
+   "stance": "conditional",
+   "relation": "支持综述命题“消费级 ego 手部数据对下游手部动作预测有正迁移”，但作者自限为开环可训练性；70mm 量级残余误差提示直接用于毫米级末端任务仍有差距。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "V 节：held-out 损失单调降 0.265→0.214；手指 -24%、腕根 -14%；未训练 554mm→mid-trained 70mm（best-of-10，100 held-out clips）。",
+   "locator": "V. TRAINING SIGNAL VALIDATION",
+   "source_context": "its predictions are mis-scaled, giving a best-of-10 wrist error of 554 mm, whereas mid-training calibrates it to our distribution (70 mm; Fig. 3b)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "held-out 动作预测损失与 best-of-10 腕部 MPJPE（mm）",
+    "value_or_direction": "损失 0.265→0.214（-19%）；手指 -24% vs 腕根 -14%；腕部误差 554mm→70mm",
+    "comparator": "未 mid-train 的 VITRA-VLA-3B 初始化",
+    "task_or_sample": "27 个 held-out 会话（100 clips），VITRA 框架 MANO 手部空间预测，10,000 步 mid-training",
+    "locator": "V. TRAINING SIGNAL VALIDATION"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "0.265/0.214/-19%/-24%/-14%/554mm/70mm 与 V 节正文及图 3 图注逐一核对一致；claim 保留作者 open-loop 限定，未声称闭环控制精度。"
+   }
+  },
+  {
+   "card_id": "2605.05945-C06",
+   "claim": "作者明确声明下游验证的边界：训练信号实验是开环的（held-out 手部动作预测、无闭环机器人 rollout），证明的是可训练性而非策略级任务成功率；且管线依赖 iPhone Pro，Android/ARCore 的 VIO 精度更低且缺 LiDAR 深度。",
+   "stance": "limit",
+   "relation": "限制综述命题“消费级长时 ego 数据已被证明可驱动机器人策略”——当前证据止于开环手部预测；同时指出消费级跨平台精度不可迁移（ARCore 更低）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VI. LIMITATIONS：开环验证声明与平台依赖声明（ARCore VIO 精度更低、无 LiDAR）。",
+   "locator": "VI. LIMITATIONS",
+   "source_context": "Our training-signal experiment is open-loop (we evaluate held-out hand-action prediction and perform no closed-loop robot rollout), so it demonstrates trainability rather than policy-level task success",
+   "evidence_type": "position",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 VI. LIMITATIONS；ARCore 论断亦出自同节（“Android/ARCore offers lower VIO accuracy and lacks LiDAR depth”）；claim 为作者立场复述。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "消费级长时采集路线的误差结构最完整自述：相机位姿（Vicon 对照 ATE/RPE）、长时漂移（ArUco 回访 <0.1%）、手部一致性（无真值三代理指标）、覆盖率缺口（86.2% 检测率）、下游开环可训练性（554→70mm 校准）。与 2512.24310 的 5mm 动捕室验证形成精度-成本-时长三角对照。最大缺口：手部绝对几何精度无真值，闭环策略验证缺失。"
+}

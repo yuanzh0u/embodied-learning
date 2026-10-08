@@ -53,9 +53,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # repo root (em
 from embodied_learning.knowledge import arxiv_reader  # noqa: E402
 from embodied_learning import locks  # noqa: E402
 try:
-    from lib.review_runs import STYLE_TO_FILE, catalog_run_paths, load_catalog_runs  # noqa: E402
+    from lib.review_runs import (  # noqa: E402
+        STYLE_TO_FILE,
+        catalog_run_paths,
+        load_catalog_runs,
+        reader_articles,
+    )
 except ImportError:  # installed console-script entry: package import path
-    from wiki_scripts.lib.review_runs import STYLE_TO_FILE, catalog_run_paths, load_catalog_runs  # noqa: E402
+    from wiki_scripts.lib.review_runs import (  # noqa: E402
+        STYLE_TO_FILE,
+        catalog_run_paths,
+        load_catalog_runs,
+        reader_articles,
+    )
 
 
 # Bare-CLI fallbacks only; serve_research_wiki and the writer agent always pass
@@ -63,12 +73,19 @@ except ImportError:  # installed console-script entry: package import path
 # package tree (a wheel install has no knowledge/ to read from).
 DEFAULT_SOURCE = default_kb_root() / "knowledge" / "literature-review-catalog.md"
 DEFAULT_OUTPUT = default_kb_root() / "wiki" / "data"
+# Branding/SEO config is a repo asset (ships with the wheel), not KB content.
+DEFAULT_SITE_CONFIG = REPO_ROOT / "wiki" / "site-config.json"
 
 VERSION_FILES = {
     "keyan": ("科研备忘录", "scientific-memo_keyan.md"),
     "zhihu": ("知乎解释版", "zhihu-explainer_zhihu.md"),
     "xiaohongshu": ("小红书版", "xiaohongshu-post_xiaohongshu.md"),
 }
+FILE_TO_VERSION = {
+    filename: (key, label)
+    for key, (label, filename) in VERSION_FILES.items()
+}
+FILE_TO_VERSION["review-packet.md"] = ("keyan", "研究综述")
 
 FIELD_RULES = (
     ("世界模型与评测", ("世界模型", "world-model", "评测", "evaluation", "仿真")),
@@ -102,6 +119,7 @@ _ARXIV_URL = re.compile(r"^https?://(?:[a-z0-9-]+\.)?arxiv\.org/", re.IGNORECASE
 # Chat-driven revisions live at <run>/revisions/<style>-v<N>.md (style is a
 # VERSION_FILES key); the revision flow never touches the base deliverables.
 REVISION_FILE_RE = re.compile(r"^(keyan|zhihu|xiaohongshu)-v(\d+)$")
+_PUBLIC_SLUG = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 @dataclass(frozen=True)
@@ -117,6 +135,7 @@ class Candidate:
     # older runs stay reachable as 第N轮综述 version keys instead of being
     # dropped from the wiki.
     superseded_runs: tuple["Candidate", ...] = ()
+    article_files: tuple[str, ...] = ()
 
 
 def _read_text(path: Path) -> str:
@@ -139,6 +158,11 @@ def _revision_index(run_dir: Path) -> dict[str, dict]:
         for entry in data
         if isinstance(entry, dict) and entry.get("version_key")
     }
+def _read_json_object(path: Path) -> dict[str, object]:
+    value = json.loads(_read_text(path))
+    if not isinstance(value, dict):
+        raise RuntimeError(f"JSON 文件必须是对象：{path}")
+    return value
 
 
 def _relative(path: Path) -> str:
@@ -217,7 +241,12 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
     catalog_mode = source.is_file()
     if catalog_mode:
         root = source.parent.parent
-        all_dirs = [item.directory for item in load_catalog_runs(root, source)]
+        runs = load_catalog_runs(root, source)
+        all_dirs = [item.directory for item in runs]
+        catalog_articles = {
+            item.directory: reader_articles(item.manifest_path, item.manifest)
+            for item in runs
+        }
     elif source.is_dir():
         all_dirs = [path for path in source.iterdir() if path.is_dir()]
     else:
@@ -225,17 +254,30 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
 
     complete: list[Candidate] = []
     for directory in all_dirs:
-        # Three-style triplet by default; a run.json declaring a reduced scope
-        # (`style` + `scope_note`) publishes with just its own deliverable.
-        manifest = read_run_manifest(directory)
-        declared_style = str((manifest or {}).get("style") or "")
-        if declared_style in _STYLE_VERSION_KEYS:
-            required_files = [VERSION_FILES[_STYLE_VERSION_KEYS[declared_style]][1]]
-        else:
-            required_files = [filename for _, filename in VERSION_FILES.values()]
-        if not all((directory / filename).is_file() for filename in required_files):
+        # Deliverable contract: three styles by default; a run.json declaring
+        # style+scope_note publishes just its own. reader_articles validates the
+        # full manifest shape; historical/flat runs without `files` fall back to
+        # the style key alone. The declaration is a required minimum, not a cap:
+        # extra on-disk deliverables publish too.
+        manifest = read_run_manifest(directory) or {}
+        declared_style = str(manifest.get("style") or "")
+        try:
+            declared_files = reader_articles(directory / "run.json", manifest)
+        except ValueError:
+            if declared_style in STYLE_TO_FILE:
+                declared_files = (STYLE_TO_FILE[declared_style],)
+            else:
+                declared_files = tuple(filename for _, filename in VERSION_FILES.values())
+        article_files = tuple(
+            filename
+            for filename in dict.fromkeys(
+                (*declared_files, *(filename for _, filename in VERSION_FILES.values()))
+            )
+            if (directory / filename).is_file()
+        )
+        if not all((directory / filename).is_file() for filename in declared_files):
             if catalog_mode:
-                raise RuntimeError(f"目录指定的 run 缺少成稿：{directory}")
+                raise RuntimeError(f"目录指定的 run 缺少声明成稿：{directory}")
             continue
         reader_match = _READER_SUFFIX.search(directory.name)
         complete.append(
@@ -245,6 +287,7 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
                 date=extract_date(directory.name),
                 reader_rank=int(reader_match.group(1)) if reader_match else 0,
                 mtime=directory.stat().st_mtime,
+                article_files=article_files,
             )
         )
 
@@ -272,6 +315,156 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
     return selected, stats
 
 
+def load_site_config(path: Path, topic_keys: set[str] | None = None) -> dict[str, object]:
+    """Load and validate the public URL/brand contract used by production builds."""
+
+    config = _read_json_object(path)
+    if config.get("schema_version") != 1:
+        raise RuntimeError("site-config.json 只支持 schema_version 1。")
+    site = config.get("site")
+    fields = config.get("fields")
+    topics = config.get("topics")
+    if not isinstance(site, dict) or not isinstance(fields, dict) or not isinstance(topics, dict):
+        raise RuntimeError("site-config.json 缺少 site、fields 或 topics 对象。")
+    required_site = {
+        "name",
+        "name_zh",
+        "language",
+        "base_url",
+        "repository_url",
+        "publisher_type",
+        "publisher_name",
+        "social_image",
+    }
+    missing_site = sorted(required_site - set(site))
+    if missing_site:
+        raise RuntimeError(f"site-config.json 缺少站点字段：{', '.join(missing_site)}")
+
+    seen_routes: dict[str, str] = {}
+    for key, value in topics.items():
+        if not isinstance(value, dict):
+            raise RuntimeError(f"专题发布配置必须是对象：{key}")
+        slug = value.get("slug")
+        title_en = value.get("title_en")
+        aliases = value.get("aliases")
+        if not isinstance(slug, str) or not _PUBLIC_SLUG.fullmatch(slug):
+            raise RuntimeError(f"专题 {key} 的 slug 非法：{slug}")
+        if not isinstance(title_en, str) or not title_en.strip():
+            raise RuntimeError(f"专题 {key} 缺少英文标题。")
+        if not isinstance(aliases, list) or any(
+            not isinstance(alias, str) or not _PUBLIC_SLUG.fullmatch(alias)
+            for alias in aliases
+        ):
+            raise RuntimeError(f"专题 {key} 的 aliases 必须是合法 slug 列表。")
+        for route in [slug, *aliases]:
+            previous = seen_routes.get(route)
+            if previous is not None:
+                raise RuntimeError(f"发布地址重复：{route} 同时属于 {previous} 与 {key}")
+            seen_routes[route] = key
+
+    if topic_keys is not None:
+        configured = set(topics)
+        missing = sorted(topic_keys - configured)
+        orphaned = sorted(configured - topic_keys)
+        if missing:
+            raise RuntimeError(f"以下当前专题缺少发布配置：{', '.join(missing)}")
+        if orphaned:
+            raise RuntimeError(f"以下发布配置未对应当前专题：{', '.join(orphaned)}")
+    return config
+
+
+def _evidence_paths(directory: Path, run: dict[str, object]) -> list[Path]:
+    files = run.get("files")
+    if not isinstance(files, dict):
+        raise RuntimeError(f"run.json 缺少 files 对象：{directory}")
+    raw_paths: list[str] = []
+    evidence = files.get("evidence")
+    reused = files.get("reused_evidence", [])
+    if isinstance(evidence, str):
+        raw_paths.append(evidence)
+    elif isinstance(evidence, list):
+        raw_paths.extend(str(item) for item in evidence)
+    if isinstance(reused, list):
+        raw_paths.extend(str(item) for item in reused)
+    paths = [directory / value for value in raw_paths]
+    missing = [str(path) for path in paths if not path.is_file()]
+    if not paths or missing:
+        detail = ", ".join(missing) if missing else "未声明 evidence 文件"
+        raise RuntimeError(f"无法读取专题证据：{directory}（{detail}）")
+    return paths
+
+
+def collect_evidence_metadata(directory: Path) -> dict[str, object]:
+    """Return validated counts and URL-deduplicated paper citations for one run."""
+
+    run = _read_json_object(directory / "run.json")
+    events: dict[str, dict[str, object]] = {}
+    for path in _evidence_paths(directory, run):
+        for line_number, line in enumerate(_read_text(path).splitlines(), start=1):
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            if not isinstance(event, dict) or not event.get("event_id"):
+                raise RuntimeError(f"证据事件缺少 event_id：{path}:{line_number}")
+            events.setdefault(str(event["event_id"]), event)
+
+    declared_count = run.get("event_count")
+    if not isinstance(declared_count, int) or declared_count != len(events):
+        raise RuntimeError(
+            f"{directory.name} 的 event_count={declared_count}，"
+            f"但证据文件去重后为 {len(events)}。"
+        )
+
+    citations_by_url: dict[str, dict[str, object]] = {}
+    for event in events.values():
+        paper = event.get("paper")
+        if not isinstance(paper, dict):
+            continue
+        url = paper.get("url")
+        if not isinstance(url, str) or not re.match(r"^https?://", url):
+            continue
+        authors = event.get("authors")
+        author_names = []
+        if isinstance(authors, list):
+            for author in authors:
+                if isinstance(author, dict) and isinstance(author.get("name"), str):
+                    author_names.append(str(author["name"]))
+        published = str(paper.get("published") or "")
+        citations_by_url.setdefault(
+            url,
+            {
+                "title": str(paper.get("title") or url),
+                "authors": author_names,
+                "published": published,
+                "year": published[:4] if re.match(r"^\d{4}", published) else None,
+                "url": url,
+            },
+        )
+
+    files = run.get("files")
+    reading_summary_name = files.get("reading_summary") if isinstance(files, dict) else None
+    reading_summary_path = directory / (
+        str(reading_summary_name) if isinstance(reading_summary_name, str) else "reading-summary.json"
+    )
+    paper_count = len(citations_by_url)
+    if reading_summary_path.is_file():
+        reading_summary = _read_json_object(reading_summary_path)
+        accepted_count = reading_summary.get("accepted_evidence_paper_count")
+        if not isinstance(accepted_count, int) or accepted_count < 0:
+            raise RuntimeError(f"reading-summary.json 缺少有效精读论文数：{directory}")
+        paper_count = accepted_count
+
+    knowledge_ids = run.get("knowledge_ids", [])
+    if not isinstance(knowledge_ids, list) or any(not isinstance(item, str) for item in knowledge_ids):
+        raise RuntimeError(f"run.json 的 knowledge_ids 必须是字符串列表：{directory}")
+    return {
+        "knowledge_ids": knowledge_ids,
+        "paper_count": paper_count,
+        "evidence_event_count": len(events),
+        "citations": sorted(citations_by_url.values(), key=lambda item: str(item["title"]).lower()),
+    }
+
+
 def excerpt(markdown: str, limit: int = 150) -> str:
     paragraphs = re.split(r"\n\s*\n", strip_frontmatter(markdown))
     for paragraph in paragraphs:
@@ -282,11 +475,11 @@ def excerpt(markdown: str, limit: int = 150) -> str:
     return plain[:limit].rstrip() + ("…" if len(plain) > limit else "")
 
 
-def get_topic_title(directory: Path, zhihu_markdown: str) -> str:
+def get_topic_title(directory: Path, default_markdown: str) -> str:
     topic = read_run_topic(directory)
     if topic:
         return topic
-    heading = first_heading(zhihu_markdown)
+    heading = first_heading(default_markdown)
     if heading:
         return heading
     name = re.sub(r"^literature-review-", "", directory.name)
@@ -399,7 +592,12 @@ def link_citation_superscripts(html_text: str, references: dict[str, str]) -> st
     return _RENDERED_SUP_CITATION.sub(rewrite, html_text)
 
 
-def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
+def build_topic(
+    candidate: Candidate,
+    publication: dict[str, object] | None = None,
+    *,
+    field_en: str | None = None,
+) -> tuple[dict[str, object], dict[str, object], dict[str, object]]:
     # Three styles by default; a run.json declaring a reduced scope publishes
     # only its own deliverable (mirrors check_run_bundle's style gate). The
     # declaration is the required minimum, not a cap: a run may ship extra
@@ -422,7 +620,11 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         key: _read_text(candidate.directory / VERSION_FILES[key][1])
         for key in version_keys
     }
-    fallback_markdown = markdown_by_version[version_keys[0]]
+    # The declared (primary) style is the reader-facing default; a bare
+    # triplet keeps the first on-disk key (zhihu first in VERSION_FILES order
+    # only when nothing is declared and all three exist).
+    default_version = version_keys[0]
+    fallback_markdown = markdown_by_version[default_version]
     title = get_topic_title(candidate.directory, fallback_markdown)
     # When the winner's own topic name needed an alias to reach the canonical
     # line (e.g. an English re-run of a Chinese-titled review), the canonical
@@ -600,6 +802,18 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
     # Run-level slide deck (汇报展示): a compiled reveal.js single file sitting
     # in the run folder. The wiki links to it; the server serves the file.
     deck_available = (candidate.directory / "slide-deck_report.html").is_file()
+    public_metadata: dict[str, object] = {}
+    if publication is not None:
+        public_metadata = collect_evidence_metadata(candidate.directory)
+        public_metadata.update(
+            {
+                "slug": publication["slug"],
+                "aliases": publication["aliases"],
+                "canonical_path": f"/research/{publication['slug']}/",
+                "title_en": publication["title_en"],
+                "field_en": field_en or "Embodied AI Research",
+            }
+        )
 
     topic = {
         "id": identifier,
@@ -608,6 +822,7 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "field": field,
         "date": candidate.date,
         "excerpt": excerpt(fallback_markdown),
+        "default_version": default_version,
         "source_directory": _relative(candidate.directory),
         "versions": versions,
         "available_versions": version_keys,
@@ -619,6 +834,7 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
             "toc": evidence_toc,
             "source_file": evidence_path.name if evidence_path.is_file() else None,
         },
+        **public_metadata,
     }
     manifest_item = {
         "id": identifier,
@@ -627,10 +843,24 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "field": field,
         "date": candidate.date,
         "excerpt": topic["excerpt"],
-        "default_version": version_keys[0],
-        "available_versions": version_keys,
+        "default_version": default_version,
+        "available_versions": list(version_keys),
         "evidence_available": bool(evidence_html),
         "slide_deck_available": deck_available,
+        **{
+            key: public_metadata[key]
+            for key in (
+                "slug",
+                "aliases",
+                "canonical_path",
+                "title_en",
+                "field_en",
+                "knowledge_ids",
+                "paper_count",
+                "evidence_event_count",
+            )
+            if key in public_metadata
+        },
     }
     search_item = {
         "id": identifier,
@@ -638,6 +868,11 @@ def build_topic(candidate: Candidate) -> tuple[dict[str, object], dict[str, obje
         "field": field,
         "date": candidate.date,
         "versions": search_versions,
+        **{
+            key: public_metadata[key]
+            for key in ("title_en", "canonical_path")
+            if key in public_metadata
+        },
     }
     return topic, manifest_item, search_item
 
@@ -653,7 +888,12 @@ def write_json(path: Path, value: object, *, compact: bool = False) -> None:
     path.write_text(payload + "\n", encoding="utf-8")
 
 
-def build_snapshot(source: Path, output: Path) -> dict[str, object]:
+def build_snapshot(
+    source: Path,
+    output: Path,
+    *,
+    site_config: Path | None = None,
+) -> dict[str, object]:
     selected, stats = discover_topics(source)
     empty_library = False
     if not selected:
@@ -669,6 +909,13 @@ def build_snapshot(source: Path, output: Path) -> dict[str, object]:
         # First-run shape: a catalog that routes zero runs publishes a real
         # empty index so a cold-start wiki serves a valid snapshot.
         empty_library = True
+    publication_config = (
+        load_site_config(site_config, {candidate.topic_key for candidate in selected})
+        if site_config is not None
+        else None
+    )
+    configured_topics = publication_config["topics"] if publication_config is not None else {}
+    configured_fields = publication_config["fields"] if publication_config is not None else {}
 
     topics_dir = output / "topics"
     topics_dir.mkdir(parents=True, exist_ok=True)
@@ -677,7 +924,22 @@ def build_snapshot(source: Path, output: Path) -> dict[str, object]:
     search_topics: list[dict[str, object]] = []
 
     for candidate in selected:
-        topic, manifest_item, search_item = build_topic(candidate)
+        publication = configured_topics.get(candidate.topic_key)
+        if publication_config is not None and not isinstance(publication, dict):
+            raise RuntimeError(f"专题缺少发布配置：{candidate.topic_key}")
+        default_file = (
+            VERSION_FILES["zhihu"][1]
+            if VERSION_FILES["zhihu"][1] in candidate.article_files
+            else candidate.article_files[0]
+        )
+        title_for_field = get_topic_title(candidate.directory, _read_text(candidate.directory / default_file))
+        field = classify_field(title_for_field, candidate.directory.name)
+        field_en = configured_fields.get(field) if isinstance(configured_fields, dict) else None
+        topic, manifest_item, search_item = build_topic(
+            candidate,
+            publication,
+            field_en=str(field_en) if isinstance(field_en, str) else None,
+        )
         filename = f"{topic['id']}.json"
         expected_files.add(filename)
         write_json(topics_dir / filename, topic, compact=True)
@@ -694,12 +956,26 @@ def build_snapshot(source: Path, output: Path) -> dict[str, object]:
         fields[field] = fields.get(field, 0) + 1
 
     generated_at = datetime.now().astimezone().isoformat(timespec="seconds")
-    manifest = {
-        "site": {
-            "title": "空间智能研究 Wiki",
-            "subtitle": "从科研备忘录到公众解释",
+    legacy_site = {
+        "title": "空间智能研究 Wiki",
+        "subtitle": "从科研备忘录到公众解释",
+        "default_version": "zhihu",
+    }
+    public_site = dict(publication_config["site"]) if publication_config is not None else legacy_site
+    public_site.update(
+        {
+            "title": (
+                f"{public_site['name']}｜{public_site['name_zh']}"
+                if publication_config is not None
+                else legacy_site["title"]
+            ),
+            "subtitle": "Research → Audit → Evidence" if publication_config is not None else legacy_site["subtitle"],
             "default_version": "zhihu",
-        },
+        }
+    )
+    manifest = {
+        **({"schema_version": 2} if publication_config is not None else {}),
+        "site": public_site,
         "generated_at": generated_at,
         "source": _relative(source),
         "stats": stats,
@@ -721,12 +997,16 @@ def validate_snapshot(output: Path) -> dict[str, object]:
     if not manifest_path.is_file():
         raise RuntimeError(f"缺少发布索引：{manifest_path}")
     manifest = json.loads(_read_text(manifest_path))
+    schema_version = manifest.get("schema_version", 1)
+    if schema_version not in (1, 2):
+        raise RuntimeError(f"不支持的 Wiki 快照 schema_version：{schema_version}")
     topics = manifest.get("topics")
     if not isinstance(topics, list):
         raise RuntimeError("发布索引中没有话题。")
     if not topics and not manifest.get("empty_library"):
         raise RuntimeError("发布索引中没有话题。")
     seen_keys: set[str] = set()
+    seen_slugs: set[str] = set()
     expected_topic_files: set[str] = set()
     manifest_ids: list[str] = []
     for item in topics:
@@ -739,6 +1019,59 @@ def validate_snapshot(output: Path) -> dict[str, object]:
         if key in seen_keys:
             raise RuntimeError(f"发现重复话题版本：{key}")
         seen_keys.add(key)
+        if schema_version == 2:
+            required = {
+                "slug",
+                "aliases",
+                "canonical_path",
+                "title_en",
+                "field_en",
+                "knowledge_ids",
+                "paper_count",
+                "evidence_event_count",
+                "default_version",
+                "available_versions",
+            }
+            missing = sorted(required - set(item))
+            if missing:
+                raise RuntimeError(f"{identifier} 缺少 schema v2 字段：{', '.join(missing)}")
+            slug = item.get("slug")
+            aliases = item.get("aliases")
+            if not isinstance(slug, str) or not _PUBLIC_SLUG.fullmatch(slug):
+                raise RuntimeError(f"{identifier} 的 slug 非法。")
+            if item.get("canonical_path") != f"/research/{slug}/":
+                raise RuntimeError(f"{identifier} 的 canonical_path 与 slug 不一致。")
+            if slug in seen_slugs:
+                raise RuntimeError(f"发布快照包含重复 slug：{slug}")
+            seen_slugs.add(slug)
+            if not isinstance(aliases, list):
+                raise RuntimeError(f"{identifier} 的 aliases 必须是列表。")
+            for alias in aliases:
+                if not isinstance(alias, str) or not _PUBLIC_SLUG.fullmatch(alias):
+                    raise RuntimeError(f"{identifier} 包含非法历史 slug。")
+                if alias in seen_slugs:
+                    raise RuntimeError(f"发布快照包含重复地址：{alias}")
+                seen_slugs.add(alias)
+            if not isinstance(item.get("paper_count"), int) or int(item["paper_count"]) < 0:
+                raise RuntimeError(f"{identifier} 的 paper_count 非法。")
+            if (
+                not isinstance(item.get("evidence_event_count"), int)
+                or int(item["evidence_event_count"]) < 0
+            ):
+                raise RuntimeError(f"{identifier} 的 evidence_event_count 非法。")
+        topic_path = output / "topics" / f"{identifier}.json"
+        if not topic_path.is_file():
+            raise RuntimeError(f"专题正文不存在：{topic_path}")
+        topic = _read_json_object(topic_path)
+        versions = topic.get("versions")
+        default_version = item.get("default_version")
+        available_versions = item.get("available_versions")
+        if not isinstance(versions, dict) or not versions:
+            raise RuntimeError(f"{identifier} 没有可发布版本。")
+        if default_version not in versions:
+            raise RuntimeError(f"{identifier} 的默认版本不存在。")
+        if available_versions != list(versions):
+            raise RuntimeError(f"{identifier} 的可用版本声明不一致。")
         manifest_ids.append(str(identifier))
         expected_topic_files.add(f"{identifier}.json")
         topic_path = output / "topics" / f"{identifier}.json"
@@ -750,6 +1083,27 @@ def validate_snapshot(output: Path) -> dict[str, object]:
         missing = [key for key in available if key not in versions]
         if missing:
             raise RuntimeError(f"{identifier} 缺少版本：{', '.join(missing)}")
+        if schema_version == 2:
+            for field in (
+                "slug",
+                "aliases",
+                "canonical_path",
+                "title_en",
+                "field_en",
+                "knowledge_ids",
+                "paper_count",
+                "evidence_event_count",
+                "default_version",
+                "available_versions",
+            ):
+                if topic.get(field) != item.get(field):
+                    raise RuntimeError(f"{identifier} 的 {field} 与发布索引不一致。")
+            citations = topic.get("citations")
+            if not isinstance(citations, list):
+                raise RuntimeError(f"{identifier} 缺少论文引用列表。")
+            citation_urls = [citation.get("url") for citation in citations if isinstance(citation, dict)]
+            if len(citation_urls) != len(citations) or len(citation_urls) != len(set(citation_urls)):
+                raise RuntimeError(f"{identifier} 的论文引用 URL 未去重。")
     actual_topic_files = {
         path.name for path in (output / "topics").glob("topic-*.json") if path.is_file()
     }
@@ -891,6 +1245,7 @@ def publish_snapshot(
     source: Path,
     output: Path,
     *,
+    site_config: Path | None = None,
     retain: int = 2,
     before_activate: Callable[[Path], None] | None = None,
 ) -> dict[str, object]:
@@ -905,7 +1260,7 @@ def publish_snapshot(
         final: Path | None = None
         activated = False
         try:
-            manifest = build_snapshot(source, stage)
+            manifest = build_snapshot(source, stage, site_config=site_config)
             validate_snapshot(stage)
             digest = hashlib.sha256(
                 (stage / "manifest.json").read_bytes()
@@ -957,6 +1312,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="本地知识库根目录（含 knowledge/ 与 evidence/）；--source 未指定时使用其中的文献综述目录",
     )
+    parser.add_argument(
+        "--site-config",
+        type=Path,
+        default=None,
+        help="品牌、英文标题与永久 URL 配置（默认随 --kb-root 或仓库目录解析）",
+    )
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--check", action="store_true", help="只校验当前原子快照")
     action.add_argument("--activate", metavar="SNAPSHOT_ID", help="回滚或切换到已验证快照")
@@ -976,7 +1337,12 @@ def main() -> int:
             print(f"Wiki 已切换到快照 {args.activate}：{len(manifest['topics'])} 个话题。")
         else:
             source, output = resolve_io_paths(args)
-            manifest = publish_snapshot(source, output, retain=args.retain)
+            manifest = publish_snapshot(
+                source,
+                output,
+                site_config=args.site_config,
+                retain=args.retain,
+            )
             stats = manifest["stats"]
             print(
                 "Wiki 已原子发布："

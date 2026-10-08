@@ -1,0 +1,360 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.19333",
+  "title": "Do as I Do: Dexterous Manipulation Data from Everyday Human Videos",
+  "published": "2026-06-17",
+  "url": "https://arxiv.org/abs/2606.19333",
+  "authors": [
+   "Bhawna Paliwal",
+   "Haritheja Etukuru",
+   "William Liang",
+   "Pieter Abbeel",
+   "N. Shafiullah",
+   "Jitendra Malik"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "从单目 RGB（含 egocentric）人视频重建手-物 4D 轨迹并重定向到灵巧手；明确给出重建噪声参考 vs 干净 MoCap 参考下的重定向成功率差距（25%/71% vs 72%/81%）、成功阈值定义（E_pos<0.1m, E_rot<0.5rad）、针对噪声参考的三项缓解组件（warmup/扰动/transition reward）以及数据过滤漏斗，直接命中综述问题的误差来源、传播路径、阈值与缓解手段四个维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "定位问题：observational 人视频到 experiential 机器人数据的鸿沟"
+   },
+   {
+    "locator": "3.1 Reconstruction",
+    "role": "method-or-design",
+    "purpose": "手部追踪（HaWoR）与 SAM 3D 引导扩散物体追踪、手-物对齐的误差来源"
+   },
+   {
+    "locator": "3.2 Retargeting",
+    "role": "method-or-design",
+    "purpose": "针对噪声重建参考的 warmup/随机力扰动/transition reward 三项缓解组件"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "重建基准（Table 2）、重定向消融（Table 3）、成功阈值、真实部署与数据过滤 playbook"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：刚性物体假设、单目深度歧义、接触/遮挡不可区分、仿真器近似"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "reason": "仅作定位对照，无独立证据价值"
+   }
+  ]
+ },
+ "research_question": "如何把丰富的单目 RGB 人类操作视频（含 egocentric 与互联网视频）重建并重定向为多指灵巧手可执行的轨迹数据？",
+ "contributions": [
+  "提出 DO AS I DO 两步算法：从单目 RGB 视频重建手-物交互并重定向到多指灵巧手",
+  "基于 SAM 3D 引导扩散的物体追踪在 DexYCB/HOI4D 与 150 条 in-the-wild 视频人评上超过 SOTA",
+  "针对噪声重建参考的 dynamics-aware 重定向三组件：warmup steps、随机力扰动、transition reward",
+  "给出人视频数据过滤 playbook：100DOH 2000 条采样仅 4% 通过重建质检"
+ ],
+ "method": {
+  "summary": "重建阶段：SAM 3 分割 + MoGe 深度/内参 + SAM 3D 单帧网格生成，并将 SAM 3D 改为引导扩散视频物体追踪器（固定形状、以上一帧位姿为先验、聚类选模态-best 位姿）；手部用 HaWoR 追踪，以手部重建尺度为基准做手-物对齐，GeoCalib 重力对齐。重定向阶段：基于 MPPI 采样优化（Pan et al. 框架）做动力学感知重定向，新增 warmup steps（物体先悬空固定、让手调整初态）、随机力扰动（抗局部极小）、transition reward（奖励 rest/in-hand 状态转换成功）。",
+  "assumptions": [
+   "物体为刚性体",
+   "单目 RGB 的深度预测具有半准确的米制尺度",
+   "手部重建尺度可作为对齐基准（视为 ground-truth 尺度）",
+   "物理仿真器对真实世界动力学的近似足以支撑 sim-to-real"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "DexYCB (160 annotated videos)",
+   "HOI4D (12 annotated videos)",
+   "150-video in-the-wild benchmark (internet/egocentric/generated)",
+   "655 reconstructed in-the-wild references",
+   "OakInk2 (1,352 clean bimanual MoCap trajectories)",
+   "100DOH (2,000 10-second clips for filtering playbook)"
+  ],
+  "tasks": [
+   "20 种动作动词（placing/picking/scrubbing/spreading/squeezing/ironing/painting/dusting/digging/erasing/pouring/writing/whisking/stirring/poking/tamping/drilling/hammering/cutting/basting）",
+   "真实部署 10 任务（whisking, pouring, dusting, squeezing, tamping, erasing, stirring, hammering, spreading, picking）"
+  ],
+  "embodiments": [
+   "22-DoF Sharpa Wave hand",
+   "UR3e arm（双臂 setup，50 Hz 控制）"
+  ],
+  "sample_or_scale": "重建评测 160+12 标注视频 + 150 条 in-the-wild 人评；重定向评测 655 条重建参考 + 1,352 条 MoCap 参考；产出 500 条人工验证的灵巧操作轨迹"
+ },
+ "evaluation": {
+  "design": "重建：DexYCB/HOI4D 上供给 ground-truth 手部、隔离评估物体重建与追踪；in-the-wild 150 视频做 3 人/videos 人评对照。重定向：以 SPIDER 为 Annealed Sampling 基线，逐步加入三个组件消融；真实世界部署展示。",
+  "baselines": [
+   "HO, IHOI, HORSE, MCC-HO, G-HOP（联合手-物重建）",
+   "FoundationPose, Any6D（物体追踪）",
+   "SPIDER (Annealed Sampling, 重定向基线)"
+  ],
+  "metrics": [
+   "F-5 / F-10 / Chamfer Distance (重建)",
+   "成功率 + 平均位置误差 E_pos + 平均旋转误差 E_rot (重定向)",
+   "成功阈值：E_pos < 0.1 m 且 E_rot < 0.5 rad",
+   "人类偏好率 (in-the-wild 追踪)"
+  ],
+  "ablations": [
+   "Annealed Sampling → +Warmup → +Perturbation → +Transition Reward（重建数据与 OakInk2 两组）",
+   "自适应位姿引导 vs 固定位姿引导；聚类选择 vs 位姿似然选择（Appendix）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "SAM 3D 引导扩散物体追踪在 DexYCB 达 F-5 0.71 / F-10 0.93 / CD 0.66，HOI4D 达 F-5 0.72 / F-10 0.91 / CD 0.49，超过 FoundationPose 等全部基线；in-the-wild 150 视频人评偏好率 67%",
+   "scope": "手部给定 ground-truth 的隔离物体追踪设定；in-the-wild 为人评",
+   "locator": "Table 2: Reconstruction Results; 4.2 Reconstruction Results"
+  },
+  {
+   "finding": "重建的噪声参考上重定向成功率从基线 25% 提升至 71%（warmup 贡献最大，25%→66%）；干净 MoCap 参考（OakInk2）上从 72% 提升至 81%；同一算法在两类参考间存在约 10 个百分点的成功率差距",
+   "scope": "22-DoF Sharpa Wave 手、成功阈值 E_pos<0.1m/E_rot<0.5rad 下",
+   "locator": "Table 3: Retargeting Results; 4.3 Retargeting Results"
+  },
+  {
+   "finding": "100DOH 2,000 条采样仅 187 条（9%）有有意义手-物交互，最终 83 条（4%）通过重建质检；失败原因含手/物出画（41）、跨镜头（29）、相机运动（14）、SAM 3D 失败（10），不当预处理带来 20× 数据惩罚",
+   "scope": "100DOH 数据集采样；作者称结论可推广至一般互联网视频",
+   "locator": "4.5 Human Data Filtering Playbook"
+  },
+  {
+   "finding": "方法假设刚性物体与半准确米制深度；单目观测存在真实手-物距离歧义，难以区分物理接触与视觉遮挡；只重建手与单个物体，无法推理环境约束",
+   "scope": "作者自述局限",
+   "locator": "5 Conclusion (Limitations)"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "假设刚性物体与半准确米制深度预测，任一假设不成立即可能失败",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "单目观测存在真实手-物距离歧义，难以区分物理接触与 mere 视觉遮挡",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "只重建手与单个物体而非全场景，无法推理障碍物或关节等环境约束",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "物理仿真器仅近似真实动力学，为真实世界表现设定上界",
+    "locator": "5 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "重建评测在手部给定 ground-truth 的隔离设定下进行，端到端（含手部追踪误差）的重建精度未在基准上定量拆解；HaWoR 手部追踪仅以'reasonable performance'定性描述",
+    "basis": "4.1 Experimental Setup 明确 'isolate object-level performance by supplying ground-truth hands'"
+   },
+   {
+    "boundary": "真实部署仅展示 10 个代表性任务的成功率定性演示，未报告真实世界的定量成功率或轨迹误差分布",
+    "basis": "4.4 Real-World Deployment 仅有 film strip 展示，无定量表"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于刚性物体、单目 RGB 人视频到 22-DoF 灵巧手的重建-重定向链路；成功阈值（E_pos<0.1m, E_rot<0.5rad）为仿真内指标，真实世界精度上界受仿真器保真度限制。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "重建与重定向解耦评估，重定向在噪声重建参考与干净 MoCap 参考上平行消融，可直接量化参考噪声的影响",
+   "人评 + 基准双轨验证 in-the-wild 追踪质量",
+   "数据过滤 playbook 给出端到端数据良率漏斗"
+  ],
+  "design_risks": [
+   "重建基准隔离了手部误差（给 GT 手），低估了端到端手部追踪误差对最终轨迹的传播",
+   "in-the-wild 追踪评测依赖 3 人/videos 主观偏好而非几何真值",
+   "成功阈值 0.1m/0.5rad 较宽松，精细操作任务下的可用性未验证"
+  ],
+  "baseline_fairness": "物体追踪基线（FoundationPose/Any6D）在同一管线中替换，其余组件固定，对照公平；重定向基线 SPIDER 为同框架作者的先前提法，消融逐步加组件，公平。",
+  "metric_validity": "F-score/CD 为重建标准指标；重定向成功阈值为文献常用口径；in-the-wild 人评为必要折衷但非几何精度。",
+  "reproducibility": "方法细节（引导扩散公式、warmup/扰动/transition reward 设计）在正文与附录给出；项目页面展示视频；是否开源代码未在提取文本中明确。",
+  "external_validity": "覆盖 ego/exo/互联网/生成视频四类来源与 20 种动词，外推性较好；但刚性物体与单物体假设限制了向可变形/多物体场景的推广。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.19333-C01",
+   "claim": "在噪声重建的人-物参考轨迹上，dynamics-aware 重定向基线（SPIDER 式退火采样）成功率仅 25%，加入 warmup steps、随机力扰动与 transition reward 三项针对噪声的组件后升至 71%；同一管线在干净 MoCap 参考（OakInk2）上从 72% 升至 81%，即重建噪声使重定向成功率比干净参考低约 10 个百分点。",
+   "stance": "support",
+   "relation": "量化手部/物体检测重建噪声经重定向传播到机器人末端轨迹的可用性损失，并给出可操作的缓解组件及其收益幅度",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 在 655 条重建参考上报告 Annealed Sampling 0.25 → +Warmup 0.66 → +Perturbation 0.67 → +Transition Reward 0.71；OakInk2 上 0.72 → 0.81。正文 4.3 明确 warmup 是主贡献（发现比噪声首帧更稳定的初态）。",
+   "locator": "Table 3: Retargeting Results; 4.3 Retargeting Results",
+   "source_context": "On our reconstructed in-the-wild data, DO AS I DO reaches a 71% success rate, significantly improving over the baseline of 25%. The main differentiator is warmup, which discovers initial states that are much more stable and natural than the noisy initial frame, thereby leading to successful tracking in subsequent timesteps.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "重定向成功率",
+    "value_or_direction": "噪声重建参考 25%→71%；干净 MoCap 参考 72%→81%",
+    "comparator": "Annealed Sampling (SPIDER) 基线",
+    "task_or_sample": "655 条 in-the-wild 重建参考 + 1,352 条 OakInk2 MoCap 参考，22-DoF Sharpa Wave 手",
+    "locator": "Table 3: Retargeting Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 3 数值与 4.3 正文陈述一致；claim 仅限定在该阈值口径与两类参考数据集内，未外推到真实世界或其他手部平台。"
+   }
+  },
+  {
+   "card_id": "2606.19333-C02",
+   "claim": "DO AS I DO 将成功重定向轨迹定义为平均位置误差 E_pos < 0.1 m 且平均旋转误差 E_rot < 0.5 rad，并在此阈值下对 655 条噪声重建参考达到 71% 成功率、最终平均位置误差 0.05 m / 旋转误差 0.28 rad，给出了人视频重定向末端轨迹的一条可接受精度参考线。",
+   "stance": "conditional",
+   "relation": "为综述问题中的'可接受阈值'提供一个具体文献口径：仿真内 E_pos<0.1m、E_rot<0.5rad，并注明其为较宽松阈值",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 Experimental Setup 明确阈值定义；Table 3 完整管线（+Transition Reward 行）报告 Reconstruction 列 Pos 0.05 / Rot 0.28。阈值沿用近期文献 [15, 59, 60] 口径。",
+   "locator": "4.1 Experimental Setup; Table 3: Retargeting Results",
+   "source_context": "Following the recent literature [15, 59, 60], we evaluate successful trajectories as those with mean position error E pos < 0.1 m and mean rotation error E rot < 0.5 rad.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "成功阈值 E_pos / E_rot",
+    "value_or_direction": "E_pos < 0.1 m 且 E_rot < 0.5 rad；完整管线在噪声参考上实际达 0.05 m / 0.28 rad",
+    "comparator": "阈值定义 vs 完整管线实测均值",
+    "task_or_sample": "655 条 in-the-wild 重建参考，仿真内评估",
+    "locator": "4.1 Experimental Setup; Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "阈值语句逐字出现于 4.1；0.05/0.28 取自 Table 3 Reconstruction 列 +Transition Reward 行；claim 明确标注为仿真内口径，不外推到真实世界精度。"
+   }
+  },
+  {
+   "card_id": "2606.19333-C03",
+   "claim": "对 100DOH 采样的 2,000 条 10 秒片段，仅 187 条（9%）存在有意义手-物交互，最终 83 条（4%）通过重建质检：41 条因手或物体出画、29 条因无活动或跨镜头、14 条因相机运动、10 条因 SAM 3D 失败；作者估计不做适当预处理过滤将承受约 20× 的数据惩罚。",
+   "stance": "limit",
+   "relation": "揭示无本体人视频数据源层面的可用性瓶颈：手部/物体可见性与追踪失败直接决定可进入重建-重定向链路的数据比例",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.5 playbook 逐类给出过滤漏斗数字：2000→187（有意义交互）→扣除出画 41、跨镜头 29、相机运动 14、SAM 3D 失败 10、其他 10→83（4%）。",
+   "locator": "4.5 Human Data Filtering Playbook",
+   "source_context": "Out of the 2,000 videos sampled from 100DOH, only 83 (4%) survive our quality check for the reconstruction pass. Even in the best case, we foresee 107 clips, or roughly 5% of the data, being directly relevant for learning dexterous manipulation, implying a 20× penalty in not properly preprocessing and filtering internet videos for robot learning.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "quality-check survival rate of sampled clips",
+    "value_or_direction": "83 of 2,000 clips (4%) survive; only 187 (9%) have meaningful hand-object interaction",
+    "comparator": "unfiltered 100DOH sample",
+    "task_or_sample": "100DOH 2,000 条 10 秒片段",
+    "locator": "4.5 Human Data Filtering Playbook"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "漏斗各级数字（187/41/29/14/10/83）均逐字出现于 4.5；claim 限定在 100DOH 采样与本管线质检标准内，作者也声明结论应可推广但未实测其他数据集。"
+   }
+  },
+  {
+   "card_id": "2606.19333-C04",
+   "claim": "作者自述该管线假设刚性物体与半准确米制单目深度，且单目观测存在真实手-物距离歧义、难以区分物理接触与视觉遮挡；重建仅覆盖手与单个物体，无法推理环境约束，仿真器近似为真实世界表现设定上界。",
+   "stance": "limit",
+   "relation": "界定检测-重建-重定向链路的误差来源边界：深度尺度误差、接触/遮挡歧义是单目无本体路线的固有误差源",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "5 Conclusion 的 Limitations 段逐项列出刚性物体、米制深度、手-物距离歧义、接触 vs 遮挡、单物体场景、仿真器近似六条局限。",
+   "locator": "5 Conclusion (Limitations)",
+   "source_context": "Our approach assumes rigid objects and semi-accurate metric depth predictions from monocular RGB, and may fail when either assumption doesn’t hold. Monocular observations also suffer from ambiguity in the true hand-object distance, making it difficult to distinguish physical contact from mere visual occlusion.",
+   "evidence_type": "discussion",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 5 Conclusion 的 Limitations 段；claim 为作者自述局限的转述，未加入读者推断，范围与原文一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  "C. Pan et al., SPIDER: Scalable physics-informed dexterous retargeting, 2026 (arXiv:2511.09484) — 重定向框架与基线",
+  "J. Zhang et al., HaWoR: World-space hand motion reconstruction from egocentric videos, CVPR 2025 — 手部追踪器",
+  "SAM 3D Team, SAM 3D: 3DFY anything in images, 2025 (arXiv:2511.16624) — 物体网格生成与引导扩散追踪基础"
+ ],
+ "figures": [
+  {
+   "figure_id": "S4.F5",
+   "caption": "Object Tracking Comparison. We compare Ours and FoundationPose for object tracking with head-to-head human evaluations on 150 videos (left), and visualize samples (right).",
+   "section": "4.2 Reconstruction Results",
+   "usage": "作者用该图展示 in-the-wild 人评偏好（67%）与 FoundationPose 在运动模糊/遮挡下丢失物体的定性对照。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "S4.T3",
+   "caption": "Retargeting Results. Success rate and average position and orientation error on two human-object reference datasets.",
+   "section": "4.3 Retargeting Results",
+   "rows": [
+    [
+     "Method",
+     "Success↑(Recon)",
+     "Pos↓",
+     "Rot↓",
+     "Success↑(OakInk2)",
+     "Pos↓",
+     "Rot↓"
+    ],
+    [
+     "Annealed Sampling",
+     "0.25",
+     "0.08",
+     "0.40",
+     "0.72",
+     "0.08",
+     "0.32"
+    ],
+    [
+     "+ Warmup",
+     "0.66",
+     "0.06",
+     "0.28",
+     "0.77",
+     "0.06",
+     "0.25"
+    ],
+    [
+     "+ Perturbation",
+     "0.67",
+     "0.06",
+     "0.30",
+     "0.79",
+     "0.03",
+     "0.14"
+    ],
+    [
+     "+ Transition Reward",
+     "0.71",
+     "0.05",
+     "0.28",
+     "0.81",
+     "0.03",
+     "0.15"
+    ]
+   ],
+   "usage": "作者用该表消融三项重定向组件在噪声重建参考与干净 MoCap 参考上的成功率与误差。"
+  }
+ ],
+ "notes": "B10 批次第 4 篇。重建基准隔离了手部误差（给 GT 手），端到端手部追踪误差→轨迹的传播未被定量拆解，此点为 reader_inferred 边界。"
+}

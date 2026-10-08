@@ -1,0 +1,399 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.24029",
+  "title": "Moving-Horizon Estimation and Nonlinear Model Predictive Control of Cable-Driven Soft Manipulators",
+  "published": "2026-07-27",
+  "url": "https://arxiv.org/abs/2607.24029",
+  "authors": [
+   "Lingxiao Xun",
+   "Haihong Li",
+   "Gang Zheng"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述'控制层方案'族的模型基（缩减Cosserat动力学+MHE-NMPC）分支：针对绳驱软体臂的绳索单边张力-松弛互补、全状态不可测、静态模型忽略速度/加速度三类误差源，给出仿真与4缆真机的量化末端跟踪精度改善（vs静态模型基线RMSE降80-94%）与实时计算成本证据（51.4-60.4 ms<100 ms采样周期），并暴露适用条件（预测时域须足够长、快速目标需绳速约束抑制摩擦）与未解痛点（真机仅2维位置跟踪、形状估计缺定量验证、模型失配未量化），2026-07发表在综述窗口内。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "状态-of-the-art与缺口：静态曲率/静态模型控制器只能跟踪慢信号且工作空间受限；MPC因计算耗时多被近似线性/学习模型替代、缺乏实验验证；基于完整动态Cosserat模型的绳驱软臂状态估计与控制实验验证稀缺。"
+   },
+   {
+    "locator": "B. Contributions and outline of this work",
+    "role": "problem",
+    "purpose": "四项贡献原文：平滑绳长驱动建模+解析Jacobian、MHE状态估计与构型重建、绳长/绳速约束NMPC、仿真+真机验证。"
+   },
+   {
+    "locator": "II. PROBLEM STATEMENT",
+    "role": "method-or-design",
+    "purpose": "把估计与控制统一为输出跟踪问题：MHE在回顾窗[t−t_est,t]估计状态、NMPC在前瞻窗[t,t+t_ctrl]优化控制。"
+   },
+   {
+    "locator": "III. ESTIMATION AND CONTROL OBJECTIVES",
+    "role": "method-or-design",
+    "purpose": "缩减模型定义、位姿控制与形状估计的目标函数形式（跳读推导细节，取结论）。"
+   },
+   {
+    "locator": "IV. DYNAMICS WITH ACTUATION CONSTRAINTS",
+    "role": "method-or-design",
+    "purpose": "绳内路径几何、绳驱动力学与绳张力-松弛互补条件（误差源之一：单边拉力约束）。"
+   },
+   {
+    "locator": "V. JACOBIAN OF THE DYNAMICS",
+    "role": "method-or-design",
+    "purpose": "动力学残差与约束的解析Jacobian推导（跳读逐式细节，确认其为SQP快速求解的基础）。"
+   },
+   {
+    "locator": "VI. NMPC-SQP FRAMEWORK",
+    "role": "method-or-design",
+    "purpose": "MHE/NMPC最优问题重构、softplus平滑互补约束（VI-C，核心机制）、SQP求解与温启动算法。"
+   },
+   {
+    "locator": "VII. NUMERICAL SIMULATIONS",
+    "role": "results-or-analysis",
+    "purpose": "16缆仿真：MHE收敛与扰动恢复（VII-A）、常值位姿调节（VII-B）、双预测时域轨迹跟踪消融（VII-C）、应变-位姿耦合抓取（VII-D）。"
+   },
+   {
+    "locator": "VIII. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "4缆真机：平台与材料参数（VIII-A）、MHE形状估计（VIII-B1）、双平面轨迹跟踪vs SMBC（VIII-B2）、实时marker跟踪（VIII-B3）、计算耗时（VIII-B4）。"
+   },
+   {
+    "locator": "VIII-B2) Trajectory tracking control",
+    "role": "relevant-core",
+    "purpose": "真机末端轨迹跟踪vs静态模型基线SMBC的核心量化对比（表I），综述问题的主要效果锚点。"
+   },
+   {
+    "locator": "IX. CONCLUSIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "总结与作者自述未来工作：形状估计定量验证、更高维位姿调节、计算效率与鲁棒性。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "APPENDIX",
+    "role": "appendix-or-supplement",
+    "reason": "李代数伴随表示与推导恒等式，纯数学补充材料，对综述问题所需的机制与量化结论无增量。"
+   }
+  ]
+ },
+ "research_question": "如何在绳驱软体机械臂上构建可实时运行的模型基估计+控制框架：以缩减Cosserat动力学为基础，用平滑绳长驱动建模处理绳张力-松弛互补条件，在仅有末端位姿量测与绳长信息（无张力传感、无全状态量测）的条件下实现任务空间末端位置/位姿的高精度跟踪，并满足张力与绳速等物理约束。",
+ "contributions": [
+  "提出绳驱软体臂的平滑绳长驱动建模：用含松弛变量λ的softplus函数E(λ)=(1/c)log(1+e^{cλ})近似绳张力T与松弛量l−l_c的互补条件（T=E(λ)，l−l_c=E(−λ)），把不可微互补约束化为光滑等式约束，使绳长而非张力可作为可微优化变量，实现无张力传感的绳长控制",
+  "推导软体臂动力学残差与绳驱动约束的解析Jacobian，支撑高效仿真、估计与优化",
+  "提出基于缩减Cosserat动力学的MHE方法：仅用末端位姿量测与绳长信息估计缩减状态并重建臂干构型",
+  "构建绳长与绳速约束下的NMPC任务空间控制框架（SQP求解+温启动），在16缆仿真与4缆真机原型上验证位姿调节、轨迹跟踪、应变-位姿耦合控制与实时可行性"
+ ],
+ "method": {
+  "summary": "以分段线性应变（PLS）缩减Cosserat杆动力学建模软体臂（仿真为16缆锥形臂，连续应变场离散为q∈R^20）；针对绳索单边张力（只能拉不能推）的张力-松弛互补约束，用softplus函数与松弛变量λ做光滑近似，把控制输入从绳张力重定义为绳长，实现无张力传感的绳长控制；推导动力学残差与约束的解析Jacobian。在滚动时域上统一求解两个耦合优化问题：MHE在回顾窗[t−t_est,t]内用末端位姿+绳长量测拟合缩减状态（估计应变分布并重建构型），NMPC在前瞻窗[t,t+t_ctrl]内优化绳长序列，目标含末端位姿跟踪（及应变跟踪）与弹性/重力势能正则项，约束含张力上限（0–20 N）与绳速限制（仿真±0.4 m/s，真机±2πr_d·w_max≈±0.314 m/s）；两者均以SQP求解并温启动。",
+  "assumptions": [
+   "应变分布与臂干位形不可直接量测；可测量仅末端位姿（仿真为位置+Euler角，真机为磁传感器位置）与各绳拉收长度，绳张力不可测",
+   "PLS分段线性应变离散（4段插值）足以近似连续应变场",
+   "softplus参数c有限时互补条件为近似，c→∞时收敛到精确互补max(0,λ)",
+   "软体臂材料参数（E=2.563×10^5 Pa、G=8.543×10^4 Pa、ρ=1.41×10^3 kg/m^3）已辨识，缩减Cosserat动力学与真实系统足够接近"
+  ]
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [
+   "末端常值位姿调节（仿真）",
+   "时变轨迹跟踪（仿真正弦轨迹；真机Y-Z与X-Z平面Lissajous式轨迹）",
+   "应变-位姿耦合抓取控制（仿真，包裹直径1.2 cm圆柱）",
+   "实时随机目标（marker指挥棒投影）跟踪（真机）",
+   "MHE状态/形状估计（仿真+真机操作员随机拉绳）"
+  ],
+  "embodiments": [
+   "16缆锥形均质软体臂（MATLAB仿真，PLS 4段，q∈R^20）",
+   "4缆硅胶锥形软体臂真机原型（4步进电机驱动、刚性套环传力、LIBERTY 240/16磁传感器测末端位置）"
+  ],
+  "sample_or_scale": "仿真在Dell Precision 7680（i7-13850HX 2.10 GHz）上运行；真机控制采样周期0.1 s，MHE时域0.3 s（3步×0.1 s），NMPC时域0.3 s（轨迹跟踪）/0.4 s（marker跟踪）；仿真预测时域消融0.01 s vs 0.06 s"
+ },
+ "evaluation": {
+  "design": "仿真与真机双阶段验证：仿真验证MHE收敛性与扰动恢复、常值位姿调节、双预测时域轨迹跟踪消融、应变-位姿耦合抓取；真机验证MHE形状估计（随机拉绳）、双平面轨迹跟踪NMPC vs SMBC、实时随机marker跟踪、全迭代计算耗时统计。",
+  "baselines": [
+   "静态模型基控制器SMBC（同组先前工作[24] Li/Xun/Zheng/Renda RA-L 2023，离散Cosserat静态模型，仅用于真机轨迹跟踪对比）"
+  ],
+  "metrics": [
+   "应变估计误差e_q=q−q_obs",
+   "末端位置估计误差e_p（cm，真机MHE）",
+   "末端各轴位置AVME（绝对最大误差）与RMSE（cm）",
+   "响应/收敛时间（s）",
+   "平均SQP迭代数与单次求解时间（ms）"
+  ],
+  "ablations": [
+   "预测时域长度消融：Δt=0.01 s vs 0.06 s（同0.01 s离散步长，仿真轨迹跟踪）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "真机4缆软臂上，NMPC相比静态模型基SMBC将末端跟踪RMSE从Y-Z平面e_y 1.044→0.064 cm、e_z 1.216→0.083 cm，X-Z平面e_x 0.310→0.062 cm、e_z 0.596→0.047 cm（降幅80–94%）；AVME同步大幅下降（如e_z 2.352→0.115 cm、1.419→0.086 cm）",
+   "scope": "4缆硅胶软臂真机、两个平面Lissajous式轨迹、单次实验",
+   "locator": "VIII-B2) Trajectory tracking control, Table I"
+  },
+  {
+   "finding": "仿真MHE仅用末端位姿+绳长量测，0.5 s内应变估计误差收敛到±0.001以内；3.8 s绳驱动突然停止（构型突变）后误差保持±0.01内并在1 s内重新收敛到±0.001",
+   "scope": "16缆软臂MATLAB仿真、时变绳张力驱动大变形",
+   "locator": "VII-A2) Analysis of simulation result, Fig. 7(b)"
+  },
+  {
+   "finding": "真机MHE+NMPC平均总计算时间51.4 ms（轨迹跟踪：MHE 18.6+NMPC 32.8）/60.4 ms（marker跟踪：MHE 19.2+NMPC 41.2），均低于0.1 s采样周期，框架可在线实时运行",
+   "scope": "4缆真机全部控制迭代统计",
+   "locator": "VIII-B4) Computational Performance, Table II"
+  },
+  {
+   "finding": "预测时域0.01 s时软臂在部分点位偏离目标轨迹、末端段逐渐卷曲并采取不合理位姿（短时域使优化'短视'陷入当前时刻局部最优）；扩展到0.06 s后卷曲消失、误差显著降低（图11误差幅度约从±2降至±0.02，单位rad或 cm）",
+   "scope": "16缆仿真正弦轨迹跟踪，时域消融",
+   "locator": "VII-C3) Influence of the duration of prediction horizon, Figs. 10-11"
+  },
+  {
+   "finding": "实时随机marker跟踪（目标投影到虚拟工作面）全实验末端投影位置RMSE 0.42 cm，验证框架对非预设快速变化目标的实时跟踪能力",
+   "scope": "4缆真机、操作员挥动带marker指挥棒、绳速约束±2πr_d·w_max（r_d=1 cm、w_max=5 rps）下",
+   "locator": "VIII-B3) Real time marker tracking, Fig. 20"
+  },
+  {
+   "finding": "常值位姿调节响应时间0.14 s（0.2 s后稳定），张力全程满足0–20 N、绳速±0.4 m/s约束；应变-位姿耦合抓取中位姿/应变响应时间0.17 s/0.4 s（0.5 s后稳定），可锁定直径1.2 cm圆柱",
+   "scope": "16缆仿真",
+   "locator": "VII-B3) Analysis of simulation result, Fig. 9; VII-D3) Analysis of simulation result, Fig. 13"
+  },
+  {
+   "finding": "真机因4缆欠驱动、工作空间为轴向压缩应变可忽略形成的极薄曲面，仅控制末端3维位置中的2维，未验证姿态控制",
+   "scope": "4缆真机平台",
+   "locator": "VIII-B2) Trajectory tracking control"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "形状估计仅有定性视觉对比（Fig. 16），定量形状估计验证有待改进（future work: improving quantitative shape-estimation validation）",
+    "locator": "IX. CONCLUSIONS"
+   },
+   {
+    "limitation": "实验平台待向更高维位姿调节扩展（真机仅实现低维位置跟踪，future work: extending the experimental platform toward higher-dimensional pose regulation）",
+    "locator": "IX. CONCLUSIONS"
+   },
+   {
+    "limitation": "MHE-NMPC框架的计算效率与鲁棒性仍需提升（future work: enhancing the computational efficiency and robustness）",
+    "locator": "IX. CONCLUSIONS"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "真机结论限于4缆欠驱动平台的2维位置跟踪；仿真中的姿态跟踪、应变-位姿耦合抓取未经真机验证，向高维任务空间外推未获证据",
+    "basis": "VIII开篇声明真机仅评估任务空间位置控制；表I仅报位置各轴误差；结论future work承认需向更高维位姿调节扩展"
+   },
+   {
+    "boundary": "真机NMPC时域0.3 s仅离散3步（步长0.1 s），远粗于仿真轨迹跟踪用的0.06 s/6步；离散步长对跟踪精度的影响未消融，精度-实时性权衡未量化",
+    "basis": "VIII-B2设定Δt=0.3 s/3步 vs VII-C仿真用0.06 s/6步；全文无离散步长消融"
+   },
+   {
+    "boundary": "计算时间已占0.1 s采样周期的51–60%；模型维数（缆数、应变段数）或约束增多时可能超实时预算，可扩展性未验证",
+    "basis": "表II 51.4/60.4 ms vs 100 ms采样周期；16缆仿真未报真机级耗时统计"
+   },
+   {
+    "boundary": "依赖辨识材料参数与精确Cosserat模型；绳摩擦、硅胶蠕变/迟滞等模型失配对精度的影响未量化，仅在marker跟踪中以绳速约束间接缓解摩擦",
+    "basis": "VIII-A1给出E/G/ρ辨识值；VIII-B3指出快速收绳产生显著摩擦增大系统误差并降低鲁棒性但未单独量化；无模型失配鲁棒性实验"
+   },
+   {
+    "boundary": "单次实验无重复/方差报告，AVME/RMSE改善的统计稳定性未知",
+    "basis": "表I与Fig. 18均为单次运行结果，无多次重复或置信区间"
+   }
+  ]
+ },
+ "transfer_boundary": "该MHE-NMPC框架适用于具备可辨识缩减Cosserat动力学模型、末端位姿可测且以绳长为控制输入的绳驱软体臂实时任务空间跟踪（本验证限于4缆、2维位置、0.1 s采样周期）；其精度依赖足够长的预测时域与低于采样周期的SQP求解时间，未覆盖姿态/形状控制的真机验证、模型失配（摩擦/蠕变）鲁棒性与高维扩展。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "仿真与真机双阶段验证，覆盖估计器收敛、位姿调节、轨迹跟踪、耦合抓取、随机目标跟踪五类任务，链条完整",
+   "真机在同一参考轨迹与硬件上与同组静态模型基控制器SMBC对比，AVME+RMSE双指标量化（表I）",
+   "显式报告MHE/NMPC各模块平均计算时间与SQP迭代数（表II），实时性主张有数据支撑",
+   "预测时域消融（0.01 vs 0.06 s）揭示NMPC短时域失效模式（短视局部最优+末端卷曲），对方案族适用条件有直接指导意义"
+  ],
+  "design_risks": [
+   "基线单一（仅静态模型控制器），无动态模型基或学习类基线横向对比，增益可能部分来自'任何动态模型+预测'而非框架特有成分",
+   "真机MHE形状估计仅定性（Fig. 16视觉对比），Fig. 17位置估计误差无汇总统计数值",
+   "无多次重复实验与方差/显著性报告，单次结果的稳定性未知",
+   "模型失配（绳摩擦、硅胶蠕变/迟滞）对精度的影响未量化，绳速约束仅间接缓解"
+  ],
+  "baseline_fairness": "基线SMBC为同组先前工作[24]（离散Cosserat静态模型控制器），在同一真机、同一参考轨迹上对比，实现公平性较好；但静态控制器天然不含速度/加速度动态，对比主要凸显'动态模型+预测控制'的增益，无法区分增益来自动力学建模还是NMPC本身，也缺少与其他动态/学习控制器的横向参照。",
+  "metric_validity": "AVME与RMSE为标准末端位置跟踪指标，单位cm与轨迹幅度（约6.75–12.5 cm）相称、可跨文献比较；但真机仅位置误差（无姿态），仿真误差单位混用（rad或cm），且无重复试验统计，数值精度以单次实验为准。",
+  "reproducibility": "材料参数（E、G、ρ）、张力/绳速约束、时域与离散步长、目标轨迹解析式均已给出；但MHE/NMPC权重矩阵仅部分给出（应变-位姿耦合W=[3 1 0.001]），softplus参数c与其余权重未报，代码未公开，复现需中等以上投入。",
+  "external_validity": "结论限绳驱软体臂+缩减Cosserat模型场景；对刚体机械臂、气动或其他驱动软臂、大模型失配或更高维任务空间的外推未经检验；真机结论进一步限于4缆2维位置跟踪与0.1 s采样周期。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.24029-C01",
+   "claim": "在4缆硅胶锥形软体臂真机上跟踪两个平面快速Lissajous式轨迹时，基于缩减Cosserat动力学的MHE-NMPC相比静态模型基控制器SMBC（因未考虑模型速度/加速度、快速圆弧运动尤其吃力）将末端位置RMSE从e_y 1.044→0.064 cm、e_z 1.216→0.083 cm（Y-Z平面）和e_x 0.310→0.062 cm、e_z 0.596→0.047 cm（X-Z平面），降幅80–94%，AVME同步大幅下降。",
+   "stance": "support",
+   "relation": "支撑综述命题'模型基预测控制（MHE-NMPC）方案族可在绳驱软体臂上把末端轨迹跟踪误差相对静态模型基线降低约一个数量级（RMSE降80–94%、至0.05–0.08 cm量级）'，为控制层模型基方案族提供真机量化效果锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VIII-B2原文：SMBC控制器下软臂只能近似跟随指定轨迹、快速圆周运动尤其困难，因其未考虑模型速度与加速度；NMPC精度更高（表I的AVME与RMSE更低）。表I逐轴数值：Y-Z平面SMBC e_y/e_z RMSE 1.044/1.216 cm→NMPC 0.064/0.083 cm；X-Z平面SMBC e_x/e_z RMSE 0.310/0.596 cm→NMPC 0.062/0.047 cm；AVME相应2.274→0.108、2.352→0.115、0.771→0.095、1.419→0.086 cm。",
+   "locator": "VIII-B2) Trajectory tracking control, Table I",
+   "source_context": "Fig. 18 reveals that under the SMBC controller, the soft ma- nipulator only approximately follows the designated trajecto- ries, particularly struggling with rapid circular movements due to a failure to consider the model’s velocity and acceleration. In contrast, the proposed NMPC controller achieves improved trajectory-tracking accuracy, as reflected by the lower AVME and RMSE values reported in Table I.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "末端各轴位置AVME（绝对最大误差）与RMSE（cm）",
+    "value_or_direction": "RMSE：Y-Z平面e_y 1.044→0.064、e_z 1.216→0.083；X-Z平面e_x 0.310→0.062、e_z 0.596→0.047（降幅80.0–93.9%）；AVME：2.274→0.108、2.352→0.115、0.771→0.095、1.419→0.086 cm",
+    "comparator": "静态模型基控制器SMBC（同组先前工作[24]，同一真机与参考轨迹）",
+    "task_or_sample": "4缆硅胶锥形软臂真机，Y-Z平面Y=6.75sin(0.9t)、Z=−6.75cos(3.6t)−1.35与X-Z平面X=12.5+3.5sin(3t)、Z=−4sin(6t)−1.5轨迹（单位cm），NMPC时域0.3 s/3步，单次实验",
+    "locator": "Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VIII-B2两句原文（含跨行连字符'ma- nipulator'、'trajecto- ries'与Unicode撇号'model's'）与表I逐行数值（Y-Z：SMBC 2.274/1.044、2.352/1.216，NMPC 0.108/0.064、0.115/0.083；X-Z：SMBC 0.771/0.310、1.419/0.596，NMPC 0.095/0.062、0.086/0.047，单位cm，表头标注(cm)）；80.0–93.9%降幅由表I RMSE前后值计算核对；'SMBC不考虑速度/加速度'与'快速圆周尤其困难'为作者原话。"
+   }
+  },
+  {
+   "card_id": "2607.24029-C02",
+   "claim": "在16缆软体臂仿真中，仅用末端位姿与绳长量测（应变/臂干位形不可直接量测、绳张力不可测）的MHE观测器在0.5 s内将应变估计误差收敛到±0.001以内；3.8 s绳驱动突然停止引起构型突变后，误差保持在±0.01内并在1 s内重新收敛到±0.001。",
+   "stance": "support",
+   "relation": "支撑综述命题'模型基估计（MHE）可从稀疏末端量测重建软体臂全状态、支撑闭环末端跟踪'，为控制层模型基方案族的估计组件提供收敛速度与扰动恢复的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VII-A2原文：观测器收敛迅速，0.5 s内应变误差收敛到±0.001以内；3.8 s扰动发生时应变误差保持在±0.01内并在1 s内重新收敛到±0.001。量测假设（仅末端位姿+绳长可测、张力不可测）见VII-A1场景定义。",
+   "locator": "VII-A2) Analysis of simulation result, Fig. 7(b)",
+   "source_context": "The results indicate that the observer has rapid convergence. Within 0.5s, the strain error converges to within ±0.001. When the disturbance occurs at 3.8s, the strain error remains within ±0.01 and reconverges to within ±0.001 within 1s.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "应变估计误差e_q=q−q_obs（应变，无量纲）",
+    "value_or_direction": "0.5 s内收敛至±0.001以内；3.8 s突变扰动后保持±0.01内、1 s内重新收敛至±0.001",
+    "comparator": "仿真真值应变q（初始估计为自然零应变水平状态）",
+    "task_or_sample": "16缆锥形软体臂MATLAB仿真（PLS 4段，q∈R^20），时变绳张力驱动大变形，3.8 s停止绳驱动注入构型突变，dt=0.01 s",
+    "locator": "Fig. 7(b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VII-A2三句原文（0.5s/±0.001/3.8s/±0.01/1s五个数值）与Fig. 7(b)图注；量测假设（应变与臂干位形不可直接量测、绳张力不可测但拉收长度可测）逐字核对VII-A1原文；主张严格限定在仿真范围。"
+   }
+  },
+  {
+   "card_id": "2607.24029-C03",
+   "claim": "在4缆真机上，MHE-NMPC框架的平均总计算时间为51.4 ms（轨迹跟踪：MHE 18.6 ms+NMPC 32.8 ms，平均SQP迭代2.2/3.5次）和60.4 ms（marker跟踪：MHE 19.2 ms+NMPC 41.2 ms，迭代2.3/3.7次），均低于0.1 s采样周期，可在线实时运行末端跟踪。",
+   "stance": "support",
+   "relation": "支撑综述命题'缩减模型+解析Jacobian+SQP温启动可把非线性MPC计算成本压入软体臂实时预算'，为控制层模型基方案族的部署条件（计算可行性）提供量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VIII-B4原文：采样周期0.1 s，记录全部控制迭代的MHE与NMPC模块计算时间；表II汇总轨迹跟踪平均总耗时约51.4 ms、marker跟踪60.4 ms，均低于采样周期，框架可在物理原型上在线实时执行末端跟踪。表II同时给出各模块时域与平均SQP迭代数。",
+   "locator": "VIII-B4) Computational Performance, Table II",
+   "source_context": "The sampling period was set to 0.1 s, and the computation time of the MHE and NMPC modules was recorded over all control iterations. As summarized in Table II, the average total computation time is approximately 51.4 ms for trajectory tracking and 60.4 ms for marker tracking. Both are below the sampling period, indicating that the proposed framework can be executed online for real-time end-effector tracking on the physical prototype.",
+   "evidence_type": "system-result",
+   "quantitative": {
+    "metric": "MHE/NMPC平均计算时间（ms）与平均SQP迭代数",
+    "value_or_direction": "轨迹跟踪MHE 18.6 ms（2.2次）+NMPC 32.8 ms（3.5次）≈51.4 ms；marker跟踪MHE 19.2 ms（2.3次）+NMPC 41.2 ms（3.7次）≈60.4 ms；均低于100 ms采样周期（占预算约51–60%）",
+    "comparator": "0.1 s（100 ms）采样周期实时预算",
+    "task_or_sample": "4缆软臂真机全部控制迭代统计，MHE时域0.3 s，NMPC时域0.3 s（轨迹跟踪）/0.4 s（marker跟踪），计算平台与仿真同为Dell Precision 7680/i7-13850HX",
+    "locator": "Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VIII-B4段落（0.1 s/51.4 ms/60.4 ms/低于采样周期/在线实时执行）与表II行值（MHE 0.3 s/2.2/18.6 ms；NMPC 0.3 s/3.5/32.8 ms；MHE 0.3 s/2.3/19.2 ms；NMPC 0.4 s/3.7/41.2 ms）；51.4=18.6+32.8、60.4=19.2+41.2加和核对；'占预算约51–60%'由51.4/60.4除以100 ms计算。"
+   }
+  },
+  {
+   "card_id": "2607.24029-C04",
+   "claim": "16缆仿真轨迹跟踪中，预测时域仅0.01 s时软臂在部分点位偏离目标轨迹、末端段逐渐卷曲并采取不合理位姿（短时域使优化'短视'、陷入当前时刻局部最优）；时域扩展到0.06 s后卷曲消失、跟踪误差显著降低（图11误差幅度约从±2降至±0.02，单位rad或cm）——预测时域长度是NMPC轨迹跟踪精度的关键适用条件。",
+   "stance": "conditional",
+   "relation": "为综述命题'NMPC方案族的精度依赖足够长的预测时域，时域不足会因短视局部最优产生位形异常（末端卷曲）'提供条件性证据，界定模型基预测控制方案族的适用条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VII-C3原文：预测时域0.01秒时软臂在部分点偏离目标轨迹；短预测时域使其无法预判未来轨迹变化、无法调整当前位姿去适应未来目标轨迹，因而采取不合理位姿试图跟随目标位置。后文进一步说明0.06 s时域下该问题解决（可在整个预测窗内规划、平滑调整、远端卷曲不再出现），图11显示扩展时域显著降低跟踪误差。±2与±0.02读自图11(a)/(b)纵轴刻度。",
+   "locator": "VII-C3) Influence of the duration of prediction horizon, Figs. 10-11",
+   "source_context": "When the prediction horizon is 0.01 seconds, the simulation results show that the soft manipulator deviates from the target trajectory at certain points. The short prediction horizon prevents the soft manip- ulator from anticipating future trajectory changes, making it unable to adjust its current pose to accommodate the future target trajectory. Consequently, the manipulator adopts an unreasonable pose in its attempt to follow the target position.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "末端位姿跟踪误差幅度（Fig. 11纵轴范围，rad or cm）",
+    "value_or_direction": "prediction horizon Δt=0.01 s：误差幅度约±2且末端卷曲；Δt=0.06 s：降至约±0.02、卷曲消失（约两个数量级改善）",
+    "comparator": "prediction horizon Δt=0.01 s vs Δt=0.06 s（同为0.01 s离散步长、同一正弦目标轨迹）",
+    "task_or_sample": "16缆软臂MATLAB仿真，目标ϕ_r=[0, 4sin(2t), 2cos(2t)]^T、p_r=[10+3sin(2t), 5sin(2t), −7cos(4t)]^T",
+    "locator": "Fig. 11"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VII-C3三句原文（0.01秒/偏离目标轨迹/短时域无法预判/不合理位姿）；'0.06 s后卷曲消失、误差显著降低'逐字核对后文'With the prediction horizon extended to 0.06s...'、'the curling phenomenon at the distal end no longer occurs'与'expanding the prediction horizon significantly reduces the tracking error'；±2与±0.02读自提取文本中图11(a)/(b)纵轴刻度行（'-2 0 2'与'-0.02 0 0.02'，单位标注Error (rad or cm)），已在claim中注明为图轴读数。"
+   }
+  },
+  {
+   "card_id": "2607.24029-C05",
+   "claim": "在实时随机目标跟踪场景中，目标位置快速随机变化会使控制输入短时剧变、降低控制平滑性并使数值优化落入不良局部极值；同时步进电机转速/输出扭矩有限，过度快速收绳会产生显著摩擦、增大系统误差并降低鲁棒性——因此作者在控制优化中引入绳速约束（|l̇|≤2πr_d·w_max，r_d=1 cm、w_max=5 rps）以增强鲁棒性并满足硬件要求。",
+   "stance": "conditional",
+   "relation": "为综述命题'绳驱方案族的部署痛点：快速目标下绳速失约束会放大摩擦误差与优化病态，需显式绳速约束保障鲁棒性'提供作者自述证据，界定该方案族在快速随机目标场景的适用条件。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VIII-B3原文：目标点位置随机快速变化使控制输入可能短时剧烈变化，该现象会降低控制平滑性并使数值优化解落入不良局部极值；此外系统硬件有性能限制（如步进电机的转速与输出扭矩）；而且过度收绳速度会产生显著摩擦、增大系统误差并降低鲁棒性；因此为增强控制鲁棒性并满足硬件要求，在控制优化问题中引入绳速约束。约束式与r_d、w_max数值见其后公式段。",
+   "locator": "VIII-B3) Real time marker tracking",
+   "source_context": "This phenomenon can reduce the smoothness of control and cause the numerical optimization solution to fall into undesirable local extrema. Additionally, the system hardware has performance limits, such as the rotational speed and output torque of the stepper motors. Moreover, excessive cable contraction speed can generate substantial friction, increasing system error and reducing robustness.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VIII-B3三句原文（控制平滑性/不良局部极值/步进电机转速与输出扭矩/过度收绳摩擦增大系统误差并降低鲁棒性）；'因此引入绳速约束'与约束式−2πr_d·w_max≤l̇_{1,2,3,4}≤2πr_d·w_max、r_d=1 cm、w_max=5 rps逐字核对其后公式段；该卡为作者对失效模式与设计动机的自述判断（may/can措辞），非实测消融，故evidence_type取author-judgment、无quantitative块。"
+   }
+  },
+  {
+   "card_id": "2607.24029-C06",
+   "claim": "该框架的核心机制是用含松弛变量λ的softplus函数光滑近似绳张力-松弛互补关系，从而把绳长（而非张力）作为控制输入纳入可微优化，实现无需张力传感的绳长控制，并据此构建基于缩减Cosserat动力学的MHE状态估计与绳长/绳速约束下的NMPC任务空间控制。",
+   "stance": "support",
+   "relation": "支撑综述命题'控制层模型基方案族通过平滑化处理绳驱单边约束（pull-only、张力-松弛互补）实现无张力传感的绳长驱动控制'，为该方案族的核心机制提供可引用的机制证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要原文：提出基于缩减Cosserat动力学的MHE与NMPC框架；发展平滑绳长驱动建模，通过近似绳张力与绳松弛之间的互补关系，实现无需直接张力传感的绳长控制。机制细节在VI-C：T=E(λ)、l−l_c=E(−λ)，softplus E(λ)=(1/c)log(1+e^{cλ})，c→∞时收敛到max(0,λ)保证互补约束，把非线性互补问题替换为等式约束G(x,l,λ)=l−l_c−E(−λ)=0并重定义最优控制问题。",
+   "locator": "VI-C. Smooth Cable Driven Constraint (Eqs. 44-47); preamble",
+   "source_context": "In this paper, we propose a moving-horizon esti- mation (MHE) and nonlinear model predictive control (NMPC) framework for cable-driven soft manipulators based on reduced Cosserat dynamics. A smooth cable-length-driven modeling for- mulation is developed by approximating the complementarity relationship between cable tension and cable slackness, enabling cable-length control without direct tension sensing.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "摘要两句逐字核对（MHE-NMPC框架/缩减Cosserat动力学/平滑绳长驱动建模/近似张力-松弛互补/无直接张力传感的绳长控制；该摘要位于提取文本 preamble 节表面）；softplus公式E(λ)=(1/c)log(1+e^{cλ})、T=E(λ)与l−l_c=E(−λ)、c→∞收敛到max(0,λ)、G(x,l,λ)定义逐字核对VI-C原文（式44-47）；'解析Jacobian'贡献逐字核对I-B贡献1。"
+   }
+  },
+  {
+   "card_id": "2607.24029-C07",
+   "claim": "真机平台因仅由4缆驱动、工作空间是轴向压缩应变可忽略形成的'厚度极小的曲面'，为避免目标轨迹越出可达工作空间，实验只控制末端3维位置中的2维（X、Y、Z中的两个坐标），真机验证不覆盖姿态控制与全3维位置跟踪。",
+   "stance": "limit",
+   "relation": "限制综述命题'MHE-NMPC可实现软体臂末端任务空间高精度跟踪'的适用范围：其真机证据限于4缆欠驱动平台的2维位置跟踪，向3维位置/姿态控制外推缺乏支撑，为该方案族的适用条件边界证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VIII-B2原文：鉴于软体臂仅由4缆驱动，末端工作空间构成厚度极小的曲面，该有限厚度源于绳张紧时软臂经历的轴向压缩应变可忽略[45]；为防目标轨迹越出可用工作空间，只管理末端位置(X,Y,Z)三个空间坐标中的两个。结论future work亦承认需向更高维位姿调节扩展。",
+   "locator": "VIII-B2) Trajectory tracking control",
+   "source_context": "Given that the soft manipulator is actuated by only four cables, the workspace of the end-effector constitutes a surface with minimal thickness. This limited thickness is due to the negligible axial compression strain experienced by the soft manipulator when tensioned by the cables, as noted in [45]. To prevent the target trajectory from extending beyond the available workspace, we manage only two of the three spatial coordinates (X, Y, Z) of the end-effector’s position.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VIII-B2四句原文（4缆驱动/厚度极小的曲面/轴向压缩应变可忽略[45]/只管理三个坐标中的两个，含Unicode撇号'end-effector's'）；表I中Y-Z平面e_x与X-Z平面e_y均为'-'（未管理）与该声明一致；结论段'extending the experimental platform toward higher-dimensional pose regulation'逐字核对IX. CONCLUSIONS。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "本族定位：控制层方案族的'模型基（缩减Cosserat动力学×MHE-NMPC）'分支，绳驱软体臂应用；与2608.26739（残差DRL×CTC，绳驱康复臂）同属绳驱动但路线互补（模型基 vs 学习增强）。对综述映射：误差源=绳索单边张力-松弛互补（pull-only）、全状态不可测（仅末端位姿+绳长可测）、静态模型忽略速度/加速度；核心机制=softplus松弛变量平滑互补条件→无张力传感绳长控制 + MHE状态重建 + 绳长/绳速约束NMPC（SQP温启动）；量化效果=真机vs静态基线RMSE降80–94%（至0.05–0.08 cm）、随机目标RMSE 0.42 cm、MHE应变收敛±0.001/0.5 s、实时计算51.4–60.4 ms<100 ms；适用条件=可辨识Cosserat模型、预测时域须足够长（0.01 s失效/0.06 s有效）、计算须低于采样周期、快速目标需绳速约束；未解痛点=真机仅4缆2维位置（姿态/3维未验证）、形状估计缺定量验证、模型失配（摩擦/蠕变）未量化、单次实验无统计、基线单一。审计说明：本run的alphaxiv提取无'##'标题结构，audit_claim_support.py的locator解析必然失败（run级已知问题，前两篇相同），全部7张卡的source_context已通过确定性上下文匹配（exact_context_match=true）并逐字人工核对。"
+}

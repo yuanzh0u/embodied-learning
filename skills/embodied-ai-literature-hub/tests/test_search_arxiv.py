@@ -3,9 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import email.message
 import importlib
+import importlib.util
+import io
+import json
 import sys
+import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
@@ -115,6 +120,49 @@ class SearchArxivRetryTest(unittest.TestCase):
             args_with_retry_waits(-5, 60).retry_wait_seconds(TimeoutError("timeout"), 0),
             0.0,
         )
+
+
+class SearchArxivExitCodeTest(unittest.TestCase):
+    """Partial-batch exit contract of ArxivSearch.run (shared by all searchers
+    via report_partial_batch): failed queries are recorded, hits are kept, and
+    the caller sees a non-zero exit plus a stderr WARNING."""
+
+    def run_main(self, fetch_side_effect: list[object]) -> tuple[int, str, dict]:
+        queries = [
+            {"label": "q-one", "query": "all:alpha"},
+            {"label": "q-two", "query": "all:beta"},
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            output_file = Path(tmp) / "out.json"
+            searcher = search_arxiv.ArxivSearch(
+                start_date="2026-01-01",
+                end_date="2026-06-30",
+                output=str(output_file),
+            )
+            stderr = io.StringIO()
+            with mock.patch.object(search_arxiv.ratelimit, "gate", lambda *a, **k: nullcontext()):
+                with mock.patch.object(search_arxiv.time, "sleep"):
+                    with mock.patch.object(search_arxiv.ArxivSearch, "fetch", side_effect=fetch_side_effect):
+                        with contextlib.redirect_stderr(stderr):
+                            code = searcher.run(queries)
+            return code, stderr.getvalue(), json.loads(output_file.read_text(encoding="utf-8"))
+
+    def test_partial_failure_exits_nonzero_and_warns(self) -> None:
+        code, stderr, output = self.run_main([RuntimeError("arXiv request failed: 429"), b"<feed />"])
+
+        self.assertEqual(1, code)
+        self.assertIn("1/2 queries failed", stderr)
+        self.assertIn("q-one", stderr)
+        self.assertIn("429", output["queries"][0]["error"])
+        self.assertNotIn("error", output["queries"][1])
+        self.assertEqual(0, output["paper_count"])
+
+    def test_all_success_exits_zero_without_warning(self) -> None:
+        code, stderr, output = self.run_main([b"<feed />", b"<feed />"])
+
+        self.assertEqual(0, code)
+        self.assertEqual("", stderr)
+        self.assertEqual(0, output["paper_count"])
 
 
 if __name__ == "__main__":

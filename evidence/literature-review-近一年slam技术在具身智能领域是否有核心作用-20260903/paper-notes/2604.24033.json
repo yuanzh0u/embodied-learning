@@ -1,0 +1,356 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.24033",
+  "title": "Event-based SLAM Benchmark for High-Speed Maneuvers",
+  "published": "2026-04-27",
+  "url": "https://arxiv.org/abs/2604.24033",
+  "authors": [
+   "Sheng Zhong",
+   "Junkai Niu",
+   "Guillermo Gallego",
+   "Kaizhen Sun",
+   "Yang Yi",
+   "Zhiqiang Miao",
+   "Dewen Hu",
+   "Yaonan Wang",
+   "Davide Scaramuzza",
+   "Yi Zhou"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "综述窗口内（2026-04）发表的 SLAM 评测基准论文（EA-VLOC），在四种机器人本体（FPV 无人机、直线滑轨、机械臂、麦轮车）上系统评测事件相机 VO/VIO 与帧相机基线在高速机动+HDR 极端条件下的能力边界，直接回应'SLAM 作为感知基础设施在极端条件下是否可被替代'：全部被评方案都是显式状态估计（多传感器融合 + 优化后端），无任何端到端/世界模型替代路线参与对比；同时其真值生产依赖动捕（亚毫米级）而既有事件数据集真值大量依赖 LiDAR-SLAM，是'SLAM/动捕作为具身数据采集与评测的度量基础设施'的样本。论文不含具身任务级下游评测，其与具身智能的关联需读者推断，但被测平台本身即机器人本体。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section I Introduction",
+    "role": "problem",
+    "purpose": "确认论文动机：事件相机理论上适合高速机动，但现有工作只在受限设定（fronto-parallel 抖动、纯 3-DoF 旋转）成功，任意激进机动下的事件状态估计并非已解决问题；vSLAM 被定位为机器人应用的关键技术"
+   },
+   {
+    "locator": "page 2-4, Section II-A Event-based VO/SLAM Methods（Table I 方法分类、Fig. 2 演化、模型/学习 × 直接/间接逐类分析）",
+    "role": "relevant-core",
+    "purpose": "理解被评方法谱系（ESVO/ESVO2 直接法、ESVIO/REFIO 间接法、DEVO/SDEVO/DEIO/SuperEvent/EVIV 学习法）与各类方法在高速机动下的机理局限（噪声事件占比、零梯度区局部极小、特征时间一致性、GPU 依赖）"
+   },
+   {
+    "locator": "page 4-5, Section II-B Event-based SLAM Datasets 与 Table II",
+    "role": "relevant-core",
+    "purpose": "梳理既有事件数据集的真值来源（MoCap / LiDAR-SLAM / GNSS-RTK / 激光跟踪仪）——确认动捕与 LiDAR-SLAM 是评测基础设施；识别 M3ED 等'高速'数据集实际光流偏小的缺口"
+   },
+   {
+    "locator": "page 5-7, Section III Shortcomings of Current Datasets（Table III 立体不一致、Fig. 4 光流分布、Fig. 5 最大可靠深度、Table IV 分辨率-事件量）",
+    "role": "method-or-design",
+    "purpose": "理解数据集设计依据：左右事件计数差 10%-86% 的立体时空不一致及镜头对焦成因；高速机动的操作性定义（6-DoF 大速度 + 适当视差，以归一化光流 AUC 为难度代理）；VGA 分辨率最合适的主张"
+   },
+   {
+    "locator": "page 7-9, Section IV Proposed Dataset（Table V 传感器、标定/时序同步、Table VI 序列特征）",
+    "role": "data-or-setting",
+    "purpose": "确认传感器套件（2×DVXplorer 640×480 双目事件相机 10 cm 基线 + D435 + IMU）、四种平台运动模式、动捕真值（LUSTER FZMotion 120 Hz / NOKOV Mars26H 60 Hz + 手眼标定，亚毫米级）与两批采集设计（第二批加入 HDR/低光与更高角速度）"
+   },
+   {
+    "locator": "page 9-11, Section V-A Evaluation Metrics（ATE/RPE 公式与新 S(ξ) 速度精度曲线/AUC 指标）",
+    "role": "method-or-design",
+    "purpose": "理解新指标设计：RVE 与按 ||v_gt|| 加权的精度曲线 S(ξ)，AUC 作为统一排名统计，区分低速/高速场景性能差异"
+   },
+   {
+    "locator": "page 11-12, Section V-B Comparison of State-of-the-Art Methods（Table VII 批1、Table VIII 批2）",
+    "role": "results-or-analysis",
+    "purpose": "核对三条结论（IMU 约束提高速度平滑性、事件相机在高速中优于帧相机、帧-事件互补）与 HDR 批次上事件-only 方法退化的数值证据"
+   },
+   {
+    "locator": "page 12, Section V-C Runtime Analysis（Table IX 见 page 14）",
+    "role": "results-or-analysis",
+    "purpose": "核对运行时分解（预处理/前端主导、HD 成本高于 VGA）与作者'实际应用实时性仍有相当差距'的结论"
+   },
+   {
+    "locator": "page 13-14, Section VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论主张（多平台高速机动基准 + 数据集缺陷分析 + SOTA 特性与根本局限讨论）；确认论文无显式自评局限章节"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 14-15, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（ESVIO、SDEVO、DPVO、VINS、EVIV），无需逐条精读；论文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：事件相机在高速机动场景的潜力被释放到什么程度？SOTA 事件 VO/VIO 方法（模型与学习、直接与间接）在何种运动/光照组合下失效？需要什么样的数据集（多平台、严格的高速机动定义、正确对焦的立体事件数据）与评测指标（速度精度 AUC）才能公平评估其操作极限？对综述问题的意义：检验 SLAM/状态估计作为极端条件下机器人感知基础设施的能力边界与不可替代性——高速机动+HDR 下帧相机方案与事件-only 方案都失效、融合方案最优，说明极端条件感知仍是显式多传感器状态估计的拼装工程；同时基准真值生产依赖动捕（室内黄金标准）而既有事件数据集真值大量依赖 LiDAR-SLAM，体现 SLAM 在数据生产侧的度量基础设施角色。",
+ "contributions": [
+  "事件 SLAM 方法分类综述：以 Table I（模型/学习 × 直接/间接 × 事件表征 × 全局精化 × 传感器模态）与 Fig. 2 演化图梳理 13 个代表方法，并逐类分析其在高速机动下的机理局限（噪声事件占比升高、2D-3D 配准陷入零梯度区、特征时间一致性被破坏、GPU 依赖）",
+  "现有事件数据集三大缺陷的定量揭示：立体事件观测时空不一致（左右事件计数差 10%-86%，Table III，ECMD street day easy a1 达 +85.82%）、高速机动场景稀缺（以分辨率归一化光流分布为判据，M3ED 光流实际接近 DSEC，Fig. 4）、分辨率竞赛导致事件量超线性增长（同场景 5 秒：346×260 约 1.2×10^6、640×480 约 12.5×10^6、1280×720 约 130.8×10^6，Table IV）",
+  "EvSLAM 数据集：四种机器人平台（FPV 无人机/直线滑轨/机械臂/麦轮车）× 两批难度递进（常规光照 7 条 + HDR/低光/更高角速度 11 条 + test 序列，共 19 条）；2×DVXplorer 640×480 双目事件相机（10 cm 基线）+ D435 灰度/彩色相机 + IMU，30 Hz 硬件脉冲时间同步，镜头对焦校正流程；动捕真值（亚毫米级 6-DoF）",
+  "评测方法学：提出速度精度指标 S(ξ)（按 ||v_gt|| 加权的相对速度误差成功率曲线）与 AUC 排名统计，填补 VIO 速度估计评估空白；对 9 个事件方法与 2 个帧方法基线完成 18 条序列评测与运行时分解分析（Table IX）"
+ ],
+ "method": {
+  "summary": "基准构建与评测四部分。(1) 传感器套件：2×Inivation DVXplorer 双目事件相机（640×480 px、10 cm 基线、110 dB 动态范围）+ 内置 IMU（正文 400 Hz / Table V 记 800 Hz）+ Intel RealSense D435（2 灰度 + 1 彩色，均 640×480、30 Hz）；30 Hz 脉冲发生器做跨模态硬件时间同步；提出对屏显示闪烁棋盘格、实时监测左右单位时间事件数并调焦至最大且匹配的对焦方法，以消除部分公开数据集的立体事件时空不一致。(2) 平台与序列：四平台覆盖（无人机 6-DoF 激进机动、滑轨纯平移、机械臂大角度震荡、麦轮车快速旋转），两批采集，第二批提高角速度并加入 HDR/低光；'高速机动'的操作性定义为 6-DoF 大线/角速度 + 适当视差，以分辨率归一化光流分布的 AUC 为序列难度代理。(3) 真值：全部序列在动捕可观测边界内录制，真值轨迹由手眼标定结果与 MoCap 数据融合（无人机序列 LUSTER FZMotion 120 Hz，其余 NOKOV Mars26H 60 Hz），作者称亚毫米级 6-DoF 精度；标定用 Kalibr（事件流先经图像重构）+ AprilTag 手眼标定。(4) 评测：ATE/RPE 之外提出速度精度曲线 S(ξ)=Σ w_i·1(RVE_i<ξ)（w_i 按 ||v_gt|| 加权），以 AUC 排名；对比 9 个 SOTA 事件方法（部分为作者集成：FETAP+VINS-mono、SuperEvent+OKVIS2、ESVIO/REFIO 基于 VINS-Fusion、SDEVO/DEIO 源自 DEVO、EVIV 连续时间速度估计）与帧基线 VINS-Fusion、DPVO（单目尺度对齐后评 ATE）；运行时在 VGA/HD 两分辨率桌面平台（i7-14700K + RTX 3090/4080）上分解为预处理/前端/后端。",
+  "assumptions": [
+   "动捕 + 手眼标定链提供亚毫米级 6-DoF 真值（作者主张，未附独立验证）",
+   "分辨率归一化光流分布（AUC of OF）是比绝对线/角速度更合适的'高速机动'难度代理（沿用 UZH-FPV 思路）",
+   "左右事件计数差 <10% 可接受、更大差异主要归因于失焦等数据质量问题（Table III 为相关性证据，非受控实验）",
+   "VGA 分辨率 + 10/25 cm 基线可满足绝大多数室内外深度估计需求（基于 ±0.5 px 视差误差的理论推算，Fig. 5）",
+   "被评方法的官方/作者集成实现在本数据集上的表现代表其当前能力（未报告统一调参协议）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EvSLAM 自采数据集（19 条序列：无人机 10 + 滑轨 3 + 机械臂 3 + 麦轮车 3；时长 5.9-47.7 s；最大线速度 8.64 m/s、最大角速度 3.61 rad/s；两批：常规光照 7 条、HDR/低光/更剧烈 11 条 + test；全部含动捕真值与回环）",
+   "TUM-VIE mocap 6dof 序列（仅用于运行时分析的 HD 分辨率对照，Table IX）",
+   "公开数据集对比分析：MVSEC/HKU/DSEC/ECMD 的立体事件计数不一致（Table III）与多数据集光流分布（Fig. 4）"
+  ],
+  "tasks": [
+   "事件/帧 VO/VIO 轨迹估计评测（ATE RMSE）",
+   "线速度估计评测（新提出的加权相对速度误差精度曲线 S(ξ) 与 AUC）",
+   "运行时评测（预处理/前端/后端分解，VGA vs HD）"
+  ],
+  "embodiments": [
+   "250mm 四旋翼 FPV 无人机（激进 6-DoF 机动：直线/椭圆/8 字/S 曲线/自旋圆周）",
+   "直线滑轨平台（纯平移）、机械臂（大角度震荡相机抖动）、麦轮车（快速旋转）",
+   "被评系统：FETAP、SuperEvent/SuperEvent*、ESVIO、REFIO、SDEVO、DEIO、EVIV、VINS-Fusion、DPVO（官方实现或作者集成，桌面级 i7-14700K + RTX 3090/4080）"
+  ],
+  "sample_or_scale": "19 条序列（Table VII 评 7 条、Table VIII 评 11 条，test 序列未评测）；9 方法 × 7 序列（批1）+ 4 方法 × 11 序列（批2）；每序列单次运行，无重复实验与方差报告"
+ },
+ "evaluation": {
+  "design": "两批难度递进（常规光照 → HDR/低光 + 更高角速度）的对照评测：事件方法 vs 帧方法基线（VINS-Fusion/DPVO）、E+F vs E-only vs F-only 模态对照、IMU 有无对照（DEIO vs SDEVO、VINS vs DPVO）、SuperEvent 有无帧相机对照（* 变体）；运行时在 VGA/HD 两分辨率、桌面级平台上按预处理/前端/后端分解",
+  "baselines": [
+   "FETAP（Mono EVIO：SuperPoint + FETAP 事件-帧融合跟踪 + VINS-mono 后端）",
+   "SuperEvent / SuperEvent*（Stereo EVIO：transformer 事件关键点接入 OKVIS2，* 为纯事件模式）",
+   "REFIO（Stereo EVIO，事件特征 + 尺度精化，未正式发表）",
+   "ESVIO（Stereo EVIO：VINS-Fusion + Arc* 事件特征）",
+   "SDEVO（Stereo EO：DEVO 学习前端 + 立体尺度恢复）",
+   "DEIO（Stereo EIO：DEVO + IMU + 近邻回环）",
+   "EVIV（Stereo EO：法向流 + 连续时间速度估计）",
+   "帧基线：VINS-Fusion（Stereo VIO）、DPVO（Mono VO，尺度对齐后评测）"
+  ],
+  "metrics": [
+   "ATE（m，RMSE）",
+   "线速度精度 AUC（新指标：按 ||v_gt|| 加权的相对速度误差成功率曲线 S(ξ) 的曲线下面积，另给出含角速度的加权变体）",
+   "RPE（公式给出，主表未报告）",
+   "运行时（ms，预处理/前端/后端 × VGA/HD）"
+  ],
+  "ablations": [
+   "IMU 有无（DEIO vs SDEVO；VINS-Fusion vs DPVO）",
+   "帧相机有无（SuperEvent vs SuperEvent*）",
+   "事件约束增益（ESVIO vs VINS-Fusion；REFIO vs VINS-Fusion）",
+   "分辨率（运行时 VGA vs HD；事件量随分辨率超线性增长）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "批1（常规光照）确认事件相机在高速机动中的优势：帧相机 DPVO 的 ATE 更低（借清晰灰度图的丰富纹理），但速度估计 AUC 不及事件-only 的 SDEVO（批1 平均 0.838 vs 0.876）；最高光流序列 arm norm 上差距最大（SDEVO AUC 0.855 vs DPVO 0.730、帧 VINS 0.694），且 SuperEvent 在该序列上有无帧相机对结果无影响。作者结论：事件相机优于帧相机且优势随光流幅度增大而扩大。",
+   "scope": "9 方法 × 批1 7 条常规光照序列（Table VII）",
+   "locator": "page 11-12, Table VII（论述见 page 11 Section V-B）"
+  },
+  {
+   "finding": "批2（HDR/低光 + 更高角速度）全部方法显著退化（平均 AUC 从批1 的 0.84-0.90 降至 0.59-0.71）：事件-only 的 SDEVO 平均 ATE 0.921 m 劣于帧相机 DPVO 0.603 m（多个 HDR/低光序列差距悬殊：drone 8 hdr 1.935 vs 0.352 m、arm hdr 0.512 vs 0.087 m、car circle hdr 1.713 vs 0.380 m；drone s 两序列上 DPVO 反而更差）；作者据此提出事件相机在 HDR 与高速机动同时存在时存在潜在局限。事件-帧-IMU 融合的 ESVIO 批2 平均最优（0.512 m / 0.710）。",
+   "scope": "4 方法 × 批2 11 条 HDR/低光/更剧烈序列（Table VIII）",
+   "locator": "page 12, Table VIII（论述见 page 11 Section V-B 末段）"
+  },
+  {
+   "finding": "帧-事件互补结论（作者第三条结论）：帧相机提供丰富纹理保证中低速高精度位姿估计，事件相机借高时间分辨率与高动态范围克服高速机动干扰；SuperEvent 纯事件模式 vs 事件-帧联合优化的对比、REFIO 较 VINS-Fusion 在 arm norm 上的增益、以及批2 上 ESVIO 对 VINS-Fusion 的全面优势（11 条序列中 10 条 ATE 与 AUC 均更优，仅 car circle hdr 的 ATE 例外）共同支撑该结论。",
+   "scope": "批1+批2 全部 18 条评测序列的跨模态对比",
+   "locator": "page 11-12, Section V-B（Table VII/VIII 交叉核对）"
+  },
+  {
+   "finding": "IMU 连续约束提高速度估计平滑性：带 IMU 的系统（DEIO vs SDEVO、VINS-Fusion vs DPVO）在高加速无人机序列上 AUC 显著更高，即便 ATE 可能更大。",
+   "scope": "批1 无人机序列的 IMU 有无对照（Table VII）",
+   "locator": "page 11, Section V-B 第一条结论"
+  },
+  {
+   "finding": "运行时与部署边界：运行时由预处理与前端主导、HD 一致性高于 VGA（Table IX：SuperEvent* 预处理 VGA 147.75 ms vs HD 723.47 ms、EVIV 91.80 vs 703.19 ms）；学习型事件 SLAM 仅在桌面级 GPU 上接近实时，作者结论是'这些方法与实际应用所需实时性能之间仍有相当差距'，更高分辨率事件数据远超当前方法能力（句子续接于 page 13）。",
+   "scope": "5-6 个代表方法在 VGA（自录 drone circle norm）与 HD（TUM-VIE mocap 6dof）上的运行时分解",
+   "locator": "page 12, Section V-C；Table IX（page 14）"
+  },
+  {
+   "finding": "数据集基础设施观察：本基准真值由动捕（LUSTER FZMotion 120 Hz / NOKOV Mars26H 60 Hz）+ 手眼标定融合生成（作者称亚毫米级）；Table II 显示既有事件数据集真值大量依赖 LiDAR-SLAM（MVSEC 'LiDAR-SLAM + MoCap'、M3ED 'LiDAR-SLAM + GNSS-RTK'、CoSEC 'LiDAR-SLAM'）、激光跟踪仪或 GNSS-RTK——动捕与成熟 SLAM 系统共同构成评测与数据生产的度量基础设施。",
+   "scope": "本数据集真值管线 + Table II 对 16 个既有数据集真值来源的汇总",
+   "locator": "page 9, Section IV-D；page 5, Table II"
+  },
+  {
+   "finding": "文表不一致（读表需以表格为准）：(a) 正文称 ESVIO 在批2 'consistently outperforms' VINS-Fusion 于所有序列，但 Table VIII 显示 car circle hdr 上 ESVIO ATE 1.127 m 劣于 VINS 的 0.842 m（AUC 0.541 仍更优）；(b) 正文称 arm norm 具最高光流幅度，但 Table VI 显示 car circle norm 的 AUC of OF（0.504）略高于 arm norm（0.489）；(c) IMU 频率正文记 400 Hz 而 Table V 记 800 Hz。",
+   "scope": "正文陈述与表格数值的交叉核对（非实验证据）",
+   "locator": "page 12 Section V-B vs Table VIII；page 11 vs page 9 Table VI；page 2 vs page 8 Table V"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "环境与轨迹尺度受动捕边界约束：全部序列在动捕可观测范围内录制（最长 47.7 s、室内），无法评估大尺度环境、长时程漂移或户外场景的性能——事件 SLAM 的回环/全局一致性能力基本未被本基准检验（序列含回环但未报告回环专属指标）",
+    "basis": "page 9, Section IV-D（'All sequences are recorded within the observable boundaries of the MoCap system'）与 Table VI 的序列时长/平台清单"
+   },
+   {
+    "boundary": "无重复实验与方差/显著性报告：每序列单次运行，HDR 序列事件噪声大，单次运行的 ATE/AUC 数值（尤其批2 的退化结论）对随机性敏感；EVIV 在批1 的异常大 ATE（平均 1.513 m）与其速度估计定位间的落差未获解释",
+    "basis": "page 12, Tables VII-VIII 的报告形式（每格单值）与 page 11 对 EVIV 的介绍"
+   },
+   {
+    "boundary": "被评方法调参协议未报告：作者自己在综述中指出 model-based 事件方法'often require extensive parameter tuning when adapting to unseen environments'，但未报告各方法在本数据集上的调参程度，方法间（尤其作者集成的 FETAP/SuperEvent/REFIO 与官方实现的 SDEVO/ESVIO）公平性无法完全排除配置差异干扰",
+    "basis": "page 4, Section II-A2) 末段与 page 11, Section V-B 的方法介绍（无调参说明）"
+   },
+   {
+    "boundary": "新指标 AUC 未经社区验证：S(ξ) 加权方案有两种定义（仅 ||v|| 或含 ||ω||）并存且主表未声明用哪种；速度真值依赖动捕-手眼标定链，亚毫米精度主张未经独立验证",
+    "basis": "page 10-11, Section V-A（两种权重定义）与 page 9（真值精度为作者自述）"
+   },
+   {
+    "boundary": "平台机动仍是受控模式（预设轨迹的滑轨/机械臂/圆周/八字机动），未覆盖真实任务中的非受控高速机动；对具身任务（导航控制、操作）的下游影响未评测，事件相机的载荷/功耗代价在机器人平台上的工程权衡未评估",
+    "basis": "page 9, Table VI 的运动模式列与全文实验范围（无下游任务实验）"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在室内动捕可观测范围内、四种受控高速机动机器人平台（最大 8.64 m/s 线速度、3.61 rad/s 角速度）、VGA 双目事件相机 + IMU 设定下，截至 2026 年 4 月：(a) 常规光照高速机动中事件相机速度估计精度（AUC）优于帧相机方法；(b) HDR 与高速机动并存时事件-only 系统（SDEVO 平均 ATE 0.921 m）劣于帧相机方法（DPVO 0.603 m），事件-帧-IMU 融合系统（ESVIO 0.512 m / AUC 0.710）最稳；(c) 学习型事件 SLAM 仅在桌面级 GPU 上接近实时，嵌入式部署差距显著。该结论不外推到户外/大尺度/长时程场景、非受控机动、无 IMU 或更高分辨率设定，也不预测具身任务下游性能。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "多平台系统覆盖（无人机/滑轨/机械臂/麦轮车 × 两批难度递进），且给出'高速机动'的操作性定义（6-DoF 大速度 + 适当视差，以归一化光流 AUC 为代理），动机与设计对齐",
+   "事件方法与帧方法（VINS-Fusion/DPVO）同场对照，使模态增益可分离；IMU 有无、帧有无均有内嵌对照",
+   "新速度精度指标（加权 S(ξ)/AUC）直接针对闭环控制需求，填补 VIO 速度评估空白，并显式区分低速/高速性能",
+   "数据集缺陷分析有定量支撑（左右事件计数差、分辨率-事件量超线性增长、光流分布跨数据集对比），并提出可操作的对焦校正流程",
+   "真值为动捕（室内最高标准）而非 SLAM 本身，避免了'用被测同类系统当真值'的循环问题"
+  ],
+  "design_risks": [
+   "文表不一致三处（ESVIO'全序列优于 VINS'与 car circle hdr 的 ATE 矛盾；arm norm'最高光流'与 Table VI 数值矛盾；IMU 400/800 Hz 报告冲突），提示结果呈现存在错位，读表需以表格为准",
+   "无重复实验与方差报告；批2 退化结论基于单次运行",
+   "被评方法混合官方实现与作者集成（FETAP+VINS-mono、SuperEvent+OKVIS2、REFIO 未正式发表），系统级差异（后端选择）与传感器模态差异混杂；调参协议未报告",
+   "动捕亚毫米真值精度为作者主张；'test' 序列列于 Table VI 却未参与评测，用途未说明",
+   "AUC 新指标未经外部验证，两种加权定义并存而主表未声明所用版本"
+  ],
+  "baseline_fairness": "帧基线（VINS-Fusion 官方、DPVO 经尺度对齐）设定明确且作者声明了对齐操作；但事件方法中 FETAP/SuperEvent/REFIO 为作者集成进 VINS-mono/OKVIS2/VINS-Fusion 的版本，后端差异会混入'事件前端收益'的归因；未报告统一调参协议，而作者自己指出 model-based 事件方法在新环境需大量调参——各方法在本数据集的适配程度不可知。",
+  "metric_validity": "ATE/RPE 为标准指标；新 AUC 指标动机合理（速度对闭环控制关键、区分高低速性能）且作者用 Fig. 9 演示了加权与非加权的差异，但未经社区检验，且与 ATE 可能背离（DPVO 低 ATE 但低 AUC）——排名对指标选择敏感；RPE 公式给出但主表未报告；运行时对比跨两个 GPU 平台（3090 vs 4080）且有方法仅测部分模块，数值可比性受限。",
+  "reproducibility": "数据集与视频公开（项目页 nail-hnu.github.io/EvSLAM Dataset、youtu.be）；传感器规格、对焦方法、Kalibr 标定、30 Hz 硬件同步、动捕配置描述详尽；但被评方法版本/配置与调参细节未报告，REFIO 等方法未公开，运行时测量平台不统一，完整复现评测困难。",
+  "external_validity": "限于室内动捕边界内的受控机动（预设轨迹）；无户外、大尺度、长时程漂移或动态物体评估；对具身任务的下游影响（控制稳定性、操作精度）未测；事件相机的功耗/载荷/成本权衡未讨论。对真实机器人部署的外推（作者也承认嵌入式实时性差距）需谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.24033-C01",
+   "claim": "在第二批（更高角速度 + HDR/低光照）序列上，事件-only 的 SDEVO 平均 ATE 0.921 m 与速度精度 AUC 0.663 均劣于帧相机 DPVO（0.603 m / 0.676），多个 HDR/低光序列差距悬殊（drone 8 hdr：1.935 vs 0.352 m；arm hdr：0.512 vs 0.087 m；car circle hdr：1.713 vs 0.380 m），例外是 drone s 两序列（DPVO 的 ATE 反而更大：1.743/2.300 vs 1.502/2.044）。事件-帧-IMU 融合的 ESVIO 在第二批平均最优（ATE 0.512 m / AUC 0.710，帧 VINS-Fusion 最差 1.103 m / 0.593）。作者据此提出：事件相机在 HDR 与高速机动同时存在的场景存在潜在局限（论述见 page 11）。",
+   "stance": "limit",
+   "relation": "限制'SLAM/状态估计已能在极端条件下可靠支撑具身机器人'的判断：即便引入专为高速+HDR 设计的事件相机传感器，事件-only 方案在两类极端条件并存时仍劣于普通帧相机方案，而帧-only 的 VINS-Fusion（平均 ATE 1.103 m）在批2 上整体最差——极端条件下的感知/状态估计没有免检方案，只有'多传感器显式融合'（ESVIO 最优）勉强胜任；这为'SLAM 作为感知基础设施在极端条件下仍不可替代、但其可靠性是拼装工程而非 solved problem'提供了窗口内的定量证据。",
+   "summary": "HDR+高速并存时事件-only SLAM 劣于帧相机（SDEVO 平均 ATE 0.921 vs DPVO 0.603 m），融合方案最优",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 12, Table VIII",
+   "source_context": "TABLE VIII: Results of SOTA event-based SLAM methods\non the second batch of sequences [ATE:(m), AUC:(-)].\nMethod \nESVIO [20] SDEVO [29] VINS [37] DPVO [44]\nStereo EVIO Stereo EO Stereo VIO Mono VO\nSequence ATE / AUC ATE / AUC ATE / AUC ATE / AUC\ndrone 8 norm 0.403 / 0.934 0.881 / 0.880 1.031 / 0.921 0.333 / 0.943\ndrone 8 hdr 0.876 / 0.922 1.935 / 0.818 1.732 / 0.767 0.352 / 0.928\ndrone s norm 0.639 / 0.899 1.502 / 0.772 1.029 / 0.759 1.743 / 0.674\ndrone s hdr 0.445 / 0.822 2.044 / 0.691 2.425 / 0.744 2.300 / 0.518\ndrone rot norm 0.386 / 0.752 0.421 / 0.577 0.664 / 0.505 0.673 / 0.402\ndrone rot fast 0.742 / 0.563 0.549 / 0.374 2.365 / 0.283 0.431 / 0.529\nslider fast 0.381 / 0.601 0.115 / 0.654 0.730 / 0.382 0.147 / 0.623\nslider hdr 0.278 / 0.544 0.197 / 0.728 0.377 / 0.572 0.124 / 0.777\narm dim 0.137 / 0.637 0.261 / 0.602 0.341 / 0.588 0.066 / 0.678\narm hdr 0.219 / 0.594 0.512 / 0.531 0.600 / 0.488 0.087 / 0.660\ncar circle hdr 1.127 / 0.541 1.713 / 0.669 0.842 / 0.513 0.380 / 0.704\nAverage 0.512 / 0.710 0.921 / 0.663 1.103 / 0.593 0.603 / 0.676",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE（m）与速度估计精度 AUC",
+    "value_or_direction": "批2 平均：SDEVO 0.921 m / 0.663 劣于 DPVO 0.603 m / 0.676；ESVIO 最优 0.512 m / 0.710；drone 8 hdr 上 SDEVO 1.935 vs DPVO 0.352，arm hdr 0.512 vs 0.087，car circle hdr 1.713 vs 0.380",
+    "comparator": "帧相机 DPVO（Mono VO）与 VINS-Fusion（Stereo VIO），以及事件-帧融合 ESVIO",
+    "task_or_sample": "第二批 11 条 HDR/低光/更剧烈机动序列上的事件与帧 VO/VIO 评测（Table VIII）",
+    "locator": "page 12, Table VIII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 12 Table VIII 全部 11 行与 Average 行（SDEVO 列即表中第 2 数据列、DPVO 为第 4 数据列；drone s norm/hdr 行 1.502/2.044 vs 1.743/2.300 确认 DPVO 例外更差，已在 claim 中如实保留）。'潜在局限'的作者论断逐字见 page 11（'suggests potential limitations of event cameras in scenarios characterized by the simultaneous presence of HDR and high-speed maneuvers'）。ESVIO'consistently outperforms' VINS 的正文句与 car circle hdr 行（1.127 vs 0.842）矛盾，故 claim 仅采表格数值与平均行，不采该句的'全序列'表述。claim 范围限于第二批 11 条序列与 4 个被评方法。"
+   }
+  },
+  {
+   "card_id": "2604.24033-C02",
+   "claim": "第一批（常规光照）序列确认事件相机在高速机动中的优势：帧相机 DPVO 的 ATE 更低（批1 平均 0.127 m vs SDEVO 0.271 m，arm norm 上 0.059 vs 0.069 m），但速度估计 AUC 不及事件-only 的 SDEVO（批1 平均 0.838 vs 0.876；arm norm 上 SDEVO 0.855 > DPVO 0.730 > 帧 VINS 0.694）；作者结论是事件相机在高速机动场景优于帧相机且优势随光流增大而扩大、帧相机与事件相机互补（帧提供纹理保中低速精度、事件借高时间分辨率与高动态范围抗高速干扰，论述见 page 11）。",
+   "stance": "support",
+   "relation": "支持'SLAM/多传感器状态估计是极端条件下机器人感知的核心基础设施'的判断：在高速机动这一帧相机失效的条件下，可用的全部方案都是显式状态估计管线（事件/帧前端 + IMU + 优化后端），且最优解是事件-帧-IMU 三模态显式融合——该基准的对比空间中不存在任何端到端/世界模型类替代路线；同时基准本身即是对 SLAM 感知基础设施的持续工程投入（新传感器 + 新指标 + 新数据）。注意这是'缺席证据'（对比中无替代方案参与），只能支持'当前实践中 SLAM 是唯一被认真对待的路线'，不能证明替代不可行。",
+   "summary": "常规光照高速机动中事件 SLAM 速度精度优于帧相机（arm norm AUC 0.855 vs 0.730），帧-事件互补",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 12, Table VII",
+   "source_context": "arm norm 0.048 / 0.831 0.033 / 0.857 0.164 / 0.784 0.033 / 0.857 0.069 / 0.855 0.078 / 0.655 1.966 / 0.805 0.170 / 0.694 0.059 / 0.730\ncar circle norm 0.149 / 0.904 0.076 / 0.904 0.131 / 0.873 0.179 / 0.844 0.263 / 0.854 0.064 / 0.913 1.505 / 0.784 0.150 / 0.887 0.215 / 0.815\nAverage 0.117 / 0.898 0.064 / 0.896 0.192 / 0.869 0.123 / 0.877 0.271 / 0.876 0.066 / 0.864 1.513 / 0.840 0.188 / 0.861 0.127 / 0.838",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "速度估计精度 AUC 与 ATE（m）",
+    "value_or_direction": "arm norm：SDEVO AUC 0.855 > DPVO 0.730 > VINS 0.694（ATE 分别 0.069 / 0.059 / 0.170）；批1 平均 AUC：SDEVO 0.876 > VINS 0.861 > DPVO 0.838，平均 ATE：DPVO 0.127 < SDEVO 0.271",
+    "comparator": "帧相机 DPVO（Mono VO）与 VINS-Fusion（Stereo VIO）",
+    "task_or_sample": "第一批 7 条常规光照序列（含高光流的 arm norm）上的事件/帧 VO/VIO 评测（Table VII）",
+    "locator": "page 12, Table VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 12 Table VII 的 arm norm 行（第 5 数据列即 SDEVO：0.069 / 0.855；第 8 列 VINS：0.170 / 0.694；第 9 列 DPVO：0.059 / 0.730）与 Average 行（SDEVO 0.271 / 0.876、VINS 0.188 / 0.861、DPVO 0.127 / 0.838）。'事件优于帧且随光流扩大'与'帧-事件互补'的作者结论逐字见 page 11（'event cameras outperform frame-based cameras in high-speed maneuvering scenarios...' 与 'frame-based cameras and event cameras can complement each other...'，后句续接 page 12 'texture information to ensure high-precision pose estimation in medium-to-low speed scenarios'）。'arm norm 具最高光流'的正文句与 Table VI（car circle norm AUC of OF 0.504 > arm norm 0.489，page 9）矛盾，claim 已改用'高光流'弱化表述。"
+   }
+  },
+  {
+   "card_id": "2604.24033-C03",
+   "claim": "EvSLAM 基准全部序列的真值由动捕系统提供：真值轨迹由手眼标定结果与 MoCap 数据融合生成，作者称达到亚毫米级 6-DoF 位姿精度；无人机序列用 LUSTER FZMotion MoCap（120 Hz 采样），其余序列用 NOKOV Mars26H（60 Hz 采样）；所有序列含多个闭环、在动捕可观测边界内录制。即高速机动场景的位姿评测以动捕（而非 SLAM）为度量基础设施。",
+   "stance": "support",
+   "relation": "支持'具身数据采集/评测依赖显式位姿基础设施'的判断：为高速机器人平台产出可用位姿真值，本基准采用动捕这一室内黄金标准；结合 Table II（page 5：MVSEC 真值 'LiDAR-SLAM + MoCap'、M3ED 'LiDAR-SLAM + GNSS-RTK'、CoSEC 'LiDAR-SLAM'），事件 SLAM 领域的数据生产以动捕与成熟 LiDAR-SLAM 为度量骨干——高精度位姿标签仍是必须显式生产（动捕/SLAM）而无法从端到端模型隐式获得的资源，这是 SLAM 在具身数据采集环节基础设施角色的旁证（不同基准分别选择动捕或 LiDAR-SLAM 作为真值来源）。",
+   "summary": "全部序列真值由动捕（LUSTER 120 Hz / NOKOV 60 Hz）+ 手眼标定融合生成，作者称亚毫米级",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 9, Section IV-D Sequences Overview",
+   "source_context": "incorporate multiple closed loops, whose ground-truth trajec-\ntories are derived by fusing hand-eye calibration results with\nMoCap data, yielding sub-millimeter-level accuracy for 6-DoF\npose estimation. Specifically, the LUSTER FZMotion MoCap\nsystem, operating at a 120 Hz sampling rate, is deployed for\ndrone sequences, while the NOKOV Mars26H system with\na 60 Hz sampling rate is used for all remaining.",
+   "evidence_type": "dataset",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 9 Section IV-D 原文（'trajec- tories' 为 PDF 跨行连字符逐字形式；120 Hz / 60 Hz 为采样率描述而非实验结果量值，故 quantitative=false）。'亚毫米级'为作者自述精度主张（无独立验证数字），claim 以'作者称'限定。Table II 中既有数据集真值来源（LiDAR-SLAM / MoCap / GNSS-RTK / 激光跟踪仪）逐字见 page 5 表格与 page 4 正文（MVSEC 'obtained by fusing LiDAR and IMU data using Cartographer'），已在 relation 中作为背景引述并注明页码。"
+   }
+  },
+  {
+   "card_id": "2604.24033-C04",
+   "claim": "学习型事件 SLAM 的部署边界：作者指出（运行时分析）部分数据驱动方法在 VGA 分辨率事件数据上已能在桌面级 GPU 达到一定实时性、甚至超过部分 model-based 方法，但这些方法严重依赖高性能 GPU，部署到功耗受限的嵌入式平台时计算延迟显著增加；事件表征构建成本与事件量线性相关、传输开销未计入分析；作者结论是'这些方法与实际应用所需的实时性能之间仍有相当差距'，更高分辨率事件数据远超当前事件 SLAM 方法的能力（句子续接于 page 13）。",
+   "stance": "gap",
+   "relation": "对'SLAM 已可作为具身智能即插即用基础设施'构成部署侧缺口：高速机动具身平台（无人机等）恰是机载算力最受限的场景，而当前性能最好的（学习型）事件 SLAM 只能在桌面级 GPU 上接近实时——SLAM 在具身部署中的瓶颈从算法精度转向算力/实时性工程，这一缺口未被端到端基础模型路线解决（本文未涉及），是具身智能感知基础设施建设的活跃工程问题。",
+   "summary": "学习型事件 SLAM 仅在桌面级 GPU 接近实时，嵌入式部署与实际应用实时性仍有相当差距",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 12, Section V-C Runtime Analysis",
+   "source_context": "Although Tab. IX suggests that some current data-driven\ndeep learning methods demonstrate a certain level of real-time\nperformance on VGA-resolution event data, even outperform-\ning some model-based methods, it is important to note that\nthese methods heavily rely on high-performance GPUs. When\ndeployed on power-constrained embedded platforms, their\ncomputational latency increases significantly [29]. In addition,\nalthough the front-end runtime of learning-based methods is\ngenerally not sensitive to increasing resolution, the cost of\nconstructing the high-dimensional and complex event repre-\nsentations used to extract implicit feature information is often\nlinearly correlated with the event count. More importantly, the\npotentially substantial overhead required for transmitting such\nevent representations is not included in the present analysis,\nwhich is also closely related to the resolution. Consequently, a\nconsiderable gap remains between these methods and the real-\ntime performance required for practical applications, while\nhigher-resolution event data remain far beyond the capabilities",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 12 Section V-C 末段（'outperform- ing'、'repre- sentations' 为 PDF 跨行连字符逐字形式；引文止于页边界 '...far beyond the capabilities'，句尾 'of current event-based SLAM methods.' 续接于 page 13，已一并核对）。具体运行时数值（SuperEvent* 预处理 VGA 147.75 ms / HD 723.47 ms 等）在 Table IX（page 14），故 claim 不含具体毫秒数、quantitative=false。综述部分同主题论断（'existing approaches typically achieve real-time performance only on high-end GPUs, making them unsuitable for embedded platforms'）逐字见 page 4，claim 与两处原文措辞一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "ESVIO: Event-based stereo visual inertial odometry",
+   "arxiv_id": "",
+   "role": "批2 最优的事件-帧-IMU 融合系统（C01 对比锚点），基于 VINS-Fusion 的事件特征扩展"
+  },
+  {
+   "title": "Deep visual odometry for stereo event cameras（SDEVO）",
+   "arxiv_id": "",
+   "role": "事件-only 代表系统：批1 速度精度优于帧相机、批2 HDR 场景退化的主要证据对象（C01/C02）"
+  },
+  {
+   "title": "Deep patch visual odometry（DPVO）",
+   "arxiv_id": "",
+   "role": "学习型帧相机 VO 基线：低 ATE 但低 AUC，HDR 批次上反而优于事件-only 方法的对照锚点"
+  },
+  {
+   "title": "VINS-Mono: A robust and versatile monocular visual-inertial state estimator",
+   "arxiv_id": "1708.03852",
+   "role": "VINS 系（VINS-Mono/VINS-Fusion）为多数被评事件方法的经典 VIO 骨架与帧基线（VINS-Fusion），体现'事件前端 + 经典优化后端'的吸收式融合路线"
+  },
+  {
+   "title": "Event-based visual-inertial state estimation for high-speed maneuvers（EVIV）",
+   "arxiv_id": "",
+   "role": "无地图的连续时间速度估计路线（80 Hz 输出），作者建议的未来方向之一；其批1 ATE 异常大（平均 1.513 m）是评测解释的未决问题"
+  }
+ ],
+ "notes": "补充观察：(1) 对综述问题最重要的结构性事实：本文全部对比空间都是显式状态估计（事件/帧前端 + IMU + 优化后端），无任何端到端/VLA/世界模型/隐式记忆类替代路线参与高速机动感知的对比——这是'缺席证据'，支持'当前实践中 SLAM 仍是极端条件感知的唯一被认真对待路线'，但不能证明替代不可行；且最优解（ESVIO/REFIO/FETAP）恰是'把事件或学习前端吸收进经典 VIO 后端（VINS/OKVIS2）'，与 ScaleMaster 一文的'基础模型进入 SLAM 而非替代 SLAM'形成同构观察。(2) 能力边界的双重暴露：帧相机在高速机动失效（VINS 批2 平均 ATE 1.103 m 最差）而事件-only 在 HDR+高速并存失效（SDEVO 0.921 m），只有显式多传感器融合稳定——极端条件感知仍是基础设施拼装问题。(3) 真值基础设施的分层：本基准用动捕（室内黄金标准、亚毫米），既有事件数据集大量用 LiDAR-SLAM（Table II page 5）——与 ScaleMaster 用 ARKit VIO 真值构成三点对照：动捕 > LiDAR-SLAM > 商品化 VIO，精度与可部署性互换，共同点是'评测 SLAM 需要 SLAM 或更强的显式几何测量'。(4) 文表不一致三处（见 findings 第 7 条），读表需以表格为准，已在证据卡 verification 中规避受影响表述。(5) 论文无显式自评局限章节（author_status=not-found），对'事件相机 HDR 局限'的论述属于对被评方法的局限而非对基准自身。(6) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。"
+}

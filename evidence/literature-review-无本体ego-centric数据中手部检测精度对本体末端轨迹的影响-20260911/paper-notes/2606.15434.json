@@ -1,0 +1,271 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.15434",
+  "title": "A Bilateral Teleoperation Framework for Dexterous Manipulation",
+  "published": "2026-06-13",
+  "url": "https://arxiv.org/abs/2606.15434",
+  "authors": [
+   "Stefano Dalla Gasperina",
+   "Dong Ho Kang",
+   "Haiyun Zhang",
+   "Aldo Galvan",
+   "Job D. Ramirez",
+   "Aaron Kim",
+   "Mark Helwig",
+   "Kazuto Yokoyama",
+   "Takahisa Ueno",
+   "Tetsuya Narita",
+   "Ann Majewicz-Fey",
+   "Ashish D. Deshpande",
+   "Luis Sentis"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "外骨骼（Maestro 电位计 10 关节）+  grounded 力觉设备（Lambda.7）的双侧遥操作框架；其 Discussion 章对误差来源的系统性反思——佩戴/解剖差异导致关节估计系统误差、残余误差四元枚举（追踪不完善/重定向不准/延迟/人差异）不可消除、共享控制作缓解——直接命中综述的误差来源、传播路径与缓解手段三问。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题定位：灵巧遥操作需精确臂-手协调、低延迟反馈；遥操作演示作为 LfD 数据桥梁。"
+   },
+   {
+    "locator": "II. SYSTEM OVERVIEW",
+    "role": "method-or-design",
+    "purpose": "操作者侧（Maestro 外骨骼 + Lambda.7）与机器人侧（Optimo + Plato）架构。"
+   },
+   {
+    "locator": "B. Teleoperation Framework",
+    "role": "method-or-design",
+    "purpose": "手部追踪（模拟传感+被试标定）、位置式关节-关节重定向+样条插值、差分臂控制、多级触觉与共享控制的控制链。"
+   },
+   {
+    "locator": "III. REAL-WORLD DEMONSTRATION",
+    "role": "results-or-analysis",
+    "purpose": "Jenga 任务可行性演示（探测-抽取-放置三阶段）。"
+   },
+   {
+    "locator": "IV. DISCUSSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "总体经验：可用遥操作更依赖用户中心集成而非硬件保真度最大化。"
+   },
+   {
+    "locator": "A. Hand Morphology and Donning Effects",
+    "role": "relevant-core",
+    "purpose": "佩戴/解剖差异→关节估计系统误差→遥操作精度的误差来源与标定缓解。"
+   },
+   {
+    "locator": "B. Impact of Haptic Feedback",
+    "role": "relevant-core",
+    "purpose": "触觉粒度与任务上下文的权衡（过细反馈增加认知负荷）。"
+   },
+   {
+    "locator": "C. Motion Retargeting for Cross-Embodiment Mismatch",
+    "role": "relevant-core",
+    "purpose": "跨本体运动学/形态失配使严格关节对应降低可控性；任务级目标优于关节精确匹配。"
+   },
+   {
+    "locator": "D. Shared Control for Human Error Mitigation",
+    "role": "relevant-core",
+    "purpose": "残余误差四元枚举与共享控制缓解（非自主、保操作者意图）。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：形态感知重定向、任务相关触觉抽象、轻量共享控制。"
+   },
+   {
+    "locator": "A. Maestro: Hand Exoskeleton; D. Lambda.7: Haptic Interface; E. Software Architecture and Timing",
+    "role": "method-or-design",
+    "purpose": "附录：16 电位计冗余传感、2kHz 低环/100Hz 高层指令、1kHz 力觉渲染的时序架构。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "B. Plato: Robotic Hand; C. Optimo: Robotic Arm",
+    "role": "method-or-design",
+    "reason": "机器人侧硬件规格清单，对手部追踪误差问题仅间接相关，略读。"
+   },
+   {
+    "locator": "REFERENCES (两处)",
+    "role": "references",
+    "reason": "参考文献仅用于引文核对。"
+   }
+  ]
+ },
+ "research_question": "如何构建模块化的双侧（bilateral）遥操作框架，将操作者侧多输入接口与机器人侧灵巧手+柔顺臂统一到同一控制架构，在真实接触密集任务中实现协调臂-手控制与接触感知交互？",
+ "contributions": [
+  "模块化双侧遥操作框架：Maestro 手部外骨骼（10 关节追踪 + SEA 指级力反馈）+ Lambda.7 grounded 力觉接口（7-DoF、1kHz）+ Optimo 柔顺臂 + Plato 三指手。",
+  "统一控制架构：位置式关节-关节重定向（+样条插值+统一代价函数）、差分臂控制、多尺度触觉渲染、共享控制（抓握稳定/力限/虚拟约束）。",
+  "真实 Jenga 任务可行性演示与四条设计经验（形态/触觉粒度/跨本体重定向/共享控制）。"
+ ],
+ "method": {
+  "summary": "手部追踪：Maestro 外骨骼 16 个旋转电位计（拇指/食指/中指冗余分布模拟传感）经被试特异性标定对齐解剖手部构型，实时估计 10 个关节 DoF。重定向：关节角经位置式关节-关节映射 + 样条插值 + 统一代价函数映到 Plato。臂控制：Lambda.7 腕部位姿作为相对平衡点的速度级差分输入，经 IK + 笛卡尔控制驱动 Optimo。触觉：Maestro SEA 关节级力觉（接触起始/滑移离散线索）+ Lambda.7 任务空间力（虚拟耦合）。共享控制：抓握后固定轨迹阻抗控制器与手动重定向并行防滑动，臂侧虚拟约束与力限。",
+  "assumptions": [
+   "被试特异性标定可将外骨骼关节空间对齐到个体解剖手部（作者自述对佩戴条件敏感，标定是必要而非充分）。",
+   "差分（速度级）臂控制公式可吸收人-机工作空间尺度与运动学结构差异。",
+   "电位计模拟传感的精度/漂移未在本文定量表征，视为足够。"
+  ]
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [
+   "Jenga（探测候选块、抽取选定块、放置塔顶三阶段）",
+   "捏取与侧向抓握等多抓型演示"
+  ],
+  "embodiments": [
+   "Optimo 7-DoF SEA 柔顺臂（Roboligent）",
+   "Plato/Aristo 三指 8-DoF 手（QDD 1:8 + NARI-Touch 指尖触觉）"
+  ],
+  "sample_or_scale": "真实硬件可行性演示（重复试次的定性成功陈述，无试次计数与统计）；无时序/精度的定量基准。"
+ },
+ "evaluation": {
+  "design": "单任务（Jenga）真实世界可行性演示 + Discussion 章的设计经验归纳（非对照实验）；无时序精度、追踪误差或成功率的定量指标。",
+  "baselines": [],
+  "metrics": [
+   "任务完成（塔不倒塌、块抽取/放置成功）的定性观察",
+   "操作者主观报告（指级接触线索优于纯视觉）"
+  ],
+  "ablations": []
+ },
+ "findings": [
+  {
+   "finding": "真实 Jenga 三阶段任务中系统维持手-臂稳定协调，重复试次均成功完成块抽取与放置且不倒塔（定性，无试次计数）。",
+   "scope": "真实硬件，Maestro+Lambda.7→Plato+Optimo",
+   "locator": "III. REAL-WORLD DEMONSTRATION"
+  },
+  {
+   "finding": "手部尺寸或设备对齐的微小变化即产生手部运动学估计的可察觉误差，直接影响遥操作精度；需被试特异性标定缓解。",
+   "scope": "Maestro 外骨骼使用经验",
+   "locator": "A. Hand Morphology and Donning Effects"
+  },
+  {
+   "finding": "残余误差（追踪不完善、重定向不准、延迟、人差异）经仔细系统设计仍不可完全消除，持续占用操作者认知负荷；共享控制可在非自主前提下显著缓解。",
+   "scope": "Discussion 经验归纳",
+   "locator": "D. Shared Control for Human Error Mitigation"
+  },
+  {
+   "finding": "严格关节对应在形态失配下降低可控性；任务级目标（指尖放置、接触稳定、抓握可行）优于关节精确匹配。",
+   "scope": "Discussion 经验归纳",
+   "locator": "C. Motion Retargeting for Cross-Embodiment Mismatch"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "可穿戴手部接口对佩戴与解剖高度敏感，微小差异即引入关节估计系统误差并降低重定向保真度；机械/传感设计无法消除时需显式标定或自适应追踪。",
+    "locator": "A. Hand Morphology and Donning Effects"
+   },
+   {
+    "limitation": "残余误差（不完善手部追踪、重定向不准、延迟、人差异）不可完全消除，对操作者形成持续认知负担。",
+    "locator": "D. Shared Control for Human Error Mitigation"
+   },
+   {
+    "limitation": "跨本体运动学/形态失配限制直接关节级映射的有效性。",
+    "locator": "C. Motion Retargeting for Cross-Embodiment Mismatch"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全文无任何定量评估：无追踪精度、无延迟测量、无成功率统计——Jenga 演示仅有定性成功陈述，所有 Discussion 误差陈述均为经验观察而非测量结论。",
+    "basis": "通读 III 与 IV 全部小节：唯一数字指标在附录时序（100Hz/1kHz/2kHz），无量化误差或任务指标。"
+   },
+   {
+    "boundary": "误差观察基于 Maestro 电位计外骨骼这一特定形态，其幅度与视觉手部追踪的误差不可比；向 ego 视觉路线的迁移只有机制层参照价值。",
+    "basis": "II.B 与附录 A：追踪源为 16 电位计模拟传感+标定，与视觉关键点检测的误差机理（遮挡/深度）不同。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：双侧遥操作系统的误差来源框架性枚举（追踪/重定向/延迟/人差异四元）、佩戴-解剖敏感性作为可穿戴追踪的系统误差来源、共享控制与标定作为缓解手段的设计依据。不适用于：任何定量精度/阈值声明（全文无测量）；视觉手部追踪路线的直接证据（传感原理为电位计外骨骼）；样本级结论（单任务可行性演示，无被试数与试次统计）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "误差来源枚举完整且结构清晰：IV.D 四元（追踪不完善/重定向不准/延迟/人差异）+ IV.A 佩戴系统误差 + IV.C 形态失配，覆盖传感-算法-人因三层。",
+   "缓解手段与误差来源一一对应（标定↔佩戴敏感、共享控制↔残余误差、任务级重定向↔形态失配），设计逻辑闭环。",
+   "时序架构透明（附录 E：100Hz 高层指令、2kHz 低环、1kHz 力觉渲染）。"
+  ],
+  "design_risks": [
+   "零定量评估：可行性演示无试次计数、无误差测量、无基线对照，证据强度限于存在性证明。",
+   "Discussion 的误差陈述全部为无数据支撑的经验观察（如『minor variations...produced noticeable errors』未给出幅度）。",
+   "两个同名小节（II-A 与 II-B 均题为 Teleoperation Framework）反映文稿整合粗糙。"
+  ],
+  "baseline_fairness": "无基线对照设计（可行性演示性质），无法评估相对优劣；主观偏好陈述（指级线索优于纯视觉）无实验设计支撑。",
+  "metric_validity": "全文无误差或性能度量；对综述问题的贡献是误差来源的概念框架与缓解手段的设计模式，不含任何阈值数据。",
+  "reproducibility": "硬件均为已发表/商用平台（Maestro/Plato/Optimo/Lambda.7）且有项目网站，架构级可复现；但无评估协议可复现。",
+  "external_validity": "限于单任务（Jenga）与单一外骨骼+力觉接口组合；Discussion 经验向其他追踪路线（尤其视觉 ego）的迁移需谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.15434-C01",
+   "claim": "该框架的作者基于实验观察指出：可穿戴手部接口对手部尺寸与佩戴对齐高度敏感——即使微小差异也会在估计的手部运动学中产生可察觉误差并直接影响遥操作精度；当机械/传感设计无法实现手型不变性时，必须引入显式标定或自适应追踪（其实践为被试特异性标定，对齐外骨骼关节空间与解剖手部构型）。",
+   "stance": "support",
+   "relation": "支持『误差来源』枚举的可穿戴分支：佩戴/解剖差异是手部追踪的系统性误差来源（非随机噪声），经关节估计直接传导为遥操作精度损失；被试特异性标定是对应缓解手段但增加部署负担。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV.A 逐字给出佩戴敏感→系统误差→精度影响的因果陈述，与因佩戴敏感而采用定制标定程序的工程回应。",
+   "locator": "A. Hand Morphology and Donning Effects",
+   "source_context": "In our experiments, even minor variations in hand size or device alignment produced noticeable errors in estimated hand kinematics, directly affecting teleoperation precision. When hand-size invariance cannot be achieved through mechanical or sensing design alone, explicit calibration or adaptive tracking becomes necessary. Because the kinematic mapping of the Maestro exoskeleton is sensitive to donning conditions, we therefore employ a custom calibration proce- dure to align the sensed exoskeleton joint space with the user’s anatomical hand configuration [10].",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 IV.A（proce- dure 断词与 user’s 弯引号按原文保留）；因果链（佩戴差异→运动学估计误差→遥操作精度）与标定缓解均为作者原文；claim 未给出原文没有的误差幅度量化。"
+   }
+  },
+  {
+   "card_id": "2606.15434-C02",
+   "claim": "该框架的作者明确枚举遥操作的残余误差来源为四项：不完善的手部追踪、重定向不准、延迟与人差异，并承认即使仔细的系统设计也无法完全消除这些误差、其对操作者形成持续认知负担；其经验是共享控制（任务相关约束增强操作者指令）可在无需全自主的前提下显著缓解残余人误，同时保留操作者意图。",
+   "stance": "support",
+   "relation": "支持综述的误差来源总框架与缓解手段结论：手部追踪误差只是四元残余误差链中的一环，系统设计只能压缩不能消除；共享控制为『追踪误差不可消除』前提下的系统级缓解范式。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "IV.D 首两句逐字给出四元误差枚举与不可消除性承认，随后给出共享控制缓解的关键经验。",
+   "locator": "D. Shared Control for Human Error Mitigation",
+   "source_context": "Teleoperation inevitably involves residual errors arising from imperfect hand tracking, retargeting inaccuracies, latency, and human variability. Our experiments confirmed that even with careful system design, these errors cannot be fully elimi- nated and place a continuous cognitive burden on the operator. A key lesson learned is that shared control can meaningfully mitigate residual human error without requiring full autonomy.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 IV.D（elimi- nated 断词按原文保留）；四元枚举、不可消除性与共享控制缓解三要素均出自原文；claim 保留『meaningfully mitigate』的定性强度，未夸大为定量结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2507.23592",
+   "reference": "[10] H. Zhang et al. Human-exoskeleton kinematic calibration to improve hand tracking for dexterous teleoperation. arXiv:2507.23592, 2025.",
+   "reason": "C01 所述被试特异性标定程序的出处——手部追踪标定的专文，是本框架追踪精度的真正证据载体。"
+  },
+  {
+   "arxiv_id": null,
+   "reference": "[16] C. Xin et al. Analyzing key objectives in human-to-robot retargeting for dexterous manipulation. IEEE RA-P, 2026.",
+   "reason": "任务级重定向目标优于关节精确匹配的论断依据。"
+  }
+ ],
+ "notes": "对综述问题的定位：高保真（外骨骼+grounded 力觉）双侧遥操作端点，与本批次低成本视觉/手套路线构成保真度谱系的另一端。核心价值在 Discussion 章的两条误差论述：(1) 佩戴/解剖差异是手部追踪的系统误差来源（C01），标定只是缓解而非消除；(2) 残余误差四元枚举与不可消除性承认（C02），把共享控制立为误差不可消除前提下的系统级缓解。注意红线：全文零定量评估，所有误差陈述为经验观察级别；其追踪源为电位计外骨骼，向视觉 ego 追踪迁移仅有机制层参照价值。ID 预算限制：IV.C 跨本体形态失配（任务级目标优于关节匹配）与 IV.B 触觉粒度权衡留于 findings/limitations 未单独成卡。"
+}

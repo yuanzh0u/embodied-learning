@@ -1,0 +1,1573 @@
+{
+ "generated_at": "2026-08-23T09:19:00.000758+00:00",
+ "planner": "embodied-ai-query-planner",
+ "topic": "近两年 Diffusion Transformer 在视频生成与世界模型中的发展",
+ "start_date": "2024-08-23",
+ "end_date": "2026-08-23",
+ "knowledge_ids": [
+  "EA-EVAL",
+  "EA-MODEL"
+ ],
+ "families": [
+  "world-model"
+ ],
+ "suggested_categories": [
+  "cs.AI",
+  "cs.CV",
+  "cs.LG",
+  "cs.RO",
+  "eess.SY"
+ ],
+ "query_budget": 50,
+ "review_mode": "scoping",
+ "search_targets": {
+  "candidate_floor": 152,
+  "full_text_floor": 35,
+  "accepted_paper_floor": 15
+ },
+ "minimum_candidate_count": 152,
+ "coverage_dimensions": [
+  {
+   "dimension": "direct-topic",
+   "query_labels": [
+    "dit-video-core",
+    "dit-world-model-core",
+    "video-latent-diffusion-core",
+    "sora-lineage",
+    "stv-lineage",
+    "genie-lineage",
+    "hunyuan-cogvideo-opensora",
+    "veo-moviegen-kling-wan",
+    "world-model-robot",
+    "ea-eval-closed-loop",
+    "ea-model-vla",
+    "ea-model-named-foundation"
+   ],
+   "minimum_unique_candidates": 3
+  },
+  {
+   "dimension": "adjacent-and-transfer",
+   "query_labels": [
+    "dit-scaling-mechanism",
+    "rectified-flow-mechanism",
+    "video-vae-mechanism",
+    "spatiotemporal-attention-mechanism",
+    "autoregressive-diffusion-hybrid-mechanism",
+    "robot-video-worldmodel-adjacent",
+    "latent-planning-worldmodel-adjacent",
+    "video-generation-survey-adjacent",
+    "world-model-video-prediction",
+    "world-model-planning",
+    "ea-eval-world-model",
+    "ea-model-finetuning"
+   ],
+   "minimum_unique_candidates": 3
+  },
+  {
+   "dimension": "limits-and-counterevidence",
+   "query_labels": [
+    "physics-consistency-limitation",
+    "temporal-consistency-limitation",
+    "object-entity-persistence-limitation",
+    "world-model-contact",
+    "world-model-long-horizon"
+   ],
+   "minimum_unique_candidates": 3
+  },
+  {
+   "dimension": "evaluation-and-validation",
+   "query_labels": [
+    "action-conditioned-worldmodel-eval",
+    "video-world-model-review-eval",
+    "video-reward-model-eval",
+    "long-horizon-consistency-eval",
+    "ea-eval-open-loop-benchmark",
+    "ea-eval-sim-real-correlation"
+   ],
+   "minimum_unique_candidates": 3
+  },
+  {
+   "dimension": "deployment-and-operations",
+   "query_labels": [
+    "inference-cost-deployment",
+    "real-time-distillation-deployment"
+   ],
+   "minimum_unique_candidates": 3
+  },
+  {
+   "dimension": "mechanisms-and-interfaces",
+   "query_labels": [
+    "ea-model-action-tokenization",
+    "spatiotemporal-attention-mechanism",
+    "video-vae-mechanism",
+    "flow-matching-video-mechanism",
+    "autoregressive-video-token-mechanism"
+   ],
+   "minimum_unique_candidates": 3
+  }
+ ],
+ "stopping_rule": {
+  "minimum_batches": 3,
+  "saturation_rounds": 2,
+  "max_new_unique_rate": 0.1,
+  "requires_candidate_floor": true,
+  "requires_full_text_floor": true,
+  "requires_accepted_paper_floor": true,
+  "requires_all_coverage_dimensions": true,
+  "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+ },
+ "notes": [
+  "llm dynamic expansion (medium): Agent inferred that a video/world-model Diffusion Transformer review needs both the generic DiT-video lineage (Sora/Stable Video Diffusion/Genie/Veo/HunyuanVideo/CogVideoX/Open-Sora) and the limitation/evaluation/action-conditioned world-model surfaces that static embodied taxonomy does not cover."
+ ],
+ "dynamic_suggestions": [
+  {
+   "label": "dit-video-core",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "high",
+   "query": "all:\"diffusion transformer\" AND (all:\"video generation\" OR all:\"video synthesis\")",
+   "why": "Direct vocabulary for Diffusion Transformer applied to video generation."
+  },
+  {
+   "label": "dit-world-model-core",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "high",
+   "query": "all:\"diffusion transformer\" AND all:\"world model\"",
+   "why": "Diffusion Transformer used as a world model / video-world-model."
+  },
+  {
+   "label": "video-latent-diffusion-core",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "high",
+   "query": "all:\"latent diffusion\" AND (all:\"video generation\" OR all:\"video world model\")",
+   "why": "Latent video diffusion architecture that underlies DiT-video models."
+  },
+  {
+   "label": "sora-lineage",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"Sora\" AND (all:\"diffusion\" OR all:\"world model\" OR all:\"video\")",
+   "why": "Sora demonstrated DiT on video and is a pivotal anchor even without public tech report completeness."
+  },
+  {
+   "label": "stv-lineage",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "high",
+   "query": "all:\"Stable Video Diffusion\"",
+   "why": "Stable Video Diffusion is a canonical video diffusion method and its successors (SVD-XT, Mochi, LongMoE) form a lineage."
+  },
+  {
+   "label": "genie-lineage",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"Genie\" AND (all:\"world model\" OR all:\"interactive\")",
+   "why": "Genie / Genie 2 are action-conditioned video world models built on video generation."
+  },
+  {
+   "label": "hunyuan-cogvideo-opensora",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "high",
+   "query": "all:\"HunyuanVideo\" OR all:\"CogVideoX\" OR all:\"Open-Sora\"",
+   "why": "Modern open DiT video models that report architecture, scaling, and evaluation details."
+  },
+  {
+   "label": "veo-moviegen-kling-wan",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"Veo\" OR all:\"MovieGen\" OR all:\"Kling\" OR all:\"Wan\"",
+   "why": "Nearer-term flagship video world-model/generation systems frequently benchmarked against."
+  },
+  {
+   "label": "dit-scaling-mechanism",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"scaling\" AND (all:\"diffusion transformer\" OR all:\"diffusion\" AND all:\"video\")",
+   "why": "Scaling-law evidence for diffusion transformers in video/world-model context."
+  },
+  {
+   "label": "rectified-flow-mechanism",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "high",
+   "query": "all:\"flow matching\" OR all:\"rectified flow\"",
+   "why": "Flow matching / rectified flow is the training objective behind most current DiT-video and Sora-style models and shapes quality."
+  },
+  {
+   "label": "video-vae-mechanism",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"video autoencoder\" OR all:\"spatiotemporal VAE\" OR all:\"3D VAE\"",
+   "why": "Latent video compression/representation (3D VAE) is a core component on which DiT-video quality depends."
+  },
+  {
+   "label": "spatiotemporal-attention-mechanism",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"spatiotemporal attention\" AND (all:\"video\" OR all:\"diffusion\")",
+   "why": "Temporal/space-time attention design inside video DiT."
+  },
+  {
+   "label": "autoregressive-diffusion-hybrid-mechanism",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"autoregressive\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"token\")",
+   "why": "Hybrid autoregressive+diffusion pipelines (e.g. W.A.L.T, next-token video models) competing with pure DiT."
+  },
+  {
+   "label": "physics-consistency-limitation",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"physics\" AND all:\"video generation\" AND (all:\"inconsistent\" OR all:\"violation\" OR all:\"dynamics\")",
+   "why": "Core limitation: generated video lacks physical consistency/real dynamics."
+  },
+  {
+   "label": "temporal-consistency-limitation",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"temporal consistency\" AND (all:\"video generation\" OR all:\"world model\" OR all:\"diffusion\")",
+   "why": "Limitation: temporal coherence and long-term consistency of generated video."
+  },
+  {
+   "label": "object-entity-persistence-limitation",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"entity\" AND all:\"persistence\" AND all:\"video\"",
+   "why": "Limitation: object identity persistence and multimodal interaction in generated scenes."
+  },
+  {
+   "label": "action-conditioned-worldmodel-eval",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"action-conditioned\" AND (all:\"world model\" OR all:\"video prediction\" OR all:\"planning\")",
+   "why": "Evaluation surface: whether DiT-video world models are truly action-controllable and usable for planning."
+  },
+  {
+   "label": "video-world-model-review-eval",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"video world model\" AND (all:\"benchmark\" OR all:\"evaluation\" OR all:\"survey\")",
+   "why": "Evaluation: benchmarks and surveys for video world models."
+  },
+  {
+   "label": "video-reward-model-eval",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"video reward model\" OR all:\"video quality assessment\"",
+   "why": "Evaluation: reward/quality models for generated video, a practical gate."
+  },
+  {
+   "label": "long-horizon-consistency-eval",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"long-horizon\" AND (all:\"video\" OR all:\"world model\" OR all:\"consistency\")",
+   "why": "Evaluation: long-horizon rollouts and consistency in video world models."
+  },
+  {
+   "label": "inference-cost-deployment",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"diffusion\" AND all:\"video\" AND (all:\"accelerat\" OR all:\"distill\" OR all:\"efficien\")",
+   "why": "Deployment: inference cost, sampling acceleration, and distillation of video diffusion."
+  },
+  {
+   "label": "real-time-distillation-deployment",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"distillation\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"latent\" OR all:\"model\")",
+   "why": "Deployment: one/few-step distillation for practical video generation throughput."
+  },
+  {
+   "label": "robot-video-worldmodel-adjacent",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"video generation\" AND all:\"robot\"",
+   "why": "Adjacent/embodied: video generation and world models for robotics (links to EA-4D/EA-EVAL)."
+  },
+  {
+   "label": "latent-planning-worldmodel-adjacent",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"latent\" AND all:\"planning\" AND all:\"world model\"",
+   "why": "Adjacent: planning in the latent space of a video/diffusion world model."
+  },
+  {
+   "label": "video-generation-survey-adjacent",
+   "channel": "arxiv_api",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "all:\"video generation\" AND all:\"survey\"",
+   "why": "Adjacent: surveys mapping the video generation field and its diffusion-transformer core."
+  },
+  {
+   "label": "dit-video-browser",
+   "channel": "browser_fallback",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "\"diffusion transformer\" \"video generation\" Sora",
+   "why": "Web fallback when arXiv under-recovers flagship DiT-video systems."
+  },
+  {
+   "label": "genie2-worldmodel-browser",
+   "channel": "browser_fallback",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "\"Genie 2\" OR \"world model\" interactive video",
+   "why": "Check action-conditioned video world-model systems outside arXiv."
+  },
+  {
+   "label": "dit-video-calibration",
+   "channel": "web_calibration",
+   "source": "llm",
+   "confidence": "medium",
+   "query": "Diffusion Transformer video generation world model 2025 advances",
+   "why": "Calibrate current DiT-video terminology and flagship systems."
+  }
+ ],
+ "calibration_notes": [
+  "No live web calibration was provided; generated offline baseline query plan."
+ ],
+ "queries": [
+  {
+   "label": "dit-video-core",
+   "tier": "core",
+   "query": "all:\"diffusion transformer\" AND (all:\"video generation\" OR all:\"video synthesis\")",
+   "why": "Direct vocabulary for Diffusion Transformer applied to video generation.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "dit-video-core"
+   ]
+  },
+  {
+   "label": "dit-world-model-core",
+   "tier": "core",
+   "query": "all:\"diffusion transformer\" AND all:\"world model\"",
+   "why": "Diffusion Transformer used as a world model / video-world-model.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "dit-world-model-core"
+   ]
+  },
+  {
+   "label": "video-latent-diffusion-core",
+   "tier": "core",
+   "query": "all:\"latent diffusion\" AND (all:\"video generation\" OR all:\"video world model\")",
+   "why": "Latent video diffusion architecture that underlies DiT-video models.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-latent-diffusion-core"
+   ]
+  },
+  {
+   "label": "sora-lineage",
+   "tier": "named-method",
+   "query": "all:\"Sora\" AND (all:\"diffusion\" OR all:\"world model\" OR all:\"video\")",
+   "why": "Sora demonstrated DiT on video and is a pivotal anchor even without public tech report completeness.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "sora-lineage"
+   ]
+  },
+  {
+   "label": "stv-lineage",
+   "tier": "named-method",
+   "query": "all:\"Stable Video Diffusion\"",
+   "why": "Stable Video Diffusion is a canonical video diffusion method and its successors (SVD-XT, Mochi, LongMoE) form a lineage.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "stv-lineage"
+   ]
+  },
+  {
+   "label": "genie-lineage",
+   "tier": "named-method",
+   "query": "all:\"Genie\" AND (all:\"world model\" OR all:\"interactive\")",
+   "why": "Genie / Genie 2 are action-conditioned video world models built on video generation.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "genie-lineage"
+   ]
+  },
+  {
+   "label": "hunyuan-cogvideo-opensora",
+   "tier": "named-method",
+   "query": "all:\"HunyuanVideo\" OR all:\"CogVideoX\" OR all:\"Open-Sora\"",
+   "why": "Modern open DiT video models that report architecture, scaling, and evaluation details.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "hunyuan-cogvideo-opensora"
+   ]
+  },
+  {
+   "label": "veo-moviegen-kling-wan",
+   "tier": "named-method",
+   "query": "all:\"Veo\" OR all:\"MovieGen\" OR all:\"Kling\" OR all:\"Wan\"",
+   "why": "Nearer-term flagship video world-model/generation systems frequently benchmarked against.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "veo-moviegen-kling-wan"
+   ]
+  },
+  {
+   "label": "dit-scaling-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"scaling\" AND (all:\"diffusion transformer\" OR all:\"diffusion\" AND all:\"video\")",
+   "why": "Scaling-law evidence for diffusion transformers in video/world-model context.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "dit-scaling-mechanism"
+   ]
+  },
+  {
+   "label": "rectified-flow-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"flow matching\" OR all:\"rectified flow\"",
+   "why": "Flow matching / rectified flow is the training objective behind most current DiT-video and Sora-style models and shapes quality.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "rectified-flow-mechanism"
+   ]
+  },
+  {
+   "label": "video-vae-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"video autoencoder\" OR all:\"spatiotemporal VAE\" OR all:\"3D VAE\"",
+   "why": "Latent video compression/representation (3D VAE) is a core component on which DiT-video quality depends.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-vae-mechanism"
+   ]
+  },
+  {
+   "label": "spatiotemporal-attention-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"spatiotemporal attention\" AND (all:\"video\" OR all:\"diffusion\")",
+   "why": "Temporal/space-time attention design inside video DiT.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "spatiotemporal-attention-mechanism"
+   ]
+  },
+  {
+   "label": "autoregressive-diffusion-hybrid-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"autoregressive\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"token\")",
+   "why": "Hybrid autoregressive+diffusion pipelines (e.g. W.A.L.T, next-token video models) competing with pure DiT.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "autoregressive-diffusion-hybrid-mechanism"
+   ]
+  },
+  {
+   "label": "physics-consistency-limitation",
+   "tier": "limitation",
+   "query": "all:\"physics\" AND all:\"video generation\" AND (all:\"inconsistent\" OR all:\"violation\" OR all:\"dynamics\")",
+   "why": "Core limitation: generated video lacks physical consistency/real dynamics.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "physics-consistency-limitation"
+   ]
+  },
+  {
+   "label": "temporal-consistency-limitation",
+   "tier": "limitation",
+   "query": "all:\"temporal consistency\" AND (all:\"video generation\" OR all:\"world model\" OR all:\"diffusion\")",
+   "why": "Limitation: temporal coherence and long-term consistency of generated video.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "temporal-consistency-limitation"
+   ]
+  },
+  {
+   "label": "object-entity-persistence-limitation",
+   "tier": "limitation",
+   "query": "all:\"entity\" AND all:\"persistence\" AND all:\"video\"",
+   "why": "Limitation: object identity persistence and multimodal interaction in generated scenes.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "object-entity-persistence-limitation"
+   ]
+  },
+  {
+   "label": "action-conditioned-worldmodel-eval",
+   "tier": "evaluation",
+   "query": "all:\"action-conditioned\" AND (all:\"world model\" OR all:\"video prediction\" OR all:\"planning\")",
+   "why": "Evaluation surface: whether DiT-video world models are truly action-controllable and usable for planning.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "action-conditioned-worldmodel-eval"
+   ]
+  },
+  {
+   "label": "video-world-model-review-eval",
+   "tier": "evaluation",
+   "query": "all:\"video world model\" AND (all:\"benchmark\" OR all:\"evaluation\" OR all:\"survey\")",
+   "why": "Evaluation: benchmarks and surveys for video world models.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-world-model-review-eval"
+   ]
+  },
+  {
+   "label": "video-reward-model-eval",
+   "tier": "evaluation",
+   "query": "all:\"video reward model\" OR all:\"video quality assessment\"",
+   "why": "Evaluation: reward/quality models for generated video, a practical gate.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-reward-model-eval"
+   ]
+  },
+  {
+   "label": "long-horizon-consistency-eval",
+   "tier": "evaluation",
+   "query": "all:\"long-horizon\" AND (all:\"video\" OR all:\"world model\" OR all:\"consistency\")",
+   "why": "Evaluation: long-horizon rollouts and consistency in video world models.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "long-horizon-consistency-eval"
+   ]
+  },
+  {
+   "label": "inference-cost-deployment",
+   "tier": "deployment",
+   "query": "all:\"diffusion\" AND all:\"video\" AND (all:\"accelerat\" OR all:\"distill\" OR all:\"efficien\")",
+   "why": "Deployment: inference cost, sampling acceleration, and distillation of video diffusion.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "inference-cost-deployment"
+   ]
+  },
+  {
+   "label": "real-time-distillation-deployment",
+   "tier": "deployment",
+   "query": "all:\"distillation\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"latent\" OR all:\"model\")",
+   "why": "Deployment: one/few-step distillation for practical video generation throughput.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "real-time-distillation-deployment"
+   ]
+  },
+  {
+   "label": "robot-video-worldmodel-adjacent",
+   "tier": "adjacent",
+   "query": "all:\"video generation\" AND all:\"robot\"",
+   "why": "Adjacent/embodied: video generation and world models for robotics (links to EA-4D/EA-EVAL).",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "robot-video-worldmodel-adjacent"
+   ]
+  },
+  {
+   "label": "latent-planning-worldmodel-adjacent",
+   "tier": "adjacent",
+   "query": "all:\"latent\" AND all:\"planning\" AND all:\"world model\"",
+   "why": "Adjacent: planning in the latent space of a video/diffusion world model.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "latent-planning-worldmodel-adjacent"
+   ]
+  },
+  {
+   "label": "video-generation-survey-adjacent",
+   "tier": "adjacent",
+   "query": "all:\"video generation\" AND all:\"survey\"",
+   "why": "Adjacent: surveys mapping the video generation field and its diffusion-transformer core.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-generation-survey-adjacent"
+   ]
+  },
+  {
+   "label": "world-model-robot",
+   "tier": "core",
+   "query": "all:\"world model\" AND all:robot",
+   "why": "Find robot papers that explicitly use world-model terminology.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-robot"
+   ]
+  },
+  {
+   "label": "world-model-video-prediction",
+   "tier": "prediction",
+   "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+   "why": "Capture predictive visual models used for planning or offline rollout.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.CV",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-video-prediction"
+   ]
+  },
+  {
+   "label": "world-model-planning",
+   "tier": "planning",
+   "query": "all:planning AND all:\"world model\" AND all:robot",
+   "why": "Find papers where a predictive model is used to choose actions.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-planning"
+   ]
+  },
+  {
+   "label": "world-model-contact",
+   "tier": "physical-limitation",
+   "query": "all:contact AND all:\"world model\" AND all:manipulation",
+   "why": "Search for contact realism and physical executability limitations.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.AI"
+   ],
+   "merged_labels": [
+    "world-model-contact"
+   ]
+  },
+  {
+   "label": "world-model-long-horizon",
+   "tier": "limitation",
+   "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+   "why": "Find long-horizon consistency and compounding-error discussions.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-long-horizon"
+   ]
+  },
+  {
+   "label": "ea-eval-closed-loop",
+   "tier": "core",
+   "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+   "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.AI"
+   ],
+   "merged_labels": [
+    "ea-eval-closed-loop"
+   ]
+  },
+  {
+   "label": "ea-eval-open-loop-benchmark",
+   "tier": "benchmark",
+   "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+   "why": "Cover fast screening metrics and their mismatch with real execution.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-eval-open-loop-benchmark"
+   ]
+  },
+  {
+   "label": "ea-eval-world-model",
+   "tier": "world-model",
+   "query": "all:\"world model\" AND all:\"robot manipulation\"",
+   "why": "Find predictive models used for robot planning, screening, or evaluation.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-eval-world-model"
+   ]
+  },
+  {
+   "label": "ea-eval-sim-real-correlation",
+   "tier": "sim-real",
+   "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+   "why": "Find work that compares simulation rankings against real robot outcomes.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.AI"
+   ],
+   "merged_labels": [
+    "ea-eval-sim-real-correlation"
+   ]
+  },
+  {
+   "label": "ea-model-vla",
+   "tier": "core",
+   "query": "all:\"vision-language-action\" AND all:robot",
+   "why": "Find VLA papers that connect perception, language, and robot action.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-vla"
+   ]
+  },
+  {
+   "label": "ea-model-named-foundation",
+   "tier": "named-method",
+   "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+   "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-named-foundation"
+   ]
+  },
+  {
+   "label": "ea-model-finetuning",
+   "tier": "transfer",
+   "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+   "why": "Find evidence about whether pretraining reduces target-task data needs.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-finetuning"
+   ]
+  },
+  {
+   "label": "ea-model-action-tokenization",
+   "tier": "representation",
+   "query": "all:\"action tokenization\" AND all:robot",
+   "why": "Surface model papers where action interfaces determine transfer behavior.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-action-tokenization"
+   ]
+  }
+ ],
+ "arxiv_api_queries": [
+  {
+   "label": "dit-video-core",
+   "tier": "core",
+   "query": "all:\"diffusion transformer\" AND (all:\"video generation\" OR all:\"video synthesis\")",
+   "why": "Direct vocabulary for Diffusion Transformer applied to video generation.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "dit-video-core"
+   ]
+  },
+  {
+   "label": "dit-world-model-core",
+   "tier": "core",
+   "query": "all:\"diffusion transformer\" AND all:\"world model\"",
+   "why": "Diffusion Transformer used as a world model / video-world-model.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "dit-world-model-core"
+   ]
+  },
+  {
+   "label": "video-latent-diffusion-core",
+   "tier": "core",
+   "query": "all:\"latent diffusion\" AND (all:\"video generation\" OR all:\"video world model\")",
+   "why": "Latent video diffusion architecture that underlies DiT-video models.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-latent-diffusion-core"
+   ]
+  },
+  {
+   "label": "sora-lineage",
+   "tier": "named-method",
+   "query": "all:\"Sora\" AND (all:\"diffusion\" OR all:\"world model\" OR all:\"video\")",
+   "why": "Sora demonstrated DiT on video and is a pivotal anchor even without public tech report completeness.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "sora-lineage"
+   ]
+  },
+  {
+   "label": "stv-lineage",
+   "tier": "named-method",
+   "query": "all:\"Stable Video Diffusion\"",
+   "why": "Stable Video Diffusion is a canonical video diffusion method and its successors (SVD-XT, Mochi, LongMoE) form a lineage.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "stv-lineage"
+   ]
+  },
+  {
+   "label": "genie-lineage",
+   "tier": "named-method",
+   "query": "all:\"Genie\" AND (all:\"world model\" OR all:\"interactive\")",
+   "why": "Genie / Genie 2 are action-conditioned video world models built on video generation.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "genie-lineage"
+   ]
+  },
+  {
+   "label": "hunyuan-cogvideo-opensora",
+   "tier": "named-method",
+   "query": "all:\"HunyuanVideo\" OR all:\"CogVideoX\" OR all:\"Open-Sora\"",
+   "why": "Modern open DiT video models that report architecture, scaling, and evaluation details.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "hunyuan-cogvideo-opensora"
+   ]
+  },
+  {
+   "label": "veo-moviegen-kling-wan",
+   "tier": "named-method",
+   "query": "all:\"Veo\" OR all:\"MovieGen\" OR all:\"Kling\" OR all:\"Wan\"",
+   "why": "Nearer-term flagship video world-model/generation systems frequently benchmarked against.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "veo-moviegen-kling-wan"
+   ]
+  },
+  {
+   "label": "dit-scaling-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"scaling\" AND (all:\"diffusion transformer\" OR all:\"diffusion\" AND all:\"video\")",
+   "why": "Scaling-law evidence for diffusion transformers in video/world-model context.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "dit-scaling-mechanism"
+   ]
+  },
+  {
+   "label": "rectified-flow-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"flow matching\" OR all:\"rectified flow\"",
+   "why": "Flow matching / rectified flow is the training objective behind most current DiT-video and Sora-style models and shapes quality.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "high",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "rectified-flow-mechanism"
+   ]
+  },
+  {
+   "label": "video-vae-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"video autoencoder\" OR all:\"spatiotemporal VAE\" OR all:\"3D VAE\"",
+   "why": "Latent video compression/representation (3D VAE) is a core component on which DiT-video quality depends.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-vae-mechanism"
+   ]
+  },
+  {
+   "label": "spatiotemporal-attention-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"spatiotemporal attention\" AND (all:\"video\" OR all:\"diffusion\")",
+   "why": "Temporal/space-time attention design inside video DiT.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "spatiotemporal-attention-mechanism"
+   ]
+  },
+  {
+   "label": "autoregressive-diffusion-hybrid-mechanism",
+   "tier": "mechanism",
+   "query": "all:\"autoregressive\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"token\")",
+   "why": "Hybrid autoregressive+diffusion pipelines (e.g. W.A.L.T, next-token video models) competing with pure DiT.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "autoregressive-diffusion-hybrid-mechanism"
+   ]
+  },
+  {
+   "label": "physics-consistency-limitation",
+   "tier": "limitation",
+   "query": "all:\"physics\" AND all:\"video generation\" AND (all:\"inconsistent\" OR all:\"violation\" OR all:\"dynamics\")",
+   "why": "Core limitation: generated video lacks physical consistency/real dynamics.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "physics-consistency-limitation"
+   ]
+  },
+  {
+   "label": "temporal-consistency-limitation",
+   "tier": "limitation",
+   "query": "all:\"temporal consistency\" AND (all:\"video generation\" OR all:\"world model\" OR all:\"diffusion\")",
+   "why": "Limitation: temporal coherence and long-term consistency of generated video.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "temporal-consistency-limitation"
+   ]
+  },
+  {
+   "label": "object-entity-persistence-limitation",
+   "tier": "limitation",
+   "query": "all:\"entity\" AND all:\"persistence\" AND all:\"video\"",
+   "why": "Limitation: object identity persistence and multimodal interaction in generated scenes.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "object-entity-persistence-limitation"
+   ]
+  },
+  {
+   "label": "action-conditioned-worldmodel-eval",
+   "tier": "evaluation",
+   "query": "all:\"action-conditioned\" AND (all:\"world model\" OR all:\"video prediction\" OR all:\"planning\")",
+   "why": "Evaluation surface: whether DiT-video world models are truly action-controllable and usable for planning.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "action-conditioned-worldmodel-eval"
+   ]
+  },
+  {
+   "label": "video-world-model-review-eval",
+   "tier": "evaluation",
+   "query": "all:\"video world model\" AND (all:\"benchmark\" OR all:\"evaluation\" OR all:\"survey\")",
+   "why": "Evaluation: benchmarks and surveys for video world models.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-world-model-review-eval"
+   ]
+  },
+  {
+   "label": "video-reward-model-eval",
+   "tier": "evaluation",
+   "query": "all:\"video reward model\" OR all:\"video quality assessment\"",
+   "why": "Evaluation: reward/quality models for generated video, a practical gate.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-reward-model-eval"
+   ]
+  },
+  {
+   "label": "long-horizon-consistency-eval",
+   "tier": "evaluation",
+   "query": "all:\"long-horizon\" AND (all:\"video\" OR all:\"world model\" OR all:\"consistency\")",
+   "why": "Evaluation: long-horizon rollouts and consistency in video world models.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "long-horizon-consistency-eval"
+   ]
+  },
+  {
+   "label": "inference-cost-deployment",
+   "tier": "deployment",
+   "query": "all:\"diffusion\" AND all:\"video\" AND (all:\"accelerat\" OR all:\"distill\" OR all:\"efficien\")",
+   "why": "Deployment: inference cost, sampling acceleration, and distillation of video diffusion.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "inference-cost-deployment"
+   ]
+  },
+  {
+   "label": "real-time-distillation-deployment",
+   "tier": "deployment",
+   "query": "all:\"distillation\" AND all:\"diffusion\" AND (all:\"video\" OR all:\"latent\" OR all:\"model\")",
+   "why": "Deployment: one/few-step distillation for practical video generation throughput.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "real-time-distillation-deployment"
+   ]
+  },
+  {
+   "label": "robot-video-worldmodel-adjacent",
+   "tier": "adjacent",
+   "query": "all:\"video generation\" AND all:\"robot\"",
+   "why": "Adjacent/embodied: video generation and world models for robotics (links to EA-4D/EA-EVAL).",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "robot-video-worldmodel-adjacent"
+   ]
+  },
+  {
+   "label": "latent-planning-worldmodel-adjacent",
+   "tier": "adjacent",
+   "query": "all:\"latent\" AND all:\"planning\" AND all:\"world model\"",
+   "why": "Adjacent: planning in the latent space of a video/diffusion world model.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "latent-planning-worldmodel-adjacent"
+   ]
+  },
+  {
+   "label": "video-generation-survey-adjacent",
+   "tier": "adjacent",
+   "query": "all:\"video generation\" AND all:\"survey\"",
+   "why": "Adjacent: surveys mapping the video generation field and its diffusion-transformer core.",
+   "source_key": "dynamic",
+   "source_type": "dynamic-suggestion",
+   "channel": "arxiv_api",
+   "dynamic_source": "llm",
+   "dynamic_confidence": "medium",
+   "evidence_role": "query-planning-only",
+   "merged_labels": [
+    "video-generation-survey-adjacent"
+   ]
+  },
+  {
+   "label": "world-model-robot",
+   "tier": "core",
+   "query": "all:\"world model\" AND all:robot",
+   "why": "Find robot papers that explicitly use world-model terminology.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-robot"
+   ]
+  },
+  {
+   "label": "world-model-video-prediction",
+   "tier": "prediction",
+   "query": "all:\"video prediction\" AND all:\"robot manipulation\"",
+   "why": "Capture predictive visual models used for planning or offline rollout.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.CV",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-video-prediction"
+   ]
+  },
+  {
+   "label": "world-model-planning",
+   "tier": "planning",
+   "query": "all:planning AND all:\"world model\" AND all:robot",
+   "why": "Find papers where a predictive model is used to choose actions.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-planning"
+   ]
+  },
+  {
+   "label": "world-model-contact",
+   "tier": "physical-limitation",
+   "query": "all:contact AND all:\"world model\" AND all:manipulation",
+   "why": "Search for contact realism and physical executability limitations.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.AI"
+   ],
+   "merged_labels": [
+    "world-model-contact"
+   ]
+  },
+  {
+   "label": "world-model-long-horizon",
+   "tier": "limitation",
+   "query": "all:\"long-horizon\" AND all:prediction AND all:robot",
+   "why": "Find long-horizon consistency and compounding-error discussions.",
+   "source_key": "world-model",
+   "source_type": "specialized-family",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "world-model-long-horizon"
+   ]
+  },
+  {
+   "label": "ea-eval-closed-loop",
+   "tier": "core",
+   "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+   "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.AI"
+   ],
+   "merged_labels": [
+    "ea-eval-closed-loop"
+   ]
+  },
+  {
+   "label": "ea-eval-open-loop-benchmark",
+   "tier": "benchmark",
+   "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+   "why": "Cover fast screening metrics and their mismatch with real execution.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-eval-open-loop-benchmark"
+   ]
+  },
+  {
+   "label": "ea-eval-world-model",
+   "tier": "world-model",
+   "query": "all:\"world model\" AND all:\"robot manipulation\"",
+   "why": "Find predictive models used for robot planning, screening, or evaluation.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-eval-world-model"
+   ]
+  },
+  {
+   "label": "ea-eval-sim-real-correlation",
+   "tier": "sim-real",
+   "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+   "why": "Find work that compares simulation rankings against real robot outcomes.",
+   "source_key": "EA-EVAL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.AI"
+   ],
+   "merged_labels": [
+    "ea-eval-sim-real-correlation"
+   ]
+  },
+  {
+   "label": "ea-model-vla",
+   "tier": "core",
+   "query": "all:\"vision-language-action\" AND all:robot",
+   "why": "Find VLA papers that connect perception, language, and robot action.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-vla"
+   ]
+  },
+  {
+   "label": "ea-model-named-foundation",
+   "tier": "named-method",
+   "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+   "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-named-foundation"
+   ]
+  },
+  {
+   "label": "ea-model-finetuning",
+   "tier": "transfer",
+   "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+   "why": "Find evidence about whether pretraining reduces target-task data needs.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-finetuning"
+   ]
+  },
+  {
+   "label": "ea-model-action-tokenization",
+   "tier": "representation",
+   "query": "all:\"action tokenization\" AND all:robot",
+   "why": "Surface model papers where action interfaces determine transfer behavior.",
+   "source_key": "EA-MODEL",
+   "source_type": "knowledge-topic",
+   "channel": "arxiv_api",
+   "suggested_categories": [
+    "cs.RO",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "merged_labels": [
+    "ea-model-action-tokenization"
+   ]
+  }
+ ],
+ "browser_fallback_queries": [
+  {
+   "label": "dit-video-browser",
+   "query": "\"diffusion transformer\" \"video generation\" Sora",
+   "why": "Web fallback when arXiv under-recovers flagship DiT-video systems.",
+   "source_key": "dynamic",
+   "channel": "browser_fallback"
+  },
+  {
+   "label": "genie2-worldmodel-browser",
+   "query": "\"Genie 2\" OR \"world model\" interactive video",
+   "why": "Check action-conditioned video world-model systems outside arXiv.",
+   "source_key": "dynamic",
+   "channel": "browser_fallback"
+  }
+ ],
+ "web_calibration_queries": [
+  {
+   "label": "dit-video-calibration",
+   "query": "Diffusion Transformer video generation world model 2025 advances",
+   "why": "Calibrate current DiT-video terminology and flagship systems.",
+   "source_key": "dynamic",
+   "source_type": "llm",
+   "channel": "web_calibration"
+  }
+ ]
+}

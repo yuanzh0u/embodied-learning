@@ -1,0 +1,327 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.06991",
+  "title": "LangGS-SLAM: Real-Time Language-Feature Gaussian Splatting SLAM",
+  "published": "2026-01-28",
+  "url": "https://arxiv.org/abs/2602.06991",
+  "authors": [
+   "Seongbo Ha",
+   "Sibaek Lee",
+   "Kyungsu Kang",
+   "Joonyeol Choi",
+   "Seungjun Tak",
+   "Hyeonwoo Yu"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-VLOC 语义 SLAM 方法论文，是综述问题中'SLAM 系统自身如何演化'一轴的直接样本：它明确以具身 AI（LLM 作为推理引擎）为动机，指出现有语义 SLAM 的闭集标签表征阻碍 LLM 交互，进而把 VLM 语言嵌入作为新地图层吸收进实时 RGB-D SLAM（跟踪仍用经典 G-ICP + 3DGS）。对综述问题它提供双向证据：一方面证明 SLAM 正在语言特征化以充当 3D 感知与语言推理之间的基础设施（未被替代，反而吸收基础模型输出）；另一方面其全部评估止步于 Replica/TUM-RGBD 基准，无任何机器人或具身下游任务闭环，'支撑具身智能'仍是动机层主张。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Section 1 Introduction 前半",
+    "role": "problem",
+    "purpose": "确认动机：LLM 作为具身 AI 推理引擎需要语言对齐 3D 特征场；现有语义 SLAM 闭集标签限制开放词汇推理与 LLM 直接交互"
+   },
+   {
+    "locator": "page 2-3, Section 1 后半（技术挑战：计算复杂度/alpha-blending 语义失真/显存与压缩耦合）与 contributions 列表",
+    "role": "relevant-core",
+    "purpose": "理解为什么在线稠密语言场 SLAM 难（Online Language Splatting <1 FPS 且只优化几何参数），以及本文三个模块的分工"
+   },
+   {
+    "locator": "page 3-4, Section 2 Related Work（Semantic SLAM 与 VLM Feature Embedded dense scene reconstruction）",
+    "role": "relevant-core",
+    "purpose": "定位本文在语义 SLAM 谱系中的位置：对象级 SLAM→度量-语义建图→NeRF/3DGS 稠密语义→语言特征场离线重建→本文在线化"
+   },
+   {
+    "locator": "page 4-8, Section 3 Method（3.1 场景表示与几何渲染、3.2 Top-K 语义渲染、3.3 多准则地图管理、3.4 混合场优化）",
+    "role": "method-or-design",
+    "purpose": "理解双线程架构（G-ICP 跟踪 + 可微渲染建图）、双渲染方案（几何 alpha-blending / 语义 Top-K + CUDA kernel）、两阶段剪枝与冗余感知插入、几何-语义解耦更新频率"
+   },
+   {
+    "locator": "page 8-9, Section 4.1 Experimental Setup（数据集、实现细节、指标、基线）",
+    "role": "data-or-setting",
+    "purpose": "确认评估范围（Replica + TUM-RGBD）、硬件（RTX 4090 24GB）、指标（ATE/PSNR/SSIM/LPIPS/Accuracy/mIoU/FPS）与两类基线（几何-only SLAM、离线开放集方法）"
+   },
+   {
+    "locator": "page 9-14, Section 4.2-4.4（Table 1 跟踪与几何、Table 2/3 语义保真度、Table 4-7 四组消融、Fig 4 定性对比）",
+    "role": "results-or-analysis",
+    "purpose": "核对跟踪/几何/语义的量化结果与 15 FPS 声明，以及 Top-K、混合优化、地图管理消融的支持证据"
+   },
+   {
+    "locator": "page 14, Section 5 Conclusion 与 Limitations 段",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限（假设 Gaussians 与表面对齐良好）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 15-17, References",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表：仅提取对证据不可或缺的核心被引（GS-ICP SLAM、Feature3DGS、LangSplat、LERF、Online Language Splatting、LSeg），无需逐条精读；论文无附录"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在严格实时约束下让 RGB-D SLAM 在维护几何场的同时在线重建稠密、无压缩的语言对齐特征场——即解决高维特征渲染的计算瓶颈（Top-K 渲染替代 alpha-blending 语义渲染）、语义-几何不一致与显存膨胀（多准则剪枝与冗余感知插入）、双场收敛调度（几何高频/语义低频的混合场优化）。对综述问题的意义：这是'SLAM 通过吸收 VLM 语义向语言推理基础设施演化'的直接样本——SLAM 不被基础模型替代，而是把基础模型的嵌入吸收为地图的新一层；但其验证止步于标准 SLAM 基准，对具身下游环节的支撑仍是动机层主张。",
+ "contributions": [
+  "在线语言对齐稠密特征场 SLAM 框架：直接从 VLM（LSeg）嵌入构建 3D 特征场，支持开放词汇查询与 LLM 可交互感知，同时维持低延迟跟踪与建图（15 FPS）",
+  "双渲染方案：几何场沿用传统 alpha-blending 保证稳定收敛，语义场用 Top-K 渲染（按贡献权重选每 ray 前 K 个 Gaussians 并重归一化聚合）避免跨表面语义混合失真并大幅提速，配套定制 CUDA kernel",
+  "多准则地图管理：两阶段语义-几何一致性剪枝（Top-K 贡献低者为候选集，按几何重要性生存概率加权采样保留）+ 冗余感知 Gaussian 插入（复用 G-ICP 对应距离抑制冗余）",
+  "混合场优化：按场特性解耦更新频率（几何高频稳定、语义低频精化），在时间约束下加速双场收敛，TUM-RGBD 噪声场景下显著提升语义保真度"
+ ],
+ "method": {
+  "summary": "LangGS-SLAM 是双线程 RGB-D SLAM：跟踪线程用 G-ICP 对齐当前帧 source Gaussians 与地图 Gaussians 估计相机位姿，重叠率低于阈值时选关键帧并把新 Gaussians（几何属性 + 从输入 VLM 特征图采样的 LSeg 特征向量）初始化进 3DGS 场；建线程通过对可微渲染做联合优化（L_map = λ_geo·L_geo + λ_feat·L_feat，几何损失监督颜色+深度、语义损失为 Top-K 渲染特征图对 LSeg GT 特征图的 L1）。渲染双轨制：颜色/深度用传统 alpha-blending，高维语义特征用 Top-K 渲染（几何渲染时记录 Top-K 索引与权重供语义 kernel 复用）。地图管理包括每 500 迭代一次的语义-几何一致性剪枝（候选集按生存概率采样保留 50%）与插入阶段的冗余抑制。混合场优化让几何更新更频繁、语义在稳定几何上低频精化。跟踪阶段另加基于渲染损失的位姿精化。整体在单张 RTX 4090 上以 15 FPS 运行。",
+  "assumptions": [
+   "Gaussians 与场景表面良好对齐——Top-K 选择与重建质量依赖表面几何准确（作者自述局限）",
+   "输入为 RGB-D 序列且 LSeg 提供的 GT 特征图可作为语义监督",
+   "语义场比几何场平滑且依赖稳定几何结构，故可解耦更新频率（消融在 TUM 上支持）",
+   "桌面级单 GPU（RTX 4090 24GB）算力与显存预算内可完成双场实时优化"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Replica（高质量合成 RGB-D 室内场景，8 个序列 r0-r2/o0-o4）",
+   "TUM-RGBD（真实世界序列，含显著噪声与深度缺失，fr1/desk、fr2/xyz、fr3/desk 等）"
+  ],
+  "tasks": [
+   "相机跟踪（ATE RMSE 评估）",
+   "稠密几何重建（关键帧渲染 PSNR/SSIM/LPIPS）",
+   "开放集语义分割（像素级 Accuracy 与 mIoU，对 LSeg GT 特征图）",
+   "文本驱动 3D 查询 / 文本查询分割（定性演示，Fig 1 与 Fig 4）"
+  ],
+  "embodiments": [
+   "无机器人本体：仅手持/数据集 RGB-D 相机序列；具身 AI 与 LLM 交互仅出现在动机与定性演示层面"
+  ],
+  "sample_or_scale": "Replica 8 场景 + TUM-RGBD 3 序列（Table 2/3）；长序列含 Replica 2000 帧、TUM fr2 3397 帧、fr3 2515 帧；报告结果为 3 次运行的最优值；单张 RTX 4090（24GB）+ Ryzen9 7900x"
+ },
+ "evaluation": {
+  "design": "三段评估：(1) 跟踪与几何保真度对 SOTA NeRF/3DGS SLAM（Table 1）；(2) 语义保真度对离线开放集重建方法 LeRF/LangSplat/Feature3DGS（Table 2 Replica、Table 3 TUM），统一 LSeg GT 特征图协议；(3) 四组消融：Top-K 的 K 值（Table 4）、混合场优化（Table 5）、地图管理（Table 6）、新颖视图剪枝（Table 7）",
+  "baselines": [
+   "几何-only SLAM：Point-SLAM（NeRF 点云）、SplaTAM（3DGS）、MonoGS（高斯 Splatting SLAM）",
+   "离线开放集重建：LeRF（NeRF 语言场）、LangSplat（3DGS 语言高斯+自编码器压缩）、Feature3DGS（512-D/128-D，离线预计算位姿、无实时约束）",
+   "消融基线：vanilla alpha-blending 语义渲染、无混合优化、无地图管理"
+  ],
+  "metrics": [
+   "ATE RMSE [cm]（跟踪）",
+   "PSNR/SSIM/LPIPS（几何渲染保真度）",
+   "像素级 Accuracy 与 mIoU（语义保真度）",
+   "System FPS（全流程耗时倒数；离线方法按排除 COLMAP 的总重建时间计）与渲染 FPS",
+   "Gaussian 数量与显存占用（Table 6）"
+  ],
+  "ablations": [
+   "Top-K 渲染 K 值消融（Table 4）：vanilla 7 FPS 几何语义双失败，top-3 为速度-稳定性折中（渲染 122 FPS）",
+   "混合场优化消融（Table 5）：Replica 上 PSNR 34.48→35.92，TUM 22.13→23.78 且语义指标显著提升",
+   "地图管理消融（Table 6）：无管理时 Replica 912595 Gaussians >24GB 显存耗尽；完整方案 215857 个 7.7GB",
+   "新颖视图剪枝消融（Table 7）：room2/office4 上语义与几何指标同步小幅提升"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "跟踪与几何保真度（Table 1）：在同时优化几何与高维语义场的前提下，Replica 上 ATE RMSE 0.213 cm（四个方法中最优，Point-SLAM/SplaTAM/MonoGS 为 0.471/0.367/0.318）、PSNR 35.92 dB、System FPS 15；TUM-RGBD 上 PSNR 23.78 dB（最高）、ATE 2.316 cm（优于 Point-SLAM 2.517 与 SplaTAM 3.263，逊于 MonoGS 1.520）、FPS 15。作者强调全部结果无任何后优化。",
+   "scope": "Replica 与 TUM-RGBD 全序列，对几何-only SLAM 基线",
+   "locator": "page 9, Table 1"
+  },
+  {
+   "finding": "语义保真度（Table 2/3）：Replica 上 Ours 平均 Accuracy 0.883、mIoU 0.673，高于 LeRF（0.618/0.277）与 LangSplat（0.614/0.263），与离线 Feature3DGS 512-D（0.893/0.671）像素精度相当且 mIoU 略高；系统 FPS 15 对 Feature3DGS-512D 的 0.300（约 50 倍）。TUM-RGBD 上 Ours 0.828/0.642/15，与 Feature3DGS 512-D（0.835/0.633/0.522）相当，作者据此主张对传感器噪声鲁棒。",
+   "scope": "Replica 8 场景与 TUM-RGBD 3 序列，对离线开放集重建方法（统一 LSeg GT 特征协议）",
+   "locator": "page 10, Table 2；page 11, Table 3"
+  },
+  {
+   "finding": "Top-K 消融（Table 4）：vanilla 全 alpha-blending 语义渲染因渲染瓶颈把优化步数限制到失败（PSNR 23.23、渲染 7 FPS），Top-K 各档恢复到 PSNR 32-35；K=1 几何最好但对特征噪声敏感，K=3 为速度与语义稳定性折中（最终设计）。",
+   "scope": "消融实验（单场景，未指明）",
+   "locator": "page 11, Table 4 与其后分析（page 11-12）"
+  },
+  {
+   "finding": "地图管理消融（Table 6）：无剪枝与冗余控制时系统在 Replica（912595 Gaussians，>24GB）与 TUM-RGBD（971818，>24GB）显存耗尽，仅约 600 帧的 TUM fr-1 可运行；完整方案 Replica 215857 个 Gaussians 7.7GB、TUM 91202 个 4.4GB，真实数据上剪枝后视觉指标不降反升（PSNR 23.21→23.78）。",
+   "scope": "Replica/TUM-RGBD 长序列显存与 Gaussian 数消融",
+   "locator": "page 12, Table 6 与 page 13 分析"
+  },
+  {
+   "finding": "混合优化消融（Table 5）：TUM-RGBD 上加入混合优化后语义指标显著提升（mIoU 0.631→0.642），作者以此支撑'依赖几何的语义场只有在稳定几何基础上才能正确优化'的假设；Replica 上因数据质量高差异可忽略。",
+   "scope": "Replica 8 场景 + TUM 3 场景平均",
+   "locator": "page 12, Table 5 与其后分析"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "方法假设 Gaussians 与场景表面对齐良好，因此当表面几何准确时才更有效；未来工作将集成几何忠实的高斯方法与畸变损失类正则",
+    "locator": "page 14, Section 5 Limitations 段"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全部定量评估限于 Replica（合成）与 TUM-RGBD（手持 RGB-D）两个标准基准，无机器人平台、无操作/导航/空间问答等具身下游任务闭环——'为具身 AI 的 LLM 推理引擎提供可交互 3D 感知'的定位停留在动机与定性演示（Fig 1 文本驱动 3D 查询）层面，语言场对具身任务的实际收益未验证",
+    "basis": "page 8 Section 4.1 Datasets 的评估范围声明与 page 1 动机段的对照；全文实验章节无任何机器人或下游任务实验"
+   },
+   {
+    "boundary": "语义保真度以对 LSeg GT 特征图的像素级 Accuracy/mIoU 衡量，未评估开放词汇查询的端到端正确率或下游任务效用；LSeg 特征本身的质量成为语言场性能上界，换用其他 VLM 的效果未报告",
+    "basis": "page 8-9 Metrics 与 Baselines 段的评估协议定义"
+   },
+   {
+    "boundary": "结果报告为 3 次运行的最优值而非均值/方差，存在选择性报告风险；离线基线 FPS 排除 COLMAP 位姿估计时间（对离线方法有利，使 50× 速度对比偏保守）但作者未报告运行次数的统计离散度",
+    "basis": "page 9 Implementation Details（'the reported results are the best values of 3 runs'）与 Metrics 段 FPS 口径"
+   },
+   {
+    "boundary": "面向静态室内场景：动态物体、光照剧变、室外大尺度与多会话持久地图均未验证；显存上界 24GB 单卡约束下，无地图管理即 OOM 说明扩展性依赖剪枝策略",
+    "basis": "page 8 数据集特性描述与 page 12 Table 6 显存消融"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在室内静态 RGB-D 序列（Replica 合成与 TUM-RGBD 真实手持）、单张 RTX 4090、以 LSeg 为特征监督的条件下，在线 SLAM 能以 15 FPS 同时维护几何场与稠密无压缩语言对齐特征场，跟踪精度达到或超过几何-only NeRF/3DGS SLAM、语义保真度与离线开放集重建相当。对机器人移动平台上的实时性、动态/室外场景、以及语言场对具身下游任务（操作、导航、空间推理）的实际收益，本文未提供证据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "双数据集设计（合成高保真 + 真实噪声）检验鲁棒性，且对语义评估统一 LSeg GT 特征图协议，使在线方法与离线方法可比",
+   "消融覆盖全部四个声称模块（Top-K、混合优化、地图管理、新颖视图剪枝），并诚实报告剪枝带来的 Replica PSNR 轻微下降及其机理解释",
+   "把离线基线明确定位为'practical quality upper bound'且 FPS 口径排除 COLMAP（对基线有利），使 15 FPS vs 0.300 FPS 的速度对比更可信"
+  ],
+  "design_risks": [
+   "无具身/机器人下游任务评估，'bridging 3D perception and language-based reasoning'的核心主张只在基准指标与定性分割图上成立",
+   "报告 3 次运行最优值而非均值/方差；操作者/序列选择的统计不确定性未知",
+   "双渲染方案引入的几何-语义不一致需要剪枝机制补偿，系统复杂度高、超参多（K、剪枝周期 500 迭代、保留比 50%、λ 权重），敏感性仅对 K 做了消融"
+  ],
+  "baseline_fairness": "几何侧选 Point-SLAM/SplaTAM/MonoGS 为当前 SOTA NeRF/3DGS SLAM，设定合理；语义侧无可比在线开放集 SLAM，故以离线方法为上限对照并统一特征监督协议，作者对口径（排除 COLMAP、best of 3 runs）有显式声明；但 TUM 上 MonoGS 的 ATE（1.520）优于本文（2.316），正文以'competitive'表述未突出该落后。",
+  "metric_validity": "ATE/PSNR/SSIM/LPIPS/Accuracy/mIoU 均为领域标准指标且定义明确（System FPS 按全流程耗时）；但语义保真度以像素级分割衡量，不等价于语言场对开放词汇查询或具身任务的效用。",
+  "reproducibility": "硬件、数据集、剪枝周期、保留比例、K=3、渲染损失位姿精化等细节较全；未提供代码/仓库链接声明；λ_geo/λ_feat 与关键帧重叠率阈值等超参未给出。",
+  "external_validity": "室内静态场景、手持级运动、单卡 24GB；未在机器人平台、动态环境、大尺度室外或多会话持久地图上验证；LSeg 之外的特征来源未测试。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.06991-C01",
+   "claim": "作者主张：大多数现有语义 SLAM 依赖闭集语义标签或场景特定特征，这类表征限制了开放词汇推理并阻碍与 LLM 的直接交互；相比之下 VLM 提供连续、语言对齐且可泛化的嵌入，可作为语义 SLAM 向开放词汇语言推理演化的语义来源。",
+   "stance": "support",
+   "relation": "这是'SLAM 系统自身如何演化'一轴的核心证据：本文把 SLAM 与具身 AI（LLM 推理引擎）之间的鸿沟定位为 SLAM 表征层的缺陷（闭集语义），并以在线吸收 VLM 嵌入为修复路径——即 SLAM 通过语言特征化继续充当空间基础设施而非被基础模型替代；同时该主张也确认了演化压力来自具身 AI 侧（LLM 需要语言对齐的 3D 空间表征）。",
+   "summary": "现有语义 SLAM 闭集标签限制开放词汇推理与 LLM 交互，VLM 连续嵌入是演化方向",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1, Section 1 Introduction",
+   "source_context": "However, most existing semantic SLAM [46,19,45,18] rely on closed-set semantic labels or scene-specific features. Such representations limit open-vocabulary reason- ing and prevent direct interaction with LLMs. In contrast, Vision-Language Models (VLMs) [25,17,4] offer continuous, language-aligned embeddings that encode rich and generalizable semantics.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 原文：闭集标签/场景特定特征（closed-set semantic labels or scene-specific features）、限制开放词汇推理与阻止 LLM 直接交互（limit open-vocabulary reasoning and prevent direct interaction with LLMs）、VLM 连续语言对齐嵌入可泛化（continuous, language-aligned embeddings that encode rich and generalizable semantics）均为原文措辞；claim 未添加原文之外的断言，闭集批评的对象范围（'most existing semantic SLAM'）也按原文限定。"
+   }
+  },
+  {
+   "card_id": "2602.06991-C02",
+   "claim": "在 Replica 与 TUM-RGBD 上，本系统在同时优化几何场与高维语义场的前提下取得领先的跟踪与几何指标：Replica 上 ATE RMSE 0.213 cm（四方法最优；Point-SLAM/SplaTAM/MonoGS 分别 0.471/0.367/0.318）、PSNR 35.92 dB、System FPS 15；TUM-RGBD 上 PSNR 23.78 dB（最高）、ATE 2.316 cm、System FPS 15，作者强调全部结果无任何后优化。",
+   "stance": "support",
+   "relation": "支撑'SLAM 可作为实时承载基础模型语义的基础设施'的能力证据：在 15 FPS 实时约束下，语言特征场并未以牺牲几何/跟踪质量为代价（反而超过几何-only SLAM 基线的几何指标与速度），说明吸收 VLM 语义后的 SLAM 仍保有完整的度量-几何职能——SLAM 的角色在扩展而非萎缩；注意 TUM 上 MonoGS 的 ATE（1.520）仍优于本文。",
+   "summary": "15 FPS 同时双场优化：Replica ATE 0.213 cm 最优、PSNR 35.92，超过几何-only SLAM 基线（Table 1）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 9, Table 1",
+   "source_context": "Table 1: Tracking Accuracy and Geometric fidelity Our method attains the best track- ing accuracy on Replica and competitive accuracy on TUM-RGBD, while maintaining high system (tracking and mapping) speed. Despite jointly optimizing both geometric and semantic fields, our system surpasses geometry-only baselines in both speed and geometric quality. All results are reported without any post-optimization. Method Replica Dataset TUM-RGBD Dataset PSNR [dB] ↑ SSIM ↑ LPIPS ↓ ATE RMSE [cm] ↓ System FPS ↑ PSNR [dB] ↑ SSIM ↑ LPIPS ↓ ATE RMSE [cm] ↓ System FPS ↑ Point-SLAM [29] 35.56 0.977 0.118 0.471 0.415 21.33 0.733 0.453 2.517 0.254 SplaTAM [14] 34.19 0.970 0.087 0.367 1.184 23.53 0.909 0.166 3.263 1.184 MonoGS [20] 35.34 0.944 0.122 0.318 0.679 18.07 0.726 0.320 1.520 2.283 Ours 35.92 0.952 0.099 0.213 15 23.78 0.856 0.147 2.316 15",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ATE RMSE [cm]、PSNR [dB]、System FPS（跟踪+建图全流程）",
+    "value_or_direction": "Replica: Ours ATE 0.213 cm / PSNR 35.92 / System FPS 15；Point-SLAM 0.471 / 35.56 / 0.415；SplaTAM 0.367 / 34.19 / 1.184；MonoGS 0.318 / 35.34 / 0.679。TUM-RGBD: Ours PSNR 23.78 / ATE 2.316 / FPS 15",
+    "comparator": "Point-SLAM、SplaTAM、MonoGS（NeRF/3DGS 几何-only SLAM 基线）",
+    "task_or_sample": "Replica 与 TUM-RGBD 数据集全序列（3 次运行最优值，无后优化）",
+    "locator": "page 9, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 9 Table 1：Ours 行 Replica 侧 35.92/0.952/0.099/0.213/15、TUM 侧 23.78/0.856/0.147/2.316/15；三个基线行数值一致。'最优 ATE（Replica）'与'PSNR 23.78 为 TUM 最高'由表内同列直接比较得出；'competitive on TUM-RGBD'为 caption 原话（MonoGS 的 TUM ATE 1.520 优于本文 2.316，claim 中已保留该限定并未声称 TUM ATE 最优）。'无任何后优化'逐字出自 caption。"
+   }
+  },
+  {
+   "card_id": "2602.06991-C03",
+   "claim": "Replica 语义保真度（对统一 LSeg GT 特征协议）：Ours 平均 Accuracy 0.883、mIoU 0.673、FPS 15，优于 LeRF（0.618/0.277/5.392）与 LangSplat（0.614/0.263/0.863），与离线 Feature3DGS 512-D（Accuracy 0.893 / mIoU 0.671 / FPS 0.300）像素精度相当、mIoU 略高，系统速度约为其 50 倍（15 vs 0.300 FPS）。",
+   "stance": "support",
+   "relation": "支撑'SLAM 吸收语言特征后仍是实时基础设施'一侧：在线 SLAM 不仅达到离线开放集重建（依赖预计算位姿、无实时约束的质量上限）的语义水平，还以数量级更快的速度运行——这削弱'必须离线重建或依赖端到端模型才能获得语言对齐空间表征'的替代论；但语义指标限于像素级分割 fidelity，不直接等于具身空间推理效用。",
+   "summary": "语义保真度与离线 Feature3DGS 相当（mIoU 0.673 vs 0.671）且 FPS 15 vs 0.300，约 50 倍速（Table 2）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 10, Table 2",
+   "source_context": "Table 2: Evaluation Results of Semantic Fidelity on Replica Dataset. The proposed method demonstrates higher semantic fidelity than LeRF and LangSplat, and compara- ble performance to Feature3DGS while delivering fast system speed. Method Metric r0 r1 r2 o0 o1 o2 o3 o4 Avg. LeRF [16] Accuracy ↑ 0.494 0.697 0.710 0.633 0.613 0.557 0.554 0.685 0.618 mIoU ↑ 0.272 0.217 0.358 0.362 0.323 0.150 0.201 0.333 0.277 FPS ↑ 5.376 5.323 5.368 5.402 5.427 5.413 5.428 5.403 5.392 LangSplat [24] Accuracy ↑ 0.544 0.549 0.701 0.345 0.655 0.772 0.651 0.690 0.614 mIoU ↑ 0.264 0.184 0.330 0.125 0.227 0.375 0.289 0.311 0.263 FPS ↑ 1.047 0.794 1.049 0.570 0.571 0.693 1.080 1.101 0.863 Feature 3DGS [43] (512-D) Accuracy ↑ 0.926 0.951 0.922 0.744 0.796 0.954 0.940 0.910 0.893 mIoU ↑ 0.836 0.718 0.738 0.546 0.434 0.687 0.775 0.633 0.671 FPS ↑ 0.242 0.245 0.276 0.337 0.373 0.296 0.292 0.335 0.300 Feature 3DGS [43] (128-D) Accuracy ↑ 0.928 0.949 0.917 0.743 0.785 0.953 0.939 0.907 0.890 mIoU ↑ 0.838 0.712 0.729 0.538 0.406 0.677 0.763 0.615 0.660 FPS ↑ 1.143 1.182 1.360 1.591 1.723 1.421 1.455 1.584 1.432 Ours Accuracy ↑ 0.904 0.939 0.916 0.744 0.793 0.934 0.925 0.908 0.883 mIoU ↑ 0.800 0.711 0.747 0.549 0.440 0.683 0.776 0.677 0.673 FPS ↑ 15 15 15 15 15 15 15 15 15",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "像素级 Accuracy、mIoU、系统 FPS（Replica 8 场景平均）",
+    "value_or_direction": "Ours: Accuracy 0.883 / mIoU 0.673 / FPS 15；Feature3DGS 512-D: 0.893 / 0.671 / 0.300；Feature3DGS 128-D: 0.890 / 0.660 / 1.432；LeRF: 0.618 / 0.277 / 5.392；LangSplat: 0.614 / 0.263 / 0.863",
+    "comparator": "LeRF、LangSplat、Feature3DGS（512-D 与 128-D）——离线开放集重建方法",
+    "task_or_sample": "Replica 数据集 8 个场景（r0-r2、o0-o4）平均，统一 LSeg GT 特征图协议",
+    "locator": "page 10, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 10 Table 2 的 Avg 列：Ours 0.883/0.673/15、Feature3DGS 512-D 0.893/0.671/0.300、128-D 0.890/0.660/1.432、LeRF 0.618/0.277/5.392、LangSplat 0.614/0.263/0.863。'higher semantic fidelity than LeRF and LangSplat, comparable to Feature3DGS'为 caption 原话；'约 50 倍速度'是 15/0.300 的直接算术，且与 page 2 Fig 1 caption 的 50× 声明一致；'像素精度相当、mIoU 略高'由 0.883 vs 0.893 与 0.673 vs 0.671 的表内直接比较得出，未外推到其他数据集。"
+   }
+  },
+  {
+   "card_id": "2602.06991-C04",
+   "claim": "本文全部定量评估仅在 Replica（高质量合成 RGB-D）与 TUM-RGBD（真实世界序列、含显著噪声与深度缺失）两个标准 SLAM 基准上进行；论文虽以具身 AI 的 LLM 推理引擎为动机并演示文本驱动 3D 查询，但不含任何机器人本体或操作/导航/空间问答等具身下游任务的闭环验证——其'SLAM 支撑具身智能'的定位停留在动机与感知层演示。",
+   "stance": "conditional",
+   "relation": "限制把该文证据外推到'SLAM 是具身智能各环节核心基础设施'的强度：它证明的是 SLAM 在标准基准上实时承载语言对齐特征场的可行性（感知/建图层基础设施），但对综述问题关心的具身数据采集、操作、导航、空间推理各环节均无直接实验——SLAM 与具身智能的连接在本篇是动机性论证而非经验证据。",
+   "summary": "评估范围限于 Replica/TUM-RGBD 基准，无机器人或具身下游任务闭环",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "locator": "page 8, Section 4.1 Experimental Setup",
+   "source_context": "Datasets. We evaluate on Replica [33] and TUM-RGBD [34]. Replica provides high- quality synthetic RGB-D data, whereas TUM-RGBD offers real-world sequences with substantial noise and frequent depth missing regions.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数据集范围（Replica 与 TUM-RGBD 及其特性描述）逐字出自 page 8 Section 4.1；'无机器人本体或具身下游任务闭环'是对全文实验章节（page 8-14，仅跟踪/重建/分割指标与 Fig 1、Fig 4 定性文本查询演示）的穷尽核查得出的否定性结论；page 1 动机段的具身 AI/LLM 表述为动机而非实验。claim 限于本文证据范围，不否定方法在其他场景的可能性。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "RGBD GS-ICP SLAM",
+   "arxiv_id": "2407.10118",
+   "role": "本文几何主干（G-ICP 跟踪与 Gaussian 初始化方案的来源，同一团队前作）"
+  },
+  {
+   "title": "Feature 3DGS: Supercharging 3D Gaussian Splatting to Enable Distilled Feature Fields",
+   "arxiv_id": "2404.19349",
+   "role": "语义保真度的主要对比基线与特征场监督协议来源（Table 2/3 及 Accuracy/mIoU 指标口径）"
+  },
+  {
+   "title": "LangSplat: 3D Language Gaussian Splatting",
+   "arxiv_id": "2312.16084",
+   "role": "离线语言高斯重建对比方法（自编码器压缩路线，本文的压缩-质量权衡讨论对象）"
+  },
+  {
+   "title": "LERF: Language Embedded Radiance Fields",
+   "arxiv_id": "2303.09553",
+   "role": "离线语言辐射场对比方法（NeRF 路线）"
+  },
+  {
+   "title": "Online Language Splatting",
+   "arxiv_id": "2503.09447",
+   "role": "在线语言高斯前驱（<1 FPS、依赖预提取 CLIP 且只优化几何参数——本文明确的技术对照物）"
+  },
+  {
+   "title": "Language-driven Semantic Segmentation (LSeg)",
+   "arxiv_id": "2201.03546",
+   "role": "全部语义实验的特征来源与 GT 特征图监督"
+  }
+ ],
+ "notes": "补充观察：(1) 该文是综述问题中'SLAM 系统自身演化'方向的典型样本：跟踪层仍是经典 G-ICP 配准 + 3DGS 几何，语言特征作为新的地图层被吸收——既非端到端替代 SLAM，也非传统 SLAM 原样，而是混合架构。(2) 关键定位语：page 1 摘要称在线语言对齐特征场 SLAM 'bridging the gap between 3D perception and language-based reasoning'；page 2 Fig 1 caption 称 'matches offline dense VLM methods in semantic quality, while running 50× faster'。(3) 与 Online Language Splatting（arXiv:2503.09447）的对照给出该子方向一年内的速度演进：<1 FPS → 15 FPS。(4) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。"
+}

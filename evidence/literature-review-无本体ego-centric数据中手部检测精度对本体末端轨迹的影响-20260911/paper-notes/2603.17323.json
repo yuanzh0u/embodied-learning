@@ -1,0 +1,314 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.17323",
+  "title": "DexEXO: A Wearability-First Dexterous Exoskeleton for Operator-Agnostic Demonstration and Learning",
+  "published": "2026-03-18",
+  "url": "https://arxiv.org/abs/2603.17323",
+  "authors": [
+   "Alvin Zhu",
+   "Mingzhang Zhu",
+   "Beomdo Kim",
+   "J. Ramos",
+   "Yike Shi",
+   "Yufeng Wu",
+   "Raayan Dhar",
+   "Fuyi Yang",
+   "Ruochen Hou",
+   "Han Fang",
+   "Quanyou Wang",
+   "Yuchen Cui",
+   "Dennis W. Hong"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "外骨骼编码器采集路线与视觉手部追踪的直接对照：含编码器 vs iPhone ARKit 位姿 vs 视觉遥操作的三设备用户研究，以及 wiggle-space 量化的人手-外骨骼相对自由度，正面回答编码器与视觉方案的精度差与失效模式。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "灵巧操作示教采集的保真度-可穿戴性权衡"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "视觉遥操作/手套/外骨骼三类接口的失效模式归因"
+   },
+   {
+    "locator": "III. HARDWARE DESIGN",
+    "role": "method-or-design",
+    "purpose": "编码器被动手、滑块手指接口、pose-tolerant 拇指机构与 wiggle space 推导"
+   },
+   {
+    "locator": "IV. DATA COLLECTION AND POLICY TRAINING",
+    "role": "method-or-design",
+    "purpose": "编码器 1kHz 采样、ARKit 末端位姿 60Hz、最近邻时间对齐等采集端精度设计"
+   },
+   {
+    "locator": "V. RESULTS",
+    "role": "results-or-analysis",
+    "purpose": "wiggle space 量化、三设备用户研究 Table I、策略消融 Table II 与 DexUMI 对比"
+   },
+   {
+    "locator": "VI. LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限"
+   },
+   {
+    "locator": "VII. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论边界"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，不影响证据判定"
+   }
+  ]
+ },
+ "research_question": "能否以可穿戴性优先的手部外骨骼（跨操作者免标定）在硬件层对齐视觉外观、接触几何与运动学，从而无需视觉后处理即可直接从腕部 RGB 示教训练灵巧操作策略？",
+ "contributions": [
+  "可穿戴性优先的手部外骨骼：滑块手指接口解析建模支持 140-217 mm 手长，免刚性对位与逐人标定",
+  "Pose-tolerant 拇指机构：保留自然人手拇指工作空间的同时维持到机器人拇指自由度的可控映射，wiggle space 椭球半轴 66.12/49.19/21.14 mm",
+  "硬件级本体对齐管线：被动手使腕部相机视野与部署机器人一致，免除分割/掩码/补绘，原始腕部 RGB 直接训练扩散策略"
+ ],
+ "method": {
+  "summary": "DexEXO 由连杆驱动外骨骼、与 OYMotion ROHand 同几何的 6 自由度被动手和机载传感模块组成；手指关节由六个模拟编码器 1 kHz 采样并经分段线性映射到 ROHand 执行器命令；末端 6 自由度位姿由 iPhone ARKit（TeleDex）采集并重采样至 60 Hz；各模态以视频时间戳为主参考做最近邻软件对齐；扩散策略（DINOv2 视觉编码 + 16 步动作 horizon 执行前 8 步）直接从原始腕部 RGB 学习，可选手指状态条件化。",
+  "assumptions": [
+   "被动手与部署机器人手几何一致即可消除视觉本体差距，无需视觉后处理",
+   "编码器测量的被动手关节角可经逐点位姿采样的分段线性插值映射到目标手执行器",
+   "拇指耦合的残余自运动（wiggle space）不改变被动手姿态，因此不影响动作标签"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Block 200 条示教，Carton/Bottle 各 150 条"
+  ],
+  "tasks": [
+   "Scissors cutting",
+   "Page flipping",
+   "Cup stacking",
+   "Piano playing（用户研究）",
+   "Block/Carton/Bottle（策略评测）"
+  ],
+  "embodiments": [
+   "DexEXO + OYMotion ROH-AP001 被动手/机器人手",
+   "DexUMI（对照）",
+   "iPhone 视觉遥操作 TeleDex（对照）"
+  ],
+  "sample_or_scale": "用户研究 n=14（7 女 7 男，18-27 岁，手长 165-195 mm）；策略每任务 20 次评测试验"
+ },
+ "evaluation": {
+  "design": "三设备（DexEXO/DexUMI/视觉遥操作）四任务用户研究（成功率+完成时间+NASA-TLX 主观量表，Wilcoxon 符号秩检验）；策略评测 20 次/任务随机初始位姿；手指状态条件化消融",
+  "baselines": [
+   "DexUMI",
+   "vision-based teleoperation (TeleDex)",
+   "DexUMI 已发表结果（Cube 1.00 / Carton 0.85，含分割补绘与触觉条件）"
+  ],
+  "metrics": [
+   "任务成功率",
+   "完成时间",
+   "Likert/NASA-TLX 主观评分",
+   "wiggle-space 拟合椭球半轴"
+  ],
+  "ablations": [
+   "显式手指状态条件化（有/无）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "视觉遥操作在剪刀任务成功率 0.00（缺乏精度、响应与力反馈），叠杯 0.33、钢琴 0.60；DexEXO 分别为 0.79/0.82/0.96，钢琴任务比 DexUMI 高 54.5% 成功率且快 16.6%",
+   "scope": "n=14 用户研究四任务",
+   "locator": "B. Demonstration User Studies, Table I"
+  },
+  {
+   "finding": "wiggle space 拟合椭球半轴 66.12/49.19/21.14 mm：外骨骼可相对手掌大幅平移旋转而不改变被动拇指姿态，操作者-设备间存在未测量的厘米级相对自由度",
+   "scope": "捏取姿态下约 25 s 动捕测量",
+   "locator": "A. Experimental Validation of Thumb Wiggle Space"
+  },
+  {
+   "finding": "硬件级本体对齐下，有无显式手指状态条件的策略成功率接近（Block 0.90/0.85、Carton 0.90/0.95、Bottle 0.85/0.80），原始 RGB 已足够",
+   "scope": "三任务各 20 次",
+   "locator": "C. Policy Evaluation, Table II"
+  },
+  {
+   "finding": "DexUMI 无触觉/无视觉后处理的原始图像基线成功率显著更低，说明分割补绘是在补偿视觉本体差距；DexEXO 在 Block/Carton 达 0.90/0.90 而无需任何后处理",
+   "scope": "与已发表 DexUMI 结果的对比",
+   "locator": "C. Policy Evaluation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "俯视视点下手指被外骨骼结构部分遮挡，影响视觉监控",
+    "locator": "VI. LIMITATIONS"
+   },
+   {
+    "limitation": "连杆机构的机械干涉限制活动范围，尤其在平面物体操作时",
+    "locator": "VI. LIMITATIONS"
+   },
+   {
+    "limitation": "被动手与操作者自然手之间存在轻微空间偏移，降低新用户直观性",
+    "locator": "VI. LIMITATIONS"
+   },
+   {
+    "limitation": "适配其他机器人手型需要非平凡的机械重设计",
+    "locator": "VI. LIMITATIONS"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "编码器测的是被动手而非操作者人手；wiggle space（半轴达 66 mm）意味着人-机相对位姿含未测自由度，『operator-agnostic』以放弃人手绝对姿态测量为代价，该误差不在动作标签中显现但也未被量化其对任务的影响",
+    "basis": "V-A wiggle space 实验 + III-D 自运动流形推导"
+   },
+   {
+    "boundary": "末端位姿依赖 iPhone ARKit 视觉-惯性追踪且只做最近邻软件时间对齐，论文未报告 ARKit 位姿精度或同步误差；长时程或快速运动下的漂移未评估",
+    "basis": "IV-A 采集描述，无精度数值"
+   },
+   {
+    "boundary": "策略任务均为桌面短程任务（每任务 150-200 条示教、20 次评测），未覆盖长时程或强遮挡场景",
+    "basis": "V-C 任务定义"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：与 ROHand 同几何的单臂腕部相机桌面灵巧操作、桌面短程任务、每任务百级示教；编码器路线的手指数据精度以机械耦合为前提，末端轨迹精度未被独立量化（依赖消费级 ARKit）；wiggle space 表明人-机相对运动不进入标签，迁移到其他手型需机械重设计。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "用户研究同时覆盖三设备四任务并有客观（成功率/时间）与主观（NASA-TLX）双维度，且报告统计检验",
+   "wiggle space 用动捕做了实验量化而非仅解析推导",
+   "手指状态消融在同一架构/数据下隔离条件化变量的贡献"
+  ],
+  "design_risks": [
+   "每条件样本小（用户研究 n=14、策略 20 次/任务），剪刀任务 DexUMI/遥操作成功率为 0 使部分比较退化为有无之别",
+   "与 DexUMI 的策略对比跨论文（不同示教数据与评测设置），作者引用对方已发表数字而非同条件复现",
+   "ARKit 末端位姿与软件时间对齐的精度未量化，『高保真』仅就手指编码器链声明"
+  ],
+  "baseline_fairness": "用户研究内三设备公平（同任务同参与者）；策略层与 DexUMI 的对比是跨论文引用，严格性有限，作者明确标注对方配置（相对动作+触觉+分割补绘）。",
+  "metric_validity": "成功率与完成时间是任务级部署指标；wiggle-space 椭球以动捕为参照，是机构容差的合理代理；无轨迹级误差指标。",
+  "reproducibility": "机构尺寸参数（L_min=56 mm 等）、编码器采样率、映射方法与训练配置均有报告；项目主页存在，但硬件图纸/代码开源状态文中未明确。",
+  "external_validity": "手长兼容范围 140-217 mm 经解析推导且 14 名参与者均在范围内；结论限于与该被动手同几何的机器人手。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.17323-C01",
+   "claim": "在 14 人四任务用户研究中，基于视觉追踪的遥操作（TeleDex）在接触/精度要求高的任务上显著劣于编码器外骨骼：剪刀剪切成功率 0.00（DexEXO 0.79、DexUMI 0.00），叠杯 0.33（DexEXO 0.82），钢琴 0.60（DexEXO 0.96）；作者将遥操作的失败归因于精度、响应与力反馈不足。",
+   "stance": "support",
+   "relation": "支持『采集端手部追踪方案的精度直接决定示教可用性』：视觉手部追踪在接触丰富、精细任务中因遮挡与不稳定而失败，编码器外骨骼绕开视线依赖后同一批操作者可完成任务。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 给出三设备四任务成功率；V-B 正文明确视觉遥操作剪刀任务失败归因于精度/响应/力反馈，且钢琴任务 DexEXO 比 DexUMI 高 54.5%。",
+   "locator": "B. Demonstration User Studies, Table I",
+   "source_context": "Tele- operation failed at the same task due to a lack of precision, responsiveness, and force feedback.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate (user study, mean)",
+    "value_or_direction": "scissors 0.79 vs 0.00 (teleop); cup stacking 0.82 vs 0.33 (teleop); piano 0.96 vs 0.60 (teleop) vs 0.62 (DexUMI, +54.5%)",
+    "comparator": "DexUMI exoskeleton and vision-based teleoperation (TeleDex), same participants",
+    "task_or_sample": "4 demonstration tasks, n=14 operators",
+    "locator": "B. Demonstration User Studies, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值与 Table I 行（DexEXO 0.79/0.82/0.96、DexUMI 0.00/0.80/0.62、Teleop 0.00/0.33/0.60）及正文归因一致；claim 未将遥操作失败泛化到所有视觉系统，限定为本研究的 TeleDex 设置。"
+   }
+  },
+  {
+   "card_id": "2603.17323-C02",
+   "claim": "视觉手部追踪系统的失效模式是视线遮挡与接触丰富交互中的追踪不稳定；无物理约束的数据手套则会产生对目标机器人运动学不可行的轨迹（correspondence problem）。",
+   "stance": "support",
+   "relation": "为综述的误差来源分类提供两端对照：视觉方案误差来自遮挡/追踪不稳定；手套方案误差来自人-机运动学不对应。这正是外骨骼编码器路线试图同时规避的两类失效。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "II-A 明确陈述两类失效并引 [15,24,34]（视觉遮挡）与 [36-38]（手套 correspondence problem）；属作者对文献的归因性陈述。",
+   "locator": "A. Teleoperation for Dexterous Manipulation",
+   "source_context": "Vision-based systems provide an unencumbered user experience, yet they are fundamentally limited by line-of-sight occlusion and tracking instability during contact-rich interactions",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两句归因逐字存在于 II-A；claim 标注为引用支持的作者陈述，未当作本文实验结果。"
+   }
+  },
+  {
+   "card_id": "2603.17323-C03",
+   "claim": "DexEXO 的 pose-tolerant 拇指耦合给外骨骼相对手掌留出四维自运动流形，捏取姿态下实测 wiggle space 拟合椭球半轴达 66.12/49.19/21.14 mm：操作者手与外骨骼之间可发生厘米级相对运动而不改变被动手（即被编码器测量并重定向的手）的姿态。",
+   "stance": "conditional",
+   "relation": "量化『operator-agnostic』的精度代价：编码器路线测的是被动手而非人手，人-机相对运动（数十毫米）被机构吸收且不进入动作标签；这既是跨操作者鲁棒性的来源，也意味着人手绝对姿态误差对标签不可见。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-D 推导两连杆耦合只施加两个标量约束、残余四维自运动；V-A 用动捕约 25 s 采样拟合出三半轴长度。",
+   "locator": "A. Experimental Validation of Thumb Wiggle Space",
+   "source_context": "The fitted ellipsoid has semi-axis lengths of 66.12 mm, 49.19 mm, and 21.14 mm.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "wiggle-space ellipsoid semi-axis lengths (motion capture, ~95% coverage)",
+    "value_or_direction": "66.12 mm / 49.19 mm / 21.14 mm",
+    "comparator": "none (single-condition characterization of thumb interface)",
+    "task_or_sample": "pinch configuration, ~25 s of natural adjustments, mocap markers",
+    "locator": "A. Experimental Validation of Thumb Wiggle Space"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "椭球半轴数值与 V-A 一致；四维自运动流形与 III-D 推导一致；claim 同时陈述其作为容差（作者视角）与人手姿态不可测（综述视角）的两面，未夸大。"
+   }
+  },
+  {
+   "card_id": "2603.17323-C04",
+   "claim": "DexEXO 的手指数据链为六个模拟编码器 1 kHz 采样、刚性防 backlash 结构，并经同姿态逐点采样的分段线性插值映射到 ROHand 执行器；末端 6 自由度位姿由 iPhone ARKit 采集重采样至 60 Hz，各模态以视频时间戳做最近邻软件对齐。全文未报告 ARKit 位姿精度或时间对齐误差数值。",
+   "stance": "conditional",
+   "relation": "给出外骨骼路线的采集端精度结构：手指侧用编码器+标定映射消除视觉检测误差，但末端位姿侧仍依赖消费级视觉-惯性追踪且同步为软件级；其精度缺口（ARKit 精度、同步误差）在该文中未被量化，是综述阈值问题的边界证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-A 逐项描述编码器 1 kHz、ARKit 60 Hz 重采样与最近邻时间对齐；III-B 描述防漂移刚性结构；全文检索无 ARKit 精度或同步误差数值。",
+   "locator": "A. Data Collection",
+   "source_context": "Asynchronous encoder and pose measurements are matched via nearest-neighbor association.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "采集链细节与 IV-A/III-B 原文一致；『未报告精度数值』经全文检索确认；claim 限定于本文系统配置。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Xu et al., DexUMI, arXiv:2505.21864",
+   "role": "同属外骨骼/视觉重建路线的对照系统，用户研究与策略对比的基准"
+  },
+  {
+   "citation": "Rayyan, Gilles, Cui, TeleDex, 2026",
+   "role": "提供 iPhone ARKit 末端位姿追踪与视觉遥操作基线"
+  }
+ ],
+ "notes": "该文为灵巧手（多指）场景，与平行夹爪 UMI 族互补；其『精度』主要体现在手指关节编码链与本体对齐，末端位姿精度依赖 ARKit 且未量化。Table I/II 在 html-flat 中为纯文本表格，已核对。"
+}

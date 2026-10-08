@@ -1,0 +1,561 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.18695",
+  "title": "Exploring Surround-View Fisheye Camera 3D Object Detection",
+  "published": "2025-11",
+  "url": "https://arxiv.org/abs/2511.18695",
+  "authors": [
+   "Changcai Li",
+   "Wenwei Lin",
+   "Zuoxun Hou",
+   "Gang Chen",
+   "Wei Zhang",
+   "Huihui Zhou",
+   "Weishi Zheng"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是综述问题在『感知任务族』上的核心量化证据：用四个 220° FoV 环视鱼眼相机做端到端 3D 目标检测，并在同场景双成像模型（6 针孔 vs 4 鱼眼）的受控基准 Fisheye3DOD 上给出针孔→鱼眼的迁移损失（>12 FDS 点）、特征级球面建模的恢复幅度（+4.5/+6.2 点）、鱼眼的差异化价值（近场 0-30m 精度可比、传感器失效物理冗余、布局设计原则 2-4%/3-5%）与硬边界（像素压缩 ~15% 不可逆、小目标类别最受损、绝对精度受 ~10× 像素证据差距限制、全仿真无实测验证）。它同时回答『哪些任务获益』（近场/低速：泊车、仓储机器人、配送机器人）与『哪些受限』（小目标检测、绝对精度敏感任务）。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract and Introduction (advantages paragraph, RQs)",
+    "role": "problem",
+    "purpose": "确认问题定义：环视鱼眼 3DOD 的技术可行性，RQ1（针孔检测器迁移到鱼眼损失多少精度）与 RQ2（如何让迁移更有效），以及鱼眼的三项部署优势（物理冗余/超广 FoV 空间受限部署/更少相机数）。"
+   },
+   {
+    "locator": "page 2, Related Work (Fisheye Dataset; Monocular Fisheye 3D Object Detection) and Contributions",
+    "role": "relevant-core",
+    "purpose": "定位数据集空白（WoodScape 无 3D 标注、SynWoodScape 仅 ~500 样本、其余任务专用或不公开）与唯一前作 Plaut 2021（单目柱面投影、无同环境针孔对照），确认本文『首个系统量化对比』的定位。"
+   },
+   {
+    "locator": "page 3, Fisheye3DOD Dataset (Data Collection; Challenges of Fisheye Images; Evaluation Metrics) and Table 1, Fig. 2, Fig. 3",
+    "role": "data-or-setting",
+    "purpose": "精读基准设计：144 序列/10Hz×50s/6 针孔+4 鱼眼 220° 同步；Kannala-Brandt 九阶多项式建模鱼眼畸变；像素压缩现象（~15% 像素面积、70×80→22×26 例）；FDS 复合指标定义。"
+   },
+   {
+    "locator": "page 4, Our Detector (Spherical Feature Representation; BEV-based Detection) and Fig. 4",
+    "role": "method-or-design",
+    "purpose": "精读方法主线：tabula rasa 端到端、特征经标定鱼眼投影函数可微扭转到球面等距柱面表示、FisheyeBEVDet 同心球面壳层 + 沿射线深度分布（LSS 兼容）。"
+   },
+   {
+    "locator": "page 5, Query-based Detection (FisheyePETR) and Implementation Details",
+    "role": "method-or-design",
+    "purpose": "精读 query 范式变体（球面截锥点位置编码、二次递增深度间隔）与训练配置（A6000、帧级 70/30 划分、2Hz、20 epochs、batch 4、AdamW、检测范围 ±48m、CBGS）。"
+   },
+   {
+    "locator": "page 5-6, Answering the Research Questions (RQ1, RQ2) and Table 2",
+    "role": "results-or-analysis",
+    "purpose": "核对两大 RQ 的答案：迁移损失 >12 FDS 点（含根因归因）与球面建模恢复 4.5/6.2 点（等距柱面 vs 柱面 0.9/2.9 点），以及作者对针孔-鱼眼差距的承认段。"
+   },
+   {
+    "locator": "page 6, Additional Analysis (RF1 System Robustness, RF2 Sensor Layout Impact) and Table 3",
+    "role": "results-or-analysis",
+    "purpose": "核对传感器失效鲁棒性（移除前后相机后鱼眼降幅远小于针孔）与布局效应（front-rear +2-4% vs left-right；full surround 再 +3-5%）。"
+   },
+   {
+    "locator": "page 7, Additional Analysis (RF3 Distance Degradation, RF4 Failure Modes), Table 4 and Fig. 6",
+    "role": "results-or-analysis",
+    "purpose": "核对近场对齐（鱼眼 0-30m 0.586 FDS ≈ 针孔 0-48m 0.563；制动距离论证；泊车/仓储/配送机器人定位）与小目标失败模式（Pedestrian/Cyclist 最受损、仿真纹理加剧）。"
+   },
+   {
+    "locator": "page 7, Qualitative Analysis (Fig. 5) and Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取定性行为（≈45m 距离等变、遮挡下近场精度等价、互补传感器定位）与作者结论（紧凑低速机器人平台、up to 6.2 FDS、与针孔差距仍在）。"
+   },
+   {
+    "locator": "page 8-9, Acknowledgments and References",
+    "role": "appendix-or-supplement",
+    "purpose": "核对资助信息与关键引文：Plaut 2021（唯一单目鱼眼 3DOD 前作）、F2BEV/FisheyeBEVSeg（16m/25m 近场先例）、BEVDet/PETR（被改造范式）、Kannala-Brandt 2006（投影模型）。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "用环视鱼眼相机系统做端到端 3D 目标检测是否技术可行？具体两个研究问题：(RQ1) 经典针孔 3D 检测器迁移到鱼眼图像会损失多少精度？(RQ2) 如何让迁移更有效？衍生问题：多鱼眼系统的传感器失效鲁棒性、相机布局效应、距离段退化规律与失败模式是什么？",
+ "contributions": [
+  "据作者所知首个系统、量化比较针孔与鱼眼成像下 3D 感知性能的研究（此前工作要么只评针孔、要么只评鱼眼，无同环境直接对比）。",
+  "Fisheye3DOD 开放基准：CARLA 合成，144 条驾驶序列，同场景同步六个环视针孔相机 + 四个 220° FoV 鱼眼相机，附 3D 边界框标注，使两种成像模型可直接公平比较。",
+  "两个把鱼眼几何内建到主流检测框架的方法：FisheyeBEVDet（BEV 范式，球面壳层 + 沿射线深度推理）与 FisheyePETR（query 范式，球面射线位置编码），均采用球面空间表示。",
+  "四条研究发现：RF1 多鱼眼系统对传感器失效的固有鲁棒性；RF2 相机布局效应（front-rear > left-right，full surround 最佳）；RF3 鱼眼能力与近场感知对齐；RF4 小目标类别是主要失败模式。"
+ ],
+ "method": {
+  "summary": "端到端『白板』方法：环视鱼眼图像直接进共享 backbone（ResNet）提取 2D 特征，再经标定鱼眼投影函数 Π 把特征可微扭转（differentiable warping）到球面等距柱面表示 Fproj——采样网格由 3D 球面方向向量（方位角/仰角参数化）经标定相机投影模型映射到图像平面坐标预计算得到。此后分两条范式主线：(1) FisheyeBEVDet 用同心球面壳层（替代 LSS 的平行平面分层）沿单位方向向量离散径向深度，FC 层为每个投影特征预测上下文向量与沿射线深度概率分布，堆叠成特征体积后投影到 BEV，与原 BEVDet 下游兼容；(2) FisheyePETR 把球面截锥 3D 点（PETR 式二次递增深度间隔）作为位置编码与投影特征融合，object query 经自注意力与交叉注意力（MHCA）端到端解码。数据侧：CARLA 无原生鱼眼传感器，作者以 Kannala-Brandt 九阶多项式投影 r(θ)=k0θ+k1θ³+k2θ⁵+k3θ⁷+k4θ⁹ 数学建模鱼眼畸变；评测沿用 nuScenes 协议（中心距离 AP，D={0.5,1,2,4}m，TP 指标 mATE/mASE/mAOE）并定义复合指标 FDS=(3mAP+Σ(1−min(1,mTP)))/6。",
+  "assumptions": [
+   "Kannala-Brandt 多项式投影足以代表真实鱼眼镜头的成像特性（全部鱼眼图像为仿真生成，无实测传感器验证）。",
+   "『tabula rasa、无 bells and whistles』的受控设计能把性能差异归因到鱼眼几何处理方式（特征级球面建模 vs 图像级矫正）本身。",
+   "CARLA 城市/郊区驾驶场景中得到的结论可外推到机器人近场感知场景（作者以 60km/h 制动距离 ≈ 0-30m 论证近场相关性，但无机器人实验）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Fisheye3DOD（自建，CARLA 合成：144 驾驶序列 × 500 帧 @10Hz×50s，城市/郊区 × 白天正午/日落/夜间 × 晴/云/雨；同场景同步 6 环视针孔 + 4 鱼眼 220° + 3D 边界框 + LiDAR/语义 LiDAR/自车轨迹；6 类目标 Car/Van/Truck/Bus/Pedestrian/Cyclist）"
+  ],
+  "tasks": [
+   "多视角环视 3D 目标检测（端到端，BEV 范式与 query 范式）",
+   "针孔→鱼眼迁移评测（透视/柱面两种图像级矫正）",
+   "传感器失效鲁棒性评测（移除前后相机）",
+   "鱼眼相机布局对比（front-rear / left-right / full surround）",
+   "累积距离段评测（0-30m vs 0-48m）与逐类 AP 分析"
+  ],
+  "embodiments": [
+   "ego 车辆（CARLA 仿真驾驶平台，实验载体）",
+   "作者论证适用的潜在部署平台（未实测）：自动泊车系统、仓储机器人、人行道配送机器人等紧凑低速平台"
+  ],
+  "sample_or_scale": "144 序列按帧 70/30 划分训练/测试；实验采样 2Hz；20 epochs、batch 4、单张 NVIDIA A6000、AdamW lr 2e-4；检测范围 X/Y ∈ [−48,48]m、Z ∈ [−5,5]m；CBGS 类平衡采样。"
+ },
+ "evaluation": {
+  "design": "同场景双成像模型（6×针孔 vs 4×鱼眼）受控对比矩阵：2 种检测范式（BEVDet/PETR）× 鱼眼侧 3 种几何处理（透视矫正/柱面矫正/特征级球面等距柱面）+ 4 组附加分析（失效鲁棒性 Table 3、布局效应 Table 3、距离段 Table 4、逐类 AP Fig. 6）+ 定性可视化 Fig. 5；全部在同一 Fisheye3DOD 测试集上。",
+  "baselines": [
+   "BEVDet / PETR 6×针孔原配置（迁移前参照）",
+   "BEVDet / PETR 4×鱼眼 + 透视矫正（迁移基线）",
+   "BEVDet / PETR 4×鱼眼 + 柱面矫正（迁移基线）",
+   "FisheyeBEVDet / FisheyePETR 柱面表示变体（表示消融）"
+  ],
+  "metrics": [
+   "FDS（复合指标：(3mAP + Σ(1−min(1,mTP)))/6，nuScenes 风格）",
+   "mAP（中心距离阈值 D={0.5,1,2,4}m）",
+   "mATE / mASE / mAOE（平移/尺度/朝向误差）",
+   "逐类 AP（Fig. 6，6 类）"
+  ],
+  "ablations": [
+   "等距柱面 vs 柱面球面表示（+0.9 / +2.9 FDS）",
+   "多鱼眼布局：front-rear vs left-right vs full surround（2-4% / 3-5% FDS 阶梯）",
+   "失效配置：移除前后相机后 2×鱼眼 vs 4×针孔（Table 3）",
+   "累积距离段：0-30m vs 0-48m（Table 4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "RQ1 迁移损失：针孔检测器经标准透视/柱面矫正迁到 4×鱼眼后，BEVDet 与 PETR 的 FDS 均下降超过 12 点（0.563→0.440/0.453；0.553→0.408/0.411），其余指标同步退化；根因是鱼眼像素压缩造成的不可逆信息损失，矫正无法恢复。",
+   "scope": "Fisheye3DOD 测试集，2 范式 × 2 矫正方式",
+   "locator": "page 5, RQ1 and page 6, Table 2"
+  },
+  {
+   "finding": "RQ2 修法：特征级球面建模优于图像级矫正——FisheyeBEVDet/FisheyePETR 等距柱面版相对透视矫正基线 FDS +4.5/+6.2 点，相对柱面版再 +0.9/+2.9 点；但最好成绩（0.485/0.470）仍低于各自针孔基线（0.563/0.553）。",
+   "scope": "Fisheye3DOD 测试集，Table 2",
+   "locator": "page 6, RQ2 and Table 2"
+  },
+  {
+   "finding": "RF1 失效鲁棒性：移除前后相机后，鱼眼配置 FDS 降幅远小于针孔配置（针孔出现盲区、多鱼眼靠重叠 FoV 保持全覆盖）；Table 3 中 2×鱼眼残缺配置（0.431/0.382）反超 4×针孔残缺配置（0.370/0.321）。",
+   "scope": "Fisheye3DOD，Table 3 失效对比",
+   "locator": "page 6, RF1 and Table 3"
+  },
+  {
+   "finding": "RF2 布局效应：front-rear 布局比 left-right 高 2-4% FDS（纵轴目标多、径向畸变小、形状保持好），full surround 再高 3-5%（多相机协同互补边缘细节）——环视鱼眼的收益依赖布局设计。",
+   "scope": "Fisheye3DOD，Table 3 三布局对比",
+   "locator": "page 6, RF2 and Table 3"
+  },
+  {
+   "finding": "RF3 近场对齐：鱼眼变体 0-30m 段 0.586 FDS 与针孔 0-48m 段 0.563 相当（0-30m 覆盖 60km/h 制动距离）；作者据此定位鱼眼特别适合自动泊车、仓储机器人、人行道配送机器人等低速场景。",
+   "scope": "Fisheye3DOD，Table 4 距离段对比",
+   "locator": "page 7, RF3 and Table 4"
+  },
+  {
+   "finding": "RF4 失败模式：小目标类别 Pedestrian/Cyclist 在针孔→鱼眼切换时性能下降最大（固有尺寸小 + 像素压缩下视觉线索更少），仿真纹理有限进一步加剧；但鱼眼模型在所有类别上均显著优于柱面矫正基线。",
+   "scope": "Fisheye3DOD，Fig. 6 逐类 AP",
+   "locator": "page 7, RF4 and Fig. 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "尽管有球面建模改进，鱼眼方法仍落后针孔检测器：针孔图像为物体提供近十倍有效像素面积，在空间证据显著更少的前提下期待鱼眼达到可比精度是不现实的。",
+    "locator": "page 6, Section Experiments, RQ2 (acknowledgment paragraph)"
+   },
+   {
+    "limitation": "小目标类别（Pedestrian/Cyclist）在针孔→鱼眼切换时受损最重；仿真环境纹理丰富度有限使问题进一步加剧，缓解或需借助小目标检测的洞察。",
+    "locator": "page 7, Section Additional Analysis, RF4 (Failure Modes and Limitations)"
+   },
+   {
+    "limitation": "与针孔系统相比性能差距仍在；鱼眼检测的适用主张收敛为『空间严格受限的紧凑低速机器人平台』。",
+    "locator": "page 7, Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全仿真证据链：CARLA 无原生鱼眼传感器，全部鱼眼图像由 Kannala-Brandt 投影数学建模生成；全文无任何真实鱼眼传感器或真实场景实验。真实镜头的非投影几何效应（渐晕、色差、噪声特性、镜头间个体差异）不在建模范围内，全部定量结论（迁移损失/恢复幅度/布局/距离/类别效应）向真实硬件外推未经检验。",
+    "basis": "page 3 Data Collection 明示 CARLA lacks native fisheye sensor support、mathematically model fisheye distortion via the Kannala-Brandt projection；全文实验仅在 Fisheye3DOD 上（page 5-7）。"
+   },
+   {
+    "boundary": "场景域偏驾驶：城市/郊区 ego 车辆场景、6 类交通参与者、0-48m 检测范围；室内机器人典型目标（杂物、工具、人-物交互物体）、机器人平台特有的安装高度/振动/极近距使用方式未覆盖。『适合仓储/配送机器人』是经制动距离类比的论证性外推，无任何机器人实验支撑。",
+    "basis": "数据集与实验均为驾驶序列（page 3）；机器人场景仅出现在 RF3 的论证句（page 7）；Table 1 显示基准为 6 类交通目标。"
+   },
+   {
+    "boundary": "针孔-鱼眼对比存在配置不对称：相机数（6 vs 4）与图像分辨率（Table 1 显示针孔 1280×720、鱼眼 800×800）不同，『鱼眼落后针孔』的幅度把成像模型差异与像素预算/相机数差异混在一起；作者以像素面积比归因，但未做分辨率或相机数匹配的受控实验。",
+    "basis": "Table 1（page 3）两行分别给 P 1280×720 与 F 800×800；RQ1 对比为 6×P vs 4×F（page 5-6）。"
+   },
+   {
+    "boundary": "无实时性/算力报告：作者主张的部署场景（紧凑低速机器人平台）对延迟与算力敏感，但全文无推理速度、参数量或边缘设备可行性数据；机器人部署可行性缺少延迟侧证据。",
+    "basis": "Implementation Details 仅给训练配置（page 5），全文无 latency/FPS/参数量报告。"
+   }
+  ]
+ },
+ "transfer_boundary": "对综述的迁移边界：本文证据域是 CARLA 仿真驾驶场景下的环视鱼眼（4×220°）3D 目标检测，全部定量结论建立在 Kannala-Brandt 数学建模的合成鱼眼图像上，无实测传感器或真实场景验证。对综述问题的证据力集中在三点：① 感知任务族中鱼眼 vs 针孔的受控量化对比（>12 FDS 迁移损失、~15% 像素面积、~10× 有效像素证据差距）——这是『鱼眼在感知任务上直接迁移受损』目前最系统的数字；② 让鱼眼可用的两条路线的相对效果（图像级矫正 vs 特征级球面建模 +4.5/+6.2 FDS）与设计原则（布局、距离段、类别风险）；③ 鱼眼的差异化价值定位（近场 0-30m 精度可比、失效物理冗余）与硬边界（小目标、绝对精度上限）。向真实具身平台外推需过三道未检验的关：仿真→真实成像差距、驾驶场景→机器人任务域差距、未报告的实时性。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同场景双成像模型（6×针孔 + 4×鱼眼同步采集）使 RQ1 的对比真正受控，填补了此前针孔/鱼眼各评各的、无直接对比的空白。",
+   "tabula rasa 原则：不堆附加技巧，两大范式各一条主线，几何表示/矫正方式/布局/距离段的效应可分离归因。",
+   "RF1-RF4 附加分析把『鱼眼是否可用』细化为可操作的设计判断（布局阶梯、距离段甜点区、类别风险表），对传感器选型有直接指导价值。"
+  ],
+  "design_risks": [
+   "全仿真 + 数学建模鱼眼：所有结论对真实鱼眼传感器的外推无实验支撑，且作者自述仿真纹理有限会加剧小目标问题——部分失败模式可能是仿真伪影。",
+   "针孔/鱼眼配置不对称（相机数 6 vs 4、分辨率不同），『鱼眼落后针孔』的幅度含配置混淆，像素面积归因未用匹配实验隔离。",
+   "无实时性/算力报告，与『紧凑低速机器人平台』的主张脱节。"
+  ],
+  "baseline_fairness": "组内对比公平：鱼眼侧 4×F 输入下透视矫正/柱面矫正/球面建模三者同输入可比，针孔侧用 BEVDet/PETR 原配置作参照；组间（4×F vs 6×P）存在相机数与分辨率混淆，作者以像素面积比解释差距但未做匹配实验。总体公平性中等：效应方向可信，幅度解释需谨慎。",
+  "metric_validity": "FDS/mAP/mATE 等沿用 nuScenes 协议，中心距离 AP 缓解了小目标 IoU 惩罚问题，对鱼眼小目标场景合理；但复合权重为驾驶基准默认，对机器人任务的适切性未讨论。",
+  "reproducibility": "数据集与代码承诺开源（GitHub: weiyangdaren/Fisheye3DOD）；CARLA + Kannala-Brandt 建模、训练超参（20 epochs/batch 4/lr 2e-4/检测范围/CBGS/2Hz 采样）与数据划分（帧级 70/30）文本完整，可复现性较好。",
+  "external_validity": "结论域为 CARLA 城市/郊区驾驶、6 类交通目标、0-48m；对室内机器人、真实鱼眼硬件、非交通目标、>48m 或极近距的有效性未测。作者自己把主张收敛到『紧凑低速平台』，该收敛是诚实的，但机器人侧证据为零。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.18695-C01",
+   "claim": "环视鱼眼相机系统相对多针孔系统的三项结构性部署优势：重叠 FoV 提供物理级冗余（同一物体被多视角捕获以增强可靠性，不依赖算法级鲁棒性）；超广 FoV 适合空间受限或成本敏感的部署场景（室内机器人、监控）；同等覆盖下针孔系统通常需要更多相机（nuScenes 用六个、Tesla autopilot 用八个）。",
+   "stance": "support",
+   "relation": "支持『应用方式/部署动机』层命题：具身平台选择环视鱼眼的理由是物理冗余、空间/成本约束与更少相机数——本文把这三点作为鱼眼 3D 检测任务的立论前提。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 逐字给出三项优势；同页还有监管预装优势（2018 美国 rear-view 法规使量产车已广泛预装、可直接复用免针孔系统改造费用），因该句被论文脚注块截断未纳入摘录，见 relation 与 note。",
+   "locator": "page 1, Section Introduction, advantages paragraph",
+   "source_context": "Second, com-\npared to methods (Ge et al. 2023; Yan et al. 2023; Xie\net al. 2025) that rely on algorithms to improve robustness\nagainst sensor failures, a surround-view fisheye system in-\nherently provides physical redundancy via overlapping FoV .\nAs shown in Figure 1 (Right), this overlap captures the same\nobject from multiple viewpoints to enhance reliability. Fi-\nnally, the ultra-wide FoV suits scenarios with constrained\nspace or cost-sensitive deployment, such as indoor robotics\nor surveillance. Standard pinhole setups usually require\nmore cameras for similar coverage (e.g., nuScenes (Caesar\net al. 2020) uses six, Tesla autopilot (Tatarek, Kronenberger,\nand Handmann 2017) uses eight).",
+   "evidence_type": "motivation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 Introduction 逐字给出 physical redundancy via overlapping FoV、ultra-wide FoV suits scenarios with constrained space or cost-sensitive deployment such as indoor robotics or surveillance、nuScenes uses six / Tesla autopilot uses eight，claim 为忠实转述，无外推。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C02",
+   "claim": "环视鱼眼相机可用四个 >180° FoV 的超广角镜头无缝捕获全向环境，为自动驾驶车辆与各类机器人提供紧凑多相机 360° 感知；但已有鱼眼工作集中于深度估计与分割，对动态避障至关重要的 3D 目标检测（3DOD）在本文之前仍是空白。",
+   "stance": "gap",
+   "relation": "支持『任务覆盖缺口』层命题：近一年鱼眼在具身感知的应用集中在深度/分割，3D 检测刚被本文首次系统填补——综述应把 3DOD 记为鱼眼感知版图的最新边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 首段；『首个系统量化研究』的定位见 page 2 贡献列表（To our knowledge, the first systematic and quantitative study）。",
+   "locator": "page 1, Section Introduction, first paragraph",
+   "source_context": "Reliable 360◦ perception is vital for autonomous systems\nlike self-driving vehicles and various robots. Surround-view\nfisheye cameras enable this via a compact multi-camera\nsetup, as shown in Figure 1 (Right), where four ultra-wide\nlenses (each exceeding 180◦ field of view (FoV)) capture the\nfull surroundings seamlessly. Existing fisheye-based works\nfocus on depth estimation (Won, Ryu, and Lim 2020; Xie,\nWang, and Liu 2023) and segmentation (Deng et al. 2019;\nPlayout et al. 2021), but 3DOD—a crucial task for dynamic\nobstacle avoidance—remains unexplored.",
+   "evidence_type": "motivation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 Introduction 首段逐字给出 four ultra-wide lenses (each exceeding 180◦ FoV) capture the full surroundings、self-driving vehicles and various robots、Existing fisheye-based works focus on depth estimation and segmentation, but 3DOD ... remains unexplored，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C03",
+   "claim": "鱼眼成像的核心机制性代价是像素压缩：非线性投影把广角场景压进有限图像区域，Fisheye3DOD 中鱼眼视图物体的像素面积仅约为针孔对应物的 15%；由此造成空间分辨率与视觉细节的显著损失，且该成像期信息熵损失不可逆——无法通过鱼眼矫正（rectification）恢复。",
+   "stance": "limit",
+   "relation": "支持『受限机制』层命题：鱼眼的 FoV 优势以像素密度为直接代价，且该代价在成像时刻已固化，任何后处理只能缓解不能消除——这是鱼眼任务受损面的第一性解释。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 3 Right 给出直观例子：同一物体针孔约 70×80 像素、鱼眼仅约 22×26 像素，鱼眼像素面积约为针孔的 0.1 倍（page 3 caption）。",
+   "locator": "page 3, Section Challenges of Fisheye Images and Fig. 3",
+   "source_context": "The Figure 3 highlights a key challenge in fisheye im-\nagery: pixel compression. Fisheye projection nonlinearly\ncompresses wide-angle scenes into limited image regions,\nresulting in significantly fewer pixels per object compared\nto pinhole projection. In our dataset, objects in fisheye views\noccupy only about 15% of the pixel area of their counterparts\nin pinhole images, as shown in Figure 3 (Left). This leads to\na substantial loss of spatial resolution and visual detail, mak-\ning reliable detection more challenging. Note that this loss of\ninformation entropy during imaging is irreversible and can-\nnot be recovered through fisheye rectification.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "鱼眼 vs 针孔物体像素面积比（projected area ratio）",
+    "value_or_direction": "鱼眼物体像素面积 ≈ 针孔对应物的 15%（约 0.1 倍）",
+    "comparator": "同数据集同物体的 fisheye 视图 vs pinhole 视图最大投影 2D 框",
+    "task_or_sample": "Fisheye3DOD 数据集统计，Fig. 3 Left（每类 100 样本，LOWESS 拟合）",
+    "locator": "page 3, Section Challenges of Fisheye Images and Fig. 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Challenges 段逐字给出 occupy only about 15% of the pixel area of their counterparts in pinhole images 与 irreversible and can- not be recovered through fisheye rectification，claim 为直接转述，15% 数字来自本段。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C04",
+   "claim": "Fisheye3DOD 基准设计：CARLA 合成的 144 条驾驶序列（城市/郊区；白天正午/日落/夜间三种光照 × 晴/云/雨三种天气），每条以 10Hz 采集 50 秒共 500 帧时间对齐传感数据；同一场景同步配置六个环视针孔相机与四个 220° FoV 广角鱼眼相机，均附 3D 边界框标注——双成像模型同场景配对使针孔/鱼眼可直接公平比较。",
+   "stance": "support",
+   "relation": "支持『评测基础设施』层命题：近一年鱼眼具身应用开始拥有同场景双成像模型的受控基准，『鱼眼 vs 针孔』的效应估计从此可做。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Data Collection 段另述 LiDAR/语义 LiDAR/自车轨迹同步采集；CARLA 无原生鱼眼传感器，畸变由 Kannala-Brandt 投影数学建模（见 C15）。",
+   "locator": "page 3, Section Fisheye3DOD Dataset, Data Collection",
+   "source_context": "To address the existing gap in fisheye 3D object detection\ndatasets, we developed Fisheye3DOD, a synthetic bench-\nmark created through the CARLA simulator (Dosovitskiy\net al. 2017). This dataset comprises 144 driving sequences\ncovering urban and suburban environments, spanning di-\nverse illumination conditions (daytime noon, sunset, night)\nand weather patterns (clear, cloudy, rainy). Each scenario\ncontains temporally aligned sensor data captured at 10Hz\nover 50-second episodes, yielding a total of 500 frames per\nsequence. A detailed comparison between Fisheye3DOD\nand the existing dataset can be found in Table 1.\nOur sensor configuration includes six surround-view pin-\nhole cameras and four wide-angle fisheye cameras (FoV =\n220◦) (Won, Ryu, and Lim 2019) with corresponding 3D\nbounding box annotations.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 Data Collection 逐字给出 144 driving sequences、10Hz over 50-second episodes、500 frames per sequence、six surround-view pin- hole cameras and four wide-angle fisheye cameras (FoV = 220◦) with corresponding 3D bounding box annotations，claim 为直接转述；『同场景同步使可直接公平比较』来自摘要与 page 2 的 synchronized multi-view data from both ... under identical scenarios, enabling a direct and fair comparison。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C05",
+   "claim": "RQ1 答案：把代表性针孔 3D 检测器（BEVDet、PETR）经标准透视或柱面矫正迁移到鱼眼数据后，尽管有预处理，两模型相对各自 6 相机针孔原配置的 FDS 均下降超过 12 点，其余指标同步明显退化；作者把退化归因于鱼眼成像的固有限制——非线性投影压缩使有效像素密度骤降、信息损失不可逆，矫正无法弥补。",
+   "stance": "limit",
+   "relation": "支持『任务受损面』层命题：3D 检测是鱼眼直接迁移受损最重的具身感知任务之一，图像级矫正不是充分补救。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "同段把根因指回像素压缩（~15% 像素面积，见 C03）；Table 2 具体数字见 C06。",
+   "locator": "page 5, Section Experiments, RQ1",
+   "source_context": "RQ1: How much accuracy is lost when transfer-\nring pinhole-based detectors to fisheye images? Table 2\npresents the performance of representative pinhole-based 3D\nobject detectors applied to fisheye data after standard recti-\nfication using perspective or cylindrical projection. Despite\nthis preprocessing, both BEVDet and PETR suffer substan-\ntial accuracy drops compared to their original configurations\non 6-camera pinhole images. Specifically, FDS decreases by\nover 12 points for both models, and other metrics also show\nclear degradation.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "FDS 下降幅度（针孔检测器迁移到鱼眼）",
+    "value_or_direction": "BEVDet 与 PETR 均下降超过 12 点（>12 FDS points）",
+    "comparator": "相对各自 6 相机针孔原配置（6×P）",
+    "task_or_sample": "Fisheye3DOD 测试集，4×鱼眼输入经透视/柱面标准矫正，Table 2",
+    "locator": "page 5, Section Experiments, RQ1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 RQ1 段逐字给出 FDS decreases by over 12 points for both models 与 both BEVDet and PETR suffer substan- tial accuracy drops compared to their original configurations on 6-camera pinhole images，claim 数字与归因均来自本段，无外推。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C06",
+   "claim": "Table 2 全量数字：BEVDet 从 6×针孔（FDS 0.563 / mAP 0.506）迁到 4×鱼眼后，透视矫正降至 0.440/0.304、柱面矫正 0.453/0.322，FisheyeBEVDet（等距柱面）恢复至 0.485/0.382；PETR 从 0.553/0.482 降至 0.408/0.274（透视）/0.411/0.285（柱面），FisheyePETR 恢复至 0.470/0.374——包括本文方法在内的全部鱼眼变体均未回到各自针孔基线水平。",
+   "stance": "limit",
+   "relation": "界定『效果幅度』层命题：鱼眼 3DOD 的最好成绩与针孔基线仍有约 0.08 FDS 差距，『可用但非等价』。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表中 mATE/mASE/mAOE 同步给出（如 PETR 针孔 mATE 0.580 → 鱼眼透视 0.783，FisheyePETR 降到 0.727；FisheyeBEVDet 恢复后 mASE 0.162 已优于针孔基线 0.161 附近）。",
+   "locator": "page 6, Table 2",
+   "source_context": "BEVDet 6 × P − 0.563 0.506 0.458 0.161 0.520\nBEVDet 4 × F Perspective 0.440 0.304 0.588 0.177 0.505\nBEVDet 4 × F Cylindrical 0.453 0.322 0.591 0.178 0.478\nFisheyeBEVDet 4 × F Cylindrical 0.476 0.361 0.581 0.162 0.482\nFisheyeBEVDet 4 × F Equirectangular 0.485 0.382 0.591 0.164 0.480\nPETR 6 × P − 0.553 0.482 0.580 0.120 0.430\nPETR 4 × F Perspective 0.408 0.274 0.783 0.161 0.433\nPETR 4 × F Cylindrical 0.411 0.285 0.773 0.169 0.447\nFisheyePETR 4 × F Cylindrical 0.441 0.330 0.758 0.159 0.425\nFisheyePETR 4 × F Equirectangular 0.470 0.374 0.727 0.142 0.434",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "FDS / mAP（环视 3D 目标检测）",
+    "value_or_direction": "BEVDet 0.563/0.506（6×P）→ 0.440/0.304（4×F 透视）/0.453/0.322（柱面）；FisheyeBEVDet 0.485/0.382；PETR 0.553/0.482 → 0.408/0.274 / 0.411/0.285；FisheyePETR 0.470/0.374",
+    "comparator": "4×鱼眼各变体 vs 6×针孔基线（同检测范式内）",
+    "task_or_sample": "Fisheye3DOD 测试集，Table 2 全表（10 行配置）",
+    "locator": "page 6, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 即 page 6 Table 2 数据行原文（BEVDet/PETR 各配置的 FDS、mAP、mATE、mASE、mAOE），claim 的每个数字均逐字来自表内，仅做中文转述与并置。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C07",
+   "claim": "RQ2 答案：在特征层端到端建模鱼眼几何（投影到球面等距柱面表示）优于图像级矫正——FisheyeBEVDet 与 FisheyePETR 的等距柱面版相对透视矫正基线 FDS 分别提升 4.5 与 6.2 点，相对柱面对应版再高 0.9 与 2.9 点；作者把优势归因于特征级建模保留更丰富的空间与语义信息，以及等距柱面更均匀的角度采样（特别是垂直方向）。",
+   "stance": "support",
+   "relation": "支持『修法路线』层命题：鱼眼几何应在特征层用球面表示原生建模而非先做图像矫正——这是近一年鱼眼感知方法论的明确走向。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要的 up to 6.2% 即 FisheyePETR 的这一增益；与 C06 表内数字一致（0.470−0.408=6.2 点、0.485−0.440=4.5 点）。",
+   "locator": "page 6, Section Experiments, RQ2",
+   "source_context": "In particular, FisheyeBEVDet and\nFisheyePETR with equirectangular representation improve\nFDS by 4.5 and 6.2 points over the perspective-rectified\nbaseline. This improvement stems from end-to-end mod-\neling of fisheye geometry at the feature level, which pre-\nserves richer spatial and semantic information than image-\nlevel rectification. Moreover, they outperform their cylindri-\ncal counterparts by 0.9 and 2.9 points, respectively. This may\nbe due to their more uniform angular sampling, particularly\nalong the vertical direction.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "FDS 提升幅度（特征级球面建模 vs 图像级矫正）",
+    "value_or_direction": "FisheyeBEVDet +4.5 点、FisheyePETR +6.2 点（相对透视矫正基线）；相对柱面版再 +0.9 / +2.9 点",
+    "comparator": "特征级球面等距柱面建模 vs 透视/柱面图像级矫正（同 4×鱼眼输入）",
+    "task_or_sample": "Fisheye3DOD 测试集，RQ2 对比，Table 2",
+    "locator": "page 6, Section Experiments, RQ2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 RQ2 段逐字给出 improve FDS by 4.5 and 6.2 points over the perspective-rectified baseline、outperform their cylindrical counterparts by 0.9 and 2.9 points 与归因句（end-to-end mod- eling ... at the feature level / more uniform angular sampling），claim 无外推。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C08",
+   "claim": "作者明确承认的天花板：即便有球面建模改进，鱼眼方法仍落后于针孔检测器；在本数据集中针孔图像为物体提供近十倍的有效像素面积，因此在空间证据显著更少的前提下，期待鱼眼检测器达到可比精度是不现实的。",
+   "stance": "limit",
+   "relation": "支持『硬边界』层命题：像素预算差距决定鱼眼 3DOD 的绝对精度上限，方法论改进只能收敛差距、不能抹平。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "这是作者自己给出的 limitation 声明（RQ2 段末承认段），与 C06 的表内差距一致。",
+   "locator": "page 6, Section Experiments, RQ2",
+   "source_context": "It should be acknowledged that, despite these improve-\nments, fisheye-based methods still lag behind pinhole detec-\ntors due to intrinsic imaging challenges. In our dataset, pin-\nhole images provide nearly ten times the effective pixel area\nof fisheye images for objects. It is therefore unrealistic to ex-\npect fisheye-based detectors to achieve comparable accuracy\nwhile operating with significantly less spatial evidence.",
+   "evidence_type": "limitation",
+   "quantitative": {
+    "metric": "物体有效像素面积比（针孔 vs 鱼眼）",
+    "value_or_direction": "针孔 ≈ 鱼眼的十倍（nearly ten times the effective pixel area）",
+    "comparator": "同物体在针孔图像 vs 鱼眼图像中的有效像素面积",
+    "task_or_sample": "Fisheye3DOD 数据集（作者承认段）",
+    "locator": "page 6, Section Experiments, RQ2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 RQ2 段末逐字给出 still lag behind pinhole detec- tors、nearly ten times the effective pixel area、unrealistic to ex- pect ... comparable accuracy，claim 为作者原话的直接转述。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C09",
+   "claim": "RF1 传感器失效鲁棒性：多鱼眼系统依靠广泛 FoV 重叠天然缓解传感器失效——在前后相机均被移除的配置下，鱼眼方法的 FDS 降幅远小于针孔对应配置，因为针孔设置在这些极端条件下产生盲区，而多鱼眼设置保持全覆盖。",
+   "stance": "support",
+   "relation": "支持『差异化价值』层命题：物理冗余是鱼眼在安全相关具身感知任务上相对针孔的独特收益，且无需任何算法补偿。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 数字：BEVDet 4×P (w/o ↕) FDS 0.370/mAP 0.206 vs FisheyeBEVDet 2×F (↔) 0.431/0.315；PETR 4×P (w/o ↕) 0.321/0.142 vs FisheyePETR 2×F (↔) 0.382/0.244——两个鱼眼残缺配置均反超针孔残缺配置。",
+   "locator": "page 6, Section Additional Analysis, RF1 and Table 3",
+   "source_context": "To validate this, Table 3 compares pin-\nhole and fisheye configurations both missing front and rear\ncameras: specifically, BEVDet with four pinhole cameras\nwithout front-rear sensors (4 × P (w/o ↕)) versus Fisheye-\nBEVDet with two fisheye cameras arranged left-right (2 ×\nF (↔)). Similar comparisons are made for PETR variants.\nResults show that fisheye methods experience much smaller\ndrops in FDS than pinhole counterparts when front and\nrear cameras are removed. This is because pinhole setups\ndevelop blind spots under these extreme conditions, while\nmulti-fisheye setups maintain full coverage.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "FDS drops under sensor failure: front and rear cameras removed (Table 3 robustness evaluation)",
+    "value_or_direction": "fisheye methods experience much smaller FDS drops than pinhole counterparts; 2xF FDS/mAP 0.431/0.315 (BEVDet family) and 0.382/0.244 (PETR family) both exceed the 4×P degraded pinhole configurations 0.370/0.206 and 0.321/0.142",
+    "comparator": "multi-fisheye configurations (2xF, left-right) vs pinhole configurations (4xP, without front-rear), both with front and rear cameras removed",
+    "task_or_sample": "Fisheye3DOD，Table 3 失效对比（BEVDet/PETR 两族）",
+    "locator": "page 6, Section Additional Analysis, RF1 and Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 RF1 段逐字给出 much smaller drops in FDS than pinhole counterparts、pinhole setups develop blind spots ... multi-fisheye setups maintain full coverage 与对比设置（4×P (w/o ↕) vs 2×F (↔)），claim 为直接转述；具体表值在 Table 3（page 6 同页，摘于 summary）。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C10",
+   "claim": "RF2 布局效应：前后（front-rear）传感器布局优于左右（left-right）布局——FDS 高 2-4%，因为交通参与者多聚集于车辆纵轴、减少径向畸变可更好保持目标形状，而左右布局把物体推向图像边缘、加剧像素压缩与检测难度；全环视（full surround）布局再比前后布局高 3-5%，取得最高精度，源于多相机协同（前后优化纵向覆盖，全环视以互补边缘细节缓解侧向畸变）。",
+   "stance": "support",
+   "relation": "支持『部署设计原则』层命题：环视鱼眼的收益依赖布局——任务主轴上的相机位形与全覆盖各贡献一档精度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 数字：FisheyeBEVDet 2×F (↕) 0.454 > 2×F (↔) 0.431 < 4×F 0.485；FisheyePETR 2×F (↕) 0.421 > (↔) 0.382 < 4×F 0.470。",
+   "locator": "page 6, Section Additional Analysis, RF2 and Table 3",
+   "source_context": "RF2 (Sensor Layout Impact): Front-rear sensor lay-\nouts outperform lateral ones, with full surround achiev-\ning the best results.To assess the effect of sensor placement\nin multi-fisheye systems, we compare three multi-fisheye\nlayouts: front-rear, left-right, and full surround. As shown in\nTable 3, front-rear yields 2-4% higher FDS than left-right,\nsince most traffic participants (e.g., cars, vans) cluster along\nthe vehicle’s longitudinal axis, allowing better shape preser-\nvation by reducing radial distortion. In contrast, the left-right\nlayout pushes objects toward image edges, increasing pixel\ncompression and detection difficulty. Moreover, the full sur-\nround layout further improves FDS by 3-5% over front-rear,\nachieving the highest accuracy. This improvement arises\nfrom multi-camera synergy: front-rear sensors optimize lon-\ngitudinal coverage, while full surround mitigates lateral dis-\ntortion by preserving complementary edge details.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "FDS（多鱼眼布局间对比）",
+    "value_or_direction": "front-rear 比 left-right 高 2-4% FDS；full surround 比 front-rear 再高 3-5% FDS",
+    "comparator": "三种多鱼眼布局：front-rear / left-right / full surround",
+    "task_or_sample": "Fisheye3DOD，Table 3 布局对比",
+    "locator": "page 6, Section Additional Analysis, RF2 and Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 RF2 段逐字给出 front-rear yields 2-4% higher FDS than left-right 及机制句（cluster along the vehicle's longitudinal axis / pushes objects toward image edges）、full surround layout further improves FDS by 3-5% over front-rear，claim 全部来自本段。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C11",
+   "claim": "RF3 近场对齐：鱼眼相机能力与近场感知对齐——鱼眼变体在 0-30m 段达到 0.586 FDS，与针孔系统 0-48m 段的 0.563 FDS 相当，而 0-30m 恰是覆盖 60km/h 车速下制动距离的关键范围；作者据此主张鱼眼相机特别适合低速场景：自动泊车系统、仓储机器人、人行道配送机器人。",
+   "stance": "support",
+   "relation": "支持『哪些任务获益』层命题：近场/低速具身任务（泊车、仓储、配送机器人）是鱼眼感知的甜点区——在关心的距离段内精度与针孔全距配置可比。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "同段引 F2BEV（16m）与 FisheyeBEVSeg（25m）为近场鱼眼先例；Table 4 另给同段对比（0-30m：针孔 0.673 vs 鱼眼 0.586，鱼眼同段仍低约 0.09 FDS）。",
+   "locator": "page 7, Section Additional Analysis, RF3 and Table 4",
+   "source_context": "Our experiments\nin Table 4 validate this, showing fisheye variants achieve\n0.586 FDS at 0-30m, comparable to pinhole systems’ 0.563\nFDS at 0-48m — a critical range covering the under-30m\nbraking distance at 60 km/h (Hosseinlou, Ahadi, and Hema-\ntian 2012). This capability makes fisheye cameras especially\nsuitable for low-speed scenarios such as automated parking\nsystems, warehouse robots, and sidewalk delivery robots.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "FDS（累积距离段）",
+    "value_or_direction": "鱼眼变体 0.586 FDS @ 0-30m ≈ 针孔 0.563 FDS @ 0-48m",
+    "comparator": "鱼眼近距段 vs 针孔全距段（跨段可比性论证）",
+    "task_or_sample": "Fisheye3DOD，Table 4；0-30m 覆盖 60km/h 制动距离",
+    "locator": "page 7, Section Additional Analysis, RF3 and Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 RF3 段逐字给出 fisheye variants achieve 0.586 FDS at 0-30m, comparable to pinhole systems' 0.563 FDS at 0-48m、under-30m braking distance at 60 km/h、suitable for low-speed scenarios such as automated parking systems, warehouse robots, and sidewalk delivery robots，claim 无外推。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C12",
+   "claim": "RF4 失败模式：从针孔输入切换到鱼眼输入时，小目标类别（Pedestrian、Cyclist）遭受最显著的性能下降——可能因固有尺寸小，鱼眼像素压缩下保留的视觉线索更少；且在仿真环境中该问题因纹理丰富度有限而进一步加剧。",
+   "stance": "limit",
+   "relation": "支持『哪些任务受限』层命题：行人/骑行者等小目标检测是鱼眼感知受损最重的类别，直接关系具身平台的人身安全相关任务。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 6 逐类 AP 同时显示鱼眼模型在所有类别上均显著优于柱面矫正基线；作者建议借助小目标检测的洞察缓解。",
+   "locator": "page 7, Section Additional Analysis, RF4 and Fig. 6",
+   "source_context": "RF4 (Failure Modes and Limitations): Small-footprint\nobjects exacerbate challenges under fisheye distortion.\nFigure 6 compares per-class AP between our fisheye mod-\nels, cylindrical rectified baselines, and their pinhole coun-\nterparts. We observe that small-footprint classes, such as\nPedestrian and Cyclist, suffer the most significant perfor-\nmance drop when shifting input from pinhole to fisheye.\nThis may be due to their inherently small size, which results\nin fewer visual cues being preserved under fisheye-induced\npixel compression. In simulation environments, these issues\nare further compounded due to the limited texture richness.",
+   "evidence_type": "limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 RF4 段逐字给出 small-footprint classes, such as Pedestrian and Cyclist, suffer the most significant perfor- mance drop、fewer visual cues being preserved under fisheye-induced pixel compression、In simulation environments ... limited texture richness，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C13",
+   "claim": "定性观察：稀疏交通下鱼眼变体对正面远距目标（≈45m 范围）达到与针孔标准版距离等变（distance-equivariant）的检测性能；重度交通多车遮挡下所有检测器对远距目标退化、鱼眼变体降幅略大（密集遮挡放大像素压缩影响）；但在这些挑战条件下鱼眼变体仍保持与针孔模型相当的近场检测精度——作者据此定位其为近距感知的互补传感器。",
+   "stance": "support",
+   "relation": "支持『近场价值』层命题：鱼眼的近场精度等价性在遮挡等挑战条件下依然成立，支撑其作为互补传感器的定位而非针孔替代品。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Fig. 5 在 LiDAR 点云中可视化稀疏/密集两种交通密度下多检测器的预测对比（BEVDet/PETR/FisheyeBEVDet/FisheyePETR vs 真值）。",
+   "locator": "page 7, Section Qualitative Analysis and Fig. 5",
+   "source_context": "In the light traf-\nfic scenario, fisheye variants achieve distance-equivariant\ndetection performance to their standard pinhole counter-\nparts for frontally distant objects (≈ 45m range), even with\ntheir inherent radial distortion and pixel compression. Under\nheavy traffic with multi-vehicle occlusion, all detectors ex-\nhibit performance degradation on distant objects, with fish-\neye variants showing a slightly greater decline. This ob-\nserved discrepancy may be due to the amplified impact\nof pixel compression under dense occlusion. Notably, fish-\neye variants maintain near-field detection accuracy equiva-\nlent to pinhole models even under these challenging condi-\ntions, suggesting their potential as complementary sensors\nfor close-range perception tasks.",
+   "evidence_type": "qualitative-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 Qualitative Analysis 段逐字给出 distance-equivariant ... for frontally distant objects (≈ 45m range)、fisheye variants showing a slightly greater decline、maintain near-field detection accuracy equiva- lent to pinhole models、complementary sensors for close-range perception tasks，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C14",
+   "claim": "方法路线：为公平回答 RQ2，作者放弃附加技巧（bells and whistles），以端到端『白板』（tabula rasa）方式在两大主流检测范式中原生引入鱼眼几何——BEV 型与 query 型两个方法均以球面坐标建模 3D 空间，并通过反向投影建立图像到空间的对应关系。",
+   "stance": "support",
+   "relation": "支持『应用方式』层命题：近一年鱼眼感知的方法论主轴是把鱼眼几何内建到检测管线（球面空间表示 + 反向投影），而非把鱼眼图像事后矫正回针孔假设。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "后续段落给出实现：2D 特征经标定鱼眼投影函数可微扭转到等距柱面表示；FisheyeBEVDet 用同心球面壳层替代 LSS 平行平面分层、沿单位射线预测深度分布；FisheyePETR 用球面截锥点（二次递增深度间隔）做位置编码（page 4-5）。",
+   "locator": "page 4, Section Our Detector, Spherical Feature Representation",
+   "source_context": "To fairly answerRQ2, we forgo the “bells and whistles” but\ninstead pursue an end-to-end “tabula rasa” approach to in-\nvestigate two distinct 3D detection paradigms: BEV-based\nand query-based. Both methods model 3D space in spherical\ncoordinates and perform back-projection to establish image-\nto-space correspondence.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Spherical Feature Representation 首段逐字给出 forgo the “bells and whistles”、end-to-end “tabula rasa” approach、two distinct 3D detection paradigms: BEV-based and query-based、model 3D space in spherical coordinates and perform back-projection，claim 为直接转述，实现细节在 summary 标注出处。"
+   }
+  },
+  {
+   "card_id": "2511.18695-C15",
+   "claim": "（读者推断）本基准的全部鱼眼证据是仿真级的：CARLA 缺乏原生鱼眼传感器支持，鱼眼畸变由 Kannala-Brandt 投影数学建模生成——即全部定量结论（迁移损失、恢复幅度、布局/距离/类别效应）建立在合成鱼眼图像上；全文无任何真实鱼眼传感器或真实场景验证，作者亦自述仿真纹理有限会加剧小目标问题——结论向真实鱼眼硬件与真实机器人场景的外推未经检验。",
+   "stance": "limit",
+   "relation": "界定证据强度：本文提供的是鱼眼 3DOD 的机理与相对效应证据（仿真内受控），而非真实部署的绝对性能证据；综述引用时应标注其仿真边界。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "推断依据有三：CARLA 无原生鱼眼（本卡 context）；RF4 仿真纹理自述（page 7）；全文实验均在 Fisheye3DOD 上、无 real-world 实验（通读观察）。",
+   "locator": "page 3, Section Fisheye3DOD Dataset, Data Collection and page 7, RF4",
+   "source_context": "Noting that CARLA lacks native fisheye sensor sup-\nport (Dosovitskiy et al. 2017), we mathematically model\nfisheye distortion via the Kannala-Brandt projection (Kan-\nnala and Brandt 2006).",
+   "evidence_type": "critical-appraisal",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "事实部分逐字来自 page 3（CARLA lacks native fisheye sensor sup- port + mathematically model fisheye distortion via the Kannala-Brandt projection）；『全文无真实验证』为通读全文的直接观察（实验均在 Fisheye3DOD，page 5-7）；『外推未检验』为显式标注的读者推断，未超出文本支持范围。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Plaut, Ben Yaacov, and El Shlomo 2021——唯一的前作单目鱼眼 3DOD（柱面投影后套用针孔检测器），本文批评其单视角、无同环境针孔对照，不回答 RQ1",
+  "WoodScape (Yogamani et al. 2019) / SynWoodScape (Sekkat et al. 2022)——鱼眼多任务数据集前辈：无 3D 标注 / 仅约 500 样本不足以训练现代检测器",
+  "BEVDet (Huang et al. 2021) / PETR (Liu et al. 2022)——被本文改造的两大针孔 3D 检测范式",
+  "F2BEV (Samani et al. 2023) / FisheyeBEVSeg (Yogamani et al. 2024)——近场鱼眼 BEV 感知先例（16m/25m 感知范围），RF3 近场定位的参照",
+  "Kannala and Brandt 2006——鱼眼投影模型（径向位移九阶多项式），本文仿真鱼眼的数学基础",
+  "nuScenes (Caesar et al. 2020)——评测协议（中心距离 AP/TP 指标）与 6 针孔配置参照"
+ ],
+ "notes": "AAAI-26（The Fortiorth AAAI Conference on Artificial Intelligence）接收，出版页码 6019-6025；作者单位：中山大学、鹏城实验室、北京空间机电研究所；代码 https://github.com/weiyangdaren/Fisheye3DOD。全文 9 页（含参考文献），无独立 Limitations 小节，作者声明的限制散见于 RQ2 承认段与 RF4（标题即 Failure Modes and Limitations）。"
+}

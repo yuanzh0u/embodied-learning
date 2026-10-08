@@ -1,0 +1,419 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.16482",
+  "title": "A Survey of Spatial Memory Representations for Efficient Robot Navigation",
+  "published": "2026-04-13",
+  "url": "https://arxiv.org/abs/2604.16482",
+  "authors": [
+   "Ma. Madecheen S. Pangaliman",
+   "Steven S. Sison",
+   "Erwin P. Quilloy",
+   "Rowel Atienza"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "survey",
+  "relevance": {
+   "decision": "include",
+   "reason": "该综述以内存部署成本为轴系统对比 1989–2025 年 52 个空间记忆表示系统（稀疏特征 SLAM、稠密栅格、神经隐式/3DGS、场景图/语义图），并给出 5 个神经 SLAM 系统的一手运行时剖析（α 因子）。它直接切入综述问题的核心张力：经典稀疏 SLAM 与神经隐式空间记忆/语义抽象在导航基础设施位置上的竞争，且其'分基准 Pareto 分析'与'场景图依赖度量 SLAM 后端'的发现对'SLAM 是否被替代'的判断有直接证据价值；但其范围显式排除无持久记忆的端到端感知，对基础模型导航路线无覆盖（需在综述中作为结构性缺口处理）。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract + Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认综述核心问题：空间记忆随环境规模/任务时长无界增长，嵌入式平台（8–16 GB 共享内存、<30 W）上已发表地图大小误导部署成本——内存是可行性约束而非成本问题"
+   },
+   {
+    "locator": "page 1-2, Fig. 1-2 + Section 1.1 Contributions",
+    "role": "relevant-core",
+    "purpose": "定位综述对综述问题的框架：表示演化三部曲（稀疏特征→神经隐式→场景图）与四项贡献（α 因子、5 系统独立剖析、评测协议+预算算法、Pareto+分类法）"
+   },
+   {
+    "locator": "page 2-3, Section 2 Scope and Methodology",
+    "role": "method-or-design",
+    "purpose": "审查综述范围与选择过程：88 篇参考文献/约 52 系统（1989–2025），显式排除完整自主栈、无持久记忆的感知、LiDAR 建图（除 BioSLAM）——评估分类法是否遗漏对立路线"
+   },
+   {
+    "locator": "page 3-4, Section 3.1-3.4 + Tables 1-2",
+    "role": "data-or-setting",
+    "purpose": "梳理四类表示族的内存行为语料：稠密 O(V) 栅格、稀疏特征（EuRoC 对比表）、神经隐式/3DGS（Replica 对比表）、层级与语义（Hydra/Kimera、CLIP 特征、下游规划系统）"
+   },
+   {
+    "locator": "page 4-6, Section 4 Unified Efficiency Analysis + Table 3 + Fig. 3-4",
+    "role": "results-or-analysis",
+    "purpose": "核对 α 定义与测量方法学（Replica/room0、A100、nvidia-smi 1 Hz、基线扣除）、检查点与文献的差异清单、基准分离的 Pareto 前沿与内存时序曲线"
+   },
+   {
+    "locator": "page 6-7, Section 5 Evaluation and Practical Guidance + Algorithm 1 + Tables 4-5",
+    "role": "results-or-analysis",
+    "purpose": "提取四指标评测协议（内存增长率/查询延迟/内存-完整度曲线/吞吐退化）、α-aware 预算算例（Jetson Orin NX）与内存动态学分类"
+   },
+   {
+    "locator": "page 7-8, Section 6 Memory Dynamics + Section 7 Open Challenges",
+    "role": "relevant-core",
+    "purpose": "提取遗忘与 α 的关系（Co-SLAM 有界地图但 α=157）、经典方法的内存纪律（关键帧剔除/WM→LTM/时间窗）、城市级神经 SLAM 与终身维护等开放问题对替代判断的含义"
+   },
+   {
+    "locator": "page 8, Section 8 Conclusion + Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限（5 系统×单场景×单 GPU、仅训练期 α、基准异质性）与三条建议（α-aware 报告、长时程基准、推理期剖析协议）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-12, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（ORB-SLAM3、NICE-SLAM、Co-SLAM、SplaTAM、Hydra、Kimera、Tosi et al. 综述、Embodied-RAG 等），无需逐条精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：视觉机器人的空间记忆随环境规模与任务时长无界增长，而已发表地图大小系统性地误导部署成本——如何在统一度量（α = M_peak/M_map）下刻画并比较各表示家族的真实运行时开销，并给出目标硬件内存预算下的表示选择方法？对综述问题的意义：该综述把'导航需要持久空间记忆表示'作为前提，从部署成本维度检验显式建图路线内部（经典稀疏 SLAM vs 神经隐式/3DGS vs 场景图）谁可行，是判断'隐式空间记忆是否正在替代经典 SLAM'的关键内存维度证据源；但它显式排除无持久记忆的端到端路线，无法回答基础模型导航是否绕开建图。",
+ "contributions": [
+  "引入 overhead factor α = M_peak/M_map（区分 α_CPU 的 CPU RSS 与 α_GPU 的设备分配），编制首个跨范式'运行时 vs 持久内存'对比，揭示已发表地图大小与实际部署成本的差距",
+  "在 NVIDIA A100-SXM4-80GB 上以统一协议（nvidia-smi 1 Hz 采样、基线扣除、检查点磁盘大小）独立剖析 5 个神经 SLAM 系统（Co-SLAM、NICE-SLAM、Point-SLAM、SplaTAM、SGS-SLAM），给出首批独立测量的 α_GPU 参考值（2.3–215）",
+  "提出四指标标准化评测协议（内存增长率 dM/dt、查询延迟、内存-完整度曲线、吞吐退化——均为现行基准未覆盖）与 α-aware 内存预算算法（Algorithm 1，由预算与 α 反推最大可行地图）",
+  "基准分离的 Pareto 前沿分析（Fig. 3）、52 系统四族分类法（Fig. 2）、内存动态学分类（Table 5：更新策略×遗忘规则×分区）与具体开放挑战清单"
+ ],
+ "method": {
+  "summary": "survey 类型论文：以'内存效率'为组织轴综述 1989–2025 年 88 篇参考文献、约 52 个持久空间记忆表示系统，覆盖稠密栅格（占据栅格/八叉树/TSDF）、稀疏特征（ORB-SLAM 系/半稠密）、神经隐式与 3DGS（iMAP/NICE-SLAM/Co-SLAM/Point-SLAM/SplaTAM/MonoGS/GS-SLAM/SGS-SLAM）、层级与语义（拓扑图/场景图 Hydra 系/VLM 特征）四个范式家族。除文献综合外包含一手剖析：5 个神经 SLAM 系统在 Replica/room0、A100-SXM4-80GB 上的 GPU 内存剖析（nvidia-smi 1 Hz、基线扣除、检查点磁盘大小），以及 ORB-SLAM3 等稀疏系统的 CPU RSS 剖析（Intel i7-10700、五次运行）；在此基础上定义 α 因子、做基准分离（EuRoC vs Replica）的 Pareto 分析与内存时序分析（Fig. 4），最后给出四指标评测协议、按约束选表示的指南（Table 4）与预算算法。",
+  "assumptions": [
+   "持久空间记忆表示是机器人导航的必需组件——整个分类法以此为前提，无持久记忆的端到端导航被显式排除在范围外",
+   "峰值运行内存与持久地图检查点大小之比（α）是部署可行性的有效诊断量，应与绝对 M_peak/M_map 一起报告",
+   "单场景（Replica/room0）、单 GPU（A100）的训练期剖析足以给出跨范式 α 参考值（作者在局限中自认此外推受限）",
+   "嵌入式平台（8–16 GB 共享内存、<30 W，如 Jetson Orin）是代表性的部署约束，且部署后无法升级硬件"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EuRoC MAV（稀疏/视觉惯性系统的评测基准，MH01–MH05）",
+   "Replica（神经 SLAM 评测与 α 剖析基准，room0 为剖析场景）",
+   "TUM RGB-D（作为现行基准短板的例证：分钟级、房间尺度）",
+   "KITTI（GigaSLAM 户外尺度参考）"
+  ],
+  "tasks": [
+   "视觉 SLAM/空间建图系统的内存剖析（α、M_peak、M_map、FPS、内存时序）",
+   "SLAM 精度与渲染质量的文献汇总（ATE、PSNR，转引自被引论文）",
+   "面向从业者的表示选择与内存预算（Table 4 + Algorithm 1）"
+  ],
+  "embodiments": [
+   "部署目标平台：搭载嵌入式 GPU（8–16 GB 共享内存、<30 W，如 NVIDIA Jetson Orin/Xavier NX）的自主机器人、无人机与 AR 头显——仅作为论述性部署约束，无机器人本体实验",
+   "剖析实验平台：服务器 GPU（A100-SXM4-80GB）与桌面 CPU（Intel i7-10700），非机器人在线运行"
+  ],
+  "sample_or_scale": "88 篇参考文献、约 52 个系统（1989–2025；15 个进入统一效率对比表 Table 3）；一手剖析：5 个神经 SLAM 系统 × Replica/room0 × 1 GPU（A100，训练期）+ 3 个稀疏系统的 EuRoC CPU 剖析（ORB-SLAM3/VINS-Mono/Basalt，其中部分内存值为综述估计）"
+ },
+ "evaluation": {
+  "design": "综述 + 一手内存剖析的混合设计：5 个神经 SLAM 系统以统一协议剖析（nvidia-smi 1 Hz、基线扣除、检查点磁盘大小），稀疏系统以 CPU RSS 剖析；跨范式对比显式按基准分离（EuRoC 真实世界 vs Replica 合成），跨范式结论仅依据 α 与 scaling 行为；附 Pareto 前沿（Fig. 3）、运行时内存时序（Fig. 4）与 α-aware 预算算法验证（Jetson Orin NX 算例）",
+  "baselines": [
+   "跨范式对比系统（Table 3）：稀疏 ORB-SLAM3/VINS-Mono/Basalt；学习流 DROID-SLAM",
+   "神经家族：iMAP、NICE-SLAM、Co-SLAM、Point-SLAM、SplaTAM、MonoGS、GS-SLAM、SGS-SLAM；尺度参考 GigaSLAM",
+   "稠密/层级：OctoMap、Hydra；内存动态学分析另含 RTAB-Map、DSO、MS-SLAM、MemGS、BioSLAM"
+  ],
+  "metrics": [
+   "α 因子（α_CPU = CPU RSS/地图大小；α_GPU = GPU 分配/地图大小）",
+   "M_map（检查点磁盘大小）与 M_peak（峰值运行内存）",
+   "ATE 与 PSNR（转引自被引论文）、FPS、复合效率 Eff.=10³/(ATE×M_map)（作者自行指出其误导性并弃用于跨范式排名）"
+  ],
+  "ablations": [
+   "无消融实验（survey）；最接近的是硬件敏感性讨论（Co-SLAM 文献 RTX 3090 值 ∼3.2 GB vs 本文 A100 实测 1.3 GB）与训练期/推理期 α 的区分讨论（Adam 优化器状态约 3 倍开销）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仅神经 SLAM 方法内部，α_GPU 就跨越两个数量级：从 Point-SLAM 的 2.3（成本前置到 2.9 GB 地图）到 NICE-SLAM 的 215（47 MB 保存地图需 10 GB 运行时 GPU 内存）——地图大小不能预测部署成本，决定可行性的是内存架构而非范式标签。",
+   "scope": "作者在 Replica/room0、A100-SXM4-80GB 上独立剖析的 5 个神经 SLAM 系统（训练期）",
+   "locator": "page 1, Abstract; page 5, Table 3"
+  },
+  {
+   "finding": "实测检查点大小与文献报告系统性地不一致（本文 vs 文献）：Co-SLAM 8 vs 32 MB、NICE-SLAM 47 vs 235 MB、Point-SLAM 2,865 vs 80 MB、SplaTAM 254 vs 85 MB、SGS-SLAM 254 vs 92 MB（3DGS 检查点约 3 倍于典型报告值）——文献中的地图大小数字本身不可靠。",
+   "scope": "5 个被剖析神经系统的 Replica/room0 检查点",
+   "locator": "page 6, Section 4.1"
+  },
+  {
+   "finding": "稀疏特征 SLAM 是唯一 CPU 实时且部署成本可预测的家族：建筑级 ORB-SLAM3 会话约 55 MB 地图、α_CPU≈4（EuRoC 上 180–250 MB 峰值 CPU RSS，Intel i7-10700），低 α 意味着地图大小可可靠预测部署成本；三个稀疏系统均在单核 CPU 上 20–30 FPS 实时（ORB-SLAM3 EuRoC ATE 3.5 cm 为表内最优，转引自原论文）。",
+   "scope": "EuRoC 基准上的稀疏/视觉惯性 SLAM（Table 1 三系统）",
+   "locator": "page 3, Section 3.2 + Table 1"
+  },
+  {
+   "finding": "场景图范式的语义抽象层并不自足：Hydra 在 Jetson Xavier NX（8 GB）上 5 Hz 构建 48 MB 图抽象层，但该数字不含底层 Kimera 度量-语义网格（ATE ∼5 cm），总内存随场景变化且被低估；作者结论'图抽象层本身紧凑，但度量后端可与神经地图相当'。",
+   "scope": "层级/语义表示家族（Hydra 及其后续）",
+   "locator": "page 4, Section 3.4"
+  },
+  {
+   "finding": "语义导航的下游规划系统（LM-Nav、SayNav、Open Scene Graphs、Embodied-RAG）继承地图的内存剖面并叠加均未被量化的规划层开销——语义导航的系统级 α 未知；CLIP 特征（d=512, 32-bit）每百万点约 2 GB，与几何地图本身相当。",
+   "scope": "VLM 特征地图与下游语言条件导航系统",
+   "locator": "page 4, Section 3.4; page 8, Section 7"
+  },
+  {
+   "finding": "分基准 Pareto 分析显示无单一范式占优：真实世界 EuRoC 上 ORB-SLAM3 最佳（3.5 cm @ 55 MB），合成 Replica 上 3DGS 系统占优（ATE ≤ 0.58 cm、90–254 MB，SplaTAM 0.36 cm 最佳但 α_GPU=55）；作者强调两基准数值不可直接比较，跨范式结论只能依据 α 与 scaling 行为。",
+   "scope": "Table 3/Fig. 3 的 15 个系统（稀疏在 EuRoC、神经在 Replica）",
+   "locator": "page 5-6, Table 3 + Fig. 3"
+  },
+  {
+   "finding": "内存动态学：遗忘降低 M_map 但不降 α——Co-SLAM 无遗忘机制却靠固定哈希表获得有界地图，仍因运行时脚手架不变而 α=157；四个神经系统均无显式遗忘，经典方法更有纪律（ORB-SLAM3 关键帧剔除、RTAB-Map WM→LTM 转磁盘、DSO 时间窗、BioSLAM 门控整合）。",
+   "scope": "Table 5 所列十个系统的更新/遗忘/分区策略",
+   "locator": "page 7-8, Section 6 + Table 5"
+  },
+  {
+   "finding": "开放挑战显示神经 SLAM 距离具身部署仍远：城市级神经 SLAM（∼10⁷ m³、>100 h、<30 W）未解决，DiskChunGS 流式在 Jetson AGX Orin 上仅约 0.01 FPS；神经 SLAM 面临灾难性遗忘；神经表示对未观测区域返回自信输出（安全关键失效）；无任何被综述系统报告推理期 α 或语义系统 α。",
+   "scope": "Section 7 开放挑战与全语料的报告缺口",
+   "locator": "page 8, Section 7"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "剖析仅覆盖 5 个神经 SLAM 系统、单一 Replica 场景、单一 GPU（A100）；α 值在其他场景、数据集或硬件上可能不同",
+    "locator": "page 8, Section 8 Limitations"
+   },
+   {
+    "limitation": "只测量了训练期 α；推理期 α 未被剖析（作者同时指出训练期脚手架如 Adam 状态占高 α 大头，推理-only 部署可能大幅降低 α_GPU，但无被综述系统做过此剖析）",
+    "locator": "page 8, Section 8 Limitations; page 6, Hardware sensitivity"
+   },
+   {
+    "limitation": "基准异质性（EuRoC 真实 vs Replica 合成）使跨范式比较只能依据 α 与 scaling 行为，不能比较绝对精度",
+    "locator": "page 8, Section 8 Limitations; page 5, Table 3 caption"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "选择过程非系统化：仅一段范围声明与筛选描述（'filtering for systems that introduce or evaluate persistent spatial memory representations'），无数据库、检索式、正式纳入/排除流程或 PRISMA 式记录——52 系统语料的覆盖面无法独立复核，可能偏向内存主题相关系统",
+    "basis": "page 2-3 Section 2 的全部方法论描述仅两段；无任何检索过程细节"
+   },
+   {
+    "boundary": "分类法遗漏与综述问题直接相关的对立路线：'无持久记忆的感知'与完整自主栈被显式排除，端到端无图导航策略（VLA/基础模型导航）不在分类法内，LiDAR 建图除 BioSLAM 外也排除——该综述对'SLAM 是否被端到端模型替代'只能提供结构性缺位而非裁决证据",
+    "basis": "page 3 范围声明与 page 2 Fig. 2 分类法（四族均为持久地图表示）的组合"
+   },
+   {
+    "boundary": "表格中大量数值为 survey estimate（VINS-Mono/Basalt/ORB-SLAM 的 map 与 peak、iMAP/MonoGS/GS-SLAM 的 map size 等，脚注标明）或转引自被引论文（ATE/PSNR），与实测 α 值混在同一表内；复合效率 Eff. 混合实测与估计值（作者已加 caveat）——除 α 与检查点大小外的数字可靠性依赖原论文",
+    "basis": "page 3-5 Tables 1-3 的脚注体系（* survey estimate、‡ survey estimates、e 独立实测、其余转引）"
+   },
+   {
+    "boundary": "对具身智能的外推有限：剖析为训练期、单合成房间、服务器 GPU；无动态环境、无多机器人合并成本定量（仅定性）、无真实机器人在线任务；综述范围限于导航的空间记忆层，对数据采集与操作环节完全未涉及",
+    "basis": "page 5-6 测量方法学、page 8 局限声明与 page 2-3 范围声明的组合"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：本综述的判断适用于'视觉空间记忆表示在机器人导航中的内存部署成本'这一层；其一手证据限于 5 个神经 SLAM 系统在 Replica/room0、A100、训练期的 GPU 剖析与 3 个稀疏系统的 EuRoC CPU 剖析（部分为估计值），其余 ATE/PSNR/FPS/内存数字转引自被引论文且检查点差异显示文献数字本身不可靠。对端到端无图导航、LiDAR 系统（除 BioSLAM）、动态环境、多机器人（仅定性）、推理期/边缘部署、以及具身数据采集与操作环节均无证据；其结论不能外推为'SLAM 范式整体'的部署判断。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "把'部署成本'变成可测量对象：α 因子定义清晰（区分 α_CPU RSS 与 α_GPU 分配），统一剖析协议具体（nvidia-smi 1 Hz、基线扣除、检查点磁盘大小），5/5 系统检查点与文献不一致的发现对文献数字可信度构成实质审计",
+   "显式基准分离（EuRoC 真实 vs Replica 合成）并声明跨基准不可比、跨范式结论仅依据 α 与 scaling——避免了综述常见的跨基准排名谬误，诚实程度高",
+   "α 的机制分析有解释力（紧凑隐式方法的优化器状态/梯度缓冲 vs 地图主导架构 vs 无剪枝累积），并给出可操作的预算算法与四指标协议，面向从业者",
+   "对自身证据边界有清晰自觉：低 α 不等于高效（Point-SLAM 前置成本）、单一比值必须与绝对值同读、Eff. 指标的误导性由作者自己指出"
+  ],
+  "design_risks": [
+   "搜索/选择过程不透明：无数据库、检索式、纳入/排除标准与流程记录，52 系统语料可能存在选择性偏倚，覆盖率无法复核",
+   "分类法遗漏重要对立工作：无持久地图的端到端导航与 LiDAR 建图（除 BioSLAM）被排除——对'范式替代'问题结构性缺位；DROID-SLAM/DPVO 等学习流系统因无持久地图被排除出 Pareto 分析，学习前端的内存代价仅一笔带过",
+   "作者综合与一手证据混编：Table 3 同表混排独立实测（⋄）、survey estimate（*）、转引值（ATE/PSNR），区分完全依赖脚注；'no single paradigm dominates'是作者基于混合数据源的 Pareto 综合",
+   "领域级主张的证据基础窄：'memory architecture, not paradigm label, determines deployment feasibility' 基于 5 系统×单场景×单 GPU×训练期剖析，作者自认外推受限；硬件敏感性（Co-SLAM RTX 3090 3.2 GB vs A100 1.3 GB）说明 α 本身硬件依赖"
+  ],
+  "baseline_fairness": "survey 类型无实验基线公平性问题，但跨范式对比存在结构性不对称：稀疏系统在真实世界 EuRoC、神经系统在合成 Replica 评测，作者以'基准分离+仅 α 与 scaling 可跨范式比较'缓解——处理诚实，但这也客观披露了神经 SLAM 家族缺乏真实世界基准证据的事实；对近期 3DGS SLAM 系统（8 篇）作者指出它们均不报告 M_peak 或 α，对比表因此不含这些最新系统。",
+  "metric_validity": "α 作为无量纲诊断指标定义清晰且区分 CPU/GPU 口径，但作者自己承认单一比值有歧义（低 α 可来自高效运行时也可来自成本前置到地图，如 Point-SLAM α=2.3 但地图 2.9 GB），必须与绝对 M_peak/M_map 同读；复合效率 Eff. 被作者指出会产生误导排名并弃用于跨范式比较；四指标协议（内存增长率/查询延迟/内存-完整度/吞吐退化）是对现行评测缺口的合理补全但尚无系统实践。",
+  "reproducibility": "测量协议描述具体（GPU 型号 A100-SXM4-80GB、nvidia-smi 1 Hz、基线扣除、检查点磁盘大小、Intel i7-10700 五次运行），检查点差异逐一列出；但未见代码/数据发布声明，5 系统剖析的序列长度、运行超参、每系统运行次数（稀疏系统为五次，神经系统未说明）未完整报告。",
+  "external_validity": "α 值外推受限（作者自认单场景/单 GPU/训练期）；对 LiDAR、动态环境、多机器人（仅定性合并成本未知）、无图端到端导航均无覆盖；对具身智能的数据采集与操作环节完全未涉及；'内存是可行性约束'的论证以嵌入式平台（8–16 GB、<30 W）为锚，对云端辅助部署（feature-based SLAM 已有 cloud-edge 分流，作者指出 3DGS 未探索）讨论不足。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.16482-C01",
+   "claim": "综述范围声明：本文聚焦视觉空间记忆的表示层，明确排除完整自主系统栈、'无持久记忆的感知'以及 LiDAR 建图（BioSLAM 除外）；其语料为 1989–2025 年筛选出的 88 篇参考文献、约 52 个系统，全部是引入或评测持久空间记忆表示的系统。",
+   "stance": "gap",
+   "relation": "该综述把'机器人导航需要持久空间记忆表示'作为不加检验的前提（四族分类法均为持久地图），端到端无图导航与基础模型导航路线被排除在证据基础之外——因此它无法直接裁决'端到端基础模型是否替代 SLAM'，只能回答显式建图路线内部哪种表示在内存维度可行；对综述问题而言这是结构性证据缺口，使用其结论时必须标注此范围限制。",
+   "summary": "综述显式排除无持久记忆的端到端感知与完整自主栈——'替代 SLAM'的对立路线不在其证据基础内",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3, Section 2 Scope and Methodology",
+   "source_context": "We exclude full autonomy stacks, perception without persistent memory, and LiDAR-based mapping (except BioSLAM [78]).",
+   "evidence_type": "claim",
+   "quantitative": {
+    "metric": "综述语料规模（references 与 systems 数）",
+    "value_or_direction": "88 references、约 52 个 systems（1989–2025）",
+    "comparator": "其中 15 个 systems directly compared in efficiency tables",
+    "task_or_sample": "筛选标准：引入或评测 persistent spatial memory representations 的系统",
+    "locator": "page 3, Section 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 Section 2：source_context 逐字匹配；语料规模见同页 'This yielded 88 references covering approximately 52 distinct systems (15 directly compared in efficiency tables)' 与 'We surveyed papers from 1989 to 2025'。claim 是范围声明与语料数字的忠实转述；'结构性证据缺口'的判断写在 relation 而非 claim 中，claim 本身不含推断。"
+   }
+  },
+  {
+   "card_id": "2604.16482-C02",
+   "claim": "综述对稀疏特征 SLAM 的剖析显示：典型建筑级 ORB-SLAM3 会话产出约 55 MB 地图、α_CPU≈4（EuRoC 上 180–250 MB 峰值 CPU RSS，Intel i7-10700），低 α 意味着地图大小可可靠预测部署成本；三个稀疏系统（含峰值仅 150 MB 的 VINS-Mono）均在单核 CPU 上以 20–30 FPS 舒适实时运行（其 EuRoC ATE 3.5 cm 为表内最优，转引自 ORB-SLAM3 原论文）。",
+   "stance": "support",
+   "relation": "支持'经典稀疏 SLAM 仍是导航环节嵌入式部署上难以替代的基础设施'：在该综述的统一比较框架里，稀疏 SLAM 是唯一兼具真实世界基准证据、单核 CPU 实时性与可预测内存开销（低 α）的家族——神经隐式表示在嵌入式平台上尚未达到同等部署可行性，'隐式空间记忆替代经典 SLAM'在部署维度不成立。",
+   "summary": "稀疏 SLAM：α_CPU≈4、180–250 MB 峰值 RSS、单核 CPU 20–30 FPS 实时——部署成本可预测的经典基础设施",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 3, Section 3.2 + Table 1",
+   "source_context": "VINS-Mono [52] (10.6 cm monocular-inertial, Eff. = 2.4) trails on ATE but operates within 150 MB peak using only a monocular camera. All three sparse systems sustain 20–30 FPS (Table 1), comfortably real-time on a single CPU core.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "α_CPU（峰值 CPU RSS / 地图大小）与实时帧率",
+    "value_or_direction": "ORB-SLAM3：α_CPU≈4、180–250 MB peak CPU RSS、∼55 MB map；三个稀疏系统 20–30 FPS；VINS-Mono 150 MB peak",
+    "comparator": "对照神经 SLAM 的 GB 级运行时开销（Co-SLAM 1.3 GB runtime）",
+    "task_or_sample": "EuRoC 稀疏/视觉惯性 SLAM（Table 1；Intel i7-10700 剖析）",
+    "locator": "page 3, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3：source_context 两句逐字匹配；α_CPU≈4 与 180–250 MB peak CPU RSS 见同页 'yields an estimated ∼55 MB payload with α CPU ≈ 4 (180–250 MB peak CPU RSS on EuRoC [4], Intel i7-10700). This low α means map size reliably predicts deployment cost.'；3.5 cm ATE 见同页 'ORB-SLAM3 achieves the best ATE (3.5 cm)'（转引已在 claim 中标明）；Co-SLAM 1.3 GB 见同页 Section 3.3。claim 限定于稀疏系统在 EuRoC 上的内存/帧率行为，未外推到其他基准。"
+   }
+  },
+  {
+   "card_id": "2604.16482-C03",
+   "claim": "综述作者在 NVIDIA A100 上的独立剖析显示：仅神经 SLAM 方法内部，运行时开销因子 α（峰值运行内存与持久地图检查点大小之比）就跨越两个数量级——从 Point-SLAM 的 2.3 到 NICE-SLAM 的 215（47 MB 保存地图在运行时需要 10 GB GPU 内存）；作者据此指出决定部署可行性的是内存架构而非范式标签。",
+   "stance": "limit",
+   "relation": "限制'神经隐式空间记忆正在导航中替代经典 SLAM'的判断：该路线的已发表地图大小系统性地误导部署成本（Co-SLAM 8 MB 地图需 1.3 GB 运行时、α_GPU=157，见 page 2-3），紧凑隐式方法在 8–16 GB 嵌入式平台上不可部署——隐式空间记忆的具身部署可行性尚未成立，替代论在部署维度缺乏证据支持。",
+   "summary": "神经 SLAM 内部 α 跨两个数量级（2.3→215；NICE-SLAM 47 MB 地图需 10 GB 运行时）——地图大小误导部署成本",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 1, Abstract",
+   "source_context": "Independent profiling on an NVIDIA A100 GPU reveals that α spans two orders of magnitude within neural methods alone, ranging from 2.3 (Point-SLAM) to 215 (NICE-SLAM, whose 47 MB map requires 10 GB at runtime), showing that memory architecture, not paradigm label, determines deployment feasibility.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "α = M_peak/M_map（峰值运行内存 / 持久地图检查点大小）",
+    "value_or_direction": "2.3（Point-SLAM）至 215（NICE-SLAM：47 MB map 需 10 GB runtime）",
+    "comparator": "神经 SLAM 方法内部的跨系统比较（two orders of magnitude）",
+    "task_or_sample": "5 个神经 SLAM 系统在 Replica/room0 上的独立剖析（NVIDIA A100-SXM4-80GB）",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 摘要：source_context 逐字匹配（2.3/215/47 MB/10 GB 全部数字在内）；α 的定义见 page 4-5（α = M_peak/M_map，M_peak 为峰值运行内存、M_map 为磁盘持久检查点），测量协议见 page 5-6（Replica/room0、A100-SXM4-80GB、nvidia-smi 1 Hz、基线扣除）。claim 限定于作者自身剖析结果；relation 中 Co-SLAM 8 MB/1.3 GB 数字已核对 page 2-3 原文。"
+   }
+  },
+  {
+   "card_id": "2604.16482-C04",
+   "claim": "综述指出场景图范式的语义抽象层并不自足：Hydra 及其后续在 Jetson Xavier NX（8 GB）上以 5 Hz 构建层级场景图、48 MB 图抽象层，但该数字不含底层 Kimera 度量-语义网格（ATE ∼5 cm），总内存随场景变化且被低估；作者结论：图抽象层本身紧凑，但度量后端可与神经地图相当——即场景图语义层之下仍是度量-语义 SLAM 后端。",
+   "stance": "support",
+   "relation": "支持'新兴语义/层级空间记忆并未摆脱 SLAM 基础设施'：作为 2023–2025 语义抽象代表的场景图（Hydra 系）在内存账目上仍依赖经典度量-语义 SLAM 后端（Kimera）——语义抽象是叠加在 SLAM 之上的层而非 SLAM 的替代品；VLM 特征（CLIP 每百万点约 2 GB）同样是叠加在几何地图之上的新内存层。",
+   "summary": "场景图 48 MB 图层不含 Kimera 度量-语义后端——'图紧凑但度量后端可与神经地图相当'，语义层之下仍是 SLAM",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 4, Section 3.4",
+   "source_context": "The key memory question for scene graphs is which layers count: the graph alone is compact, but the metric backend can rival a neural map.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "场景图抽象层内存（Hydra graph layer）",
+    "value_or_direction": "48 MB graph abstraction，5 Hz 构建，Jetson Xavier NX（8 GB）",
+    "comparator": "不含 underlying Kimera metric-semantic mesh（ATE ∼5 cm），total memory scene-dependent and underreported",
+    "task_or_sample": "Hydra 及其后续系统的层级场景图构建",
+    "locator": "page 4, Section 3.4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 4 Section 3.4：source_context（结论句）逐字匹配；Hydra 数字见同页 'Hydra [26] and its successors [81] construct hierarchical scene graphs at 5 Hz on a Jetson Xavier NX (8 GB) with a 48 MB graph abstraction, but this figure excludes the underlying Kimera [54] metric-semantic mesh (ATE ∼5 cm), making the total memory scene-dependent and underreported.'（该句原文含跨行连字符，故 source_context 选用同段无连字符断行的结论句）。claim 为两处的忠实转述，未添加论文未做的判断。"
+   }
+  },
+  {
+   "card_id": "2604.16482-C05",
+   "claim": "综述以 SplaTAM 为例论证神经空间记忆在具身平台上部署不可行：α_GPU=55 的 SplaTAM 运行时消耗 14 GB，在 16 GB 嵌入式 GPU 上仅剩 <2 GB 给感知、规划与操作系统，尽管其地图只有 254 MB——内存效率是可行性约束而非成本问题；外推到 100 m² 公寓地图约需 ∼200 GB，甚至超过数据中心级 A100（80 GB）。",
+   "stance": "limit",
+   "relation": "限制'3DGS/神经空间记忆可替代经典 SLAM 作为具身导航基础设施'的判断：综述设定的部署平台是 8–16 GB 共享内存、<30 W 的嵌入式 GPU（Jetson Orin 级，部署后不可升级硬件），而测量到的神经 SLAM 运行时开销（SplaTAM 14 GB、SGS-SLAM 峰值 40 GB，见 Table 3）使该路线在具身机器人本体上当前不可部署——替代必须先过部署可行性这一关。",
+   "summary": "SplaTAM 运行 14 GB、16 GB 嵌入式平台仅剩 <2 GB——神经空间记忆在具身平台上不可部署（内存=可行性约束）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "SplaTAM (α GPU = 55) consuming 14 GB at runtime leaves <2 GB for perception, planning, and the OS, making the system infeasible despite the map being only 254 MB.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "运行时 GPU 内存消耗（SplaTAM，α_GPU=55）",
+    "value_or_direction": "14 GB at runtime（map 254 MB），16 GB 平台 leaves <2 GB；外推 100 m² apartment ∼200 GB vs A100 80 GB",
+    "comparator": "嵌入式部署约束：8–16 GB shared memory、<30 W power budgets",
+    "task_or_sample": "3DGS SLAM 在嵌入式 GPU（Jetson Orin 级）上的部署外推",
+    "locator": "page 2, Section 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 2：source_context 逐字匹配（14 GB/<2 GB/254 MB/α_GPU=55 全部在内）；外推句 'Scaling to a 100 m2 apartment would extrapolate to ∼200 GB, far exceeding even a data-center-class A100 (80 GB)' 与嵌入式约束 'embedded GPUs with 8–16 GB shared memory (e.g., NVIDIA Jetson Orin) under strict power budgets (<30 W)'、'Memory efficiency is therefore not a cost problem but a feasibility constraint' 亦在同页。claim 是作者部署论证的忠实转述；relation 中 SGS-SLAM 40 GB 见 page 5 Table 3。"
+   }
+  },
+  {
+   "card_id": "2604.16482-C06",
+   "claim": "综述的 Pareto 分析按基准显式分离：真实世界 EuRoC 上经典稀疏 ORB-SLAM3 取得最佳 ATE（3.5 cm @ 55 MB 地图），Basalt 以精度换更小地图（35 MB）；合成 Replica 上 3DGS 系统占优（ATE ≤ 0.58 cm、90–254 MB 地图，SplaTAM 最佳 0.36 cm）。作者强调两基准数值不可直接比较，跨范式结论只能依据 α 与 scaling 行为。",
+   "stance": "conditional",
+   "relation": "对综述问题给出条件性判断：在综述证据范围内无任何单一范式全面占优——经典稀疏 SLAM 是唯一有真实世界基准领先证据的家族，神经/3DGS 的精度优势仅成立于合成基准；因此'SLAM 被神经表示替代'在真实世界证据上不成立，但合成基准上的精度差距也表明经典 SLAM 未在所有维度领先，替代与否取决于部署约束（内存/算力/真实世界泛化）而非单一精度维度。",
+   "summary": "分基准 Pareto：EuRoC 上 ORB-SLAM3 最佳（3.5 cm @ 55 MB），Replica 上 3DGS 最佳（0.36 cm）——无单一范式占优且跨基准不可比",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 6, Section 4.3 + Fig. 3",
+   "source_context": "On EuRoC (Fig. 3, left), ORB-SLAM3 achieves the best ATE (3.5 cm) at 55 MB; Basalt trades accuracy for a smaller map (35 MB).",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "ATE 与地图大小（按基准分离的 Pareto 对比）",
+    "value_or_direction": "EuRoC：ORB-SLAM3 best 3.5 cm @ 55 MB；Replica：3DGS cluster ATE ≤ 0.58 cm（90–254 MB），SplaTAM best 0.36 cm",
+    "comparator": "EuRoC (Real-World) 与 Replica (Synthetic) 基准分离，数值不可直接比较",
+    "task_or_sample": "Table 3 / Fig. 3 的跨范式系统对比",
+    "locator": "page 6, Fig. 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 Section 4.3：source_context 逐字匹配；Replica 侧数字见同页 'On Replica (right), 3DGS systems cluster favorably (ATE ≤ 0.58 cm, 90–254 MB), with SplaTAM achieving the best ATE (0.36 cm) at α GPU = 55.'（该句原文含跨行连字符，故未用作 source_context）；基准不可比声明见同页 'these benchmarks are not directly comparable' 与 page 5 Table 3 标注。claim 忠实于分基准呈现，未做跨基准排名。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "ORB-SLAM3: An accurate open-source library for visual, visual-inertial, and multimap SLAM",
+   "arxiv_id": "2007.11898",
+   "role": "经典稀疏 SLAM 效率参照系（EuRoC 3.5 cm、α_CPU=4、单核实时）"
+  },
+  {
+   "title": "NICE-SLAM: Neural implicit scalable encoding for SLAM",
+   "arxiv_id": "2112.12130",
+   "role": "α_GPU=215 极端案例（47 MB 地图/10 GB 运行时），隐式方法隐藏开销的证据"
+  },
+  {
+   "title": "Co-SLAM: Joint coordinate and sparse parametric encodings for neural real-time SLAM",
+   "role": "8 MB 地图/1.3 GB 运行时（α=157）的隐式压缩案例，哈希有界地图但运行时脚手架不变"
+  },
+  {
+   "title": "SplaTAM: Splat, track & map 3D Gaussians for dense RGB-D SLAM",
+   "arxiv_id": "2312.02126",
+   "role": "3DGS SLAM 代表（Replica 最佳 ATE 0.36 cm 但 14 GB 运行时，嵌入式不可部署）"
+  },
+  {
+   "title": "Hydra: A real-time spatial perception system for 3D scene graph construction and optimization",
+   "role": "场景图抽象层依赖度量-语义后端的关键案例（48 MB 图层不含 Kimera 网格）"
+  },
+  {
+   "title": "Kimera: an open-source library for real-time metric-semantic localization and mapping",
+   "role": "Hydra 之下的度量-语义 SLAM 后端——语义层之下仍是 SLAM 基础设施"
+  },
+  {
+   "title": "How NeRFs and 3D Gaussian Splatting are reshaping SLAM: a survey (Tosi et al.)",
+   "arxiv_id": "2402.13255",
+   "role": "被本文对照的方法导向神经 SLAM 综述（按精度排名 vs 本文按内存行为组织）"
+  },
+  {
+   "title": "Embodied-RAG: General non-parametric embodied memory for retrieval and generation",
+   "arxiv_id": "2409.18313",
+   "role": "下游语义导航系统继承地图内存剖面且不量化系统级开销的例子"
+  }
+ ],
+ "notes": "survey 批判评估四问的结论：(1) 搜索/选择过程——仅一段范围声明与筛选描述，无数据库/检索式/纳入排除流程，透明度中低，但范围声明本身明确（排除项逐一点名）；(2) 分类法遗漏——'无持久记忆的感知'与完整自主栈被显式排除，端到端无图导航（恰是综述问题的对立路线）与 LiDAR（除 BioSLAM）不在分类法内，学习流系统（DROID-SLAM/DPVO）因无持久地图被排除出 Pareto；(3) 作者综合 vs 一手证据——α 剖析与检查点差异为一手证据，ATE/PSNR/FPS 转引自被引论文，Eff. 指标与 Pareto 结论为作者综合，多个表格数值为 survey estimate（脚注标注）；(4) 领域级主张比例——'no single paradigm dominates'基于 15 系统两基准且自带基准分离 caveat，与语料成比例；'memory architecture, not paradigm label'基于 5 系统单场景训练期剖析，外推受限（作者自认）。对综述问题的含义：该综述不支持'SLAM 被隐式空间记忆替代'——它显示（a）神经表示在部署成本上远未取代稀疏 SLAM（嵌入式平台上不可行、真实世界基准上无领先证据）；（b）场景图/VLM 语义层是叠加在度量-语义 SLAM 后端之上的层而非替代品；（c）但它同时显示 SLAM 内部正在快速神经化（2020–2025 演化主线是 neural implicit→3DGS），且端到端无图路线在其证据边界之外——它证明的是'显式空间记忆层的内存瓶颈'，不是'显式层的必要性'。另注：提取管道实际为 alphaxiv-fulltext-api（PDF 文本），note 中 extraction.method 按校验器枚举记为 pdf-text。"
+}

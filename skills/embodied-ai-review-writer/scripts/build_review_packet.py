@@ -31,6 +31,13 @@ from embodied_learning.parse.figure_table import (  # noqa: E402
 )
 from embodied_learning.search.abstract_evidence import ABSTRACT_TIER, load_tier  # noqa: E402
 STANCE_ORDER = ["support", "conditional", "limit", "gap"]
+# Hard caps for writer-facing brief/appendix (token opt H4). Full evidence.jsonl stays uncapped.
+DEFAULT_WRITER_STANCE_CAPS = {
+    "support": 8,
+    "limit": 6,
+    "conditional": 6,
+    "gap": 4,
+}
 FORMAL_SOURCE_THRESHOLD = 5
 # Same numbers as the enforced settle gate (finalize_run.CITED_PAPER_FLOORS,
 # defined in scripts/lib/review_runs.py): a mismatched "brief floor" made the
@@ -930,6 +937,90 @@ def render_style_contract() -> list[str]:
         lines.append("")
     return lines
 
+def parse_stance_caps(raw: str | None) -> dict[str, int]:
+    """Parse `support=8,limit=6,...` overrides; missing keys keep defaults."""
+    caps = dict(DEFAULT_WRITER_STANCE_CAPS)
+    if not raw:
+        return caps
+    for part in raw.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "=" not in part:
+            raise ValueError(f"invalid stance cap entry {part!r}; expected stance=N")
+        stance, value = part.split("=", 1)
+        stance = stance.strip()
+        if stance not in STANCE_ORDER:
+            raise ValueError(f"unknown stance in cap override: {stance}")
+        caps[stance] = max(0, int(value.strip()))
+    return caps
+
+
+def cap_events_for_writer(
+    events: list[dict[str, Any]],
+    stance_caps: dict[str, int] | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Select a bounded writer subset while preserving full-run auditability.
+
+    Returns (selected_events, stats). Unselected events remain in evidence.jsonl
+    on disk; only the briefing surfaces (writing-brief / evidence-appendix) are
+    capped so pathological event counts cannot blow writer context.
+    """
+    caps = dict(stance_caps or DEFAULT_WRITER_STANCE_CAPS)
+    by_stance: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    unlabeled: list[dict[str, Any]] = []
+    for event in sorted(events, key=event_sort_key):
+        stance = str(event.get("stance") or "")
+        if stance in STANCE_ORDER:
+            by_stance[stance].append(event)
+        else:
+            unlabeled.append(event)
+    selected: list[dict[str, Any]] = []
+    omitted_by_stance: dict[str, int] = {}
+    for stance in STANCE_ORDER:
+        group = by_stance.get(stance, [])
+        limit = int(caps.get(stance, 0))
+        kept = group[:limit]
+        selected.extend(kept)
+        omitted = len(group) - len(kept)
+        if omitted:
+            omitted_by_stance[stance] = omitted
+    # Unlabeled stances are rare; keep a small fixed window for visibility.
+    unlabeled_cap = 4
+    selected.extend(unlabeled[:unlabeled_cap])
+    if len(unlabeled) > unlabeled_cap:
+        omitted_by_stance["unlabeled"] = len(unlabeled) - unlabeled_cap
+    stats = {
+        "total_events": len(events),
+        "writer_events": len(selected),
+        "stance_caps": caps,
+        "omitted_by_stance": omitted_by_stance,
+        "omitted_total": sum(omitted_by_stance.values()),
+    }
+    return selected, stats
+
+
+def format_writer_cap_note(stats: dict[str, Any]) -> str:
+    caps = stats.get("stance_caps") or {}
+    cap_bits = ", ".join(f"{stance}≤{caps.get(stance, 0)}" for stance in STANCE_ORDER)
+    omitted = stats.get("omitted_by_stance") or {}
+    if omitted:
+        omit_bits = ", ".join(f"{stance}:{count}" for stance, count in sorted(omitted.items()))
+        omit_line = f"- Writer subset omitted {stats.get('omitted_total', 0)} event(s) by stance ({omit_bits}); full set remains in `evidence.jsonl`."
+    else:
+        omit_line = "- Writer subset includes every loaded event (under stance caps)."
+    return "\n".join(
+        [
+            "## Writer evidence caps (token optimization)",
+            "",
+            f"- Stance caps: {cap_bits}",
+            f"- Events in this brief/appendix: {stats.get('writer_events', 0)} / {stats.get('total_events', 0)} loaded",
+            omit_line,
+            "- Claim-support and citation audits still use the complete `evidence.jsonl`, not this capped projection.",
+            "",
+        ]
+    )
+
 
 def render_writing_brief(
     topic: str,
@@ -941,9 +1032,16 @@ def render_writing_brief(
     review_mode: str | None = None,
     coverage_report: dict[str, Any] | None = None,
     abstract_events: list[dict[str, Any]] | None = None,
+    writer_stats: dict[str, Any] | None = None,
+    all_events: list[dict[str, Any]] | None = None,
 ) -> str:
-    """The writer-facing brief: raw material organized for prose, not for audit."""
-    state = sufficiency_state(events, fallback_sources, review_mode, coverage_report)
+    """The writer-facing brief: raw material organized for prose, not for audit.
+
+    ``events`` should already be the capped writer subset. Pass ``all_events`` +
+    ``writer_stats`` so sufficiency/counts still reflect the full evidence set.
+    """
+    audit_events = all_events if all_events is not None else events
+    state = sufficiency_state(audit_events, fallback_sources, review_mode, coverage_report)
     caveats = [
         event
         for event in sorted(events, key=event_sort_key)
@@ -970,14 +1068,23 @@ def render_writing_brief(
         f"- Coverage and saturation gate: {'passed' if state['coverage_ready'] else 'blocked'}",
         f"- Writing readiness: {state['status']}",
         "- Unresolved checks: " + (", ".join(str(item) for item in state["unresolved"]) or "none"),
-        f"- Accepted events: {len(events)}",
-        "",
-        "## 中心论点候选(从张力对中提炼,不要照抄)",
-        "",
-        "综述的中心论点应回答:这批证据合在一起说明了什么矛盾/机制/转变?",
-        "以下 support ⟷ limit/conditional 张力对是论点候选的原料:",
+        f"- Accepted events (full evidence set): {len(audit_events)}",
+        f"- Writer-facing events (capped): {len(events)}",
         "",
     ]
+    if writer_stats:
+        lines.extend(format_writer_cap_note(writer_stats).splitlines())
+        if lines[-1] != "":
+            lines.append("")
+    lines.extend(
+        [
+            "## 中心论点候选(从张力对中提炼,不要照抄)",
+            "",
+            "综述的中心论点应回答:这批证据合在一起说明了什么矛盾/机制/转变?",
+            "以下 support ⟷ limit/conditional 张力对是论点候选的原料:",
+            "",
+        ]
+    )
     pairs = tension_pairs(events)
     lines.extend(pairs if pairs else ["- 证据中没有明显的 stance 张力;考虑以共识+边界作为组织轴。"])
     lines.extend(["", "## 按主题聚类的证据(写作时按论证重组,不要按此顺序罗列)", ""])
@@ -1045,22 +1152,30 @@ def render_evidence_appendix(
     events: list[dict[str, Any]],
     time_range: str | None = None,
     abstract_events: list[dict[str, Any]] | None = None,
+    writer_stats: dict[str, Any] | None = None,
 ) -> str:
     """Per-event appendix; each `### <event_id>` heading is the anchor target for in-text event links.
 
     Abstract-tier events share ONE section (`### 摘要级相关工作`) instead of one
     heading each: they are positioning material, and that single heading is the
-    only anchor they can be linked through."""
+    only anchor they can be linked through. ``events`` should be the capped
+    writer subset; full evidence remains in evidence.jsonl.
+    """
     abstract_events = abstract_events or []
     lines = [
         f"# Evidence Appendix: {topic}",
         "",
         f"- Time range: {time_range or 'not provided'}",
-        f"- Events: {len(events)}",
-        *( [f"- Abstract-tier events: {len(abstract_events)}"] if abstract_events else [] ),
+        f"- Events in this appendix: {len(events)}"
+        + (f" / {writer_stats.get('total_events')} loaded" if writer_stats else ""),
+        *([f"- Abstract-tier events: {len(abstract_events)}"] if abstract_events else []),
         "- 每个事件一节,标题即锚点;trace-map 中的 event 链接跳转到这里。",
+        "- Writer stance caps may omit events from this appendix; the complete set stays in `evidence.jsonl` for audits.",
         "",
     ]
+    if writer_stats:
+        lines.extend(format_writer_cap_note(writer_stats).rstrip().splitlines())
+        lines.append("")
     for event in sorted(events, key=event_sort_key):
         event_id = str(event.get("event_id") or "missing-event-id")
         evidence = event.get("evidence") or {}
@@ -1404,6 +1519,8 @@ def render_output_artifacts(
     emit_scaffold: bool = False,
     review_mode: str | None = None,
     coverage_report: dict[str, Any] | None = None,
+    writer_stance_caps: dict[str, int] | None = None,
+    uncapped_writer: bool = False,
 ) -> dict[str, str]:
     """Assemble the briefing bundle.
 
@@ -1420,17 +1537,32 @@ def render_output_artifacts(
 
     fulltext_events, abstract_events = split_tiers(events)
 
+    if uncapped_writer:
+        writer_events = list(events)
+        writer_stats = {
+            "total_events": len(events),
+            "writer_events": len(events),
+            "stance_caps": dict(writer_stance_caps or DEFAULT_WRITER_STANCE_CAPS),
+            "omitted_by_stance": {},
+            "omitted_total": 0,
+            "uncapped": True,
+        }
+    else:
+        writer_events, writer_stats = cap_events_for_writer(events, writer_stance_caps)
+
     def brief() -> str:
         return render_writing_brief(
             topic,
             knowledge_ids,
-            fulltext_events,
+            writer_events,
             source_ids,
             time_range,
             fallback_sources,
             review_mode,
             coverage_report,
             abstract_events=abstract_events,
+            writer_stats=writer_stats,
+            all_events=events,
         )
 
     def scaffold(output_style: str) -> str:
@@ -1455,9 +1587,9 @@ def render_output_artifacts(
             abstract_events=abstract_events,
         )
         artifacts[BRIEF_FILENAME] = brief()
-        if fulltext_events or abstract_events:
+        if fulltext_events or abstract_events or writer_events:
             artifacts[APPENDIX_FILENAME] = render_evidence_appendix(
-                topic, fulltext_events, time_range, abstract_events=abstract_events
+                topic, writer_events, time_range, abstract_events=abstract_events, writer_stats=writer_stats
             )
         if emit_scaffold:
             for output_style in DEFAULT_OUTPUT_STYLES:
@@ -1466,9 +1598,9 @@ def render_output_artifacts(
         # Explicit formal style: never emit a file that looks like a finished article.
         artifacts[scaffold_filename(style)] = scaffold(style)
         artifacts[BRIEF_FILENAME] = brief()
-        if fulltext_events or abstract_events:
+        if fulltext_events or abstract_events or writer_events:
             artifacts[APPENDIX_FILENAME] = render_evidence_appendix(
-                topic, fulltext_events, time_range, abstract_events=abstract_events
+                topic, writer_events, time_range, abstract_events=abstract_events, writer_stats=writer_stats
             )
     else:
         # survey / related-work / positioning keep their packet-flavored artifact.
@@ -1657,6 +1789,19 @@ def build_parser() -> argparse.ArgumentParser:
              "over --work-dir; --output still wins when given.",
     )
     parser.add_argument("--output", help="Write Markdown artifact to this path. Use '-' for stdout. Defaults to work/<project>/ when omitted.")
+    parser.add_argument(
+        "--writer-stance-caps",
+        default=None,
+        help=(
+            "Comma-separated per-stance caps for writing-brief/evidence-appendix "
+            "(default support=8,limit=6,conditional=6,gap=4). Full evidence.jsonl is never capped."
+        ),
+    )
+    parser.add_argument(
+        "--uncapped-writer",
+        action="store_true",
+        help="Disable writer brief/appendix stance caps (debug/audit only).",
+    )
     return parser
 
 
@@ -1716,6 +1861,7 @@ def main(argv: list[str] | None = None) -> int:
         coverage_report = apply_reading_gate(fulltext_events, args.review_mode, coverage_report, reading_summary)
     cards = load_topic_cards([Path(path) for path in args.topic_card])
     source_ids = load_source_ids(Path(args.source_file)) if args.source_file else []
+    stance_caps = parse_stance_caps(args.writer_stance_caps)
     artifacts = render_output_artifacts(
         args.topic,
         args.knowledge_id,
@@ -1728,6 +1874,8 @@ def main(argv: list[str] | None = None) -> int:
         emit_scaffold=args.emit_scaffold,
         review_mode=args.review_mode,
         coverage_report=coverage_report,
+        writer_stance_caps=stance_caps,
+        uncapped_writer=args.uncapped_writer,
     )
     if args.consolidate_evidence and events:
         artifacts["evidence.jsonl"] = consolidated_evidence_lines(events)

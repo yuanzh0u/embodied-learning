@@ -1,0 +1,351 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.04455",
+  "title": "The brain as a blueprint: a survey of brain-inspired approaches to learning in artificial intelligence",
+  "published": "2025-11-06T15:26:18Z",
+  "url": "https://arxiv.org/abs/2511.04455",
+  "authors": [
+   "Guillaume Etter"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "survey",
+  "relevance": {
+   "decision": "include",
+   "reason": "单作者视角性综述,系统梳理'以脑为蓝图'的学习路线(中间神经元微电路、生物合理性 credit assignment、burst/BTSP 可塑性、持续学习、神经形态硬件),为综述问题提供生物合理性学习规则这条支线的领域地图、规模化证据与双重边界判断。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认综述命题:深度学习成功建立在四项脑启发原则上,但反向传播不可信生物学、且难以增量积累知识;失败案例常反映神经科学理解缺口。"
+   },
+   {
+    "locator": "2.1 Computing errors locally with inhibitory interneurons",
+    "role": "relevant-core",
+    "purpose": "理解 PV/SOM/VIP 中间神经元微电路如何提供局部误差计算与学习门控。"
+   },
+   {
+    "locator": "2.1.4 Implementing inhibitory interneurons in ANNs",
+    "role": "method-or-design",
+    "purpose": "收集 Dale 原则 ANN 的训练效率结论,即类脑架构约束的实现证据。"
+   },
+   {
+    "locator": "2.2 Biologically plausible credit assignment",
+    "role": "method-or-design",
+    "purpose": "掌握 credit assignment 家族谱系:BP→feedback alignment→sign symmetry→target propagation→DTP→FW-DTP。"
+   },
+   {
+    "locator": "2.3.5 Silence, single, and bursting activity: ternary code of biological neural networks",
+    "role": "method-or-design",
+    "purpose": "理解 burst 三元编码与 Burstprop 的机制及其验证规模(MNIST、数百神经元)。"
+   },
+   {
+    "locator": "2.4 The continual learning challenge",
+    "role": "results-or-analysis",
+    "purpose": "收集持续学习/灾难性遗忘缺口与脑启发应对方向(结构改变、重放、实时振荡)。"
+   },
+   {
+    "locator": "Neuromorphic computing",
+    "role": "results-or-analysis",
+    "purpose": "收集神经形态/忆阻器硬件的能耗潜力主张与器件级限制。"
+   },
+   {
+    "locator": "Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者结论:von Neumann 硬件与神经科学知识前沿构成类脑路线的双重边界。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1.1 Parvalbumin interneurons / 2.1.2 Somatostatin interneurons / 2.1.3 VIP interneurons",
+    "reason": "三类中间神经元的生理学细节,其 AI 含义已在 2.1 与 2.1.4 节获得。"
+   },
+   {
+    "locator": "2.3.1 Long-term potentiation / 2.3.2 Spike-time-dependent plasticity / 2.3.3 Behavioral timescale plasticity / 2.3.4 Role of backpropagating associated calcium spikes in plasticity",
+    "reason": "LTP/STDP/BTSP/BAC 尖峰的基础生理学背景,综述所需结论已在 2.3.5 与结论中覆盖。"
+   },
+   {
+    "locator": "2.4.1 Continual learning with structural changes / 2.4.2 Continual learning with replay / 2.4.3 Continual learning in real-time",
+    "reason": "持续学习子方向细节,主线判断(灾难性遗忘缺口+振荡假说)已从 2.4 母节获得。"
+   }
+  ]
+ },
+ "research_question": "哪些近期神经科学发现(局部误差计算的中间神经元微电路、生物合理的 credit assignment、行为时间尺度/burst 可塑性、持续学习机制、神经形态硬件)已被成功移植进人工智能模型,其成功与失败各说明了什么,下一步有前景的方向在哪里?",
+ "contributions": [
+  "按计算环节组织'以脑为蓝图'的学习路线图:局部误差计算(PV/SOM/VIP 微电路)→credit assignment(FA/sign symmetry/TP/DTP/FW-DTP)→可塑性规则(STDP/BTSP/burst 三元编码)→持续学习→神经形态硬件",
+  "梳理并对比生物合理性 credit assignment 家族,指出严格权重对称性并非深度网络学习的必要条件",
+  "将 BTSP、burst 依赖可塑性与 theta 振荡序列等新近神经科学发现定位为下一代 AI 的候选测试场,并明确其大多尚处假说阶段",
+  "给出双边界判断:类脑算法进展受神经科学知识前沿限制,而 spike-based 学习规则的落地受 von Neumann 硬件限制"
+ ],
+ "method": {
+  "summary": "单作者叙事性综述(narrative review),不做系统检索或统一基准评测。作者按'神经科学证据→AI 实现尝试→成功/失败教训'的结构分节论述,引用以编号文献为主,并用一张对照表汇总各 credit assignment 算法的成就与主要局限。结论部分上升为对类脑路线整体约束(硬件、知识前沿)的判断。",
+  "assumptions": [
+   "AI 的下一个突破仍可能来自神经科学发现的外译,这一历史模式( CNN、注意力)会延续",
+   "生物合理性(局部性、无权重传输、训练推理不分离)是评估学习规则的核心轴,而非仅看精度"
+  ]
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [],
+  "embodiments": [],
+  "sample_or_scale": "覆盖范围:神经科学侧(中间神经元微电路、BTSP、BAC 尖峰、theta 序列/重放)与机器学习侧(feedback alignment、sign symmetry、target propagation/DTP/FW-DTP、Burstprop、Dale 原则 ANN、持续学习、忆阻器神经形态硬件)的交叉文献;无自产实验,被引实证规模从 MNIST(数百神经元)到 ImageNet 不等"
+ },
+ "evaluation": {
+  "design": "综述组织框架而非实验评测:按误差信号来源、credit assignment、突触可塑性、持续学习、硬件基底五个计算环节分节;每节先给神经科学机制,再审查 ANN 实现的成功与局限",
+  "baselines": [
+   "反向传播(作为生物合理性对照的参照系)",
+   "feedback alignment / sign symmetry",
+   "target propagation / DTP / FW-DTP",
+   "Burstprop",
+   "常规非 Dale 原则 ANN"
+  ],
+  "metrics": [
+   "定性判断:与 BP 的精度接近程度、收敛稳定性、生物合理性(局部性/权重传输)",
+   "转述被引工作的数据集级结果(MNIST、ImageNet)"
+  ],
+  "ablations": []
+ },
+ "findings": [
+  {
+   "finding": "权重对称性可以放宽:固定随机反馈(feedback alignment)或仅共享符号(sign symmetry)仍能学习,sign symmetry 在 ImageNet 上已接近反向传播精度",
+   "scope": "被引工作,图像分类",
+   "locator": "2.2.3 Sign symmetry"
+  },
+  {
+   "finding": "FW-DTP 固定反馈权重即可向隐层传递有效目标,训练开销显著降低,且在多个图像分类数据集上常优于标准 DTP",
+   "scope": "被引工作",
+   "locator": "2.2.7 Fixed-weight difference target propagation"
+  },
+  {
+   "finding": "Burstprop 在 MNIST 图像分类上(数百神经元网络)取得与 BPTT 可比的低测试误差,是 burst 三元编码学习规则最有代表性的实证",
+   "scope": "被引工作,小规模网络",
+   "locator": "2.3.5 Silence, single, and bursting activity: ternary code of biological neural networks"
+  },
+  {
+   "finding": "遵循 Dale 原则(兴奋/抑制神经元分工)的 ANN,只要抑制居中并标准化兴奋信号,就能以与常规 ANN 相同的效率训练",
+   "scope": "被引工作",
+   "locator": "2.1.4 Implementing inhibitory interneurons in ANNs"
+  },
+  {
+   "finding": "灾难性遗忘仍是当前神经网络的重大挑战,新任务重训练通常导致旧知识丢失;综述以结构改变、重放与实时振荡机制为脑启发应对方向",
+   "scope": "领域级判断",
+   "locator": "2.4 The continual learning challenge"
+  },
+  {
+   "finding": "作者判断:von Neumann 硬件终将限制生物合理 AI 系统的实现(尤其依赖 spike-based 学习规则者),且该路线进展受限于神经科学知识前沿本身",
+   "scope": "结论级判断",
+   "locator": "Conclusions"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "类脑/生物合理算法的进展受限于神经科学知识前沿本身,神经生理实验对 AI 从业者仍有重大价值",
+    "locator": "Conclusions"
+   },
+   {
+    "limitation": "von Neumann 硬件最终难以实现生物合理系统,特别是依赖 spike-based 学习规则的系统",
+    "locator": "Conclusions"
+   },
+   {
+    "limitation": "忆阻器器件存在显著变异性(器件间/循环间波动)、有限擦写寿命、非理想开关特性与难以精确增量更新等问题,大规模可靠集成仍是挑战",
+    "locator": "Neuromorphic computing"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "叙事性综述而非系统综述:未声明检索协议与筛选标准,覆盖面受单作者选择偏置影响,不能当作完备的路线清单使用",
+    "basis": "全文无检索方法学描述,章节为作者自选主题"
+   },
+   {
+    "boundary": "文中生物合理性学习规则的实证规模有限:burst 类止步于 MNIST/数百神经元,ImageNet 级仅 sign symmetry 等放宽对称性变体;不能外推为局部学习规则已具备 LLM 规模竞争力",
+    "basis": "2.3.5 节明确 networks with hundreds of neurons;2.2.3 节 ImageNet 结论仅属 sign symmetry"
+   }
+  ]
+ },
+ "transfer_boundary": "本综述的判断是领域级定性结论,不能当定量证据使用:'接近 BP 精度'等表述均转引自被引文献且限于图像分类;其生物合理性主张不可外推到脉冲大模型、器官智能等未覆盖子领域,亦不构成对任何具体 SNN 训练算法性能的度量。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "跨神经科学-机器学习双视角,把机制(微电路/可塑性)与算法(FA/DTP/Burstprop)逐一对接",
+   "按计算环节组织谱系,并为各 credit assignment 算法给出成就-局限对照表",
+   "同时给出正面证据(可放宽权重对称、Dale 原则可行)与边界判断(硬件、知识前沿)"
+  ],
+  "design_risks": [
+   "单作者叙事综述,无系统检索协议,可能存在选择与确认偏置",
+   "无定量荟萃或统一基准,各路线实证强度不可直接比较",
+   "BTSP、theta 序列实时学习等前沿主张仍属假说,证据等级未分级标注"
+  ],
+  "baseline_fairness": "无自有实验基线;对被引算法局限的描述基于原文献,未见明显贬抑或拔高,但公平性依赖原文献报告",
+  "metric_validity": "以定性判断为主,仅在转述被引工作时提及 MNIST/ImageNet 等数据集,无统一可比指标",
+  "reproducibility": "无可复现代码与检索协议;引用编号密集,多数结论可回溯到被引文献,但综述本身不可复现",
+  "external_validity": "结论限定于脑启发学习规则子领域;对脉冲大模型与器官智能仅间接相关,未涉及具身或多模态场景"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.04455-C01",
+   "claim": "该综述主张:深度学习的既有成功建立在四项脑启发原则之上,而把脑机制移植进 AI 的失败案例往往反映的是对生物计算理解本身的局限,因此需要持续将神经科学新发现转化为人工智能模型,并以此反过来检验脑功能理论。",
+   "stance": "support",
+   "relation": "为综述问题提供领域级理由:脑启发路线值得持续跟踪,其瓶颈常在神经科学知识而非工程,界定了'类脑模型'支线的证据来源。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言中作者把移植失败归因于对生物计算的理解局限,并据此提出双向检验(翻译神经科学进 AI、用 AI 测脑理论)的纲领。",
+   "locator": "1 Introduction",
+   "source_context": "In parallel, this also suggests that failures to implement aspects of the brain into AI models often reflects limits in our understanding of biological computations.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对:作者明确把'移植失败'归因于生物计算理解的局限,紧接的句子提出需要定期评估神经科学进展并翻译进人工模型,与卡片主张的因果与纲领表述一致。"
+   }
+  },
+  {
+   "card_id": "2511.04455-C02",
+   "claim": "综述转述被引工作:放宽反向传播的严格权重对称性后学习仍然有效——仅共享权重符号的 sign symmetry 网络在 ImageNet 等数据集上已接近反向传播的精度,说明精确权重传输并非深度网络学习的必要条件。",
+   "stance": "support",
+   "relation": "支持'生物合理性 credit assignment 路线已在大规模视觉任务上接近 BP'的进展主张,是类脑学习规则少数达到 ImageNet 规模的证据点。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "2.2.3 节转述 sign symmetry 在 ImageNet 上接近 BP 精度,并连同 feedback alignment 说明权重对称可放宽。",
+   "locator": "2.2.3 Sign symmetry",
+   "source_context": "Interestingly, networks trained with sign symmetry have also demonstrated promising performance on challenging datasets like ImageNet, approaching the accuracy of backpropagation in some cases.",
+   "evidence_type": "cited-result",
+   "quantitative": {
+    "metric": "accuracy",
+    "value_or_direction": "approaching the accuracy of backpropagation in some cases",
+    "comparator": "backpropagation",
+    "task_or_sample": "ImageNet and other challenging datasets",
+    "locator": "2.2.3 Sign symmetry"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 2.2.3 节原句逐字核对;'approaching the accuracy of backpropagation in some cases'明确限定在部分情况下接近,故卡片主张保留'已接近/部分情况'措辞而非等同,数据集限定 ImageNet 等具有挑战性的数据集。"
+   }
+  },
+  {
+   "card_id": "2511.04455-C03",
+   "claim": "综述转述被引工作:固定反馈权重的 FW-DTP 无需学习反馈通路即可向隐层传递有效目标,显著降低训练计算成本,并在多个图像分类数据集上常取得高于标准 DTP 的测试性能——说明层间目标重构的训练并非目标传播有效性的必要条件。",
+   "stance": "support",
+   "relation": "支持'目标传播类局部学习规则可通过固定反馈通路削减开销且性能不降'的主张,给出该路线在图像分类上的相对基线。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "2.2.7 节描述 FW-DTP 固定反馈权重带来的成本下降与性能改进,并据此质疑反馈权重学习的必要性。",
+   "locator": "2.2.7 Fixed-weight difference target propagation",
+   "source_context": "FW-DTP can achieve improved stability during training and often exhibits higher test performance compared to standard DTP on various image classification datasets.",
+   "evidence_type": "cited-result",
+   "quantitative": {
+    "metric": "test performance",
+    "value_or_direction": "improved stability and often higher test performance",
+    "comparator": "standard DTP",
+    "task_or_sample": "various image classification datasets",
+    "locator": "2.2.7 Fixed-weight difference target propagation"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 2.2.7 节;'often'表明是多数情况而非恒定优于,卡片措辞保留'常取得';成本下降主张出自同节前句'By fixing the feedback weights, FW-DTP significantly reduces the computational cost associated with training'。"
+   }
+  },
+  {
+   "card_id": "2511.04455-C04",
+   "claim": "条件性证据:基于 burst 三元编码(静默/单脉冲/burst)的 Burstprop,在 MNIST 图像分类上用数百神经元的网络取得与 BPTT 可比的低测试误差;该结论成立条件是小规模网络与 MNIST 级任务,尚不能外推到大规模或语言模型场景。",
+   "stance": "conditional",
+   "relation": "定位 burst/局部学习规则相对反向传播的差距:机制可行但实证止步于 MNIST 与数百神经元规模,与脉冲大模型之间存在数量级跨度。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "2.3.5 节转述 Burstprop 在 MNIST 上与 BPTT 可比,网络规模为数百神经元,并被定位为可运行于神经形态硬件的学习方法。",
+   "locator": "2.3.5 Silence, single, and bursting activity: ternary code of biological neural networks",
+   "source_context": "Experimental results have shown that Burstprop can achieve low test classification errors on MNIST, with performance levels that are comparable to those obtained using backpropagation through time on the same network architectures.",
+   "evidence_type": "cited-result",
+   "quantitative": {
+    "metric": "test classification errors",
+    "value_or_direction": "low, comparable to backpropagation through time",
+    "comparator": "backpropagation through time",
+    "task_or_sample": "MNIST image classification with networks of hundreds of neurons",
+    "locator": "2.3.5 Silence, single, and bursting activity: ternary code of biological neural networks"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 2.3.5 节;同节前句明确'tasks like image classification on the MNIST dataset using networks with hundreds of neurons'限定规模,故卡片以条件性措辞记录,主张范围与原文完全一致。"
+   }
+  },
+  {
+   "card_id": "2511.04455-C05",
+   "claim": "边界:作者判断 von Neumann 架构终将无法胜任生物合理 AI 系统的实现,尤其是依赖 spike-based 学习规则的系统;且该类算法的进展最终受限于神经科学知识前沿,神经生理实验对 AI 从业者仍有重大价值。",
+   "stance": "limit",
+   "relation": "为综述问题标出类脑路线的结构性边界:算法-硬件协同(von Neumann 瓶颈)与经验证据来源(神经科学前沿)双重约束,任何'类脑已实用'的强主张都受此限制。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节把硬件约束与知识前沿约束并列为类脑算法推进的两道限制,同时肯定神经形态硬件的替代潜力。",
+   "locator": "Conclusions",
+   "source_context": "Critically, von Neumann hardware will eventually be limited in its ability to implement biologically plausible artificial systems, in particular those that rely on spike-based learning rules.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为结论节原句逐字核对;'知识前沿限制'出自同节后句'progress for these bioplausible algorithms is limited by the very knowledge frontier in neuroscience',两处共同支撑卡片的双重边界表述。"
+   }
+  },
+  {
+   "card_id": "2511.04455-C06",
+   "claim": "缺口:持续学习中的灾难性遗忘仍是当前神经网络的重大挑战——在新任务上重训练通常会丢失先前知识;综述将结构改变、经验重放与实时振荡(theta 序列)等脑启发机制列为应对方向,但其中实时振荡机制仍属推测性假说。",
+   "stance": "gap",
+   "relation": "记录类脑路线的核心能力缺口(增量/终身学习),这是衡量类脑模型相对标准深度学习边界、也是器官智能等路线宣称优势的关键轴。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2.4 节把灾难性遗忘定位为当前网络的重大挑战;2.4.3 节自述该节探讨的是已知生理机制在持续学习中的'更推测性角色'。",
+   "locator": "2.4 The continual learning challenge",
+   "source_context": "This currently still poses a significant challenge for current neural networks, as re-training a model on new tasks will usually lead to the loss of previous knowledge",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 2.4 节,支撑灾难性遗忘仍是重大挑战的判断;'推测性假说'措辞依据 2.4.3 节开头'This section will explore more speculative roles of known physiological mechanisms in continual learning',主张范围与原文一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Feedback Alignment"
+  },
+  {
+   "title": "Sign symmetry learning"
+  },
+  {
+   "title": "Difference Target Propagation (DTP)"
+  },
+  {
+   "title": "Fixed-Weight Difference Target Propagation (FW-DTP)"
+  },
+  {
+   "title": "Burstprop: burst-dependent plasticity learning"
+  },
+  {
+   "title": "Behavioral timescale plasticity (BTSP)"
+  }
+ ],
+ "notes": "单作者视角性综述(分类 q-bio.NC),作者 Guillaume Etter。定位是神经科学→机器学习的外译路线图,而非 SNN 训练算法综述;对本综述的价值在于给出'生物合理性学习'支线的领域判断与规模边界(sign symmetry 到 ImageNet、Burstprop 到 MNIST),可与 NeuroTrain(2605.15058)的基准化视角互补。"
+}

@@ -1,0 +1,386 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.00153",
+  "title": "EgoMI: Learning Active Vision and Whole-Body Manipulation from Egocentric Human Demonstrations",
+  "published": "2025-10-31",
+  "url": "https://arxiv.org/abs/2511.00153",
+  "authors": [
+   "Justin Yu",
+   "Yide Shentu",
+   "Di Wu",
+   "Pieter Abbeel",
+   "Ken Goldberg",
+   "Philipp Wu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "EgoMI 是 robot-free ego-centric 采集系统，手部追踪走 VR 手柄 6-DoF 而非视觉手部检测；Table I 给出 UMI/AirExo-2/EgoMI 三类 robot-free 方案的末端追踪误差（mm 级），并明确指出 robot-free 采集下示教设备精度直接决定数据质量，直接命中综述问题的精度-可用性链条。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认 embodiment gap 与 ego 数据中头-手协同问题定位。"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "对照 EgoMimic/DexCap/ARCap 等手部追踪采集路线。"
+   },
+   {
+    "locator": "C. Policy learning with Active Vision",
+    "role": "relevant-core",
+    "purpose": "Table I 追踪误差对比与 robot-free 精度依赖性论述。"
+   },
+   {
+    "locator": "III. EGOMI SYSTEM",
+    "role": "method-or-design",
+    "purpose": "系统总览。"
+   },
+   {
+    "locator": "A. Data Collection Hardware",
+    "role": "method-or-design",
+    "purpose": "Quest 3S 手柄 6-DoF 追踪 + ZED 2i + 法兰/夹爪硬件对齐。"
+   },
+   {
+    "locator": "B. Operator Gaze and Active Vision Data",
+    "role": "method-or-design",
+    "purpose": "无眼动追踪时用 reticle 代理视线及其失败观察。"
+   },
+   {
+    "locator": "C. Data Reformatting and Cleaning",
+    "role": "method-or-design",
+    "purpose": "SE(3) 平滑阈值过滤、坐标系重定向、flange/TCP 标定——误差缓解管线。"
+   },
+   {
+    "locator": "D. Robot Setup: Wheeled-Humanoid with Active Head",
+    "role": "data-or-setting",
+    "purpose": "目标机器人 Rainbow RBY1 + YAM 主动头。"
+   },
+   {
+    "locator": "IV. METHOD",
+    "role": "method-or-design",
+    "purpose": "方法总览。"
+   },
+   {
+    "locator": "A. Policy Interface: 29D Action and State Representation",
+    "role": "method-or-design",
+    "purpose": "29D 动作/状态表示与相对化参数化。"
+   },
+   {
+    "locator": "B. Spatial-Aware Robust Keyframe Selection (SPARKS)",
+    "role": "method-or-design",
+    "purpose": "关键帧记忆机制，应对头部快速视角切换。"
+   },
+   {
+    "locator": "C. Policy Training",
+    "role": "method-or-design",
+    "purpose": "π0 两阶段微调到 29D 相对笛卡尔空间；约 200 小时 EgoMI 数据。"
+   },
+   {
+    "locator": "D. Policy Deployment",
+    "role": "method-or-design",
+    "purpose": "可微 IK（Pyroki）graceful degradation 重定向。"
+   },
+   {
+    "locator": "V. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "实验设计：零机器人数据迁移。"
+   },
+   {
+    "locator": "A. Data Collection and Policy Training",
+    "role": "data-or-setting",
+    "purpose": "每任务 1-1.5 小时数据、40k 步训练。"
+   },
+   {
+    "locator": "B. Searching Tasks",
+    "role": "results-or-analysis",
+    "purpose": "29D vs 20D vs 固定头部的定量消融。"
+   },
+   {
+    "locator": "C. Memory Tasks",
+    "role": "results-or-analysis",
+    "purpose": "SPARKS vs 单帧策略消融。"
+   },
+   {
+    "locator": "VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，scoping 深度不逐条核对。"
+   }
+  ]
+ },
+ "research_question": "如何利用 ego-centric 人类演示（含主动头部运动）训练可零样本重定向到半人形机器人的全身操作策略，并弥合人-机 embodiment gap？",
+ "contributions": [
+  "EgoMI 采集系统：Quest 3S VR 头显提供头部与手柄 6-DoF 追踪，ZED 2i 第一视角相机，腕相机安装点与 Robotiq 2F-85 法兰接口，robot-free 同步记录头/手/夹爪/视频流。",
+  "29D 动作/状态表示（双手 6D 旋转+3D 位置+夹爪 + 头部 6D+3D）与两阶段 π0 微调到相对笛卡尔空间。",
+  "SPARKS 关键帧选择提供空间记忆；可微 IK 实现无需手工轨迹过滤的 graceful degradation 重定向。",
+  "真实机器人实验：主动头建模在搜索/记忆任务上显著优于无头基线。"
+ ],
+ "method": {
+  "summary": "操作者佩戴 Quest 3S，手柄触发器映射到真实夹爪驱动；采集的头/手 SE(3) 轨迹经视频时序检查与 SE(3) 平移/旋转增量平滑阈值过滤，再按首帧头部位置与双手前向方向重定向到机器人规范坐标系，并经 VR 手柄→法兰→TCP 标定链变换。策略以 29D 向量（世界系绝对、训练时左手/头部相对右手参数化）训练，部署时可微 IK（Pyroki）把双手+头部目标解算到 RBY1+YAM 关节。",
+  "assumptions": [
+   "VR 手柄 6-DoF 追踪精度足以替代视觉手部检测，作为末端轨迹真值来源。",
+   "头部朝向可作为视觉注意中心的可靠代理（reticle 居中约束）。",
+   "目标机器人具有可复现人头/手运动范围的主动头与双臂。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "约 200 小时 EgoMI 多任务演示（通用微调）",
+   "每任务 1-1.5 小时任务专属数据"
+  ],
+  "tasks": [
+   "Tabletop Search（桌面搜索+双手交接）",
+   "Shelf Search（2.4m 货架搜索+交接）",
+   "Memory Task（90° 侧桌记忆取物）"
+  ],
+  "embodiments": [
+   "Rainbow RBY1 轮式半人形（6-DoF 躯干 + 2×7-DoF 臂）",
+   "I2RT YAM + ZED2i 主动头"
+  ],
+  "sample_or_scale": "每任务评测 40 次 rollout（成功计点制）；策略训练 40k 步约 50 小时。"
+ },
+ "evaluation": {
+  "design": "真实机器人零机器人数据迁移；对照 29D（头+手）vs 20D（仅手腕相机+手部 SE(3)）vs 固定头部目标；记忆任务对照单帧 vs SPARKS。",
+  "baselines": [
+   "20D wrist camera-only policy",
+   "20D + head-camera images（固定头部目标）",
+   "single-timestep policy（无记忆）"
+  ],
+  "metrics": [
+   "任务成功率/得分（40 次 rollout 计点）"
+  ],
+  "ablations": [
+   "头部动作输出与头部相机（29D vs 20D vs 固定头）",
+   "SPARKS 记忆 vs 单帧"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Table I：robot-free 采集方案的末端追踪误差——UMI 8.855±3.228 mm、AirExo-2 1.737±1.713 mm、EgoMI 2.126±1.216 mm；作者强调 robot-free 下示教设备精度直接决定数据质量。",
+   "scope": "采集系统层面对比",
+   "locator": "C. Policy learning with Active Vision, Table I"
+  },
+  {
+   "finding": "Tabletop 搜索：29D 36/40 优于 20D 29/40；保留头部相机但固定头部目标时仅 2/20。Shelf 搜索：29D 35/40，20D 0/40。",
+   "scope": "40 次/20 次 rollout，真实 RBY1",
+   "locator": "B. Searching Tasks"
+  },
+  {
+   "finding": "记忆任务：SPARKS 31/40 vs 单帧 21/40（接近随机）。",
+   "scope": "40 次 rollout",
+   "locator": "C. Memory Tasks"
+  },
+  {
+   "finding": "无 reticle 约束时策略 often fail completely，作者归因于自由视线漂移使出离演示分布。",
+   "scope": "定性观察",
+   "locator": "B. Operator Gaze and Active Vision Data"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "系统沉重，部分用户难以长时间使用。",
+    "locator": "VI. CONCLUSION"
+   },
+   {
+    "limitation": "机器人主动头运动范围可超出人体自然范围，重定向可能因此限制性能。",
+    "locator": "VI. CONCLUSION"
+   },
+   {
+    "limitation": "SPARKS 为固定打分启发式，不能自适应更新记忆。",
+    "locator": "VI. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "手部追踪依赖 Quest 3S VR 手柄（毫米级），其精度结论不可外推到纯单目视觉手部检测器的误差水平。",
+    "basis": "III-A 硬件基于 VR 手柄；Table I 误差为设备级测量，非视觉估计误差。"
+   },
+   {
+    "boundary": "论文未做追踪误差→下游成功率的敏感性分析，2mm 级残余误差对精细操作的影响未被隔离测量。",
+    "basis": "全文无误差注入或精度-性能消融；评测均为任务成功率。"
+   },
+   {
+    "boundary": "评测仅 40 次 rollout/任务且计点制，无常模基线对照。",
+    "basis": "V 节实验设置。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：具备 VR 级 6-DoF 手部/头部追踪硬件、目标机器人带主动头与双臂、任务为搜索+搬运类的 robot-free ego 采集；不覆盖无专用硬件的单目视频手部估计场景，也未给出视觉手部检测误差下的性能曲线。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "Table I 提供少见的跨系统末端追踪误差定量对比（mm 级 avg±std）。",
+   "29D/20D/固定头三组消融清晰隔离主动头的作用；失败模式用 Sankey 图归因。",
+   "采集-清洗-标定-重定向全链路文档化，含坐标变换公式，可复现性高。"
+  ],
+  "design_risks": [
+   "追踪误差只在设备层面报告，未与任务成功率建立剂量-响应关系。",
+   "每任务 40 次 rollout、无统计检验；固定头条件仅 20 次。",
+   "无视觉手部检测对照组，无法回答'视觉手部追踪要达到什么精度才可用'。"
+  ],
+  "baseline_fairness": "20D 与固定头基线共享训练协议，隔离变量合理；但无常模/遥操作常模对照。",
+  "metric_validity": "成功计点直接反映任务完成；无轨迹级精度指标（如末端位置 RMSE）。",
+  "reproducibility": "作者承诺开源代码与硬件设计；变换公式、训练步数、控制频率（25Hz、40ms 推理）均写明。",
+  "external_validity": "结论限于带主动头的半人形机器人与搜索/搬运任务；对无头或固定头平台外推需谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.00153-C01",
+   "claim": "在 robot-free ego 采集系统中，末端追踪误差为毫米级且因方案而异：UMI 8.855±3.228 mm、AirExo-2 1.737±1.713 mm、EgoMI（VR 手柄）2.126±1.216 mm；作者指出 robot-free 采集下数据质量直接取决于示教设备保真度（而 on-embodiment 采集由机器人传感反馈记录，对示教设备精度不敏感）。",
+   "stance": "support",
+   "relation": "为综述问题提供稀缺的定量锚点：robot-free 路线中手部/末端追踪精度是数据质量的一阶决定因素，且现有 robot-free 系统的末端误差处于 1.7-8.9 mm 区间。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 列出各系统 Error (mm, avg±std) 与是否 robot-free/头部追踪/真夹爪；表注明确阐述 robot-free 与 on-embodiment 对示教设备精度依赖的差异。",
+   "locator": "C. Policy learning with Active Vision",
+   "source_context": "TABLE I: Comparison of teleoperation systems and their features.\nFor on-embodiment data collection, teaching device accuracy is less\ncritical since the robot records data from sensor feedback rather\nthan depending on the fidelity of the teaching device itself. Our\nproposed method, EgoMI, is the only system that simultaneously\ncaptures head and hand trajectories, supports true gripper actions,\nand enables whole-body retargeting, bridging the embodiment gap\nbetween human demonstrations and robotic execution.\nSystem \nError (mm)\n(avg\n±std\n)\nRobot-free\nCollection\nHead Pose\nTracking\nTrue Gripper\nAction\nGello N/A ✗ ✗ ✓\nALOHA N/A ✗ ✗ ✓\nUMI 8.855\n±3.228 \n✓ ✗ ✗\nAirExo-2 1.737\n±1.713 \n✓ ✗ ✗\nVIA N/A ✗ ✓ ✓\nEgoMI 2.126\n±1.216 \n✓ ✓ ✓",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "end-effector tracking error (mm, avg ± std)",
+    "value_or_direction": "UMI 8.855±3.228; AirExo-2 1.737±1.713; EgoMI 2.126±1.216",
+    "comparator": "three robot-free collection systems (Gello/ALOHA/VIA listed N/A or non-robot-free)",
+    "task_or_sample": "data collection systems comparison (Table I)",
+    "locator": "C. Policy learning with Active Vision, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table I 各行数值与表注原文逐字核对一致；claim 的'一阶决定因素'表述直接对应表注'robot-free ... depending on the fidelity of the teaching device itself'，未超出原文语义。"
+   }
+  },
+  {
+   "card_id": "2511.00153-C02",
+   "claim": "EgoMI 的 robot-free 轨迹净化与标定管线包括：视频时序检查与 SE(3) 平移/旋转增量平滑阈值过滤低质轨迹；按首帧头部水平位置与双手前向方向（circular mean yaw）把 VR 世界系重定向到机器人规范坐标系；再经 VR 手柄→机器人法兰→TCP 的固定标定链，将全部轨迹表达到机器人中心坐标系以缩小本体感知差距。",
+   "stance": "support",
+   "relation": "回答综述问题中的误差缓解手段：robot-free 手部轨迹在进入策略前经过平滑阈值过滤+坐标系重定向+标定链三级处理，而非直接使用原始追踪输出。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "C 节完整描述过滤（timing checks、SE(3) deltas 平滑阈值）与四步变换（前向估计、base origin、VR-to-base、calibration/offsets），并声明目的是最小化 proprioceptive gap。",
+   "locator": "C. Data Reformatting and Cleaning",
+   "source_context": "We develop a high-throughput conversion pipeline that\ndiscovers and validates trajectory episodes, filtering out\nlow-quality or corrupted data via video timing checks, and\ntrajectory smoothness thresholds (SE(3) translation/rotation\ndeltas). A key step is applying transforms that re-orient the\nraw data to minimize the proprioceptive gap between the\ncapture system and the target robot. Because demonstrations\nare collected in a VR system with its own arbitrary world\nframe, we align all poses to the robot’s canonical coordinate\nsystem based on the first time step data sample per-episode.\nThis is done by applying a homogeneous transform that\naligns the first timestep head position in the horizontal plane\nwith the world-frame origin and re-orienting the forward-\nfacing direction determined by the combined orientation of\nthe gripper end-effectors. Specifically, let the raw VR-frame\nposes at time t be\nT \nL\nV \n(t), T \nR\nV \n(t), T \nH\nV \n(t) ∈ SE(3)\nwhere R ∈ SO(3) and p ∈ R\n3\n. Here, L and R refer to the left\nand right end-effectors, and H to the head.\n1) Forward direction estimation: We first extract the\nforward-facing axis (the z-axes in our case) of the two end-\neffector frames at the first timestep:\nz\nL\n(t) = R\nL\nV \n(t) e\nz\n, z\nR\n(t) = R\nR\nV \n(t) e\nz\n, e\nz \n= \n\u0002\n0 0 1\n\u0003\n⊤ \n.\n\nWe project each vector onto the xy-plane and normalize:\n¯z\nL \n= \nΠ\nxy\nz\nL\n(0)\n∥Π\nxy\nz\nL\n(0)∥ \n, ¯z\nR \n= \nΠ\nxy\nz\nR\n(0)\n∥Π\nxy\nz\nR\n(0)∥ \n,\nwhere the projection operator is\nΠ\nxy\n\n\nx\ny\nz\n\n \n=\n\n\nx\ny\n0\n\n \n.\nWe then compute the yaw angles of each vector and take\nthe circular mean to avoid discontinuities:\nθ\nL \n= atan2(¯z\nL,y\n, ¯z\nL,x\n), θ\nR \n= atan2(¯z\nR,y\n, ¯z\nR,x\n),\nθ = atan2(sin θ\nL \n+ sin θ\nR\n, cos θ\nL \n+ cos θ\nR\n).\nWe define this re-orientation component as a yaw rotation\nabout the z-axis R\nz\n(θ ).\n2) Base origin from head position: We place the base-\nframe origin at the x-y position of the head from the first\ntimestep: t\nB \n= \n\u0002\np\nH,x \np\nH,y \n0\n\u0003\n⊤ \n.\n3) VR to base transform: We define the base-to-VR and\nits inverse VR-to-base transform as:\nT \nB\nV \n=\n\"\nR\nz\n(θ ) t\nB\n0 1\n#\n, T\nV\nB \n= (T \nB\nV \n)\n−1 \n=\n\"\nR\nz\n(θ )\n⊤ \n−R\nz\n(θ )\n⊤\nt\nB\n0 1\n#\n.\n4) Applying calibration and offsets: Let T \nL\nflange \nand T \nR\nflange\nbe the VR controller-to-robot flange calibration transforms,\nand T\nflange→TCP \nbe the fixed tool-center-point (TCP) offset\nfor the end-effectors. The calibrated, base-frame end-effector\nposes are then\nT \nL/R\nB \n(t) = T\nV\nB \nT \nL/R\nV \n(t) T \nL/R\nflange \nT\nflange→TCP\nFor the head, let T\nhead→cam \nbe the fixed transform from the\nVR headset to the camera:\nT \nH\nB \n(t) = T\nV\nB \nT \nH\nV \n(t) T\nhead→cam\nThis process re-expresses all trajectories in a consistent\nrobot-centric frame, minimizing the proprioceptive gap be-\ntween VR-collected demonstrations",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "span 覆盖过滤与变换全段，claim 的三级处理与原文步骤一一对应；未声称具体过滤阈值数值（原文未给出）。"
+   }
+  },
+  {
+   "card_id": "2511.00153-C03",
+   "claim": "重定向环节用可微 IK（Pyroki）替代解析 IK：把不可达位姿作为加权代价最小化问题处理，实现 graceful degradation——尽可能接近演示位姿而非执行报错，从而无需手工轨迹过滤或重训即可把不受约束的人类演示迁移到不同运动学极限的机器人。",
+   "stance": "support",
+   "relation": "对应综述问题的缓解手段：人类手部轨迹与机器人工作空间的不匹配可在 IK 层软化吸收，避免解析 IK 在不可达位姿上失败/返回空值。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "D. Policy Deployment 原段对比解析 IK 与可微 IK 在不可达位姿上的行为，并声明无需 manual trajectory filtering or retraining。",
+   "locator": "D. Policy Deployment",
+   "source_context": "Unlike analytical IK,\nwhich fails or returns nulls on unreachable poses, a differentiable\napproach treats IK as a weighted cost-minimization problem. By op-\ntimizing for end-effector pose error alongside posture regularization,\nthe system achieves ”graceful degradation” reaching as close as\nphysically possible to the demonstrated pose rather than experiencing\nexecution errors. This ensures robust transfer of unconstrained human\ndemonstrations to robot embodiments with varying kinematic limits\nwithout requiring manual trajectory filtering or retraining.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文直接支持 claim 全部要点；'软化吸收'为对 weighted cost-minimization/graceful degradation 的直译，无因果外推。"
+   }
+  },
+  {
+   "card_id": "2511.00153-C04",
+   "claim": "在宽域搜索任务上，仅用手部 SE(3)+腕相机的 20D 策略显著落后于加入头部 SE(3) 与头部相机的 29D 策略：桌面任务 29/40 vs 36/40；保留头部图像但固定头部目标时骤降至 2/20；货架任务 0/40 vs 35/40。",
+   "stance": "conditional",
+   "relation": "对综述问题的边界贡献：ego 数据的有用监督不止于手部轨迹精度——头部/视线通道缺失或被冻结会在宽域任务上造成灾难性失败，说明手部轨迹足够准并非策略可用的充分条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "B. Searching Tasks 报告三组对照的 rollout 计数，并解释 20D 因腕视角场景上下文不完整而在跨工作区协调上失败。",
+   "locator": "B. Searching Tasks",
+   "source_context": "On the tabletop task, the 29D policy achieves a success rate\nof 36/40, outperforming the 20D wrist camera-only policy, which\nachieves 29/40. Failure analysis shows that the 20D policy struggles\nprimarily in wide-spanning scenarios requiring hand transfers, often\nfailing to coordinate across the workspace due to incomplete\nscene context within only the wrist-views. By contrast, the 29D\npolicy leverages the operator’s natural pre-attentive head motion: as\noperators look toward the placement location before moving their\nhands, head-centering ensures that the placement location is already\nwithin the observation context for the policy model.\nTo further isolate the role of active head motion, we introduce an\nadditional experiment in which the model is still provided with a\nhead-camera image stream, but the ability to dynamically reposition\nthe viewpoint is removed by fixing the head target. Performance\ndrops achieving only 2/20 successful trials. Without active head\ncontrol, the policy struggles heavily with object grasping and\nplacement accuracy.\nOn the shelf task, the benefits of active head modeling are even\nmore pronounced. The 29D policy achieves 35/40 success points\n(each can placed correctly counts as one point), while the 20D\npolicy achieves 0/40. Without head pose and gaze retargeting, the\n20D model fails immediately, unable to localize off-screen targets or\ncoordinate vertical and lateral search motions.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate (points out of 40 rollouts; fixed-head condition 20 trials)",
+    "value_or_direction": "tabletop: 29D 36/40 vs 20D 29/40; fixed-head 2/20; shelf: 29D 35/40 vs 20D 0/40",
+    "comparator": "29D (head SE(3)+head camera) vs 20D (wrist-only) vs 20D+head-image-fixed-target",
+    "task_or_sample": "Tabletop Search and Shelf Search on Rainbow RBY1, 40 rollouts per condition",
+    "locator": "B. Searching Tasks"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四个比值与原文逐一核对一致；claim 限定在宽域搜索任务与该平台，relation 中的推断已用 conditional 标注且未超出消融所隔离的变量。"
+   }
+  },
+  {
+   "card_id": "2511.00153-C05",
+   "claim": "作者自述三类局限：系统沉重不利于长时间采集；机器人主动头运动范围可超出人体自然范围、重定向可能因此受限；SPARKS 为固定启发式、不能自适应更新记忆。",
+   "stance": "limit",
+   "relation": "为综述提供转移边界：人头追踪范围与机器人头部工作空间的不匹配是重定向保真度的结构性上限之一。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VI. CONCLUSION 开头连续陈述三点局限。",
+   "locator": "VI. CONCLUSION",
+   "source_context": "While EgoMI significantly narrows the embodiment gap, several\nlimitations remain. The system is heavy and difficult to use for long\ndurations for certain users. Physical embodiment mismatches also\npersist: for example, the robot’s actuated head can move beyond\nnatural human ranges, so retargeting may constrain performance.\nSPARKS, though effective, uses a fixed scoring heuristic and\ndoes not adaptively update memory; more intelligent conditioning\nmechanisms could further improve performance.",
+   "evidence_type": "discussion",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "结论节原文逐句对应三点局限；claim 未添加原文之外的局限。"
+   }
+  },
+  {
+   "card_id": "2511.00153-C06",
+   "claim": "无显式眼动追踪时，作者用注视点 reticle 约束操作者将目标置于视野中心；定性观察显示无 reticle 训练的策略经常完全失败，作者归因于自由视线漂移使轨迹与观察在部署时出离演示分布。",
+   "stance": "conditional",
+   "relation": "提示 ego 数据质量不仅取决于手部追踪：头-眼代理信号的缺失会以分布漂移形式传播为策略失败，属于采集协议层面的误差源。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "B. Operator Gaze and Active Vision Data 末尾报告无 reticle 策略经常完全失败的定性观察及其归因。",
+   "locator": "B. Operator Gaze and Active Vision Data",
+   "source_context": "Qualitatively, we observe that policies trained without the\nreticle often fail completely, likely due to free gaze variability\nand weak head–gaze correlation, which caused trajectories\nand observations to drift out of the demonstration distribution\nat deployment.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文为定性观察（often fail completely, likely due to...），claim 保留了'定性观察'与'归因于'的措辞强度，未升级为定量结论。"
+   }
+  }
+ ],
+ "core_citations": [
+  "C. Chi et al., Universal Manipulation Interface (UMI), arXiv:2402.10329（Table I 对照的 robot-free 追踪误差来源）",
+  "K. Black et al., π0, 2024（基础模型）",
+  "C. M. Kim et al., Pyroki, arXiv:2505.03728（可微 IK 重定向）"
+ ],
+ "notes": "本文手部追踪依赖 VR 手柄而非视觉手部检测，其毫米级误差不能代表单目视觉手部估计；对综述问题的价值在于提供 robot-free 采集的精度锚点与净化/标定/重定向缓解链。SPARKS 记忆消融（31/40 vs 21/40）与手部精度关联弱，未单独成卡。"
+}

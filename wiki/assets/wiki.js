@@ -6,6 +6,11 @@
     zhihu: "知乎解释版",
     xiaohongshu: "小红书版",
   };
+  const AI_TASKS = {
+    summary: "总结本专题的核心判断，按『结论—证据—边界』组织回答，并指出最值得优先阅读的论文。",
+    audit: "审查本专题的证据边界：区分论文直接支持、跨论文综合与作者推断，并列出反例、争议和仍缺失的证据。",
+    questions: "基于现有证据提出 5 个可继续研究的问题；每个问题说明研究价值、当前证据缺口和建议验证方式。",
+  };
   const FIELD_ORDER = [
     "世界模型与评测",
     "数据工程与质量",
@@ -110,6 +115,7 @@
     snapshotTime: el("snapshot-time"),
     welcome: el("welcome-view"),
     welcomeGrid: el("welcome-grid"),
+    staticDirectory: document.querySelector(".static-research-directory"),
     article: el("article-view"),
     error: el("error-view"),
     errorMessage: el("error-message"),
@@ -126,6 +132,13 @@
     evidenceButton: el("evidence-button"),
     exportButton: el("export-button"),
     exportDropdown: el("export-dropdown"),
+    aiResearchButton: el("ai-research-button"),
+    aiDialog: el("ai-dialog"),
+    aiTopicTitle: el("ai-topic-title"),
+    aiTopicMetrics: el("ai-topic-metrics"),
+    aiCanonicalLink: el("ai-canonical-link"),
+    aiPrompt: el("ai-prompt"),
+    aiCopyButton: el("ai-copy-button"),
     evidenceDrawer: el("evidence-drawer"),
     evidenceTitle: el("evidence-title"),
     evidenceSource: el("evidence-source"),
@@ -210,6 +223,25 @@
   function formatTopicUpdated(value) {
     if (!value || value === "0000-00-00") return "时间未标注";
     return `更新于 ${value}`;
+  }
+
+  function canonicalHref(topic) {
+    return topic?.canonical_path ? topic.canonical_path.replace(/^\/+/, "") : "research/";
+  }
+
+  function shouldUseNativeLink(event) {
+    return event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+  }
+
+  function topicDefaultVersion(topic) {
+    return topic?.default_version || state.manifest?.site?.default_version || "zhihu";
+  }
+
+  function openTopicFromLink(event, element, version = null) {
+    if (!element || shouldUseNativeLink(event)) return false;
+    event.preventDefault();
+    setRoute(element.dataset.topicId, element.dataset.version || version);
+    return true;
   }
 
   async function fetchJson(path, bust = false) {
@@ -305,10 +337,10 @@
           </button>
           <div class="tree-children" id="${childrenId}">
             ${topics.map((topic) => `
-              <button class="tree-topic ${state.topic?.id === topic.id ? "is-active" : ""}" type="button" data-topic-id="${escapeHtml(topic.id)}" ${state.topic?.id === topic.id ? 'aria-current="page"' : ""}>
+              <a class="tree-topic ${state.topic?.id === topic.id ? "is-active" : ""}" href="${escapeHtml(canonicalHref(topic))}" data-topic-id="${escapeHtml(topic.id)}" ${state.topic?.id === topic.id ? 'aria-current="page"' : ""}>
                 <span class="tree-topic-title">${escapeHtml(topic.title)}</span>
                 <small class="tree-topic-meta">${escapeHtml(formatTopicUpdated(topic.date))}</small>
-              </button>`).join("")}
+              </a>`).join("")}
           </div>
         </section>`;
     }).join("");
@@ -317,25 +349,34 @@
   function renderWelcome() {
     const topics = state.manifest.topics.slice(0, 6);
     nodes.welcomeGrid.innerHTML = topics.map((topic) => `
-      <button type="button" class="welcome-card" data-topic-id="${topic.id}">
+      <a class="welcome-card" href="${escapeHtml(canonicalHref(topic))}" data-topic-id="${topic.id}">
         <small>${escapeHtml(topic.field)}</small>
         <strong>${escapeHtml(topic.title)}</strong>
-        <span>${escapeHtml(formatDate(topic.date))} · 默认知乎解释版</span>
-      </button>`).join("");
+        <span>${escapeHtml(formatDate(topic.date))} · 默认${escapeHtml(VERSION_LABELS[topicDefaultVersion(topic)] || "研究版")}</span>
+      </a>`).join("");
   }
 
   function parseRoute() {
-    const match = location.hash.match(/^#\/topic\/([^?]+)(?:\?version=(keyan|zhihu|xiaohongshu))?/);
-    return match ? { id: decodeURIComponent(match[1]), version: match[2] || "zhihu" } : null;
+    const match = location.hash.match(/^#\/topic\/([^?]+)(?:\?(.*))?$/);
+    if (!match) return null;
+    const parameters = new URLSearchParams(match[2] || "");
+    const version = parameters.get("version");
+    return {
+      id: decodeURIComponent(match[1]),
+      version: VERSION_LABELS[version] ? version : null,
+      openAi: parameters.get("ai") === "1",
+    };
   }
 
-  function setRoute(topicId, version = "zhihu", replace = false) {
-    const hash = `#/topic/${encodeURIComponent(topicId)}?version=${version}`;
+  function setRoute(topicId, version = null, replace = false) {
+    const manifestItem = state.manifest?.topics.find((item) => item.id === topicId);
+    const selectedVersion = version || topicDefaultVersion(manifestItem);
+    const hash = `#/topic/${encodeURIComponent(topicId)}?version=${selectedVersion}`;
     if (replace) history.replaceState(null, "", hash);
     else location.hash = hash;
   }
 
-  async function loadTopic(identifier, requestedVersion = "zhihu") {
+  async function loadTopic(identifier, requestedVersion = null, openAi = false) {
     const manifestItem = state.manifest.topics.find((item) => item.id === identifier);
     if (!manifestItem) {
       showWelcome();
@@ -349,8 +390,8 @@
         state.topicCache.set(identifier, topic);
       }
       state.topic = topic;
-      const defaultVersion = topic.available_versions?.includes("zhihu") ? "zhihu" : topic.available_versions?.[0] || "zhihu";
-      state.version = topic.versions[requestedVersion] ? requestedVersion : defaultVersion;
+      const fallbackVersion = topicDefaultVersion(topic);
+      state.version = topic.versions[requestedVersion] ? requestedVersion : fallbackVersion;
       state.drawerMode = null;
       state.expandedFields.add(topic.field);
       if (state.chat.pane === "workflow") {
@@ -366,6 +407,7 @@
       renderArticle();
       closeMobileSidebar();
       window.scrollTo({ top: 0, behavior: "instant" });
+      if (openAi) requestAnimationFrame(openAiDialog);
     } catch (error) {
       showError(`无法读取“${manifestItem.title}”：${error.message}`);
     }
@@ -399,6 +441,9 @@
     nodes.deckButton.title = topic.slide_deck?.available
       ? "打开汇报放映件" : "还没有放映件：点击生成（约 5-10 分钟）";
     const available = topic.available_versions || Object.keys(topic.versions);
+    nodes.versionTabs.innerHTML = Object.entries(topic.versions).map(([key, item]) =>
+      `<button type="button" role="tab" data-version="${escapeHtml(key)}">${escapeHtml(item.label || VERSION_LABELS[key] || key)}</button>`
+    ).join("");
     [...nodes.versionTabs.querySelectorAll("[data-version]")].forEach((button) => {
       const present = available.includes(button.dataset.version);
       button.hidden = !present;
@@ -413,7 +458,9 @@
     bindArticleLinks();
     bindReaderLinks(nodes.articleBody);
     updateProgress();
-    document.title = `${version.article_title}｜空间智能研究 Wiki`;
+    document.title = `${version.article_title}｜Embodied AI Evidence Hub`;
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical && topic.canonical_path) canonical.href = new URL(canonicalHref(topic), document.baseURI).href;
   }
 
   function baseStyleOf(versionKey) {
@@ -509,7 +556,9 @@
     }
     syncChatPane();
     renderFieldTree();
-    document.title = "空间智能研究 Wiki";
+    document.title = "Embodied AI Evidence Hub｜具身智能证据知识库";
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.href = new URL("./", document.baseURI).href.split("#")[0];
   }
 
   function showError(message) {
@@ -551,8 +600,70 @@
       return;
     }
     const parsed = parseRoute();
-    if (parsed) loadTopic(parsed.id, parsed.version);
+    if (parsed) loadTopic(parsed.id, parsed.version, parsed.openAi);
     else showWelcome();
+  }
+
+  function absoluteCanonical(topic = state.topic) {
+    return new URL(canonicalHref(topic), document.baseURI).href.split("#")[0];
+  }
+
+  function buildAiPrompt(task = "summary") {
+    const topic = state.topic;
+    const instruction = AI_TASKS[task] || AI_TASKS.summary;
+    const knowledgeIds = topic.knowledge_ids?.length ? topic.knowledge_ids.join(", ") : "未标注";
+    return `请基于以下 Embodied AI Evidence Hub 专题回答，优先读取 canonical 页面中的完整正文、论文引用和证据附录，不要只依赖搜索摘要。
+
+专题：${topic.title}
+English title: ${topic.title_en || "未标注"}
+Canonical: ${absoluteCanonical(topic)}
+证据规模：${topic.paper_count || 0} 篇精读论文，${topic.evidence_event_count || 0} 条正式证据事件
+知识单元：${knowledgeIds}
+当前阅读版本：${topic.versions[state.version]?.label || VERSION_LABELS[state.version] || state.version}
+
+研究任务：${instruction}
+
+回答要求：
+1. 区分论文直接支持、跨论文综合和推断，不把推断写成事实。
+2. 明确证据适用范围、时间窗口、反例与不确定性。
+3. 引用时优先给出本页 canonical 地址和原始论文链接。
+4. 无法从本页或引用论文确认的内容，请明确标注“证据不足”。`;
+  }
+
+  function selectAiTask(task) {
+    nodes.aiDialog.querySelectorAll("[data-ai-task]").forEach((button) => {
+      const active = button.dataset.aiTask === task;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    nodes.aiPrompt.value = buildAiPrompt(task);
+  }
+
+  function openAiDialog() {
+    if (!state.topic) return;
+    nodes.aiTopicTitle.textContent = state.topic.title;
+    nodes.aiTopicMetrics.textContent = `${state.topic.paper_count || 0} 篇精读论文 · ${state.topic.evidence_event_count || 0} 条正式证据事件`;
+    nodes.aiCanonicalLink.href = absoluteCanonical();
+    selectAiTask("summary");
+    if (!nodes.aiDialog.open) nodes.aiDialog.showModal();
+    nodes.aiPrompt.focus();
+  }
+
+  function closeAiDialog() {
+    if (nodes.aiDialog.open) nodes.aiDialog.close();
+  }
+
+  async function copyAiPrompt(provider = "") {
+    const prompt = nodes.aiPrompt.value.trim();
+    if (!prompt) return;
+    try {
+      await navigator.clipboard.writeText(prompt);
+    } catch (_error) {
+      nodes.aiPrompt.focus();
+      nodes.aiPrompt.select();
+      document.execCommand("copy");
+    }
+    showToast(provider ? `研究指令已复制，请粘贴到 ${provider}。` : "研究指令已复制。可粘贴到任意支持网页阅读的 AI。 ");
   }
 
   function openEvidence() {
@@ -729,21 +840,23 @@
   function renderSearchResults(query) {
     const value = query.trim();
     if (!value) {
-      nodes.searchCount.textContent = `${state.searchIndex?.topics.length || 0} 个话题，覆盖三种表达版本`;
+      nodes.searchCount.textContent = `${state.searchIndex?.topics.length || 0} 个话题，覆盖所有可用表达版本`;
       nodes.searchResults.innerHTML = '<p class="search-empty">可以搜索概念、结论、论文名或研究问题。</p>';
       return;
     }
     const results = search(value);
     nodes.searchCount.textContent = `找到 ${results.length} 个版本匹配`;
     nodes.searchResults.innerHTML = results.length ? results.map((result) => `
-      <button type="button" class="search-result" data-topic-id="${result.topic.id}" data-version="${result.versionKey}">
-        <span class="search-result-badge">${escapeHtml(VERSION_LABELS[result.versionKey])}</span>
+      <a class="search-result" href="${escapeHtml(canonicalHref(result.topic))}" data-topic-id="${result.topic.id}" data-version="${result.versionKey}">
+        <span class="search-result-badge">${escapeHtml(result.version.label || VERSION_LABELS[result.versionKey] || result.versionKey)}</span>
         <span><strong>${escapeHtml(result.topic.title)}</strong><p>${makeSnippet(result.version.text, normalizeSearch(value))}</p></span>
-      </button>`).join("") : '<p class="search-empty">没有找到匹配内容。试试更短的关键词。</p>';
+      </a>`).join("") : '<p class="search-empty">没有找到匹配内容。试试更短的关键词。</p>';
   }
 
-  function selectSearchResult(button) {
+  function selectSearchResult(button, event) {
     const { topicId, version } = button.dataset;
+    if (shouldUseNativeLink(event)) return;
+    event.preventDefault();
     nodes.searchDialog.close();
     nodes.searchInput.value = "";
     setRoute(topicId, version);
@@ -2748,7 +2861,7 @@
     const topics = state.manifest.topics;
     const current = topics.findIndex((topic) => topic.id === state.topic.id);
     const next = topics[(current + 1) % topics.length];
-    setRoute(next.id, "zhihu");
+    setRoute(next.id, topicDefaultVersion(next));
   }
 
   function bindEvents() {
@@ -2777,9 +2890,9 @@
     nodes.fieldNav.addEventListener("click", (event) => {
       const topicButton = event.target.closest("[data-topic-id]");
       if (topicButton) {
+        if (!openTopicFromLink(event, topicButton)) return;
         state.drawerMode = null;
         closeMobileSidebar();
-        setRoute(topicButton.dataset.topicId, "zhihu");
         return;
       }
       const fieldButton = event.target.closest("[data-field]");
@@ -2792,8 +2905,12 @@
       focusFieldRow(fieldName);
     });
     nodes.welcomeGrid.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-topic-id]");
-      if (button) setRoute(button.dataset.topicId, "zhihu");
+      const link = event.target.closest("[data-topic-id]");
+      openTopicFromLink(event, link);
+    });
+    nodes.staticDirectory?.addEventListener("click", (event) => {
+      const link = event.target.closest("[data-topic-id]");
+      openTopicFromLink(event, link);
     });
     nodes.recentResearch.addEventListener("click", showRecentResearch);
     nodes.versionTabs.addEventListener("click", (event) => {
@@ -2892,6 +3009,16 @@
         if (event.key === "Escape" && !nodes.exportDropdown.hidden) closeExportMenu();
       });
     }
+    nodes.aiResearchButton.addEventListener("click", openAiDialog);
+    el("ai-dialog-close").addEventListener("click", closeAiDialog);
+    nodes.aiDialog.querySelector(".ai-task-options").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-ai-task]");
+      if (button) selectAiTask(button.dataset.aiTask);
+    });
+    nodes.aiCopyButton.addEventListener("click", () => copyAiPrompt());
+    nodes.aiDialog.querySelectorAll("[data-ai-provider]").forEach((link) => link.addEventListener("click", () => {
+      void copyAiPrompt(link.dataset.aiProvider);
+    }));
     el("evidence-close").addEventListener("click", closeEvidence);
     nodes.drawerScrim.addEventListener("click", closeEvidence);
     el("search-trigger").addEventListener("click", openSearch);
@@ -2902,7 +3029,7 @@
     });
     nodes.searchResults.addEventListener("click", (event) => {
       const button = event.target.closest("[data-topic-id][data-version]");
-      if (button) selectSearchResult(button);
+      if (button) selectSearchResult(button, event);
     });
     nodes.refreshButton.addEventListener("click", refreshWiki);
     el("retry-button").addEventListener("click", () => init(true));
@@ -2943,6 +3070,7 @@
           setChatFocused(false);
         } else if (state.chat.open && nodes.chatPanel.contains(document.activeElement)) setChatOpen(false);
         if (readerViewActive()) closeReaderToTopic();
+        closeAiDialog();
         closeEvidence();
         closeSidebar();
       }

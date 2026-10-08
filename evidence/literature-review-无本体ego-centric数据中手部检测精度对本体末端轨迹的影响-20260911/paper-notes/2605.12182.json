@@ -1,0 +1,237 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.12182",
+  "title": "DexTwist: Dexterous Hand Retargeting for Twist Motion via Mixed Reality-based Teleoperation",
+  "published": "2026-05-12",
+  "url": "https://arxiv.org/abs/2605.12182",
+  "authors": [
+   "Dongmyoung Lee",
+   "Chengxi Li",
+   "Dongheui Lee"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "输入侧正是 ego-centric 追踪（Apple Vision Pro 头显内置手部姿态估计器）；明确刻画'小运动学误差在本体差距下表现为切向滑移/轴线漂移/三指失稳'的放大路径，给出迟滞门（防追踪噪声致模式误切换）、功能重定向目标（转角跟踪+闭合/轴线/质心正则）两级缓解，并以 ArUco 物转与'人手意图'双参照量化追踪误差，揭示视觉意图估计本身被遮挡污染。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认问题框架：MR 头显 ego-centric 手部追踪输入；本体差距使直接运动学映射在接触旋转任务中产生切向滑移、螺丝轴漂移、抓取失稳"
+   },
+   {
+    "locator": "II. RELATED WORKS",
+    "role": "relevant-core",
+    "purpose": "定位既有重定向目标（姿态/接触几何）在接触旋转中不保功能的局限"
+   },
+   {
+    "locator": "III. METHODOLOGY (A-B)",
+    "role": "method-or-design",
+    "purpose": "提取掌系构造、基座变换 T_B^H、迟滞门三指捏合激活、螺丝轴/累积转角估计、虚拟物目标函数（式 8）与有界残差精修"
+   },
+   {
+    "locator": "IV. EXPERIMENTS (A-C)",
+    "role": "results-or-analysis",
+    "purpose": "提取仿真 Table I（RMSE/MAE/AxisDev）与真机 Table II（ArUco 与人手意图双参照）量化结果及遮挡致误差分析"
+   },
+   {
+    "locator": "V. DISCUSSION & CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者声明局限：仅覆盖三指捏取旋转；依赖视觉手部追踪，严重自遮挡会偏置推断的扭转意图"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表不逐条精读"
+   }
+  ]
+ },
+ "research_question": "在 MR 头显 ego-centric 手部追踪驱动灵巧手遥操作时，如何在人-机器人本体差距下保持接触丰富的旋转（扭转）操作功能，而非仅保持手部姿态相似？",
+ "contributions": [
+  "MR 灵巧遥操作管线：鲁棒三指捏合激活（迟滞门）与回合级转角状态（支持棘轮式重抓）",
+  "功能扭转重定向模块：残差关节空间精修，最小化定义在机器人掌系的虚拟物目标（转角跟踪、螺丝轴一致、指尖闭合、三指质心稳定）",
+  "与向量重定向基线在仿真与真机上的对比评估协议（转角跟踪 RMSE/MAE/Corr、轴偏差）"
+ ],
+ "method": {
+  "summary": "用 Vision Pro 头显内置手部姿态估计器取 27 维人手关节配置，腕部关键点为原点、腕到食指/小指根节构造掌系 {P}，经静态基座变换 T_B^H 与尺度变换映射到机器人末端指令（式 4）。持续三指捏合经迟滞门激活扭转重定向；以三指尖构成的三角面法线为螺丝轴（式 5）、以掌系相对旋转投影累积任务转角 θ_task（式 6）；机器人侧定义同类三指工具系，以有界关节更新的有限差分梯度下降（每控制周期 5 次迭代）最小化虚拟物目标 J(q)（式 8：转角误差+闭合+轴一致+质心漂移四项加权）。",
+  "assumptions": [
+   "输入为头显内置手部追踪的 3D 关节位置与腕部位姿（ego-centric 视觉追踪）",
+   "扭转任务以三指捏合（拇指-食指-中指）执行，三非共线指尖接触可定义螺丝轴",
+   "存在静态的人-机器人基座标定变换 T_B^H 与workspace缩放",
+   "机器人臂用笛卡尔阻抗控制，手用关节级指令"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "仿真环境（机器人指尖由正运动学直接可得）",
+   "真机：单一操作者经 10 小时内熟悉后，每方法 5 次试验"
+  ],
+  "tasks": [
+   "拧瓶盖（cap screwing）",
+   "钥匙开锁（key unlocking）",
+   "螺栓拧旋类扭转操作"
+  ],
+  "embodiments": [
+   "Franka Emika FR3 臂 + Allegro Hand",
+   "Apple Vision Pro（操作者侧）"
+  ],
+  "sample_or_scale": "仿真（试验数未报告）+ 真机 1 名操作者 × 每方法 5 次试验"
+ },
+ "evaluation": {
+  "design": "仅在捏合激活段评估转角跟踪（RMSE/MAE/Pearson 相关）；仿真以'估计的人手扭转意图'为 GT、轴偏差由机器人指尖运动学计算；真机以 ArUco 标记物旋转为主参照、估计人手意图为辅参照；与 Vector Retargeting（最小化掌-指尖/指尖-指尖向量差）对比",
+  "baselines": [
+   "Vector Retargeting [2]（AnyTeleop 式任务空间向量优化）"
+  ],
+  "metrics": [
+   "转角跟踪 RMSE/MAE（度）",
+   "Pearson 相关 ρ",
+   "螺丝轴偏差 AxisDev（度，仅仿真）"
+  ],
+  "ablations": [
+   "无（未对 w_rot/w_conn/w_axis/w_pos 权重或迟滞门做独立消融）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仿真（参照=估计人手意图）：Vector Retargeting RMSE 27.7°/MAE 23.3°/AxisDev 13.6°，DexTwist 18.8°/15.6°/6.1°——功能目标在降低转角误差同时将轴偏差减半以上",
+   "scope": "仿真，捏合激活段",
+   "locator": "IV-C. Experimental Results, Table I"
+  },
+  {
+   "finding": "真机 ArUco 物转参照：DexTwist RMSE 14.3°/MAE 11.9°/Corr 0.96，优于 Vector Retargeting 23.2°/15.6°/0.83；以估计人手意图为参照时两者误差均大幅升高（40.3°/32.8°/0.60 vs 33.7°/25.9°/0.67），说明意图参照本身含视觉追踪噪声",
+   "scope": "真机，1 操作者 × 5 试验/方法",
+   "locator": "IV-C. Experimental Results, Table II"
+  },
+  {
+   "finding": "迟滞门用于三指捏合检测，防止追踪噪声下的伪切换；螺丝轴方向用掌法线消歧并做时间对齐避免符号翻转",
+   "scope": "方法设计",
+   "locator": "III-B. Hand Functional Retargeting"
+  },
+  {
+   "finding": "误差后期增大机制：部分指尖遮挡、重抓与累积姿态失配偏置视觉人手意图估计；DexTwist 虽以人手意图为参照，稳定正则项可使执行轨迹比含噪意图估计更接近实测物转",
+   "scope": "真机结果分析",
+   "locator": "IV-C. Experimental Results"
+  },
+  {
+   "finding": "头显内置手部估计经内部标定管线免去多相机/MoCap 所需专用标定流程；但系统仍依赖视觉手部追踪，严重自遮挡会偏置推断的扭转意图，作者建议引入触觉/接触状态感知提升对滑移与不可靠视觉更新的鲁棒性",
+   "scope": "系统设计与局限",
+   "locator": "III-A. Robot Teleoperation System Architecture; V. DISCUSSION & CONCLUSION"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅覆盖三指捏取扭转；两指/四指捏取、柱形抓握、力抓握或工具特定抓握需按抓握类型设计功能表示（接触几何/物体位姿/触觉反馈）",
+    "locator": "V. DISCUSSION & CONCLUSION"
+   },
+   {
+    "limitation": "系统依赖视觉手部追踪，严重自遮挡会偏置推断的扭转意图",
+    "locator": "V. DISCUSSION & CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "真机仅 1 名操作者、每方法 5 次试验，无操作者间方差；'10 小时熟悉后'的陈述暗示学习曲线影响未量化",
+    "basis": "IV-C Real-world results：'all trials are conducted by one operator after familiarization within 10 hours usage. Each method was tested over five trials'"
+   },
+   {
+    "boundary": "未做追踪噪声的受控注入实验（如对关键点加已知幅度抖动），遮挡影响仅由后期误差上升的观察性分析推断；无可接受阈值声明",
+    "basis": "IV-C 仅有事后定性归因（'Late-phase errors can increase due to partial fingertip occlusion...'），无受控噪声实验"
+   },
+   {
+    "boundary": "真机以 ArUco 物转为主参照，但 DexTwist 优化的参照是含噪人手意图；'执行比意图更接近物转'意味着评价口径部分补偿了输入噪声，不能直接读作轨迹绝对精度",
+    "basis": "Table II 双参照设计与该段解释性陈述"
+   }
+  ]
+ },
+ "transfer_boundary": "本文是无本体 ego-centric 追踪（Vision Pro 头显）驱动灵巧手的直接案例：其证据表明 (1) 接触旋转任务中小的运动学/追踪误差经本体差距被放大为滑移、轴线漂移与失稳；(2) 误差缓解可发生在状态门（迟滞门抗伪切换）与目标函数（功能转角+几何正则）两层；(3) 视觉意图估计本身含噪（遮挡、重抓、累积失配），评价时应区分'追踪含噪意图'与'追踪物理物转'两个参照。结论限于三指捏取扭转原语与 Allegro 手，未给出追踪误差幅度的可接受阈值。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "双参照评价（ArUco 物转 vs 视觉人手意图）显式暴露输入参照含噪问题，比单参照更诚实",
+   "迟滞门、轴符号时间对齐、有界关节更新等针对追踪噪声的工程化缓解明确写出",
+   "RMSE/MAE/Corr 三指标分工清楚（RMSE 对滑移/重抓等大误差敏感，MAE 表征典型偏差）"
+  ],
+  "design_risks": [
+   "真机样本极小（1 操作者×5 试验）",
+   "无数控噪声注入实验，噪声-误差关系为观察性归因",
+   "仿真 GT 即'估计的人手意图'，仿真结果无法暴露意图估计误差",
+   "目标函数四项权重取值未报告"
+  ],
+  "baseline_fairness": "单一基线 Vector Retargeting，作者说明不比较学习类功能重定向的理由（需演示/训练/奖励设计）；基线为'广泛使用'的方法，同对象同初始配置，公平性可接受但覆盖面窄",
+  "metric_validity": "转角 RMSE/MAE 与轴偏差是扭转功能的合理任务级代理；非指尖位置误差，且仅在捏合激活段统计，系统性避开自由空间段",
+  "reproducibility": "掌系构造、目标函数（式 8）、优化器（有限差分 5 迭代）与硬件写明；但权重 w_rot 等、迟滞门阈值、试验原始数据未公开",
+  "external_validity": "限于 Vision Pro+FR3+Allegro 组合与三指捏取扭转；对其他追踪器噪声水平、其他手型与抓握类型的外推未验证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.12182-C01",
+   "claim": "在接触丰富的扭转任务中，小的运动学误差在人-机器人本体差距下会被放大为功能失效：直接姿态模仿产生沿物体表面的切向指尖滑动而非绕预期轴的旋转，表现为螺丝轴漂移、接触滑移与三指稳定性丧失。DexTwist 的缓解是把目标从几何相似换成功能保持：捏合激活后估计操作者螺丝轴与累积扭转意图，用定义在机器人三指几何上的虚拟物目标（转角跟踪+指尖闭合+轴一致+质心稳定四项正则）做实时有界残差关节精修。",
+   "stance": "conditional",
+   "relation": "误差放大路径（小运动学/追踪误差×本体差距→切向滑移、轴线漂移、抓取失稳）与目标函数级缓解（功能转角目标+三指几何正则替代纯姿态相似），输入侧为头显 ego-centric 手部追踪。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 开篇明确：常规重定向目标强调几何相似，接触扭转中小运动学误差在本体差距下表现为切向滑移、轴漂移与三指失稳；同节给出功能化替代：迟滞门激活、螺丝轴（式 5）与累积转角（式 6）估计、虚拟物目标（式 8）与每周期 5 次有限差分迭代的有界残差精修。",
+   "locator": "B. Hand Functional Retargeting",
+   "source_context": "Conventional hand retargeting objectives emphasize geo-\nmetric similarity (e.g., joint angles or fingertip positions). For\ncontact-rich twisting, however, small kinematic errors under\nembodiment mismatch often manifest as tangential slip, axis\ndrift, and loss of tripod stability.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 III-B 首段（跨行断词 geo-/metric 按原文保留）；claim 的缓解部分对应同节迟滞门激活、式 5-8 与'five iterations of finite-difference gradient descent per control cycle'段，已逐句核对；'放大'为对'manifest as'的语义复述，未加数值。"
+   }
+  },
+  {
+   "card_id": "2605.12182-C02",
+   "claim": "真机扭转实验中，误差沿时间轴增大的机制被归因于输入侧视觉追踪退化：部分指尖遮挡、重抓与累积姿态失配偏置视觉人手意图估计；以 ArUco 物转为参照，DexTwist 转角跟踪 RMSE 14.3°/MAE 11.9°/Corr 0.96，优于向量重定向的 23.2°/15.6°/0.83；以视觉估计的人手意图为参照时两者误差均大幅升高（33.7°/25.9°/0.67 vs 40.3°/32.8°/0.60），且 DexTwist 的稳定正则项可使执行轨迹比含噪意图估计更接近实测物转。",
+   "stance": "support",
+   "relation": "量化误差传播与输入噪声污染：遮挡/重抓/累积失配→视觉意图估计偏置（参照本身含噪）；同时给出功能重定向在 ego-centric 追踪输入下达到的任务级误差水平（14.3° RMSE 物转参照），可作为该设置下'可用误差水平'的实证参照点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C 真机结果段：五种试验聚合；Table II 双参照数值（ArUco：23.2/15.6/0.83 vs 14.3/11.9/0.96；意图：40.3/32.8/0.60 vs 33.7/25.9/0.67）；同段明确归因'Late-phase errors can increase due to partial fingertip occlusion, re-grasping, and accumulated orientation mismatch, which bias the visual estimate of human intent'。",
+   "locator": "C. Experimental Results",
+   "source_context": "Late-phase errors\ncan increase due to partial fingertip occlusion, re-grasping,\nand accumulated orientation mismatch, which bias the visual\nestimate of human intent. Although DexTwist tracks Human\nIntent as its reference, the stability regularizers can yield\ncloser alignment with measured object rotation than with the\nnoisy intent estimate.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "turning-angle tracking RMSE / MAE / Pearson correlation (ArUco reference)",
+    "value_or_direction": "DexTwist RMSE 14.3 deg, MAE 11.9 deg, Corr 0.96 vs Vector Retargeting RMSE 23.2 deg, MAE 15.6 deg, Corr 0.83",
+    "comparator": "Vector Retargeting baseline (same operator, same object setup, 5 trials each)",
+    "task_or_sample": "real-world twist teleoperation, Franka FR3 + Allegro Hand, Apple Vision Pro egocentric hand tracking, 1 operator x 5 trials per method",
+    "locator": "C. Experimental Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 IV-C Real-world results 段；六组数值逐一核对于 Table II 两个参照块（ArUco：Vector 23.2/15.6/0.83、DexTwist 14.3/11.9/0.96；Human Intent：40.3/32.8/0.60、33.7/25.9/0.67）；样本量（1 操作者、每方法 5 试验）在 claim 与 quantitative.task_or_sample 中如实声明，未外推到其他噪声水平。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "ID 段预算（B03 六篇共 15 个事件 ID，本文用 0042-0043）下仅投影 2 张核心卡；仿真 Table I（27.7/23.3/13.6 vs 18.8/15.6/6.1）、迟滞门抗追踪噪声设计、头显内标定免外部标定流程、V 节自遮挡局限等保留在 findings/limitations，如追加 ID 可补投影。提取结构完整（IEEE 节标题正常），定位器均可解析。"
+}

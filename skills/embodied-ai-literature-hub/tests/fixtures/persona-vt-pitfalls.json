@@ -1,0 +1,98 @@
+{
+  "topic": "近半年触觉数据联合训练的坑",
+  "generated_by": "llm",
+  "personas": [
+    {
+      "id": "P-FAILURE-HUNTER",
+      "name": "失败模式猎手",
+      "focus": "专挖联合训练的失败案例：负迁移、模态污染、训练不稳定",
+      "primary_dimensions": ["limits-and-counterevidence"],
+      "inspired_by": ["EA-SENSOR: 无约束触觉注入污染视觉 dynamics model"]
+    },
+    {
+      "id": "P-SYNC-ENGINEER",
+      "name": "数据同步工程师",
+      "focus": "时间同步、时钟残差、采样率错配、标定漂移",
+      "primary_dimensions": ["mechanisms-and-interfaces"],
+      "inspired_by": ["EA-DATA: 同时间戳帧只是最低层记录"]
+    },
+    {
+      "id": "P-REALTIME-DEPLOYER",
+      "name": "部署与实时性工程师",
+      "focus": "触觉高频反馈与低频视觉的带宽延迟冲突、推理时触觉缺失",
+      "primary_dimensions": ["deployment-and-operations"],
+      "inspired_by": ["AT-VLA 快慢流分离证据"]
+    },
+    {
+      "id": "P-EVAL-SKEPTIC",
+      "name": "评测怀疑者",
+      "focus": "benchmark 错位、开环指标 vs 闭环收益、跨硬件不可比",
+      "primary_dimensions": ["evaluation-and-validation"],
+      "inspired_by": ["SoftVTBench: limit 立场"]
+    },
+    {
+      "id": "P-BASIC-FACTS",
+      "name": "基础事实覆盖者",
+      "focus": "广泛覆盖主题基础事实",
+      "primary_dimensions": ["direct-topic"],
+      "inspired_by": ["STORM 默认角色安全网设计"]
+    }
+  ],
+  "queries": [
+    {
+      "label": "persona-failure-negative-transfer",
+      "tier": "persona-limit",
+      "query": "all:\"negative transfer\" AND all:tactile AND all:robot",
+      "why": "失败模式猎手：直接搜索负迁移证据",
+      "persona": "P-FAILURE-HUNTER"
+    },
+    {
+      "label": "persona-failure-modality-pollution",
+      "tier": "persona-limit",
+      "query": "all:modality AND all:interference AND all:\"world model\"",
+      "why": "失败模式猎手：验证 tactile pollution 是否已被命名研究",
+      "persona": "P-FAILURE-HUNTER"
+    },
+    {
+      "label": "persona-sync-clock-drift",
+      "tier": "persona-method",
+      "query": "all:\"time synchronization\" AND all:visuotactile AND all:robot",
+      "why": "数据同步工程师：时钟错配证据",
+      "persona": "P-SYNC-ENGINEER"
+    },
+    {
+      "label": "persona-deploy-latency",
+      "tier": "persona-deploy",
+      "query": "all:\"tactile sensing\" AND all:latency AND all:bandwidth",
+      "why": "部署工程师：触觉高频流与部署约束冲突",
+      "persona": "P-REALTIME-DEPLOYER"
+    },
+    {
+      "label": "persona-eval-openloop-mismatch",
+      "tier": "persona-eval",
+      "query": "all:benchmark AND all:visuotactile AND all:\"closed-loop\"",
+      "why": "评测怀疑者：开环指标与闭环收益错位",
+      "persona": "P-EVAL-SKEPTIC"
+    },
+    {
+      "label": "persona-basic-survey",
+      "tier": "persona-direct",
+      "query": "all:\"visuotactile learning\" AND all:survey",
+      "why": "基础事实覆盖者：主题综述入口",
+      "persona": "P-BASIC-FACTS"
+    },
+    {
+      "label": "persona-basic-terminology",
+      "query": "all:\"tactile representation\" AND all:\"vision-language-action\"",
+      "why": "基础事实覆盖者：无 tier 无 dimension，走 persona primary_dimensions 推导",
+      "persona": "P-BASIC-FACTS"
+    },
+    {
+      "label": "persona-failure-duplicate-of-first",
+      "tier": "persona-limit",
+      "query": "all:\"negative transfer\" AND all:tactile AND all:robot",
+      "why": "与第一条查询重复，用于验证去重合并 merged_labels",
+      "persona": "P-FAILURE-HUNTER"
+    }
+  ]
+}

@@ -1,0 +1,385 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2604.07957",
+  "title": "WorldMAP: Bootstrapping Vision-Language Navigation Trajectory Prediction with Generative World Models",
+  "published": "2026-04-09",
+  "url": "https://arxiv.org/abs/2604.07957",
+  "authors": [
+   "Hongjin Chen",
+   "Shangyun Jiang",
+   "Tonghua Su",
+   "Chen Gao",
+   "Xinlei Chen",
+   "Yong Li",
+   "Zhibo Chen"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是'生成式世界模型替代显式地图'路线的关键方法论文：用世界模型生成的未来视频构造语义空间记忆与结构化轨迹监督，训练轻量 VLM 学生直接预测导航轨迹。精读后发现其替代形态对综述问题极具判别力——世界模型替代的是观测来源，而教师管线内部仍显式重建 BEV 建图与 FMM 规划等经典几何基础设施，且评测真值依赖 SLAM 轨迹；配合 MindJourney 负结果与监督消融，是判断'世界模型路线能否替代 SLAM'的核心证据源。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract + I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认论文问题：单观测+语言指令的可靠轨迹预测；VLM 直接预测不稳定、世界模型不直接提供接地信号；作者对经典 SLAM 管线的定位（remain effective 但依赖持久建图/重复探索/工程化模块）"
+   },
+   {
+    "locator": "page 3, II. RELATED WORK（Structured Spatial Representations / World Models and VLM Reasoning）",
+    "role": "relevant-core",
+    "purpose": "定位技术谱系：显式空间表示（SLAM/语义地图/3D 表示）vs VLM 直接预测 vs 世界模型（PathDreamer/DREAMWALKER/NavMorph/MindJourney/AVIC）；确认本文把世界模型重定位为监督源而非测试时证据"
+   },
+   {
+    "locator": "page 3-5, III. METHOD（Overview / World-Model-Driven Trajectory Teacher / Student Trajectory Learning）",
+    "role": "method-or-design",
+    "purpose": "理解教师管线：世界模型生成未来视频→DA3 单目深度反投影+语义空间记忆→CLIP 检索+UniPixel 开放词汇接地目标/障碍→BEV 代价图→FMM 显式规划→轨迹伪标签；学生=Qwen3-VL-8B+LoRA+多假设轨迹解码器"
+   },
+   {
+    "locator": "page 5-6, IV-A. Experimental Setup（Benchmark / Metrics / Implementation）",
+    "role": "data-or-setting",
+    "purpose": "确认基准（Target-Bench，真值为四足机器人 SLAM 估计 3D 轨迹，投影为 2D 像素真值）、指标（ADE/FDE/normalized DTW，投影 2D 像素空间）与训练数据构成（基准 GT + 教师伪标签）"
+   },
+   {
+    "locator": "page 6-7, IV-B. Main Results + IV-C. Analysis（Table I, Fig. 5）",
+    "role": "results-or-analysis",
+    "purpose": "核对主结果与三族基线（专有 VLM/开源 VLM/世界模型增强）对比、MindJourney 负结果及其归因（跨视角不一致的想象引入误导性证据）"
+   },
+   {
+    "locator": "page 8, IV-D. Ablation Studies（Table II/III, Fig. 6）",
+    "role": "results-or-analysis",
+    "purpose": "核对学生骨干规模消融与训练监督组成消融（WM 伪标签 only / GT only / 组合），以及 VLM 五准则伪标签质量分级协议"
+   },
+   {
+    "locator": "page 8-9, V. DISCUSSION + VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者对证据边界的自述：增益不能只归因监督、世界模型一致性不足（快慢系统视角）、未验证动态场景/多层环境/长时程探索、受未来生成与几何重建质量约束"
+   },
+   {
+    "locator": "page 11-13, Supplementary Material（Appendix A 数据处理 / Appendix B 实现细节 / Appendix C 定性结果）",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 SLAM 轨迹投影与 ORB+RANSAC 单应对齐协议、教师实现（BEV 5 mm/格、0.5–1.5 m 高度带、UniPixel-7B）、学生实现（LoRA 两阶段、解码器超参、4×A100 80GB、100 epochs）与基线失败模式定性归纳"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-10, REFERENCES",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（Target-Bench、Depth Anything 3、UniPixel、CLIP、MindJourney、AVIC、NaviTrace、LeCun、FMM/Sethian），无需逐条精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何把世界模型生成的未来转化为接地轨迹预测的结构化监督？（单张第一人称观测 + 语言指令 → 可靠导航轨迹；VLM 直接预测不稳定、世界模型不提供接地信号。）对综述问题的意义：该文是'生成式世界模型替代显式地图'路线的旗舰证据，但其替代形态特殊——世界模型替代的是观测来源（想象未来替代真实传感器探索），教师管线内部仍显式重建 BEV 建图与 FMM 规划等经典几何基础设施，且训练与评测真值依赖 SLAM 采集的轨迹，为'世界模型能否替代 SLAM'提供了能力证明与边界证明的双方证据。",
+ "contributions": [
+  "提出（据作者所知）首个把世界模型生成用作监督源而非测试时证据的单观测接地轨迹预测框架 WorldMAP（教师-学生蒸馏）",
+  "世界模型驱动的教师管线：生成未来视频 → 语义空间记忆 + DA3 单目深度反投影 → CLIP 检索 + UniPixel 开放词汇接地目标/障碍 → BEV 代价图 + FMM 显式规划 → 轨迹伪标签",
+  "轻量学生（Qwen3-VL-8B + LoRA + 多假设轨迹头，best-of-K 损失）直接从视觉-语言输入预测轨迹；Target-Bench 上 ADE/FDE 最优（相对最佳基线 -18.0% / -42.1%）"
+ ],
+ "method": {
+  "summary": "教师管线从单张第一人称 RGB + 语言指令出发：(1) 世界构造——多流世界模型生成未来视频，每帧用 Depth Anything 3 估计单目深度并反投影到共享场景表示，同时构建含视觉嵌入、字幕与相机位姿的语义空间记忆，并用 RANSAC 从有效深度反投影估计场景级地面平面作为共享导航平面；(2) 任务感知接地——CLIP 检索最相关记忆帧，VLM 把任务改写为分割就绪的目标短语，UniPixel 开放词汇分割产生目标与障碍掩码，掩码经 DA3 深度与相机位姿反投影、3D 融合并投影到共享 BEV；(3) 几何规划与监督——把多视角证据累积为保度量的 RGB BEV（仅保留地面高度带内的点、置信度加权颜色融合），叠加接地目标/障碍构造代价图（障碍格封锁、未观测区域保守视为不可通行、近障碍加代价），在 BEV 代价图上运行 Fast Marching Method 得最小代价路径，平滑重采样为 waypoint 序列作为教师轨迹伪标签。学生为两阶段训练的 Qwen3-VL-8B（LoRA 适配编码几何感知特征 + 轻量轨迹解码器，预测 K 条假设轨迹及置信度，best-of-K 损失 = 逐点 L2 回归 + 段方向一致性，λ_d=0.5），训练数据为基准真值 + 经 VLM 五准则质量分级（usable/borderline/reject）筛选的教师伪标签（默认仅 usable 档）；测试时仅运行学生，直接从 RGB+指令输出单条轨迹，无需在线建图。",
+  "assumptions": [
+   "世界模型能从单观测生成几何上足够一致的未来视频（作者自认不完全成立，靠多流互补与质量分级缓解）",
+   "单目深度（DA3）与生成帧相机位姿足够准确，可支撑 3D 反投影与 BEV 构造",
+   "场景存在可由 RANSAC 拟合的场景级地面平面（作为共享导航平面）",
+   "语义空间记忆（嵌入+字幕+位姿）检索能定位任务相关视角",
+   "基准真值（SLAM 估计轨迹）与投影/单应对齐流程提供的监督足够可靠"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Target-Bench（真实世界非结构化室内外场景、语义目标 mapless 路径规划基准；每样本 = 第一人称 RGB + 语言指令 + 四足机器人 SLAM 估计的 3D 轨迹；预处理把 SLAM 轨迹投影到真实首帧得 2D 像素真值，再用 ORB+RANSAC 单应对齐到世界模型首帧；附录 Fig.9 给出处理后验证集的室内外比例、目标类别与轨迹长度分布）"
+  ],
+  "tasks": [
+   "单观测视觉-语言导航轨迹预测（mapless path planning toward semantic targets，输出投影到首帧的 2D 像素轨迹）"
+  ],
+  "embodiments": [
+   "基准真值来自四足机器人平台（SLAM 估计轨迹）；WorldMAP 本身为图像空间轨迹预测器，无机器人闭环执行"
+  ],
+  "sample_or_scale": "Target-Bench（正文未报告样本数，附录 Fig.9 为处理后验证集统计）；教师组件：世界模型多流生成 + Depth Anything 3 + CLIP 检索 + UniPixel-7B 分割 + FMM 规划；学生 Qwen3-VL-8B；训练 4×NVIDIA A100 80GB、AdamW 5e-4、batch 64、100 epochs"
+ },
+ "evaluation": {
+  "design": "在 Target-Bench 投影 2D 像素空间与三族方法同协议对比（专有 VLM 直接预测、开源 VLM 直接预测、世界模型增强测试时推理）；两个消融：学生骨干规模（4B vs 8B，固定教师与协议）、训练监督组成（WM 伪标签 only / Train GT only / 两种组合）；伪标签经 VLM 五准则质量分级（task success、stop accuracy、collision safety、trajectory naturalness、cross-view consistency，各 1-5 分 → usable/borderline/reject）",
+  "baselines": [
+   "专有 VLM 直接预测：GPT-5.4、o3、Gemini-3-Pro",
+   "开源 VLM 直接预测：Qwen3-VL-4B/8B/32B、InternVL3-14B",
+   "世界模型增强：MindJourney†（o-series 推理模型 + SVC，按原文最佳配置）"
+  ],
+  "metrics": [
+   "ADE（平均位移误差，投影 2D 像素空间）",
+   "FDE（最终位移误差）",
+   "normalized DTW（归一化动态时间规整）",
+   "均为 lower-better"
+  ],
+  "ablations": [
+   "学生骨干：Qwen3-VL-4B 45.07/42.84/33.56 vs 8B 42.06/38.87/31.95（增益中等，监督配方是主要改善来源）",
+   "训练监督：WM 伪标签 only（usable/borderline）95.98/141.10/88.25；Train GT only 78.34/121.75/75.09；GT+WM（usable/borderline）42.85/40.97/31.78；GT+WM（usable）42.06/38.87/31.95"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "主结果：WorldMAP（Qwen3-VL-8B 学生）取得全部对比方法中最优的 ADE 42.06 与 FDE 38.87、DTW 31.95；相对最佳竞争基线 Gemini-3-Pro（51.27/67.19/31.63），ADE 降低 18.0%、FDE 降低 42.1%，DTW 接近（31.95 vs 31.63）。同一 Qwen3-VL-8B 骨干作直接预测时 ADE 183.93，作 WorldMAP 学生后达 42.06。",
+   "scope": "Target-Bench 投影 2D 像素空间，训练过的学生 vs 零样本直接预测基线",
+   "locator": "page 6, Table I"
+  },
+  {
+   "finding": "MindJourney 负结果：世界模型增强的测试时推理（o-series + SVC）在全部三个指标上差于其直接预测基线 o3（152.41/250.17/84.84 vs 112.14/177.27/57.30）——测试时直接消费想象视角并非自动有益；作者归因于语义合理但跨视角不一致的生成视图引入误导性证据（与 AVIC 的 gated imagination 结论一致）。",
+   "scope": "Target-Bench 同协议对比（MindJourney 用原文最佳配置）",
+   "locator": "page 6, Table I; page 6, IV-C Analysis"
+  },
+  {
+   "finding": "监督消融：仅用世界模型伪标签训练 ADE 95.98，仅用基准真值（Train GT）训练 78.34，两者结合（usable 档）最优 42.06——世界模型监督单独不足以支撑训练（差于仅用真值），其价值在与真实轨迹数据结合时才显现。",
+   "scope": "学生训练监督组成消融（固定学生架构与协议）",
+   "locator": "page 8, Table III"
+  },
+  {
+   "finding": "教师管线显式重建经典几何基础设施：DA3 单目深度反投影、RANSAC 地面平面、BEV 代价图（障碍封锁 + 未观测区域保守不可通行 + 安全边距）、FMM 规划——世界模型替代的是观测来源（想象未来替代真实传感器探索），建图与规划机制本身在教师内部被显式重建而非取消；'mapless' 仅指测试时学生无需在线建图。",
+   "scope": "方法设计叙述（page 4-5, III-B）",
+   "locator": "page 4-5, Section III-B"
+  },
+  {
+   "finding": "评测与训练的数据基础设施依赖 SLAM 与经典几何：Target-Bench 真值为四足机器人 SLAM 估计的 3D 轨迹，预处理将其投影到首帧作 2D 像素真值；附录用 ORB 特征匹配 + RANSAC 单应（≤400 特征、≥20 内点）对齐真实帧与世界模型帧；最优训练配方含基准真值（Train GT）。",
+   "scope": "评测设定与附录数据处理（page 5, IV-A; page 11, Appendix A; page 8, Table III）",
+   "locator": "page 5, IV-A; page 11, Appendix A"
+  },
+  {
+   "finding": "作者对经典 SLAM 管线的定位（引言）：经典管线通过显式定位、建图与规划（SLAM 式几何地图、语义地图、解析路径规划器）解决问题，'remain effective because they expose interpretable intermediate representations that support reliable motion planning and obstacle avoidance'；其批评点仅在依赖持久建图、重复场景探索与精细工程化的模块设计，在未见或动态环境中繁琐。",
+   "scope": "作者动机叙述（引言，非实验）",
+   "locator": "page 1, I. INTRODUCTION"
+  },
+  {
+   "finding": "作者自述证据边界：增益不能单独归因于监督（WorldMAP 还依赖记忆检索、语义接地与显式规划）；结果仅在 Target-Bench 上测量，未证明迁移到高度动态场景、多层环境或长时程探索；受未来生成与几何重建质量约束（世界模型可能产生不一致、缺失区域或幻觉内容）。",
+   "scope": "Discussion 与 Scope and limitations（作者自述）",
+   "locator": "page 8-9, V. DISCUSSION"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "结果仅在 Target-Bench 上测量，尚未证明迁移到高度动态场景、多层环境或长时程探索",
+    "locator": "page 9, V. DISCUSSION（Scope and limitations）"
+   },
+   {
+    "limitation": "WorldMAP 仍受未来生成与几何重建质量的约束：即使先进世界模型也可能产生不一致、缺失区域或幻觉内容（靠检索、多视角接地与几何投影蒸馏出稳定的导航结构来缓解）",
+    "locator": "page 9, V. DISCUSSION（Scope and limitations）"
+   },
+   {
+    "limitation": "增益不能单独归因于监督，因为 WorldMAP 还依赖记忆检索、语义接地与显式规划（作者对自身因果归因的限定）",
+    "locator": "page 8, V. DISCUSSION（What the current evidence supports）"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "替代形态边界：世界模型并未替代建图/规划基础设施——教师管线内部显式重建了 SLAM 式几何处理链（单目深度反投影→地面平面→BEV 代价图→FMM 规划），只是把观测来源从真实传感器探索换成生成视频；'无图'仅指测试时学生不需在线建图，'世界模型替代 SLAM'的强主张在该文中不成立，成立的是'生成数据替代真实探索数据'",
+    "basis": "page 4-5 III-B 方法叙述与 page 5 'In this way, explicit planning serves not as the final navigation policy, but as the mechanism that converts grounded scene structure into structured trajectory supervision'"
+   },
+   {
+    "boundary": "数据/评测基础设施依赖：训练监督（Train GT）与评测真值均来自 Target-Bench 的 SLAM 估计轨迹；真实帧与世界模型帧的对齐用 ORB+RANSAC 单应——该'无图'路线的闭环依赖 SLAM 提供的真值与经典几何对齐，SLAM 作为具身数据采集与评测基础设施的角色未被替代",
+    "basis": "page 5 IV-A（'a SLAM-estimated 3D trajectory of a quadruped robot'、'we project the robot trajectory onto the corresponding real first-frame image ... used as ground truth'）与 page 11 Appendix A（ORB feature matching + RANSAC-based homography fit）"
+   },
+   {
+    "boundary": "监督质量边界：世界模型伪标签需 VLM 五准则分级过滤（usable/borderline/reject）且默认仅用 usable 档；伪标签单独训练（ADE 95.98）反而显著差于仅用真值（78.34）——'bootstrapping' 标题与世界模型监督的实际独立支撑能力之间存在张力",
+    "basis": "page 8 Fig. 6 质量分级协议与 Table III 监督消融数值"
+   },
+   {
+    "boundary": "任务形态边界：输出与评测均在投影 2D 像素空间（ADE/FDE/DTW），非机器人可执行的全局度量轨迹，无闭环控制与真实机器人执行验证；碰撞安全、停止语义仅有定性证据（Fig. 5/11）而无定量指标",
+    "basis": "page 5-6 指标定义（'computed on the projected 2D trajectories in the real first-frame image'）与全部实验范围"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 Target-Bench（真实世界非结构化室内外场景、四足机器人 SLAM 轨迹真值、ORB+RANSAC 单应投影对齐）上，从单张第一人称 RGB + 语言指令预测投影到首帧 2D 像素空间的导航轨迹：以 Qwen3-VL-8B 为学生骨干、用基准真值与世界模型伪标签（usable 档）联合训练的 WorldMAP 取得 ADE 42.06 / FDE 38.87 / DTW 31.95，优于全部直接 VLM 与世界模型增强基线。对高度动态场景、多层环境、长时程探索、真实机器人闭环执行（度量轨迹输出与控制）、世界模型生成质量不足的场景，以及不依赖真实 SLAM 轨迹数据的'纯自举'训练，均未证明。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三族基线（专有/开源 VLM 直接预测、世界模型增强测试时推理）同协议同指标对比，直接回答'直接 VLM 预测是否够'与'世界模型当监督还是当证据'两个问题",
+   "监督组成消融（GT only / WM only / 两种组合）干净地分离了世界模型伪标签的边际价值，并暴露其不能独立支撑训练",
+   "VLM 五准则伪标签质量分级协议（usable/borderline/reject）使生成监督的噪声影响可审计",
+   "作者诚实声明增益不能只归因监督（教师还贡献检索/接地/规划），并在 Discussion 中给出清晰的能力边界自述"
+  ],
+  "design_risks": [
+   "最优配置依赖真实基准真值（SLAM 轨迹）联合训练，与标题'bootstrapping'的自举叙事存在张力——世界模型伪标签 alone（ADE 95.98）差于 GT alone（78.34）",
+   "WorldMAP 是经训练的学生（用到基准 GT），而 VLM 基线是零样本直接预测，比较对象不对等（作者文中如实说明但表内未区分）",
+   "MindJourney† 采用原文最佳配置而非为本基准调优，其负结果对'测试时想象无益'的支撑力有限（作者也承认解释主要转引 AVIC）",
+   "正文未报告样本数、数据划分与统计显著性；评测在投影 2D 像素空间而非度量空间，像素误差与真实可执行性的关系未建立；Target-Bench 真值本身是 SLAM 估计（含 SLAM 误差）"
+  ],
+  "baseline_fairness": "与直接 VLM 预测的对比同协议、同指标、同评测空间，公平；但'训练过的 WorldMAP 学生 vs 零样本 VLM'的本质差异作者仅在 Analysis 中说明（'This comparison does not isolate supervision as the only changed factor'），表格呈现上未突出该不对称。MindJourney† 用原文最佳配置（o-series + SVC），未为本基准调优，负结果解释需谨慎。开源 VLM 直接预测的差结果（如 Qwen3-VL-8B 183.93）与 PanoNav 等论文中 VLM 基线的表现相互印证。",
+  "metric_validity": "ADE/FDE/DTW 是轨迹预测标准指标，但全部定义在投影 2D 像素空间——依赖单应投影（ORB+RANSAC，≤400 特征、≥20 内点、拒绝不稳定拟合）的正确性；像素误差不直接等价于导航成功，碰撞安全/停止准确性仅有定性图示（Fig. 5/11）而无定量评测；真值本身为 SLAM 估计，存在系统性误差来源。",
+  "reproducibility": "附录给出教师/学生主要超参（BEV 5 mm/格、垂直带平面下 0.5 m 至上 1.5 m、UniPixel-7B、解码器 hidden 256/3 层 MLP/dropout 0.1/8 头、AdamW lr 5e-4、wd 1e-4、batch 64、100 epochs、4×A100 80GB、λ_d=0.5）；未报告所用世界模型的具体选型与流数、假设数 K 数值、质量分级阈值与 prompt、数据划分与样本数；无代码发布声明。",
+  "external_validity": "仅 Target-Bench 一个基准；作者自认未验证高度动态场景、多层环境、长时程探索；输出为图像空间轨迹而非机器人控制量，无闭环执行；世界模型生成的幻觉/不一致是外推的主要瓶颈（作者自认）；真实机器人部署所需的度量轨迹输出与控制接口未涉及。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2604.07957-C01",
+   "claim": "在 Target-Bench（真实世界非结构化室内外场景、语义目标导航轨迹预测基准）的投影 2D 像素空间评测中，WorldMAP（Qwen3-VL-8B 学生骨干，测试时仅运行轻量学生、无需在线建图）取得全部对比方法中最优的 ADE 42.06 与 FDE 38.87：相对最佳竞争基线 Gemini-3-Pro，ADE 从 51.27 降至 42.06（-18.0%）、FDE 从 67.19 降至 38.87（-42.1%），normalized DTW 31.95 与 Gemini-3-Pro 的 31.63 接近。",
+   "stance": "support",
+   "relation": "支持'生成式世界模型派生的结构化监督可训练出超过直接 VLM 预测与测试时世界模型推理的轨迹预测器'的替代路线判断：在单观测、测试时无在线建图的设定下，学习型预测器达到优于专有 VLM 的精度——但该能力来自教师内部显式建图+规划产生的监督（见 C02），且最优训练依赖基准真值（见 C05），替代主张需限定在此条件内。",
+   "summary": "Target-Bench 上 WorldMAP ADE 42.06 / FDE 38.87 最优，相对 Gemini-3-Pro 降低 18.0% / 42.1%",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table I",
+   "source_context": "WorldMAP achieves the best ADE and FDE among all compared methods. Relative to the best competing baseline, Gemini-3-Pro, it reduces ADE from 51.27 to 42.06 (18.0%) and FDE from 67.19 to 38.87 (42.1%), while remaining close on normalized DTW (31.95 vs. 31.63).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ADE / FDE / normalized DTW",
+    "value_or_direction": "WorldMAP 42.06 / 38.87 / 31.95；Gemini-3-Pro 51.27 / 67.19 / 31.63（ADE -18.0%、FDE -42.1%）",
+    "comparator": "最佳竞争基线 Gemini-3-Pro（专有 VLM 直接预测）及全部 8 个对比方法",
+    "task_or_sample": "Target-Bench 单观测视觉-语言导航轨迹预测（投影 2D 像素空间）",
+    "locator": "page 6, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 原文：'WorldMAP achieves the best ADE and FDE among all compared methods. Relative to the best competing baseline, Gemini-3-Pro, it reduces ADE from 51.27 to 42.06 (18.0%) and FDE from 67.19 to 38.87 (42.1%), while remaining close on normalized DTW (31.95 vs. 31.63).'，与 Table I 数值（WorldMAP 42.06 38.87 31.95；Gemini-3-Pro 51.27 67.19 31.63）一致。学生骨干 Qwen3-VL-8B 与测试时仅运行学生的设定见 page 6 表注与 page 5 III-C。claim 忠实于原文报告范围，未外推到其他基准。"
+   }
+  },
+  {
+   "card_id": "2604.07957-C02",
+   "claim": "WorldMAP 教师管线把世界模型生成的未来视频转化为结构化轨迹监督的方式，是显式重建经典几何建图-规划链：接地的多视角证据被投影到共享导航平面并累积为 BEV 代价图（障碍格封锁、未观测区域保守视为不可通行、近障碍加代价），再由 Fast Marching Method 在 BEV 代价图上规划最小代价路径、平滑重采样为 waypoint 序列形成教师轨迹；作者明确定位：显式规划不是最终导航策略，而是把接地场景结构转化为结构化轨迹监督的机制。",
+   "stance": "conditional",
+   "relation": "限定'生成式世界模型替代显式地图'的实际替代范围：世界模型替代的是观测来源（用想象未来替代真实传感器探索与持久建图），而 BEV 建图与 FMM 规划等经典几何基础设施在教师内部被显式重建而非取消——'mapless'仅指测试时学生不需在线建图。这支持一个更精确的综述判断：世界模型路线替代的是 SLAM 的数据获取方式，而非其建图/规划基础设施功能。",
+   "summary": "教师管线内部显式重建 BEV 代价图 + FMM 规划——世界模型替代观测来源而非建图/规划基础设施",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 5, Section III-B.3（FMM planning）",
+   "source_context": "Given the start position and the grounded target region, we run the Fast Marching Method (FMM) [35], [36] on the BEV cost map to obtain a minimum-cost path from start to goal. The raw grid path is then smoothed and resampled into a sparse waypoint sequence. These BEV waypoints are finally mapped back onto the navigation plane to form the teacher trajectory. In this way, explicit planning serves not as the final navigation policy, but as the mechanism that converts grounded scene structure into structured trajectory supervision.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 III-B.3 FMM planning 段：所选片段与提取文本完全一致（含 '(FMM) [35], [36] on the BEV cost map' 的原文标点）。代价图构造细节（障碍封锁、未观测区域保守不可通行、安全边距）逐字见同节 Cost map construction 段；DA3 深度反投影与地面平面见 page 4。claim 是对教师管线机制的忠实转述，'替代观测来源而非基础设施'的解读置于 relation，不进入 claim。"
+   }
+  },
+  {
+   "card_id": "2604.07957-C03",
+   "claim": "在同一评测协议下，世界模型增强的测试时推理系统 MindJourney（o-series 推理模型 + SVC，按原文最佳配置）在 Target-Bench 全部三个指标上均差于其直接预测基线 o3（ADE 152.41 vs 112.14、FDE 250.17 vs 177.27、DTW 84.84 vs 57.30）——测试时直接消费生成的想象视角并非自动有益；作者归因于语义上合理但跨视角几何不一致的生成视图会引入误导性证据。",
+   "stance": "limit",
+   "relation": "限制'世界模型可在测试时作为地图/空间证据的直接替代'的主张：想象视角作为直接证据消费在该基准上系统性降低精度（三个指标全面劣于不用想象），支持作者'世界模型应作监督源而非 action-ready 证据'的重定位——对'世界模型直接替代 SLAM 提供空间信息'的强替代主张是直接的反例边界。",
+   "summary": "MindJourney（测试时世界模型推理）在全部三指标上差于直接 o3 基线——想象视角当证据用反而有害",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table I",
+   "source_context": "Notably, the o3-based MindJourney model also underperforms the direct o3 baseline on all three metrics, indicating that additional imagined views are not automatically beneficial in this benchmark.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ADE / FDE / DTW",
+    "value_or_direction": "MindJourney† 152.41 / 250.17 / 84.84 vs 直接 o3 112.14 / 177.27 / 57.30（三指标全面更差）",
+    "comparator": "直接 o3 基线（同协议零样本预测，无想象增强）",
+    "task_or_sample": "Target-Bench 单观测导航轨迹预测",
+    "locator": "page 6, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 6 原文叙述 'Notably, the o3-based MindJourney model also underperforms the direct o3 baseline on all three metrics, indicating that additional imagined views are not automatically beneficial in this benchmark.'；Table I 数值核对：MindJourney† 152.41 250.17 84.84、o3 112.14 177.27 57.30。跨视角不一致归因见同页 IV-C（'generated views that are semantically plausible yet cross-view inconsistent can introduce misleading evidence'）。claim 限定于该基准与该配置（原文最佳配置，未为本基准调优）。"
+   }
+  },
+  {
+   "card_id": "2604.07957-C04",
+   "claim": "WorldMAP 评测所用的 Target-Bench 以四足机器人 SLAM 估计的 3D 轨迹作为每个样本的真值，预处理把该机器人轨迹投影到真实首帧图像得到 2D 像素空间真值用于最终评测——该'无图导航/世界模型'路线的评测闭环建立在 SLAM 采集的轨迹数据与投影对齐之上。",
+   "stance": "conditional",
+   "relation": "限定'世界模型/学习型预测器替代 SLAM'主张的范围：替代发生在预测/决策层，而评测基础设施（真值轨迹采集、跨帧几何对齐）仍依赖 SLAM 输出与经典几何方法（附录用 ORB 特征匹配 + RANSAC 单应对齐真实帧与世界模型帧）——SLAM 作为具身数据采集与评测基准基础设施的角色在该路线中未被替代，反而被作为真值标准使用。",
+   "summary": "Target-Bench 真值是四足机器人 SLAM 估计轨迹——'无图'路线的评测闭环依赖 SLAM 基础设施",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 5, IV-A Experimental Setup",
+   "source_context": "a natural-language navigation instruction, and a SLAM-estimated 3D trajectory of a quadruped robot.",
+   "evidence_type": "dataset",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 5 IV-A Benchmark 段：'Each sample provides a first-person RGB observation, a natural-language navigation instruction, and a SLAM-estimated 3D trajectory of a quadruped robot.'（所选片段避开原文 'ob-servation' 跨行连字符，从 'a natural-language' 起引）；投影为 2D 像素真值见同段 'we project the robot trajectory onto the corresponding real first-frame image to obtain a 2D pixel-space trajectory, which is used as ground truth for final evaluation'；ORB+RANSAC 单应对齐见 page 11 Appendix A。claim 为对评测设定的忠实转述，未添加论文未做的结论。"
+   }
+  },
+  {
+   "card_id": "2604.07957-C05",
+   "claim": "学生训练监督消融：仅用世界模型伪标签（usable/borderline 档）训练的学生 ADE 95.98 / FDE 141.10 / DTW 88.25，仅用基准真值（Train GT）训练为 78.34 / 121.75 / 75.09，两者结合（Train GT + 伪标签 usable 档）达到最优 42.06 / 38.87 / 31.95——世界模型生成的监督单独不足以支撑训练（甚至差于仅用真实真值），其价值只在与真实轨迹数据结合时显现。",
+   "stance": "limit",
+   "relation": "限制'生成式世界模型可自举（bootstrap）导航学习/替代真实具身数据采集'的主张：世界模型伪标签不能替代真实机器人（SLAM 采集）轨迹数据，最优结果必须与之联合训练——世界模型在该路线中是真实数据的数据增强器，而非 SLAM 数据采集基础设施的替代品。",
+   "summary": "监督消融：WM 伪标签 alone ADE 95.98 差于 GT alone 78.34，结合才最优 42.06——世界模型监督不能独立支撑训练",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 8, Table III",
+   "source_context": "WM pseudo-labels only (usable / borderline) 95.98 141.10 88.25\nTrain GT only 78.34 121.75 75.09\nTrain GT + WM pseudo-labels (usable / borderline) 42.85 40.97 31.78\nTrain GT + WM pseudo-labels (usable) 42.06 38.87 31.95",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ADE / FDE / DTW",
+    "value_or_direction": "WM 伪标签 only 95.98 / 141.10 / 88.25；Train GT only 78.34 / 121.75 / 75.09；GT+WM（usable）42.06 / 38.87 / 31.95（最优）",
+    "comparator": "四种训练监督组合（WM 伪标签 only / Train GT only / 两种组合）",
+    "task_or_sample": "Target-Bench 学生训练监督消融（固定 Qwen3-VL-8B 学生架构与评测协议）",
+    "locator": "page 8, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 8 Table III 四行数值：'WM pseudo-labels only (usable / borderline) 95.98 141.10 88.25'、'Train GT only 78.34 121.75 75.09'、'Train GT + WM pseudo-labels (usable / borderline) 42.85 40.97 31.78'、'Train GT + WM pseudo-labels (usable) 42.06 38.87 31.95'；与正文 'Train GT only and WM pseudo-labels only both perform poorly, while combining Train GT with teacher-generated pseudo-labels gives the strongest results' 一致。最优配置含基准真值（SLAM 轨迹）另见 page 6 Implementation 'trained from teacher pseudo-labels together with benchmark GT when available'。claim 忠实于表格数值与作者叙述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Target-bench: Can world models achieve mapless path planning with semantic targets?",
+   "arxiv_id": "2511.17792",
+   "role": "评测基准与真值来源（SLAM 估计轨迹）；本 run 内另有该文独立 note 可交叉"
+  },
+  {
+   "title": "Depth anything 3: Recovering the visual space from any views",
+   "arxiv_id": "",
+   "role": "教师管线的单目深度估计（3D 反投影与 BEV 构造的几何基础）"
+  },
+  {
+   "title": "Unipixel: Unified object referring and segmentation for pixel-level visual reasoning",
+   "arxiv_id": "",
+   "role": "教师管线的开放词汇目标/障碍分割（UniPixel-7B）"
+  },
+  {
+   "title": "Learning transferable visual models from natural language supervision",
+   "arxiv_id": "2103.00020",
+   "role": "CLIP：语义空间记忆检索（教师接地阶段）"
+  },
+  {
+   "title": "Mindjourney: Test-time scaling with world models for spatial reasoning",
+   "arxiv_id": "",
+   "role": "关键负结果基线：测试时消费想象视角反而劣化（C03）"
+  },
+  {
+   "title": "When and how much to imagine: Adaptive test-time scaling with world models for visual spatial reasoning",
+   "arxiv_id": "2602.08236",
+   "role": "AVIC：'想象需 gated'的核心转引证据，支撑 C03 的解释"
+  },
+  {
+   "title": "Navitrace: Evaluating embodied navigation of vision-language models",
+   "arxiv_id": "2510.26909",
+   "role": "VLM 直接轨迹预测不稳定的 benchmark 证据（问题动机）"
+  },
+  {
+   "title": "A path towards autonomous machine intelligence",
+   "arxiv_id": "",
+   "role": "LeCun 世界模型架构（World-Memory-Action-Perception 分解的思想来源）"
+  },
+  {
+   "title": "Fast marching methods",
+   "arxiv_id": "",
+   "role": "Sethian FMM：教师管线中的经典规划器（C02 的基础设施证据）"
+  }
+ ],
+ "notes": "补充观察：(1) 提取管道为 alphaxiv-fulltext-api（PDF 文本），note 中 extraction.method 按校验器枚举记为 pdf-text；reading packet 与 extraction 在 '(FMM) [35], [36] on the BEV' 处有一处逗号差异，source_context 以 extraction 为准。(2) 对综述问题的关键含义：WorldMAP 表面上是'世界模型替代地图'路线的旗舰证据，但精读后其替代形态是'数据源替代'而非'基础设施替代'——教师管线内部完整重建了经典导航几何栈（DA3 深度反投影、RANSAC 地面平面、BEV 代价图、FMM 规划），测试时的学生确实无需在线建图，但其训练与评测都依赖 Target-Bench 的 SLAM 估计真值轨迹，且最优配方必须包含真实 GT（伪标签 alone 更差）。(3) 论文对经典 SLAM 管线的评价是 'remain effective because they expose interpretable intermediate representations'（page 1），批评点仅在持久建图/重复探索/工程负担——即作者自己也把 SLAM 管线视为有效但沉重的基线。(4) MindJourney 负结果（C03）与监督消融（C05）共同表明：世界模型的正确用法是转成结构化监督而非测试时当证据/地图用——这对'世界模型直接替代 SLAM'的强主张是双重边界证据。(5) 与 PanoNav（2511.06840）对照：两者同属无图路线，但 PanoNav 用文本级隐式记忆替代地图的语义功能，WorldMAP 用世界模型替代观测来源而保留几何建图-规划栈——'替代'一词在两文中指代不同层次，综述中应分层表述。"
+}

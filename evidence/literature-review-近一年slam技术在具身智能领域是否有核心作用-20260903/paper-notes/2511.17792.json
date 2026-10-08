@@ -1,0 +1,392 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.17792",
+  "title": "Target-Bench: Can Video World Models Achieve Mapless Path Planning with Semantic Targets?",
+  "published": "2026-04-15",
+  "url": "https://arxiv.org/abs/2511.17792",
+  "authors": [
+   "Dingrui Wang",
+   "Zhihao Liang",
+   "Hongyuan Ye",
+   "Zhexiao Sun",
+   "Zhaowei Lu",
+   "Yuchen Zhang",
+   "Yuyu Zhao",
+   "Yuan Gao",
+   "Marvin Seegert",
+   "Finn Schäfer",
+   "Haotong Qin",
+   "Wei Li",
+   "Luigi Palmieri",
+   "Felix Jahncke",
+   "Mattia Piccinini",
+   "Johannes Betz"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个量化视频世界模型能否执行无图语义目标路径规划的基准；对综述问题双向相关：(1) SLAM 作为真值/数据采集基础设施被显式依赖；(2) 结果显示最强现成世界模型规划得分仅 0.341，为'SLAM 尚未被世界模型替代'提供量化证据；world-decoder 消融还给出 SLAM 管线与前馈几何模型在生成视频上的直接对比。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1",
+    "role": "problem",
+    "purpose": "摘要与题目：确立问题——视频世界模型能否做无图语义目标路径规划，以及 SLAM 轨迹作为运动趋势参考的角色"
+   },
+   {
+    "locator": "pages 1-3",
+    "role": "method-or-design",
+    "purpose": "引言：论证现有评测只关注视觉保真度，缺少对语义推理/空间估计/规划的量化评估；列贡献"
+   },
+   {
+    "locator": "page 3",
+    "role": "relevant-core",
+    "purpose": "相关工作：世界模型、语义导航数据集、世界模型基准三条线，Table 1/2 对比"
+   },
+   {
+    "locator": "pages 4-8",
+    "role": "method-or-design",
+    "purpose": "Target 数据集（四足机器人平台、LiDAR-SLAM 采集栈、450 场景）与 world-decoder（VGGT/SpaTracker/ViPE + 尺度恢复）"
+   },
+   {
+    "locator": "pages 8-10",
+    "role": "method-or-design",
+    "purpose": "路径评测指标：ADE/FDE/MR/SE/AC/加权总分定义，走廊式 AC 支持路径非唯一性"
+   },
+   {
+    "locator": "pages 10-13",
+    "role": "results-or-analysis",
+    "purpose": "实验：现成模型评测（Table 3/4 显式 vs 隐式目标）、微调模型（0.084→0.330→0.394）"
+   },
+   {
+    "locator": "pages 13-14",
+    "role": "results-or-analysis",
+    "purpose": "消融：三种重建工具对比（VGGT 0.862 / SpaTracker 0.623 / ViPE 0.291 真值视频）、规划时域敏感性（Table 6）"
+   },
+   {
+    "locator": "page 14",
+    "role": "results-or-analysis",
+    "purpose": "讨论：世界模型性能差距、 holistic 评测、真实导航潜力"
+   },
+   {
+    "locator": "page 15",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与未来工作：闭环重规划、隐式记忆长时域导航"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "pages 16-19",
+    "reason": "references-only: 参考文献页，无正文内容"
+   }
+  ]
+ },
+ "research_question": "视频世界模型能否在无显式地图条件下完成语义目标驱动的路径规划？其规划能力与 SLAM 真值轨迹差距有多大？SLAM 在评测基础设施中扮演什么角色？",
+ "contributions": [
+  "首个评测视频世界模型在真实世界无结构环境中做无图语义目标路径规划的基准（含模块化可替换 world-decoder 与五项互补指标）",
+  "开源 450 场景（112,500 帧）四足机器人采集数据集，47 语义类别，含 SLAM 度量轨迹真值、点云地图与显式/隐式目标标注",
+  "对开源与专有世界模型（Sora 2、Veo 3.1、Wan 系列）的系统对比，以及首个在小型真实机器人数据集上微调开源模型用于路径规划的实验（0.084→0.394）"
+ ],
+ "method": {
+  "summary": "用四足机器人（Livox Mid-360 LiDAR + OAK-D Pro W 立体相机 + Jetson AGX Orin）经 LiDAR 中心 SLAM 管线（IMU+腿式里程计 EKF 融合、GICP 增量配准、G2O 后端）采集 450 个目标导向场景，产出视频序列、度量尺度轨迹真值、语义目标 prompt 与点云地图。评测时，世界模型根据首帧+prompt 生成未来视频，world-decoder（VGGT/SpaTracker/ViPE 三选一）从生成视频恢复相机轨迹（单目方法用前 2 秒真值位移做尺度恢复），再与 SLAM 真值轨迹比较，计算 ADE/FDE/MR/SE/AC 五指标加权总分（WO）。",
+  "assumptions": [
+   "机器人采集时目标始终在初始视野内，操作员采用恒速直趋目标的遥操作策略（不测试探索）",
+   "真值轨迹被视为运动趋势参考而非唯一正确解（走廊式 AC 指标）",
+   "生成视频的位姿恢复误差可由 world-decoder 在真值视频上的表现上界刻画"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Target-Bench 自建数据集（450 场景 / 112,500 帧 / 25Hz / 每样本约10秒；232 室内 218 室外；378 显式目标 72 隐式目标；125 场景为基准集，325 为训练集）"
+  ],
+  "tasks": [
+   "无图语义目标路径规划（image-to-video 生成 + 轨迹恢复评测）"
+  ],
+  "embodiments": [
+   "DEEP Robotics Lite 3 Venture 四足机器人（数据采集）"
+  ],
+  "sample_or_scale": "450 场景；47 语义类别；评测世界模型 11 个变体；微调用 325 训练场景 + 4 倍移帧增广"
+ },
+ "evaluation": {
+  "design": "给定首帧与语义目标 prompt，世界模型生成未来视频，world-decoder 恢复相机轨迹后与 SLAM 真值轨迹对比；五个指标加权（w_ADE=0.075, w_FDE=0.125, w_MR=0.125, w_SE·AC=0.675）合成 [0,1] 总分",
+  "baselines": [
+   "gt_video（真值视频，刻画 decoder 噪声底）",
+   "Sora 2",
+   "Veo 3.1",
+   "Veo 3.1-fast",
+   "Wan2.5-Preview",
+   "Wan2.2-Plus",
+   "Wan2.2-Flash",
+   "Wan2.1-Plus",
+   "Wan2.1-Turbo",
+   "Wan2.2-5B-base",
+   "Wan2.2-5B-FT",
+   "Wan2.2-5B-FT-DA（微调+数据增广）"
+  ],
+  "metrics": [
+   "ADE（平均位移误差）",
+   "FDE（最终位移误差）",
+   "MR（偏差>2m 比率）",
+   "SE（高斯软端点，σ=0.6m）",
+   "AC（走廊式趋近一致性）",
+   "WO（加权总分）"
+  ],
+  "ablations": [
+   "world-decoder 对比：VGGT vs SpaTracker vs ViPE（真值视频 0.862/0.623/0.291）",
+   "规划时域 8s/6s/4s 敏感性",
+   "显式 vs 隐式语义目标",
+   "微调 ±数据增广"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "最强现成视频世界模型（Wan2.2-Flash）加权总分仅 0.341（FDE 1.362m、ADE 1.005m、MR 38.75%），远低于真值视频噪声底 0.862，视觉生成质量与语义规划能力之间存在显著鸿沟",
+   "scope": "125 场景基准集，VGGT decoder，8 秒时域",
+   "locator": "pages 11-12, Table 3"
+  },
+  {
+   "finding": "在自建 SLAM 标注的 325 个真实机器人场景上微调开源 Wan2.2-5B（LoRA，8×A800），总分从 0.084 升至 0.330，加数据增广达 0.394，超越所有现成模型",
+   "scope": "同域微调+同分布测试",
+   "locator": "page 12, Table 3"
+  },
+  {
+   "finding": "三种 world-decoder 中，SLAM 视觉惯性管线 ViPE 在生成视频上表现最弱（真值视频 WO 仅 0.291），前馈式 VGGT 最好（0.862），SpaTracker 居中（0.623）",
+   "scope": "全部 12 个世界模型变体",
+   "locator": "page 13, Table 5 & Fig. 8"
+  },
+  {
+   "finding": "规划时域从 8s 缩短到 4s 时加权总分一致提升（Wan2.2-Flash 0.341→0.363），世界模型仅在短时窗口内可靠",
+   "scope": "2 个模型 × 3 个时域",
+   "locator": "pages 13-14, Table 6"
+  },
+  {
+   "finding": "隐式语义目标上的表现与显式目标接近，说明当前视频世界模型能理解语义目标，短板在几何路径规划精度",
+   "scope": "显式/隐式目标分组评测",
+   "locator": "page 12, Table 4"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前为开环评测与初步部署演示，未来工作需扩展到机器人上的闭环重规划",
+    "locator": "page 15"
+   },
+   {
+    "limitation": "复杂后退时域（receding-horizon）导航任务中隐式记忆如何支持导航尚待研究",
+    "locator": "page 15"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "采集协议让目标始终在初始视野内且恒速直趋，完全不测试探索与搜索——而探索/重访恰是显式建图（SLAM）相对隐式记忆的核心优势场景，故该基准系统性低估了地图在导航中的作用",
+    "basis": "Sec 3.1.2 采集策略描述"
+   },
+   {
+    "boundary": "真值视频经 VGGT decoder 的噪声底为 0.862 而非 1.0，世界模型得分被 decoder 误差压低约 14%，跨 decoder 的绝对分数不可直接比较",
+    "basis": "Table 3/5 gt_video 行"
+   },
+   {
+    "boundary": "微调与测试同分布（同机器人、同采集协议、同场景类型），未测试跨本体/跨场景泛化；325 训练场景规模很小，'数据高效适应'结论的边界未刻画",
+    "basis": "Sec 4.3 实验设置"
+   },
+   {
+    "boundary": "单目 decoder 需要前 2 秒的真值位移做尺度恢复，实际部署中该真值来自 SLAM/里程计——即评测管线本身在开环阶段就依赖外部度量信息",
+    "basis": "Sec 3.2.1 Scale Factor Recovery"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：真实世界室内外场景、四足机器人平台、8 秒以内开环单步预测、目标初始可见的直趋式导航。不适用于：探索式导航、长时域闭环重规划、目标不可见的搜索任务、跨本体部署；微调收益仅在同域小数据设定下验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "走廊式 AC 指标承认路径非唯一性，以运动趋势而非轨迹重叠评分，降低对唯一真值的过强假设",
+   "用真值视频（gt_video）刻画 decoder 噪声底，区分'生成质量问题'与'解码问题'",
+   "模块化可替换 world-decoder，隔离了重建工具进步对评测的影响"
+  ],
+  "design_risks": [
+   "直趋式采集策略使数据集不含探索行为，评测结论对'无图导航'的外推有限",
+   "尺度恢复依赖前 2 秒真值位移（来自 SLAM），被评的'无图'方法在管线中隐性使用了度量信息",
+   "VLM 裁判不确定性虽被规避，但轨迹级指标无法评估避障安全性（无碰撞/通行性检查）"
+  ],
+  "baseline_fairness": "现成模型输入条件（首帧+prompt）一致；但生成时长不一致（Sora 2/Veo 8s vs Wan2.2-Plus/Flash 5s vs 微调模型 8s），时长差异会经时域敏感性（Table 6）系统性影响得分，跨模型绝对比较需谨慎；闭源与开源算力/数据量不对等但如实标注。",
+  "metric_validity": "指标聚焦趋近能力与方向一致性（SE·AC 权重 0.675），与任务成功直接挂钩；但无避障/通行性度量，一条穿过障碍物的'好'轨迹同样得高分。",
+  "reproducibility": "代码与数据集开源（target-bench.github.io）；指标定义、权重、超参完整给出；微调用 DiffSynth-Studio LoRA，硬件（8×A800）与推理卡（RTX PRO 6000）披露。",
+  "external_validity": "单平台（四足）采集、目标初始可见设定；结论'世界模型规划能力不足'对当前模型代际成立，但微调实验显示小数据适应可大幅提升，能力差距可能随数据与模型迭代快速收窄。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.17792-C01",
+   "claim": "Target-Bench 基准的全部真值基础设施建立在 SLAM 之上：450 个机器人采集场景以 SLAM 轨迹作为运动趋势参考，评测管线显式依赖 SLAM-based ground-truth robot paths",
+   "stance": "support",
+   "relation": "支持'SLAM 在具身智能领域发挥核心作用'：即使研究对象是声称要摆脱地图的世界模型，其能力评测仍以 SLAM 产出的度量轨迹为真值锚点",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要与结论两处明确：SLAM 轨迹是 benchmark 的运动参考（摘要）且评测是 against SLAM-based ground-truth robot paths（结论）。无图方法的'图'由 SLAM 在评测侧补齐。",
+   "locator": "page 1",
+   "source_context": "Target-Bench provides 450 robot-collected scenarios spanning 47 semantic categories, with SLAM-based trajectories serving as motion tendency references.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要原句逐字出现；page 15 结论另有 'measures planning performance against SLAM-based ground-truth robot paths' 互证。claim 措辞未超出原文。"
+   }
+  },
+  {
+   "card_id": "2511.17792-C02",
+   "claim": "数据采集栈采用 LiDAR 中心 SLAM 管线（IMU+腿式里程计 EKF 融合、运动补偿点云配准、G2O 后端轨迹优化），产出全部度量轨迹与点云地图，使该数据集成为唯一同时具备度量轨迹、语义目标、点云与运动学一致性的导航数据集",
+   "stance": "support",
+   "relation": "支持'SLAM 在具身数据采集环节发挥核心作用'：为评测世界模型（SLAM 的潜在替代者）而建的数据集，其数据质量根基仍是经典多传感器融合 SLAM",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec 3.1.1 描述软件栈：LiDAR-centric SLAM pipeline + multi-sensor fusion，EKF 融合 IMU 与腿式里程计产生基座位姿，SLAM 前端做运动补偿与增量配准，后端优化轨迹并建全局地图；Table 1 中该数据集是唯一四项全有的数据集。",
+   "locator": "page 5",
+   "source_context": "centric SLAM pipeline [20, 33] with multi-sensor fusion. Inertial Measurement Unit (IMU) data and legged odometry are fused via an Extended Kalman Filter (EKF) to produce a stable base-frame pose",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 原句逐字出现（含跨行处已按归一化空白匹配）；Table 1（page 4）显示 Ours 是唯一 Metric/Traj./Semantic Target/Point Cloud/Kinem. Match 全勾的数据集。SLAM 前端/后端描述在 page 5-6 边界处，claim 引用的管线组件（EKF、运动补偿、后端优化、全局地图）均见于原文。"
+   }
+  },
+  {
+   "card_id": "2511.17792-C03",
+   "claim": "在 125 场景基准集、8 秒时域、VGGT decoder 条件下，最强现成视频世界模型 Wan2.2-Flash 的加权总分仅 0.341（FDE 1.362m、ADE 1.005m、MR 38.75%），而真值视频噪声底为 0.862——当前世界模型的无图语义路径规划能力远不可靠",
+   "stance": "support",
+   "relation": "支持'SLAM 未被世界模型替代'：作者明言这揭示视觉生成保真度与语义规划之间的显著鸿沟，无图导航替代方案在量化评测中明显不成熟",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table 3 完整结果：11 个模型变体中 Wan2.2-Flash 最佳（0.341），Sora 2 仅 0.207、Veo 3.1 仅 0.210；MR 在 38.75%–77.25% 之间；讨论节明确'a significant gap between current world model capabilities and reliable path planning'。分母条件：125 基准场景、gt_video 噪声底 0.862 作为上界参照。",
+   "locator": "page 12",
+   "source_context": "The best off-the-shelf video WM, Wan2.2-Flash, achieves only 0.341 overall score. This indicates a significant gap between cur-",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "weighted overall (WO) score [0,1]（w_ADE=0.075,w_FDE=0.125,w_MR=0.125,w_SE·AC=0.675）；附 FDE/ADE/MR",
+    "value_or_direction": "Wan2.2-Flash WO 0.341（FDE 1.362m, ADE 1.005m, MR 38.75%）；Sora 2 0.207；Veo 3.1 0.210；真值视频噪声底 gt_video 0.862",
+    "comparator": "11 个现成/微调世界模型变体 vs 真值视频（gt_video）",
+    "task_or_sample": "125 基准场景（450 场景总池），8 秒时域，VGGT world-decoder，720p",
+    "locator": "page 11, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 讨论节原句出现（PDF 中 'current' 被 'cur-/rent' 跨行连字符打断，source_context 截断到连字符前仍为原文逐字子串）；Table 3（page 11）给出全部 11 个模型变体完整数值（Wan2.2-Flash 行：FDE 1.362/ADE 1.005/MR 38.75/SE 0.292/AC 0.746/WO 0.341；gt_video 行 WO 0.862）。数字与评测条件（125 基准集、8s、VGGT decoder）均在原文。"
+   }
+  },
+  {
+   "card_id": "2511.17792-C04",
+   "claim": "在从生成视频恢复相机轨迹的 world-decoder 对比中，基于 SLAM 的视觉惯性管线 ViPE 表现最弱（真值视频 WO 仅 0.291），显著低于前馈式 VGGT（0.862）与 SpaTracker（0.623）——增量式 SLAM 估计在含幻觉/生成伪影的视频上比前馈几何基础模型更脆弱",
+   "stance": "limit",
+   "relation": "限制'SLAM 在具身智能所有场景都不可或缺'的强主张：在合成/生成内容这一特定环节，经典增量式 SLAM 管线的鲁棒性反而不如前馈几何基础模型，说明 SLAM 的适用边界正在被重划而非简单维持",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table 5 与 Fig. 8 的三 decoder 对比：VGGT 在真值视频上 0.862（最佳）、SpaTracker 0.623、ViPE 0.291（最弱）；所有 12 个世界模型变体上 ViPE 的 WO 都低于 VGGT（如 Wan2.2-Flash：VGGT 0.341 vs ViPE 0.260）。ViPE 是融合视觉+IMU、带闭环的增量式度量管线，而 VGGT/SpaTracker 是前馈多视角重建。",
+   "locator": "page 13",
+   "source_context": "VGGT achieves the best weighted overall score of 0.862 with the ground truth videos. SpaTracker shows lower performance, while ViPE produces the weakest results.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "weighted overall (WO) score（VGGT/SpaTracker/ViPE 三 decoder 对比）",
+    "value_or_direction": "真值视频：VGGT 0.862 > SpaTracker 0.623 > ViPE 0.291；Wan2.2-Flash 生成视频：VGGT 0.341 vs ViPE 0.260",
+    "comparator": "前馈多视角重建（VGGT、SpaTracker）vs SLAM 视觉惯性管线（ViPE）",
+    "task_or_sample": "全部 12 个世界模型变体在 125 基准场景上的生成视频 + 真值视频",
+    "locator": "page 13, Table 5 & Fig. 8"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 Sec 4.4 原句逐字出现；Table 5 给出 SpaTracker 与 ViPE 两个 decoder 下全部模型的完整数值（gt_video 行：SpaTracker WO 0.623、ViPE WO 0.291；Wan2.2-Flash：SpaTracker 0.284、ViPE 0.260）。ViPE 的 SLAM 管线属性见 page 8 'ViPE is a SLAM-based visual-inertial pipeline'。"
+   }
+  },
+  {
+   "card_id": "2511.17792-C05",
+   "claim": "仅在 325 个 SLAM 标注的真实机器人场景（含 4 倍移帧增广）上 LoRA 微调开源 Wan2.2-5B，加权总分从 0.084 提升至 0.330，数据增广后达 0.394（较基座 +469%），超越全部现成模型——SLAM 标注的真实机器人数据是世界模型数据高效适应的关键使能",
+   "stance": "support",
+   "relation": "支持'SLAM 在具身数据环节发挥核心作用'：世界模型要获得导航能力，最有效的路径仍是消费 SLAM 产出的真值标注数据，二者是互补而非纯替代关系",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec 4.3：用训练集 325 场景微调 Wan2.2-TI2V-5B（DiffSynth-Studio LoRA，8×A800 80GB），文本 prompt+首帧输入；FT 版 0.330、FT-DA 版 0.394，均为 8s/720p、VGGT decoder、unseen 数据评测；作者结论'微调小模型超越全部现成模型，说明 WM 能从有限真实数据有效学习导航任务'。",
+   "locator": "page 12",
+   "source_context": "The fine-tuned Wan2.2-5B (Wan2.2-5B-FT) improves its score from 0.084 to 0.330. The augmented version (Wan2.2-5B-FT-DA) outperforms the base model by more than 469% and achieves the best overall score.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "weighted overall (WO) score（LoRA 微调前后）",
+    "value_or_direction": "Wan2.2-5B base 0.084 → FT 0.330 → FT-DA 0.394（较 base +369%，论文表述较基座超 469% 指相对提升幅度）",
+    "comparator": "base vs LoRA 微调 vs 微调+移帧数据增广；微调后超越全部现成模型（最佳现成 0.341）",
+    "task_or_sample": "325 个 SLAM 标注训练场景（4 倍增广至约 1300 clips），8×A800 80GB LoRA，unseen 基准集评测",
+    "locator": "page 12, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 原句逐字出现；Table 3 给出三行完整数值（base 0.084 / FT 0.330 / FT-DA 0.394，FDE 分别 3.666/1.320/1.050）。微调设定（325 训练场景、LoRA、8×A800）见 Sec 4.1 与 Sec 4.3。"
+   }
+  },
+  {
+   "card_id": "2511.17792-C06",
+   "claim": "规划时域从 8s 缩短到 4s 时，被测世界模型加权总分一致提升（Wan2.2-Flash 0.341→0.363，Wan2.2-Plus 0.290→0.339），作者结论为世界模型仅在较短时间窗口内规划更可靠——长时域无图导航的可靠性尚未建立",
+   "stance": "support",
+   "relation": "支持'SLAM 尚未被替代'：世界模型的空间一致性随预测时域衰减，而 SLAM 式显式状态维护正是长时域一致性问题的经典解法；该证据划定了替代方案的当前能力边界",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Table 6：两个模型 × 三个时域（8s/6s/4s）的完整对比；Wan2.2-Flash 6s 时 MR 从 38.75% 降至 23.76%；Sec 4.5 原文结论 'the weighted score consistently improves as the horizon decreases, suggesting that WMs are more reliable when planning on shorter temporal windows'。",
+   "locator": "page 14",
+   "source_context": "improves as the horizon decreases, suggesting that WMs are more reliable when planning on shorter temporal windows.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "weighted overall (WO) score（规划时域敏感性）",
+    "value_or_direction": "Wan2.2-I2V-Flash: 8s 0.341 / 6s 0.337 / 4s 0.363；Wan2.2-I2V-Plus: 8s 0.290 / 6s 0.338 / 4s 0.339；6s 时 MR 从 38.75% 降至 23.76%",
+    "comparator": "同一模型在 8s/6s/4s 三个预测时域下的自比较",
+    "task_or_sample": "2 个世界模型 × 3 时域，125 基准场景，VGGT decoder",
+    "locator": "page 14, Table 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 14 Sec 4.5 末句出现（'consistently' 被 'consis-/tently' 跨行连字符打断，source_context 从连字符后接续，仍为原文逐字子串）；Table 6（page 14）给出 2 模型 × 3 时域完整数值。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "VGGT: Visual Geometry Grounded Transformer (CVPR 2025)",
+   "why": "C03/C04/C05 的 world-decoder 与最高分基准",
+   "locator": "page 7, ref [40]"
+  },
+  {
+   "ref": "ViPE: Video Pose Engine for 3D Geometric Perception (NVIDIA, arXiv:2508.10934)",
+   "why": "C04 中表现最弱的 SLAM 视觉惯性 decoder",
+   "locator": "page 8, ref [16]"
+  },
+  {
+   "ref": "g2o general framework for graph optimization (ICRA 2011)",
+   "why": "SLAM 采集栈后端优化器",
+   "locator": "page 5, ref [20]"
+  },
+  {
+   "ref": "Generalized-ICP (RSS 2009)",
+   "why": "SLAM 采集栈点云配准",
+   "locator": "page 5, ref [33]"
+  }
+ ],
+ "notes": "论文题目即综述核心问题的一个子命题（世界模型能否无图规划）。关键结构性观察：(1) 评测对象是'反地图'方法，但整条评测链（真值轨迹、尺度恢复锚点、点云地图）都是 SLAM 产出——替代者的能力标尺由被替代者提供；(2) ViPE 消融是少见的前馈几何模型 vs 增量 SLAM 在生成内容上的直接对比，前馈方法显著更稳；(3) 采集协议（目标初始可见+直趋）系统性避开了 SLAM 最擅长的探索/重访场景，这是 reader-inferred 的最重要边界。附录提及四足机器人上 world-decoder 初步部署，但主 PDF 未见部署数据。"
+}

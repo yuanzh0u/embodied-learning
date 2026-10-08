@@ -22,7 +22,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -64,13 +64,23 @@ jobs:
           from pathlib import Path
 
           revision_range = sys.argv[1]
+          # Only Added/Modified binaries are blocked; deletions of leftover
+          # binaries (e.g. sunk raw PDFs) are intentional cleanup.
           numstat = subprocess.check_output(
-              ["git", "diff", "--numstat", revision_range], text=True
+              ["git", "diff", "--numstat", "--diff-filter=AM", revision_range], text=True
           )
+          allowed_binary_files = {
+              "wiki/assets/social-preview.png",
+              "wiki/guides/mind-omni/assets/drivevlm.png",
+              "wiki/guides/mind-omni/assets/linkvla.png",
+              "wiki/guides/mind-omni/assets/mind-omni-overview.png",
+              "wiki/guides/mind-omni/assets/streaming-intent.png",
+              "wiki/guides/mind-omni/assets/u1-architecture.png",
+          }
           binary_files = []
           for line in numstat.splitlines():
               added, deleted, path = line.split("\t", 2)
-              if added == "-" or deleted == "-":
+              if (added == "-" or deleted == "-") and path not in allowed_binary_files:
                   binary_files.append(path)
           if binary_files:
               raise SystemExit("binary files are not allowed:\n- " + "\n- ".join(binary_files))

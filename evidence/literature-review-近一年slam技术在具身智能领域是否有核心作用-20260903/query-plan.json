@@ -1,0 +1,1526 @@
+{
+  "generated_at": "2026-09-03T10:49:47.017118+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年SLAM技术在具身智能领域是否有核心作用",
+  "start_date": "2025-09-03",
+  "end_date": "2026-09-03",
+  "knowledge_ids": [
+    "EA-HARDWARE",
+    "EA-MODEL"
+  ],
+  "families": [],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 128,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 128,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-slam-vla-intersection",
+        "dynamic-gaussian-slam",
+        "dynamic-gaussian-robotic-mapping",
+        "dynamic-mapless-navigation",
+        "dynamic-spatial-memory-robot",
+        "dynamic-language-map-navigation",
+        "dynamic-slam-teleoperation",
+        "dynamic-slam-manipulation",
+        "dynamic-endtoend-slam",
+        "dynamic-worldmodel-pathplanning",
+        "dynamic-spatial-intelligence",
+        "dynamic-vo-foundation",
+        "ea-hardware-handheld-gripper",
+        "ea-model-finetuning"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "persona-slam-engineer-robustness",
+        "persona-basic-slam-robot",
+        "persona-basic-slam-survey",
+        "ea-hardware-teleop-device",
+        "ea-model-vla",
+        "ea-model-named-foundation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "persona-slam-engineer-neural-frontend",
+        "persona-vla-implicit-navigation",
+        "ea-hardware-slam-demonstration",
+        "ea-hardware-arkit-tracking",
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "persona-vla-mapfree",
+        "persona-vla-worldmodel-replace-map",
+        "persona-counter-dynamic-failure",
+        "persona-counter-implicit-memory"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "deployment-and-operations",
+      "query_labels": [
+        "persona-auditor-teleop-pose",
+        "persona-auditor-camera-relocalization"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "evaluation-and-validation",
+      "query_labels": [
+        "persona-auditor-ground-truth"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage.",
+    "persona_regeneration": {
+      "retrieval_phase_trigger": "After each literature-hub retrieval round, run suggest_persona_regeneration.py: any coverage dimension with passed=false or unique_candidates below minimum_unique_candidates requests a targeted gap-filling persona.",
+      "reading_phase_trigger": "During deep reading, if accepted-evidence stance distribution has limit+gap share below 0.20, request a counter-evidence seeker persona.",
+      "max_regeneration_rounds": 2,
+      "note": "Regeneration output re-enters the plan only via --persona-file after review; it never bypasses coverage gates."
+    }
+  },
+  "notes": [
+    "web-calibration dynamic expansion (medium): 2026-09-03 校准：发现 SLAM-as-VLA-infrastructure（From Pixels to Actions: The Hidden Role of SLAM in VLA）、SLAM as embodied operator、3DGS-SLAM（GaussLite/LEG-SLAM/compact 3DGS SLAM）、mapless/implicit-memory 反方路线（SRU mapless RL、LAMP implicit language map、Target-Bench mapless world-model planning、PanoNav）等术语簇，均不在静态分类法中。",
+    "llm dynamic expansion (medium): 主题为辩论型（SLAM 是否核心），需要同时覆盖正方（SLAM 作为位姿/地图基础设施）与反方（端到端隐式空间能力替代显式地图）术语。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-slam-vla-intersection",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:SLAM AND all:\"vision-language-action\"",
+      "why": "近一年出现直接讨论 SLAM 与 VLA 关系的论文（SLAM 作为 VLA 训练/评测/部署的隐形底座），静态分类法没有该交集。"
+    },
+    {
+      "label": "dynamic-gaussian-slam",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:\"Gaussian splatting\" AND all:SLAM",
+      "why": "3DGS-SLAM 是近一年 SLAM 前沿主线之一（compact 3DGS dense SLAM、Splat-SLAM、LEG-SLAM），用于机器人实时建图。"
+    },
+    {
+      "label": "dynamic-gaussian-robotic-mapping",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"Gaussian splatting\" AND all:mapping AND all:robot",
+      "why": "GaussLite 等任务条件化在线 3DGS 建图把地图与具身任务耦合，是 SLAM 在具身侧的新形态。"
+    },
+    {
+      "label": "dynamic-mapless-navigation",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "high",
+      "query": "all:mapless AND all:navigation AND all:robot",
+      "why": "mapless/map-free 导航是显式地图路线的主要反方证据来源。"
+    },
+    {
+      "label": "dynamic-spatial-memory-robot",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"spatial memory\" AND all:robot",
+      "why": "隐式/结构化空间记忆（SRU、稀疏记忆导航）被提出替代显式 SLAM 地图，是核心作用之争的关键邻接家族。"
+    },
+    {
+      "label": "dynamic-language-map-navigation",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"language map\" AND all:navigation",
+      "why": "LAMP 等隐式语言场地图把语义地图神经化，覆盖 semantic SLAM 与语言导航的交叉。"
+    },
+    {
+      "label": "dynamic-slam-teleoperation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:SLAM AND all:teleoperation",
+      "why": "SLAM 在数据采集侧（遥操作位姿恢复、手持采集器）的隐形角色，静态分类法仅从 UMI 角度覆盖。"
+    },
+    {
+      "label": "dynamic-slam-manipulation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:SLAM AND all:manipulation",
+      "why": "操作任务中 SLAM 的作用（物体级地图、位姿跟踪支撑抓取）是核心作用之争的操作侧证据。"
+    },
+    {
+      "label": "dynamic-endtoend-slam",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"end-to-end\" AND all:SLAM",
+      "why": "端到端/深度 SLAM 路线检验学习化是否正在替代模块化 SLAM 栈。"
+    },
+    {
+      "label": "dynamic-worldmodel-pathplanning",
+      "channel": "arxiv_api",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "all:\"world model\" AND all:\"path planning\" AND all:robot",
+      "why": "Target-Bench 等工作直接评测世界模型能否做 mapless 路径规划，是地图替代路线的评测证据。"
+    },
+    {
+      "label": "dynamic-spatial-intelligence",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"spatial intelligence\" AND all:robot",
+      "why": "spatial intelligence 是近一年把定位建图能力重新包装进具身基础模型话语的术语。"
+    },
+    {
+      "label": "dynamic-vo-foundation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"visual odometry\" AND all:\"foundation model\"",
+      "why": "基础模型化视觉里程计（学习化前端）检验 SLAM 前端是否被大模型吸收。"
+    },
+    {
+      "label": "dynamic-slam-vla-browser",
+      "channel": "browser_fallback",
+      "source": "web-calibration",
+      "confidence": "medium",
+      "query": "SLAM \"vision-language-action\" robot pose",
+      "why": "SLAM×VLA 交集在 arXiv 元数据中可能稀疏，浏览器检索覆盖博客与项目页。"
+    },
+    {
+      "label": "dynamic-slam-dead-debate-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "low",
+      "query": "\"SLAM\" \"embodied AI\" role debate 2026",
+      "why": "核实辩论双方近一年的公开措辞，仅作术语校准。"
+    },
+    {
+      "label": "dynamic-slam-embodied-web",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "low",
+      "query": "SLAM embodied AI \"core role\" 2026",
+      "why": "校准正方措辞。"
+    },
+    {
+      "label": "dynamic-mapless-web",
+      "channel": "web_calibration",
+      "source": "web-calibration",
+      "confidence": "low",
+      "query": "mapless navigation \"spatial memory\" robot 2026",
+      "why": "校准反方措辞。"
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-slam-vla-intersection",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:\"vision-language-action\"",
+      "why": "近一年出现直接讨论 SLAM 与 VLA 关系的论文（SLAM 作为 VLA 训练/评测/部署的隐形底座），静态分类法没有该交集。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slam-vla-intersection"
+      ]
+    },
+    {
+      "label": "dynamic-gaussian-slam",
+      "tier": "dynamic-association",
+      "query": "all:\"Gaussian splatting\" AND all:SLAM",
+      "why": "3DGS-SLAM 是近一年 SLAM 前沿主线之一（compact 3DGS dense SLAM、Splat-SLAM、LEG-SLAM），用于机器人实时建图。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-gaussian-slam"
+      ]
+    },
+    {
+      "label": "dynamic-gaussian-robotic-mapping",
+      "tier": "dynamic-association",
+      "query": "all:\"Gaussian splatting\" AND all:mapping AND all:robot",
+      "why": "GaussLite 等任务条件化在线 3DGS 建图把地图与具身任务耦合，是 SLAM 在具身侧的新形态。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-gaussian-robotic-mapping"
+      ]
+    },
+    {
+      "label": "dynamic-mapless-navigation",
+      "tier": "dynamic-association",
+      "query": "all:mapless AND all:navigation AND all:robot",
+      "why": "mapless/map-free 导航是显式地图路线的主要反方证据来源。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-mapless-navigation"
+      ]
+    },
+    {
+      "label": "dynamic-spatial-memory-robot",
+      "tier": "dynamic-association",
+      "query": "all:\"spatial memory\" AND all:robot",
+      "why": "隐式/结构化空间记忆（SRU、稀疏记忆导航）被提出替代显式 SLAM 地图，是核心作用之争的关键邻接家族。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-spatial-memory-robot"
+      ]
+    },
+    {
+      "label": "dynamic-language-map-navigation",
+      "tier": "dynamic-association",
+      "query": "all:\"language map\" AND all:navigation",
+      "why": "LAMP 等隐式语言场地图把语义地图神经化，覆盖 semantic SLAM 与语言导航的交叉。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-language-map-navigation"
+      ]
+    },
+    {
+      "label": "dynamic-slam-teleoperation",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:teleoperation",
+      "why": "SLAM 在数据采集侧（遥操作位姿恢复、手持采集器）的隐形角色，静态分类法仅从 UMI 角度覆盖。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slam-teleoperation"
+      ]
+    },
+    {
+      "label": "dynamic-slam-manipulation",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:manipulation",
+      "why": "操作任务中 SLAM 的作用（物体级地图、位姿跟踪支撑抓取）是核心作用之争的操作侧证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slam-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-endtoend-slam",
+      "tier": "dynamic-association",
+      "query": "all:\"end-to-end\" AND all:SLAM",
+      "why": "端到端/深度 SLAM 路线检验学习化是否正在替代模块化 SLAM 栈。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-endtoend-slam"
+      ]
+    },
+    {
+      "label": "dynamic-worldmodel-pathplanning",
+      "tier": "dynamic-association",
+      "query": "all:\"world model\" AND all:\"path planning\" AND all:robot",
+      "why": "Target-Bench 等工作直接评测世界模型能否做 mapless 路径规划，是地图替代路线的评测证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-worldmodel-pathplanning"
+      ]
+    },
+    {
+      "label": "dynamic-spatial-intelligence",
+      "tier": "dynamic-association",
+      "query": "all:\"spatial intelligence\" AND all:robot",
+      "why": "spatial intelligence 是近一年把定位建图能力重新包装进具身基础模型话语的术语。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-spatial-intelligence"
+      ]
+    },
+    {
+      "label": "dynamic-vo-foundation",
+      "tier": "dynamic-association",
+      "query": "all:\"visual odometry\" AND all:\"foundation model\"",
+      "why": "基础模型化视觉里程计（学习化前端）检验 SLAM 前端是否被大模型吸收。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vo-foundation"
+      ]
+    },
+    {
+      "label": "persona-slam-engineer-robustness",
+      "tier": "persona-direct",
+      "query": "all:\"visual SLAM\" AND all:robustness",
+      "why": "SLAM 系统工程师：定位近一年 SLAM 鲁棒性进展本身",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-SLAM-SYSTEM-ENGINEER",
+      "persona_source": "persona",
+      "coverage_dimension": "direct-topic",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-slam-engineer-robustness"
+      ]
+    },
+    {
+      "label": "persona-slam-engineer-neural-frontend",
+      "tier": "persona-method",
+      "query": "all:SLAM AND all:\"neural\" AND all:real-time",
+      "why": "SLAM 系统工程师：神经化组件（学习特征/匹配/深度）进入实时 SLAM 栈的证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-SLAM-SYSTEM-ENGINEER",
+      "persona_source": "persona",
+      "coverage_dimension": "mechanisms-and-interfaces",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-slam-engineer-neural-frontend"
+      ]
+    },
+    {
+      "label": "persona-vla-implicit-navigation",
+      "tier": "persona-method",
+      "query": "all:\"vision-language-action\" AND all:navigation",
+      "why": "VLA 研究者：VLA 是否直接承担导航与空间任务",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-VLA-RESEARCHER",
+      "persona_source": "persona",
+      "coverage_dimension": "mechanisms-and-interfaces",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-vla-implicit-navigation"
+      ]
+    },
+    {
+      "label": "persona-vla-mapfree",
+      "tier": "persona-limit",
+      "query": "all:\"map-free\" AND all:navigation",
+      "why": "VLA 研究者：map-free 路线声称无需显式地图即可导航",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-VLA-RESEARCHER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-vla-mapfree"
+      ]
+    },
+    {
+      "label": "persona-vla-worldmodel-replace-map",
+      "tier": "persona-limit",
+      "query": "all:\"world model\" AND all:mapping AND all:navigation",
+      "why": "VLA 研究者：世界模型是否以生成式地图替代 SLAM 建图",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-VLA-RESEARCHER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-vla-worldmodel-replace-map"
+      ]
+    },
+    {
+      "label": "persona-auditor-teleop-pose",
+      "tier": "persona-deploy",
+      "query": "all:teleoperation AND all:\"pose tracking\"",
+      "why": "数据基础设施审计员：遥操作/示教采集中位姿跟踪的部署证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "persona_source": "persona",
+      "coverage_dimension": "deployment-and-operations",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-auditor-teleop-pose"
+      ]
+    },
+    {
+      "label": "persona-auditor-ground-truth",
+      "tier": "persona-eval",
+      "query": "all:SLAM AND all:\"ground truth\"",
+      "why": "数据基础设施审计员：SLAM 作为评测真值生产工具的可靠性边界",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "persona_source": "persona",
+      "coverage_dimension": "evaluation-and-validation",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-auditor-ground-truth"
+      ]
+    },
+    {
+      "label": "persona-auditor-camera-relocalization",
+      "tier": "persona-deploy",
+      "query": "all:relocalization AND all:robot",
+      "why": "数据基础设施审计员：相机重定位在机器人数据管线中的角色",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "persona_source": "persona",
+      "coverage_dimension": "deployment-and-operations",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-auditor-camera-relocalization"
+      ]
+    },
+    {
+      "label": "persona-counter-dynamic-failure",
+      "tier": "persona-limit",
+      "query": "all:SLAM AND all:failure AND all:dynamic",
+      "why": "反面证据搜寻者：动态环境与失效模式证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-COUNTER-EVIDENCE-SEEKER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-counter-dynamic-failure"
+      ]
+    },
+    {
+      "label": "persona-counter-implicit-memory",
+      "tier": "persona-limit",
+      "query": "all:\"implicit memory\" AND all:navigation",
+      "why": "反面证据搜寻者：隐式记忆路线宣称替代显式地图的反方证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-COUNTER-EVIDENCE-SEEKER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-counter-implicit-memory"
+      ]
+    },
+    {
+      "label": "persona-basic-slam-robot",
+      "tier": "persona-direct",
+      "query": "all:SLAM AND all:robot AND all:embodied",
+      "why": "基础事实覆盖者：SLAM 与具身智能的总体交集",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-BASIC-FACTS",
+      "persona_source": "persona",
+      "coverage_dimension": "direct-topic",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-basic-slam-robot"
+      ]
+    },
+    {
+      "label": "persona-basic-slam-survey",
+      "tier": "persona-direct",
+      "query": "all:\"simultaneous localization and mapping\" AND all:survey",
+      "why": "基础事实覆盖者：近一年 SLAM 综述提供领域全景基础事实",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-BASIC-FACTS",
+      "persona_source": "persona",
+      "coverage_dimension": "direct-topic",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-basic-slam-survey"
+      ]
+    },
+    {
+      "label": "ea-hardware-teleop-device",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"data collection\" AND all:robot",
+      "why": "Find hardware routes used to collect robot demonstrations.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-teleop-device"
+      ]
+    },
+    {
+      "label": "ea-hardware-slam-demonstration",
+      "tier": "tracking",
+      "query": "all:SLAM AND all:\"robot manipulation\" AND all:demonstration",
+      "why": "Capture tracking and reconstruction limitations in collection devices.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-hardware-slam-demonstration"
+      ]
+    },
+    {
+      "label": "ea-hardware-arkit-tracking",
+      "tier": "tracking",
+      "query": "all:ARKit AND all:robot AND all:tracking",
+      "why": "Find low-cost pose-tracking and VIO routes relevant to data capture.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-arkit-tracking"
+      ]
+    },
+    {
+      "label": "ea-hardware-handheld-gripper",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:robot",
+      "why": "Catch UMI-like collection devices that may not use UMI in metadata.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-handheld-gripper"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-slam-vla-intersection",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:\"vision-language-action\"",
+      "why": "近一年出现直接讨论 SLAM 与 VLA 关系的论文（SLAM 作为 VLA 训练/评测/部署的隐形底座），静态分类法没有该交集。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slam-vla-intersection"
+      ]
+    },
+    {
+      "label": "dynamic-gaussian-slam",
+      "tier": "dynamic-association",
+      "query": "all:\"Gaussian splatting\" AND all:SLAM",
+      "why": "3DGS-SLAM 是近一年 SLAM 前沿主线之一（compact 3DGS dense SLAM、Splat-SLAM、LEG-SLAM），用于机器人实时建图。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-gaussian-slam"
+      ]
+    },
+    {
+      "label": "dynamic-gaussian-robotic-mapping",
+      "tier": "dynamic-association",
+      "query": "all:\"Gaussian splatting\" AND all:mapping AND all:robot",
+      "why": "GaussLite 等任务条件化在线 3DGS 建图把地图与具身任务耦合，是 SLAM 在具身侧的新形态。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-gaussian-robotic-mapping"
+      ]
+    },
+    {
+      "label": "dynamic-mapless-navigation",
+      "tier": "dynamic-association",
+      "query": "all:mapless AND all:navigation AND all:robot",
+      "why": "mapless/map-free 导航是显式地图路线的主要反方证据来源。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-mapless-navigation"
+      ]
+    },
+    {
+      "label": "dynamic-spatial-memory-robot",
+      "tier": "dynamic-association",
+      "query": "all:\"spatial memory\" AND all:robot",
+      "why": "隐式/结构化空间记忆（SRU、稀疏记忆导航）被提出替代显式 SLAM 地图，是核心作用之争的关键邻接家族。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-spatial-memory-robot"
+      ]
+    },
+    {
+      "label": "dynamic-language-map-navigation",
+      "tier": "dynamic-association",
+      "query": "all:\"language map\" AND all:navigation",
+      "why": "LAMP 等隐式语言场地图把语义地图神经化，覆盖 semantic SLAM 与语言导航的交叉。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-language-map-navigation"
+      ]
+    },
+    {
+      "label": "dynamic-slam-teleoperation",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:teleoperation",
+      "why": "SLAM 在数据采集侧（遥操作位姿恢复、手持采集器）的隐形角色，静态分类法仅从 UMI 角度覆盖。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slam-teleoperation"
+      ]
+    },
+    {
+      "label": "dynamic-slam-manipulation",
+      "tier": "dynamic-association",
+      "query": "all:SLAM AND all:manipulation",
+      "why": "操作任务中 SLAM 的作用（物体级地图、位姿跟踪支撑抓取）是核心作用之争的操作侧证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-slam-manipulation"
+      ]
+    },
+    {
+      "label": "dynamic-endtoend-slam",
+      "tier": "dynamic-association",
+      "query": "all:\"end-to-end\" AND all:SLAM",
+      "why": "端到端/深度 SLAM 路线检验学习化是否正在替代模块化 SLAM 栈。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-endtoend-slam"
+      ]
+    },
+    {
+      "label": "dynamic-worldmodel-pathplanning",
+      "tier": "dynamic-association",
+      "query": "all:\"world model\" AND all:\"path planning\" AND all:robot",
+      "why": "Target-Bench 等工作直接评测世界模型能否做 mapless 路径规划，是地图替代路线的评测证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "web-calibration",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-worldmodel-pathplanning"
+      ]
+    },
+    {
+      "label": "dynamic-spatial-intelligence",
+      "tier": "dynamic-association",
+      "query": "all:\"spatial intelligence\" AND all:robot",
+      "why": "spatial intelligence 是近一年把定位建图能力重新包装进具身基础模型话语的术语。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-spatial-intelligence"
+      ]
+    },
+    {
+      "label": "dynamic-vo-foundation",
+      "tier": "dynamic-association",
+      "query": "all:\"visual odometry\" AND all:\"foundation model\"",
+      "why": "基础模型化视觉里程计（学习化前端）检验 SLAM 前端是否被大模型吸收。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vo-foundation"
+      ]
+    },
+    {
+      "label": "persona-slam-engineer-robustness",
+      "tier": "persona-direct",
+      "query": "all:\"visual SLAM\" AND all:robustness",
+      "why": "SLAM 系统工程师：定位近一年 SLAM 鲁棒性进展本身",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-SLAM-SYSTEM-ENGINEER",
+      "persona_source": "persona",
+      "coverage_dimension": "direct-topic",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-slam-engineer-robustness"
+      ]
+    },
+    {
+      "label": "persona-slam-engineer-neural-frontend",
+      "tier": "persona-method",
+      "query": "all:SLAM AND all:\"neural\" AND all:real-time",
+      "why": "SLAM 系统工程师：神经化组件（学习特征/匹配/深度）进入实时 SLAM 栈的证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-SLAM-SYSTEM-ENGINEER",
+      "persona_source": "persona",
+      "coverage_dimension": "mechanisms-and-interfaces",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-slam-engineer-neural-frontend"
+      ]
+    },
+    {
+      "label": "persona-vla-implicit-navigation",
+      "tier": "persona-method",
+      "query": "all:\"vision-language-action\" AND all:navigation",
+      "why": "VLA 研究者：VLA 是否直接承担导航与空间任务",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-VLA-RESEARCHER",
+      "persona_source": "persona",
+      "coverage_dimension": "mechanisms-and-interfaces",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-vla-implicit-navigation"
+      ]
+    },
+    {
+      "label": "persona-vla-mapfree",
+      "tier": "persona-limit",
+      "query": "all:\"map-free\" AND all:navigation",
+      "why": "VLA 研究者：map-free 路线声称无需显式地图即可导航",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-VLA-RESEARCHER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-vla-mapfree"
+      ]
+    },
+    {
+      "label": "persona-vla-worldmodel-replace-map",
+      "tier": "persona-limit",
+      "query": "all:\"world model\" AND all:mapping AND all:navigation",
+      "why": "VLA 研究者：世界模型是否以生成式地图替代 SLAM 建图",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-VLA-RESEARCHER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-vla-worldmodel-replace-map"
+      ]
+    },
+    {
+      "label": "persona-auditor-teleop-pose",
+      "tier": "persona-deploy",
+      "query": "all:teleoperation AND all:\"pose tracking\"",
+      "why": "数据基础设施审计员：遥操作/示教采集中位姿跟踪的部署证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "persona_source": "persona",
+      "coverage_dimension": "deployment-and-operations",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-auditor-teleop-pose"
+      ]
+    },
+    {
+      "label": "persona-auditor-ground-truth",
+      "tier": "persona-eval",
+      "query": "all:SLAM AND all:\"ground truth\"",
+      "why": "数据基础设施审计员：SLAM 作为评测真值生产工具的可靠性边界",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "persona_source": "persona",
+      "coverage_dimension": "evaluation-and-validation",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-auditor-ground-truth"
+      ]
+    },
+    {
+      "label": "persona-auditor-camera-relocalization",
+      "tier": "persona-deploy",
+      "query": "all:relocalization AND all:robot",
+      "why": "数据基础设施审计员：相机重定位在机器人数据管线中的角色",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "persona_source": "persona",
+      "coverage_dimension": "deployment-and-operations",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-auditor-camera-relocalization"
+      ]
+    },
+    {
+      "label": "persona-counter-dynamic-failure",
+      "tier": "persona-limit",
+      "query": "all:SLAM AND all:failure AND all:dynamic",
+      "why": "反面证据搜寻者：动态环境与失效模式证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-COUNTER-EVIDENCE-SEEKER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-counter-dynamic-failure"
+      ]
+    },
+    {
+      "label": "persona-counter-implicit-memory",
+      "tier": "persona-limit",
+      "query": "all:\"implicit memory\" AND all:navigation",
+      "why": "反面证据搜寻者：隐式记忆路线宣称替代显式地图的反方证据",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-COUNTER-EVIDENCE-SEEKER",
+      "persona_source": "persona",
+      "coverage_dimension": "limits-and-counterevidence",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-counter-implicit-memory"
+      ]
+    },
+    {
+      "label": "persona-basic-slam-robot",
+      "tier": "persona-direct",
+      "query": "all:SLAM AND all:robot AND all:embodied",
+      "why": "基础事实覆盖者：SLAM 与具身智能的总体交集",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-BASIC-FACTS",
+      "persona_source": "persona",
+      "coverage_dimension": "direct-topic",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-basic-slam-robot"
+      ]
+    },
+    {
+      "label": "persona-basic-slam-survey",
+      "tier": "persona-direct",
+      "query": "all:\"simultaneous localization and mapping\" AND all:survey",
+      "why": "基础事实覆盖者：近一年 SLAM 综述提供领域全景基础事实",
+      "source_key": "persona",
+      "source_type": "persona-suggestion",
+      "channel": "arxiv_api",
+      "persona_id": "P-BASIC-FACTS",
+      "persona_source": "persona",
+      "coverage_dimension": "direct-topic",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "persona-basic-slam-survey"
+      ]
+    },
+    {
+      "label": "ea-hardware-teleop-device",
+      "tier": "core",
+      "query": "all:teleoperation AND all:\"data collection\" AND all:robot",
+      "why": "Find hardware routes used to collect robot demonstrations.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-teleop-device"
+      ]
+    },
+    {
+      "label": "ea-hardware-slam-demonstration",
+      "tier": "tracking",
+      "query": "all:SLAM AND all:\"robot manipulation\" AND all:demonstration",
+      "why": "Capture tracking and reconstruction limitations in collection devices.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-hardware-slam-demonstration"
+      ]
+    },
+    {
+      "label": "ea-hardware-arkit-tracking",
+      "tier": "tracking",
+      "query": "all:ARKit AND all:robot AND all:tracking",
+      "why": "Find low-cost pose-tracking and VIO routes relevant to data capture.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-arkit-tracking"
+      ]
+    },
+    {
+      "label": "ea-hardware-handheld-gripper",
+      "tier": "device-language",
+      "query": "(all:\"handheld gripper\" OR all:\"hand-held gripper\") AND all:robot",
+      "why": "Catch UMI-like collection devices that may not use UMI in metadata.",
+      "source_key": "EA-HARDWARE",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-hardware-handheld-gripper"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-slam-vla-browser",
+      "query": "SLAM \"vision-language-action\" robot pose",
+      "why": "SLAM×VLA 交集在 arXiv 元数据中可能稀疏，浏览器检索覆盖博客与项目页。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-slam-dead-debate-browser",
+      "query": "\"SLAM\" \"embodied AI\" role debate 2026",
+      "why": "核实辩论双方近一年的公开措辞，仅作术语校准。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-slam-embodied-web",
+      "query": "SLAM embodied AI \"core role\" 2026",
+      "why": "校准正方措辞。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "dynamic-mapless-web",
+      "query": "mapless navigation \"spatial memory\" robot 2026",
+      "why": "校准反方措辞。",
+      "source_key": "dynamic",
+      "source_type": "web-calibration",
+      "channel": "web_calibration"
+    }
+  ],
+  "personas": [
+    {
+      "id": "P-SLAM-SYSTEM-ENGINEER",
+      "name": "SLAM 系统工程师",
+      "focus": "从 SLAM 系统本体出发：近一年 SLAM 前端/后端在学习化、3DGS/神经隐式表示、实时性上的演进，以及这些形态是否被具身任务实际采用",
+      "primary_dimensions": [
+        "direct-topic",
+        "mechanisms-and-interfaces"
+      ]
+    },
+    {
+      "id": "P-VLA-RESEARCHER",
+      "name": "VLA 与世界模型研究者",
+      "focus": "检验端到端具身模型是否正在内化空间能力（隐式记忆、mapless 导航、世界模型路径规划），从而绕开显式 SLAM 地图",
+      "primary_dimensions": [
+        "mechanisms-and-interfaces",
+        "limits-and-counterevidence"
+      ]
+    },
+    {
+      "id": "P-DATA-INFRA-AUDITOR",
+      "name": "数据基础设施审计员",
+      "focus": "清点 SLAM 在具身数据采集、位姿真值与评测协议中的隐形角色：遥操作位姿恢复、手持采集、SLAM-based ground truth、相机重定位",
+      "primary_dimensions": [
+        "deployment-and-operations",
+        "evaluation-and-validation"
+      ]
+    },
+    {
+      "id": "P-COUNTER-EVIDENCE-SEEKER",
+      "name": "反面证据搜寻者",
+      "focus": "主动寻找 SLAM 失效、被绕开、被替代的证据：动态环境失败、长时漂移、地图维护成本、map-free 路线的成功案例、SLAM 被降级为可插拔组件的部署实践",
+      "primary_dimensions": [
+        "limits-and-counterevidence"
+      ]
+    },
+    {
+      "id": "P-BASIC-FACTS",
+      "name": "基础事实覆盖者",
+      "focus": "广泛覆盖主题基础事实：SLAM 与机器人/具身智能的总体交集、综述、基准与教程性材料",
+      "primary_dimensions": [
+        "direct-topic"
+      ]
+    }
+  ],
+  "persona_suggestions": [
+    {
+      "label": "persona-slam-engineer-robustness",
+      "channel": "arxiv_api",
+      "source": "persona:P-SLAM-SYSTEM-ENGINEER",
+      "confidence": "medium",
+      "query": "all:\"visual SLAM\" AND all:robustness",
+      "why": "SLAM 系统工程师：定位近一年 SLAM 鲁棒性进展本身",
+      "coverage_dimension": "direct-topic"
+    },
+    {
+      "label": "persona-slam-engineer-neural-frontend",
+      "channel": "arxiv_api",
+      "source": "persona:P-SLAM-SYSTEM-ENGINEER",
+      "confidence": "medium",
+      "query": "all:SLAM AND all:\"neural\" AND all:real-time",
+      "why": "SLAM 系统工程师：神经化组件（学习特征/匹配/深度）进入实时 SLAM 栈的证据",
+      "coverage_dimension": "mechanisms-and-interfaces"
+    },
+    {
+      "label": "persona-vla-implicit-navigation",
+      "channel": "arxiv_api",
+      "source": "persona:P-VLA-RESEARCHER",
+      "confidence": "medium",
+      "query": "all:\"vision-language-action\" AND all:navigation",
+      "why": "VLA 研究者：VLA 是否直接承担导航与空间任务",
+      "coverage_dimension": "mechanisms-and-interfaces"
+    },
+    {
+      "label": "persona-vla-mapfree",
+      "channel": "arxiv_api",
+      "source": "persona:P-VLA-RESEARCHER",
+      "confidence": "medium",
+      "query": "all:\"map-free\" AND all:navigation",
+      "why": "VLA 研究者：map-free 路线声称无需显式地图即可导航",
+      "coverage_dimension": "limits-and-counterevidence"
+    },
+    {
+      "label": "persona-vla-worldmodel-replace-map",
+      "channel": "arxiv_api",
+      "source": "persona:P-VLA-RESEARCHER",
+      "confidence": "medium",
+      "query": "all:\"world model\" AND all:mapping AND all:navigation",
+      "why": "VLA 研究者：世界模型是否以生成式地图替代 SLAM 建图",
+      "coverage_dimension": "limits-and-counterevidence"
+    },
+    {
+      "label": "persona-auditor-teleop-pose",
+      "channel": "arxiv_api",
+      "source": "persona:P-DATA-INFRA-AUDITOR",
+      "confidence": "medium",
+      "query": "all:teleoperation AND all:\"pose tracking\"",
+      "why": "数据基础设施审计员：遥操作/示教采集中位姿跟踪的部署证据",
+      "coverage_dimension": "deployment-and-operations"
+    },
+    {
+      "label": "persona-auditor-ground-truth",
+      "channel": "arxiv_api",
+      "source": "persona:P-DATA-INFRA-AUDITOR",
+      "confidence": "medium",
+      "query": "all:SLAM AND all:\"ground truth\"",
+      "why": "数据基础设施审计员：SLAM 作为评测真值生产工具的可靠性边界",
+      "coverage_dimension": "evaluation-and-validation"
+    },
+    {
+      "label": "persona-auditor-camera-relocalization",
+      "channel": "arxiv_api",
+      "source": "persona:P-DATA-INFRA-AUDITOR",
+      "confidence": "medium",
+      "query": "all:relocalization AND all:robot",
+      "why": "数据基础设施审计员：相机重定位在机器人数据管线中的角色",
+      "coverage_dimension": "deployment-and-operations"
+    },
+    {
+      "label": "persona-counter-dynamic-failure",
+      "channel": "arxiv_api",
+      "source": "persona:P-COUNTER-EVIDENCE-SEEKER",
+      "confidence": "medium",
+      "query": "all:SLAM AND all:failure AND all:dynamic",
+      "why": "反面证据搜寻者：动态环境与失效模式证据",
+      "coverage_dimension": "limits-and-counterevidence"
+    },
+    {
+      "label": "persona-counter-implicit-memory",
+      "channel": "arxiv_api",
+      "source": "persona:P-COUNTER-EVIDENCE-SEEKER",
+      "confidence": "medium",
+      "query": "all:\"implicit memory\" AND all:navigation",
+      "why": "反面证据搜寻者：隐式记忆路线宣称替代显式地图的反方证据",
+      "coverage_dimension": "limits-and-counterevidence"
+    },
+    {
+      "label": "persona-basic-slam-robot",
+      "channel": "arxiv_api",
+      "source": "persona:P-BASIC-FACTS",
+      "confidence": "medium",
+      "query": "all:SLAM AND all:robot AND all:embodied",
+      "why": "基础事实覆盖者：SLAM 与具身智能的总体交集",
+      "coverage_dimension": "direct-topic"
+    },
+    {
+      "label": "persona-basic-slam-survey",
+      "channel": "arxiv_api",
+      "source": "persona:P-BASIC-FACTS",
+      "confidence": "medium",
+      "query": "all:\"simultaneous localization and mapping\" AND all:survey",
+      "why": "基础事实覆盖者：近一年 SLAM 综述提供领域全景基础事实",
+      "coverage_dimension": "direct-topic"
+    }
+  ],
+  "persona_coverage": [
+    {
+      "persona_id": "P-SLAM-SYSTEM-ENGINEER",
+      "name": "SLAM 系统工程师",
+      "query_labels": [
+        "persona-slam-engineer-robustness",
+        "persona-slam-engineer-neural-frontend"
+      ],
+      "dimensions": {
+        "direct-topic": 1,
+        "mechanisms-and-interfaces": 1
+      },
+      "query_count": 2
+    },
+    {
+      "persona_id": "P-VLA-RESEARCHER",
+      "name": "VLA 与世界模型研究者",
+      "query_labels": [
+        "persona-vla-implicit-navigation",
+        "persona-vla-mapfree",
+        "persona-vla-worldmodel-replace-map"
+      ],
+      "dimensions": {
+        "mechanisms-and-interfaces": 1,
+        "limits-and-counterevidence": 2
+      },
+      "query_count": 3
+    },
+    {
+      "persona_id": "P-DATA-INFRA-AUDITOR",
+      "name": "数据基础设施审计员",
+      "query_labels": [
+        "persona-auditor-teleop-pose",
+        "persona-auditor-ground-truth",
+        "persona-auditor-camera-relocalization"
+      ],
+      "dimensions": {
+        "deployment-and-operations": 2,
+        "evaluation-and-validation": 1
+      },
+      "query_count": 3
+    },
+    {
+      "persona_id": "P-COUNTER-EVIDENCE-SEEKER",
+      "name": "反面证据搜寻者",
+      "query_labels": [
+        "persona-counter-dynamic-failure",
+        "persona-counter-implicit-memory"
+      ],
+      "dimensions": {
+        "limits-and-counterevidence": 2
+      },
+      "query_count": 2
+    },
+    {
+      "persona_id": "P-BASIC-FACTS",
+      "name": "基础事实覆盖者",
+      "query_labels": [
+        "persona-basic-slam-robot",
+        "persona-basic-slam-survey"
+      ],
+      "dimensions": {
+        "direct-topic": 2
+      },
+      "query_count": 2
+    }
+  ]
+}

@@ -12,6 +12,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import sys
 import time
 import urllib.error
 import urllib.parse
@@ -25,6 +26,25 @@ API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
 MAX_RETRIES = 3
 TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+
+
+def report_partial_batch(query_results: list[dict[str, object]]) -> int:
+    """Shared run() tail: a batch with per-query ``error`` entries is PARTIAL.
+
+    The JSON is already written (callers keep the hits), but the caller must
+    see a non-zero exit — a silent partial batch used to stand in for "these
+    papers are irrelevant" downstream (see the 20260930 absolute-pose hole).
+    Returns 1 when any query failed, else 0."""
+    failed = [item for item in query_results if item.get("error")]
+    if not failed:
+        return 0
+    labels = ", ".join(str(item["label"]) for item in failed)
+    print(
+        f"WARNING: {len(failed)}/{len(query_results)} queries failed "
+        f"(no results for them; partial batch saved): {labels}",
+        file=sys.stderr,
+    )
+    return 1
 
 
 class ArxivSearch:
@@ -109,7 +129,7 @@ class ArxivSearch:
                 handle.write(rendered + "\n")
         else:
             print(rendered)
-        return 0
+        return report_partial_batch(query_results)
 
     def fetch(self, query: str) -> bytes:
         params = {

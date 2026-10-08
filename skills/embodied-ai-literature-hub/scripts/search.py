@@ -47,6 +47,7 @@ def _build_query_plan_parse_args(argv: list[str] | None = None) -> argparse.Name
     parser.add_argument("--start-date", help="Optional YYYY-MM-DD scope metadata.")
     parser.add_argument("--end-date", help="Optional YYYY-MM-DD scope metadata.")
     parser.add_argument("--dynamic-file", action="append", default=[], help="JSON file with LLM/agent dynamic query suggestions. May be repeated.")
+    parser.add_argument("--persona-file", action="append", default=[], help="JSON persona file with perspective-driven queries. May be repeated.")
     parser.add_argument("--calibration-file", action="append", default=[], help="JSON calibration file. May be repeated.")
     parser.add_argument(
         "--review-mode",
@@ -86,6 +87,7 @@ def _build_query_plan_main(argv: list[str] | None = None) -> int:
         start_date=args.start_date,
         end_date=args.end_date,
         dynamic_file=args.dynamic_file,
+        persona_file=args.persona_file,
         calibration_file=args.calibration_file,
         review_mode=args.review_mode,
         target_candidates=args.target_candidates,

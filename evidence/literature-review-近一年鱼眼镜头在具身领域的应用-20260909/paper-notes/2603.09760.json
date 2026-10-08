@@ -1,0 +1,589 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.09760",
+  "title": "PanoAffordanceNet: Towards Holistic Affordance Grounding in 360° Indoor Environments",
+  "published": "2026-03",
+  "url": "https://arxiv.org/abs/2603.09760",
+  "authors": [
+   "Guoliang Zhu",
+   "Wanjun Jia",
+   "Caoyang Shao",
+   "Yuheng Zhang",
+   "Zhiyong Li",
+   "Kailun Yang"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "『鱼眼/全景镜头进入具身任务层』主题下的核心证据：首个 360° 室内整体 affordance grounding 任务 + 端到端框架（DASM 畸变感知谱调制 + OSDH 全环球面稠密化 + 三级损失）+ 首个全景 affordance 数据集 360-AGD（Easy ~800 / Hard ~1,200，19 类）。对鱼眼综述的价值：(1) 任务获益证据：全景化后在 360-AGD 上对同协议透视基线 OOAL/OS-AGDO 全指标大幅领先（Easy KLD 1.270 vs 2.868/2.853）；(2) 受限证据：透视范式直迁 ERP 输入灾难性崩溃（碎片化激活+语义漂移）、透视域 AGD20K Unseen 上点敏感指标受损的条件化交换；(3) 机制证据：ERP 畸变的纬度依赖结构（赤道边缘锐化 vs 极区拉伸）与双频补偿、球面自相似种子传播恢复稀疏激活、LoRA rank 倒 U 边界（r=16）；(4) 具身性：头戴 Insta360 X4 模拟 360° egocentric 视角的真实场景实验（定性），动机直指服务机器人功能先验。局限：无机器人控制闭环、真实实验无量化指标、静态场景（时序与 3D 协同为 future work）。"
+  },
+  "sections_read": [
+   {
+    "locator": "pages 1-2, Section I Introduction",
+    "role": "problem",
+    "purpose": "确认任务缺口陈述（affordance grounding 物体中心+透视局限）、ERP 三挑战（几何畸变/非均匀采样稀疏/语义漂移）与贡献列表。"
+   },
+   {
+    "locator": "page 2, Section II Related Works",
+    "role": "relevant-core",
+    "purpose": "定位本文在『视觉 affordance grounding / 场景级功能理解 / 室内全景感知』三谱系中的位置，登记 OOAL、OS-AGDO、AGD20K、WorldAfford、SphereNet 等近邻工作。"
+   },
+   {
+    "locator": "pages 2-4, Section III Method (III-A to III-E)",
+    "role": "method-or-design",
+    "purpose": "精读双编码器（DINOv2+LoRA / CLIP+CoOp）、DASM 双频分解与 HFEM/LFSM 纬度补偿、OSDH 球面亲和+种子传播（式 4-7）、三级损失（式 8-11）。"
+   },
+   {
+    "locator": "page 5, Section IV 360-AGD: Established Dataset",
+    "role": "data-or-setting",
+    "purpose": "确认数据集来源与规模（Easy 360-Indoor+Gibson ~800；Hard PanoContext+Sun360 ~1,200，最高 4552×9104）、19 类、关键点—高斯核软监督与遮挡忽略规则。"
+   },
+   {
+    "locator": "page 5, Section V-A Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "登记实现细节（DINOv2-Base/CLIP、AdamW 1e-5、20k 迭代、2×A6000、560×1120、全景特定增强 ±3°/±5%/环绕平移）与指标定义（KLD/SIM/NSS）。"
+   },
+   {
+    "locator": "pages 6-7, Sections V-B to V-E",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table I 主结果（360-AGD + AGD20K 跨域）、Fig 5 定性失效分析、Table II 组件消融、Table III 损失消融、Table IV LoRA rank、Table V top-k 敏感性。"
+   },
+   {
+    "locator": "pages 7-8, Section V-F Performance in Real-World Scenarios",
+    "role": "results-or-analysis",
+    "purpose": "精读可穿戴 Insta360 X4 头戴 360° egocentric 真实实验（办公/家居、sit/display 局部化）的定性结论。"
+   },
+   {
+    "locator": "page 8, Section VI Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "登记作者边界声明：future work 指向动态场景时序推理与 3D 跨模态协同（即当前不覆盖）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8, References",
+    "reason": "参考文献列表本身无综述问题相关主张；核心引文（OOAL/OS-AGDO/AGD20K/DINOv2/CLIP/LoRA/SphereNet/Thinking-in-360）已按需登记 core_citations。"
+   }
+  ]
+ },
+ "research_question": "论文问题：如何在 360° 室内全景（ERP）图像中做整体场景级 affordance grounding——同时对抗 ERP 纬度依赖几何畸变、非均匀采样导致的功能区域稀疏、以及低（one-shot）监督下的语义漂移？综述映射：全景相机在具身智能中的应用方式（服务机器人功能感知/动作先验、头戴 360° egocentric 采集）、效果（360-AGD 基准大幅领先、AGD20K 条件化泛化、真实场景定性鲁棒）与局限（静态场景、无 3D 协同、无机器人闭环、真实实验无量化）。",
+ "contributions": [
+  "提出新任务『360° 室内环境的整体 affordance grounding』，把范式从孤立物体级理解转向场景级功能推理，对齐机器人的 360° 物理动作空间。",
+  "提出 PanoAffordanceNet 端到端框架：DASM（双频谱蒸馏 + HFEM/LFSM 纬度补偿）应对 ERP 畸变、OSDH（球面自相似 + top-k 种子传播）恢复稀疏激活的拓扑连续、三级损失（像素/分布/区域—文本对比）抑制语义漂移。",
+  "构建 360-AGD：首个高质量室内全景 affordance grounding 数据集（Easy ~800 / Hard ~1,200、19 类、关键点软监督），并建立 one-shot 基准。",
+  "实证：360-AGD 上全指标显著超越 OOAL/OS-AGDO，透视 AGD20K 上保持竞争力（Seen 持平 OOAL、Unseen SIM 略优），并以头戴 Insta360 X4 完成 360° egocentric 真实场景验证。"
+ ],
+ "method": {
+  "summary": "one-shot 全景 affordance grounding 的端到端管线：视觉侧 DINOv2 (ViT-B/14) 提取 patch 特征并以 LoRA 低秩适配（对抗稀疏 one-shot 标注下的过拟合并容纳 ERP 畸变）；文本侧 CLIP 文本编码器 + CoOp 提示学习产出 19 类 affordance 语义嵌入。核心模块：(1) DASM——跨模态语义注入（文本→视觉多头交叉注意力）后做双频分解（Laplacian 高频 + Gaussian 低频），HFEM 锐化赤道交互边界并抑制极区伪影、LFSM 稳定极区全局结构，语言驱动通道门 × 自适应空间门的门控残差融合，再经 MHSA/FFN 上下文再聚合；(2) 球面感知层级解码器——文本嵌入作 query 交叉注意力生成初始图 A_init，OSDH 把精化特征投影到单位超球面构建余弦亲和矩阵 S、top-k 高置信种子、置信图 C 噪声抑制，A_refined = A_init + α·max(S·C)（α 可学习残差标量）；(3) 损失 L_total = λ1·L_BCE（像素）+ λ2·L_KL（分布）+ λ3·L_RTC（InfoNCE 区域—文本对比）。训练 20k 迭代、batch 4、2×A6000、输入 560×1120、全景特定增强（±3° 旋转、±5% 缩放、水平环绕平移强化 360° 旋转不变性）。",
+  "assumptions": [
+   "ERP 畸变以纬度依赖为主：赤道附近保留锐利边缘、极区结构被拉伸（DASM 的双频补偿建立其上）。",
+   "全景功能区域可由高置信种子经球面自相似传播恢复（OSDH 的结构先验假设）。",
+   "关键点 + 高斯核软热图可替代像素级分割作为监督信号，重度遮挡区域可忽略。",
+   "one-shot（一类一图）监督足以支撑跨类别语义对齐（任务协议假设）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "360-AGD（自建，首个全景 affordance 数据集：Easy ~800 张来自 360-Indoor+Gibson，~512×1024；Hard ~1,200 张来自 PanoContext+Sun360，最高 4552×9104；19 affordance 类；关键点→高斯软监督）",
+   "AGD20K（透视域泛化基准，Seen/Unseen 分裂）",
+   "真实场景（头戴 Insta360 X4 可穿戴采集，办公/家居）"
+  ],
+  "tasks": [
+   "360° 室内全景（ERP）图像的 one-shot affordance grounding：19 类功能区域热图预测"
+  ],
+  "embodiments": [
+   "无机器人控制闭环；任务动机为服务机器人的功能感知与动作规划先验；真实实验以头戴 Insta360 X4 全景相机模拟具身智能体 360° egocentric 视角（办公/家居场景定性验证）；训练硬件 2×NVIDIA A6000"
+  ],
+  "sample_or_scale": "one-shot 协议（每类单标注样例）；360-AGD 总量约 2,000 张全景图（Easy ~800 + Hard ~1,200）；训练 20k 迭代、batch 4、输入 560×1120；对比基线 OOAL/OS-AGDO（同 one-shot 协议适配 ERP）+ AGD20K 上 LOCATE/WSMA/LoopTrans（弱监督）"
+ },
+ "evaluation": {
+  "design": "360-AGD Easy/Hard 主对比（Table Ia）+ 透视 AGD20K Seen/Unseen 跨域泛化（Table Ib）+ 组件消融（Table II）+ 损失消融（Table III）+ LoRA rank 敏感性（Table IV）+ OSDH top-k 敏感性（Table V）+ 定性对比（Fig 5）+ 可穿戴真实场景实验（Fig 6）",
+  "baselines": [
+   "OOAL（one-shot 开放词汇 affordance，CVPR 2024）——同协议适配 equirectangular 投影",
+   "OS-AGDO（one-shot 可变形物体 affordance，IROS 2025）——同协议适配 ERP",
+   "AGD20K 上另比 LOCATE / WSMA / LoopTrans（弱监督范式，监督类型在表中标注）"
+  ],
+  "metrics": [
+   "KLD（预测—真值热图分布 KL 散度，越低越好）",
+   "SIM（直方图交叠相似度，越高越好）",
+   "NSS（归一化扫描路径显著性，越高越好）"
+  ],
+  "ablations": [
+   "组件：LoRA / DASM / OSDH 逐个叠加（Table II）",
+   "损失：L_BCE / L_KL / L_RTC 组合（Table III）",
+   "LoRA rank r ∈ {4, 8, 16, 24, 32}（Table IV）",
+   "OSDH top-k ∈ {1, 5, 10, 20, 30}（Table V）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "头条：360-AGD 两分裂全指标大幅领先——Easy 1.270/0.506/4.490 vs OOAL 2.868/0.117/1.267、OS-AGDO 2.853/0.124/1.299；Hard 1.306/0.474/4.398 vs 3.067/0.097/1.484、2.965/0.115/1.484",
+   "scope": "one-shot 协议，Table I(a)",
+   "locator": "page 6, Table I (a)"
+  },
+  {
+   "finding": "跨域条件化：AGD20K Seen 与 OOAL 持平微优（0.739/0.616/1.750 vs 0.740/0.577/1.745）；Unseen SIM 略优（0.475 vs 0.461）但 KLD/NSS 劣（1.185 vs 1.070；1.419 vs 1.503）——全景模块的分布平滑偏置在透视域是指标交换",
+   "scope": "Table I(b) 透视域泛化",
+   "locator": "page 6, Table I (b)"
+  },
+  {
+   "finding": "机制消融：DASM 显著降 KLD（几何扭曲关键修正）、OSDH 恢复拓扑连续，完整模型最佳 1.306/0.474（vs 无组件基线 1.475/0.416/4.196）",
+   "scope": "360-AGD Hard Split 组件消融",
+   "locator": "page 6, Table II and Section V-D"
+  },
+  {
+   "finding": "损失分级：单损失最弱 1.596/0.395/3.891 → 三级损失最强 1.306/0.474/4.398（像素+分布+区域—文本协同）",
+   "scope": "Table III 损失消融",
+   "locator": "page 6, Table III"
+  },
+  {
+   "finding": "超参边界：LoRA rank 倒 U（r=16 最优 1.306；r=32 KLD 升至 1.403，过参数化在稀疏 one-shot 下过拟合）；OSDH top-k∈[5,20] 高度稳定（KLD 波动仅 0.006）",
+   "scope": "Tables IV/V 敏感性分析",
+   "locator": "page 7, Tables IV and V"
+  },
+  {
+   "finding": "真实具身场景：头戴 Insta360 X4 模拟 360° egocentric 视角，办公/家居场景在光照变化与严重畸变下准确局部化 sit/display（定性，无量化指标）",
+   "scope": "Section V-F 可穿戴实验",
+   "locator": "pages 7-8, Section V-F and Figure 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前框架不覆盖动态场景：时序推理（temporal reasoning for dynamic scenes）列为 future work",
+    "locator": "page 8, Section VI (future work)"
+   },
+   {
+    "limitation": "未与 3D 空间表征跨模态协同（cross-modal synergy with 3D spatial representations 列为 future work）——功能接地停留在 2D ERP 热图层",
+    "locator": "page 8, Section VI (future work)"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无机器人闭环与任务效用验证：真实场景实验仅定性展示（Fig 6 两例），无量化指标、无交互成功率、无下游动作规划实验；『服务机器人功能先验』停留在动机与定性层，综述引用时应作为『感知方法 + 定性部署演示』而非具身任务成功证据",
+    "basis": "Section V-F 全文（accurately localizes ... 定性措辞，无表格/数值）+ 全文无控制或规划实验"
+   },
+   {
+    "boundary": "数据集规模小且为聚合既有库：Easy/Hard 合计约 2,000 张，均收集自 360-Indoor/Gibson/PanoContext/Sun360 四个既有全景数据集而非新采集；精确计数未给出（approximately 800 / 1, 200），类别分布仅以词云与图 4(d) 呈现",
+    "basis": "page 5 Section IV Data Collection（collect images from several existing large-scale panorama datasets ... approximately 800 and 1, 200）"
+   },
+   {
+    "boundary": "监督与指标均为代理：标注为关键点+高斯核软热图，重度遮挡区域被显式忽略；KLD/SIM/NSS 是显著性分布对齐指标，不度量交互可行性或动作成功率——『功能接地正确』与『可执行』之间的差距未讨论",
+    "basis": "page 5 Section IV Data Annotation（ignore heavily occluded interaction regions ... Gaussian kernel）+ page 5 Section V-A 指标定义"
+   },
+   {
+    "boundary": "基线覆盖窄：全景主对比仅两个 2D one-shot 方法（OOAL/OS-AGDO）适配 ERP 后对比，未纳入全景专用感知方法（如球面卷积检测/分割）或 3D affordance 方法（SceneFun3D 类），『全景化收益』的对照系不完整",
+    "basis": "page 6 Section V-B（benchmarked against two leading 2D one-shot methods）"
+   },
+   {
+    "boundary": "无统计不确定性：Tables I-V 全为单值点估计，无种子/方差/显著性；Easy 与 Hard 间难度差异无量化定义（仅来源与分辨率描述）",
+    "basis": "Tables I-V 单值 + Section IV 对 Easy/Hard 的定性描述"
+   },
+   {
+    "boundary": "分辨率压缩：Hard Split 原生最高 4552×9104 的全景图统一 resize 到 560×1120 训练，极区细节损失未量化——ERP 极区本已是畸变最重区域，压缩可能低估/掩盖极区误差",
+    "basis": "page 5 Section V-A（All panoramic inputs are uniformly resized to a resolution of 560×1120）+ page 4 Section III-C 极区畸变描述"
+   },
+   {
+    "boundary": "成稿质量信号：Fig 2（DASM 概览图）内嵌未清理的中文公式占位符『zz在此处键入公式。』（page 3 提取文本），提示图形细节未经充分校对——引用该图机制描述时应以正文公式(1)-(3)为准",
+    "basis": "page 3 提取文本 Fig 2 区域（zz在此处键入公式。出现在 DASM 模块图内部）"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：360° 室内静态场景的 ERP 全景 affordance grounding（19 类功能热图预测）；one-shot/极低监督设定；DINOv2+CLIP 类基础模型骨干；服务机器人功能先验生成与头戴 360° egocentric 感知语境。不适用于：动态场景（无时序建模，作者列为 future work）、3D 空间执行层（无 3D 表征协同与机器人闭环）、重度遮挡交互区域（标注策略显式忽略）、以及透视域上对点敏感指标（KLD/NSS）的极致追求（AGD20K Unseen 上 OOAL 仍更强）；真实场景效果目前仅定性证据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "任务—方法—数据—基准四位一体：新任务定义 + 专用框架 + 首个数据集 + 基线对比，建立完整可检验的评测单元",
+   "消融链条完整：组件（Table II）/损失（Table III）/LoRA rank（Table IV）/top-k（Table V）四层隔离，且每层给出失效归因",
+   "跨域双检验：AGD20K 透视域泛化 + 头戴 Insta360 X4 真实场景，超出单一基准的自证循环",
+   "one-shot 协议统一公平：两基线按同一 one-shot 协议适配 ERP 后对比，监督类型在表中显式标注",
+   "超参鲁棒性分析（top-k 波动 0.006）直指部署实用性，是方法论文中少见的落地视角"
+  ],
+  "design_risks": [
+   "基线覆盖窄：仅两个 2D one-shot 方法适配 ERP，未比全景专用感知方法或 3D affordance 方法",
+   "真实场景实验仅定性（Fig 6 两例），无量化指标与失败案例分析",
+   "数据规模小（约 2,000 张聚合图）且精确计数未披露；KLD/SIM/NSS 为热图代理指标而非任务效用",
+   "无统计方差/显著性报告，全部单值点估计",
+   "成稿质量信号：Fig 2 含未清理的中文公式占位符（『zz在此处键入公式。』），图形校对不充分"
+  ],
+  "baseline_fairness": "OOAL/OS-AGDO 在同一 one-shot 协议下适配 equirectangular 投影后对比（作者明示 both adapted for equirectangular projections under the same one-shot protocol）；AGD20K 上同时报告弱监督与 one-shot 方法并标注监督类型；但缺少全景专用与 3D 路线方法，『全景化收益』的对照系不完整。",
+  "metric_validity": "KLD/SIM/NSS 为 affordance grounding 文献的标准显著性式指标（跟随 AGD20K/LOCATE/OOAL 惯例），度量预测热图与关键点高斯真值的分布对齐；不度量交互可行性与动作成功；真实场景实验无任何量化指标。",
+  "reproducibility": "代码与数据集承诺公开（github.com/GL-ZHU925/PanoAffordanceNet）；训练细节完整（DINOv2-Base/CLIP、AdamW 1e-5 余弦退火、20k 迭代、batch 4、2×A6000、560×1120、增强清单）；数据来源（四个既有公开全景库）可追溯；损失权重 λ1-λ3 未给出具体数值。",
+  "external_validity": "覆盖 Easy/Hard 难度分层 + 透视域 AGD20K + 真实办公/家居场景，域内多样性尚可；但全部为室内静态场景、19 类 affordance、2D ERP 热图输出；无动态场景、无户外、无机器人执行验证；Hard Split 高分辨率输入被压缩到 560×1120，对极区的有效性存疑。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.09760-C01",
+   "claim": "作者任务缺口陈述：360° 空间的全局感知对具身智能体必不可少，但当前 affordance grounding（功能可供性接地）研究仍以物体为中心、局限于透视视图；作者据此提出新任务『360° 室内环境的整体 affordance grounding』，其三大挑战为 ERP 等距柱状投影的严重几何畸变、语义分散、跨尺度对齐困难。",
+   "stance": "gap",
+   "relation": "为综述提供任务缺口证据：全景相机在具身智能中的感知价值（360° 物理动作空间）与既有功能感知范式的透视/物体中心缺口之间的落差——全景输入接入具身 affordance 感知是被明确界定但尚无建制的应用方向。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要开篇：全局感知必要性 + 现状局限（object-centric、perspective views）+ 新任务三挑战（ERP 畸变、语义分散、跨尺度对齐）。",
+   "locator": "page 1, Abstract",
+   "source_context": "Global perception is essential for embodied agents\nin 360° spaces, yet current affordance grounding remains\nlargely object-centric and restricted to perspective views. To\nbridge this gap, we introduce a novel task: Holistic Affor-\ndance Grounding in 360° Indoor Environments. This task\nfaces unique challenges, including severe geometric distor-\ntions from Equirectangular Projection (ERP), semantic dis-\npersion, and cross-scale alignment difficulties.",
+   "evidence_type": "problem-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 Global perception is essential for embodied agents in 360° spaces、remains largely object-centric and restricted to perspective views、unique challenges, including severe geometric distortions from Equirectangular Projection (ERP), semantic dispersion, and cross-scale alignment difficulties；claim 的现状缺口与三挑战清单均由 context 直接蕴含，未扩大到其他任务。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C02",
+   "claim": "方法设计：PanoAffordanceNet 端到端框架，以畸变感知谱调制器（DASM）做纬度依赖的校准、以全环球面稠密化头（OSDH）从稀疏激活恢复拓扑连续，并通过像素级、分布级、区域—文本对比三级约束，在低监督下有效抑制语义漂移。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：全景（ERP）输入接入具身功能感知的代表性管线设计——『畸变感知调制 + 球面稠密化 + 多级对比目标』三组件范式，给出全景相机接入具身任务的方法模板。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要方法段：DASM 纬度校准、OSDH 拓扑连续恢复、三级约束抑制语义漂移。",
+   "locator": "page 1, Abstract",
+   "source_context": "We propose\nPanoAffordanceNet, an end-to-end framework featuring a\nDistortion-Aware Spectral Modulator (DASM) for latitude-\ndependent calibration and an Omni-Spherical Densification\nHead (OSDH) to restore topological continuity from sparse\nactivations. By integrating multi-level constraints comprising\npixel-wise, distributional, and region-text contrastive objectives,\nour framework effectively suppresses semantic drift under low\nsupervision.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 Distortion-Aware Spectral Modulator (DASM) for latitude-dependent calibration、Omni-Spherical Densification Head (OSDH) to restore topological continuity from sparse activations、pixel-wise, distributional, and region-text contrastive objectives、effectively suppresses semantic drift under low supervision；claim 的三组件职责与低监督设定一一对应 context。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C03",
+   "claim": "数据集贡献：作者构建 360-AGD——首个带精确交互区域标注的全景 affordance grounding 数据集，此前无公开基准支持全景室内场景的交互 affordance 接地。Easy Split 约 800 张（源自 360-Indoor 与 Gibson，原始分辨率约 512×1024，相对干净简单室内场景），Hard Split 约 1,200 张（源自 PanoContext 与 Sun360，最高 4552×9104，视觉复杂度与保真度更高）；标注覆盖 19 个 affordance 类，采用关键点监督策略——标注者在所有有效（非遮挡）交互区域内布点，经高斯核生成每类概率热图，重度遮挡且边界模糊的区域被忽略。",
+   "stance": "support",
+   "relation": "支持综述命题（资源/基础设施）：全景相机具身应用的首个 affordance 评测基准（任务难度分层 Easy/Hard + 低成本关键点监督方案），为『全景输入是否提升具身功能感知』提供可检验的评测底座。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 IV 节全段：首个数据集声明 + Easy/Hard 双分裂来源与规模（约 800/约 1,200）+ 19 类 + 关键点—高斯核软监督 + 遮挡忽略规则。",
+   "locator": "page 5, Section IV (360-AGD: Established Dataset)",
+   "source_context": "Existing affordance datasets [13, 23] mainly target\nstandard-view 2D images or 3D point clouds, and no public\nbenchmark currently supports interactive affordance ground-\ning in panoramic indoor scenes. To bridge this gap, we\nintroduce 360-AGD, the first dataset with precise annotations\nof interaction regions in panoramic images. This benchmark\nis designed to evaluate model generalization and robustness\nacross indoor environments of diverse complexity.\nData Collection. To build a benchmark capable of com-\nprehensively evaluating model performance, we collect im-\nages from several existing large-scale panorama datasets and\norganize them into an “Easy Split” and a “Hard Split”. The\nEasy Split is designed to evaluate the model’s fundamental\nperformance in relatively clean and simple indoor scenes.\nIts images are primarily sourced from the 360-Indoor [31]\nand Gibson [32] datasets, with original resolutions of ap-\nproximately 512×1024. We further establish a Hard Split\nto test generalization across more challenging environments.\nSourced from PanoContext [33] and Sun360 [34], these\nsamples exhibit superior visual complexity and high-fidelity\ndetails, with original resolutions reaching 4552×9104. In\ntotal, the Easy and Hard splits contain approximately 800\nand 1, 200 panoramic images, respectively.\nData Annotation. Our annotation task targets 19 af-\nfordance classes within complex, 360\n◦ \npanoramic indoor\nscenes. A key challenge is that a single affordance (e.g.,\nsit, lie) can correspond to multiple, spatially disjoint re-\ngions within the same scene. Consequently, annotators are\ninstructed to identify and mark all visible instances of\neach affordance class. However, given the visual clutter and\ncomplexity of these scenes, we ignore heavily occluded\ninteraction regions whose boundaries are ambiguous. To effi-\nciently capture such multi-region affordances without costly\npixel-wise segmentation, we adopt a keypoint-based super-\nvision strategy. Annotators place multiple keypoints within\nthe boundaries of all valid (non-occluded) interaction areas.\nThese keypoint sets are then transformed into a continuous\nground-truth signal by applying a Gaussian kernel to each\npoint, generating a probability heatmap for each affordance\nclass.",
+   "evidence_type": "dataset",
+   "quantitative": {
+    "metric": "dataset scale, sources, and supervision form",
+    "value_or_direction": "approximately 800 Easy and 1,200 Hard panoramic images; Easy from 360-Indoor and Gibson at about 512x1024; Hard from PanoContext and Sun360 up to 4552x9104; 19 affordance classes; keypoint-based supervision with Gaussian-kernel heatmaps",
+    "comparator": "no prior public benchmark for panoramic affordance grounding (first dataset)",
+    "task_or_sample": "360-AGD panoramic affordance grounding benchmark",
+    "locator": "page 5, Section IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出 no public benchmark currently supports interactive affordance grounding in panoramic indoor scenes、the first dataset with precise annotations of interaction regions in panoramic images、approximately 800 and 1, 200 panoramic images、original resolutions reaching 4552x9104、targets 19 affordance classes、keypoint-based supervision strategy、applying a Gaussian kernel、ignore heavily occluded interaction regions whose boundaries are ambiguous；claim 的规模、来源、类数与监督形式均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C04",
+   "claim": "负结果（透视范式直迁全景失败）：作者的比较视觉分析显示，常规 2D 透视范式（OOAL、OS-AGDO）直接应用于 360° 等距柱状输入时发生灾难性的空间推理崩溃——热图呈混乱、碎片化激活，普遍缺乏结构连贯性，频繁出现严重语义漂移（高响应区域系统性偏离真值功能区）。",
+   "stance": "limit",
+   "relation": "限制综述命题『透视 affordance 模型可直接用于全景输入』：为『哪些任务受限』提供任务级证据——未经全景化改造的透视功能接地方法在 ERP 输入上崩溃，全景输入需要专用设计。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 V-C 节 + Fig 5：对 OOAL/OS-AGDO 热图的定性失效分析——碎片化激活、结构失连、语义漂移。",
+   "locator": "page 6, Section V-C (Performance Analysis) and Figure 5",
+   "source_context": "perspective-based paradigms undergo a catastrophic break-\ndown of spatial reasoning when directly applied to 360-\ndegree equirectangular inputs. The heatmaps generated by\nOOAL [9] and OS-AGDO [35] are characterized by er-\nratic, fragmented activations and a pervasive lack of struc-\ntural coherence, frequently exhibiting severe semantic drift\nTABLE III: Ablation study of loss components on the 360-AGD\nHard Split. We investigate the impact of the L\nKL\n, L\nRTC \nand L\nBCE\n.\nL\nKL \nL\nRTC \nL\nBCE \nKLD ↓ SIM ↑ NSS ↑\n✓ 1.596 0.395 3.891\n✓ ✓ 1.459 0.442 4.374\n✓ ✓ 1.430 0.450 4.041\n✓ ✓ 1.331 0.493 4.361\n✓ ✓ ✓ 1.306 0.474 4.398\nwhere high-response regions systematically deviate from\nthe ground-truth functional areas.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 Conventional 2D perspective-based paradigms undergo a catastrophic breakdown of spatial reasoning when directly applied to 360-degree equirectangular inputs、The heatmaps generated by OOAL [9] and OS-AGDO [35] are characterized by erratic, fragmented activations and a pervasive lack of structural coherence、frequently exhibiting severe semantic drift where high-response regions systematically deviate from the ground-truth functional areas；claim 的失效主体（两基线）、失效模式（碎片化/失连/漂移）均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C05",
+   "claim": "机制（DASM 纬度自适应补偿）：针对 ERP 引起的频率失衡——赤道附近保留锐利边缘、极区结构被拉伸——对高/低频两支路做定向补偿：高频增强模块（HFEM）锐化赤道区域的交互边界同时抑制极区被放大的伪影；低频稳定模块（LFSM）在极区附近维持全局结构一致性以缓解拉伸造成的语义碎片化。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：ERP 畸变具有纬度依赖的双向结构（赤道边缘 vs 极区拉伸），全景感知模块应按纬度分层补偿——为具身系统的全景前端设计给出可迁移的畸变应对原则。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 III-C 节：ERP 频率失衡描述 + HFEM/LFSM 分支职责。",
+   "locator": "page 4, Section III-C (Distortion-Aware Spectral Modulator)",
+   "source_context": "To address ERP-induced frequency imbalance, where\nsharp edges are preserved near the equator but structures\nare stretched at the poles, we apply targeted compensation\nto each branch: the High-Frequency Enhancement Module\n(HFEM, Fig. 2(c)) sharpens the interaction boundaries in\nequatorial regions while suppressing artifacts amplified at\nthe poles; the Low-Frequency Stabilization Module (LFSM,\nFig. 2(d)) maintains global structural consistency near the\npoles to mitigate semantic fragmentation from stretching.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 where sharp edges are preserved near the equator but structures are stretched at the poles、High-Frequency Enhancement Module (HFEM, Fig. 2(c)) sharpens the interaction boundaries in equatorial regions while suppressing artifacts amplified at the poles、Low-Frequency Stabilization Module (LFSM, Fig. 2(d)) maintains global structural consistency near the poles to mitigate semantic fragmentation from stretching；claim 的频率失衡描述与两模块的纬度分工均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C06",
+   "claim": "机制（OSDH 球面稠密化）：为在球面流形上恢复拓扑连续，OSDH 以视觉自相似性为结构归纳偏置——将精化视觉特征投影到单位超球面构建余弦亲和矩阵，经 top-k 选高置信种子、置信图噪声抑制后，以种子传播式 A_refined = A_init + α·max_j(S_ij·C_j)（α 为可学习残差标量）把稀疏激活稠密化为完整连贯的功能区域。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：全景非均匀采样导致的功能区域稀疏可经『球面自相似 + 种子传播』恢复——应对 ERP 极区稀疏激活的机制证据，与 DASM 的畸变补偿互补。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 III-D 节 OSDH 段 + 式(5)-(7)：球面投影、亲和矩阵、种子传播公式与可学习残差标量。",
+   "locator": "page 4, Section III-D (Spherical-Aware Hierarchical Decoder) and Figure 3",
+   "source_context": "visual self-similarity as a structural inductive bias (detailed in\nFig. 3). Specifically, we project the refined visual features F\n′′\nv\nonto the unit hypersphere and construct a symmetric affinity\nmatrix S ∈ R\nL×L \nvia cosine similarity:\nS\nij \n= (f \n′′\nv,i \n· f \n′′\nv,j \n)/(∥f \n′′\nv,i\n∥∥f \n′′\nv,j \n∥). (5)\nSimultaneously, high-confidence seeds K are selected via\ntop-k. Spurious noise is suppressed with a confidence map:\nC = Sigmoid((A\ninit \n− μ\nA\n)/(σ\nA\n/T )) , (6)\nMax Pool\nSpherical\nProjection \nBMM\nα\nSeed Indices (K）\nLayerNorm\nNormalize \nConfidence\nMapping\nGather\nGather\nRefine Map\nInit Map\n𝐀𮰀𝐀\n𝐀\nVision Token\nFig. 3: Architecture of the Omni-Spherical Densification Head\n(OSDH). Visual tokens undergo spherical projection to construct a\ncosine affinity matrix. Sparse initial activations are then densified\nvia top-k seed selection, confidence-guided noise suppression, and\nmax propagation with a learnable residual scalar α.\nThe final densified map is obtained via seed propagation:\nA\nrefined \n= A\ninit \n+ α · max\nj∈K \n(S\nij \n· C\nj \n), (7)\nwhere α is a learnable residual scalar. OSDH efficiently\nrecovers complete, coherent regions for panoramic geometry.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 逐字给出 OSDH lever-ages visual self-similarity as a structural inductive bias、project the refined visual features onto the unit hypersphere and construct a symmetric affinity matrix via cosine similarity、high-confidence seeds K are selected via top-k、A_refined = A_init + α·max(S·C)、where α is a learnable residual scalar、OSDH efficiently recovers complete, coherent regions for panoramic geometry；claim 的机制链条与公式成分均由 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C07",
+   "claim": "主结果（360-AGD，one-shot，指标 KLD↓/SIM↑/NSS↑）：Easy Split 上 Ours 1.270/0.506/4.490 vs OOAL 2.868/0.117/1.267、OS-AGDO 2.853/0.124/1.299；Hard Split 上 Ours 1.306/0.474/4.398 vs OOAL 3.067/0.097/1.484、OS-AGDO 2.965/0.115/1.484——KLD 约降一半以上，SIM 约 4 倍，NSS 约 3 倍，两个难度分裂上全指标一致领先。",
+   "stance": "support",
+   "relation": "支持综述命题（效果）：经全景化改造（畸变调制+球面稠密化）后，360° affordance grounding 相对同协议透视适配基线大幅领先——为『哪些任务获益』提供功能感知任务的量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I(a) 全量数值：两基线 + Ours 在 Easy/Hard 两分裂上的三元组指标。",
+   "locator": "page 6, Table I (a)",
+   "source_context": "TABLE I: Quantitative comparison across different domains. Top: Performance on our proposed 360-AGD dataset. Bottom: Generalization\nresults on the perspective AGD20K dataset [13].\n(a) Evaluation on the Proposed 360-AGD Dataset\nMethod Supervision \nEasy Split Hard Split\nKLD↓ SIM↑ NSS↑ KLD↓ SIM↑ NSS↑\nOOAL [9] One-shot 2.868 0.117 1.267 3.067 0.097 1.484\nOS-AGDO [35] One-shot \n2.853 0.124 1.299 2.965 0.115 1.484\nOurs One-shot 1.270 0.506 4.490 1.306 0.474 4.398",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "KLD, SIM, NSS on 360-AGD Easy and Hard splits",
+    "value_or_direction": "Easy 1.270/0.506/4.490 and Hard 1.306/0.474/4.398 vs OOAL Easy 2.868/0.117/1.267, Hard 3.067/0.097/1.484; OS-AGDO Easy 2.853/0.124/1.299, Hard 2.965/0.115/1.484",
+    "comparator": "OOAL and OS-AGDO one-shot baselines adapted to equirectangular projections under the same one-shot protocol",
+    "task_or_sample": "one-shot affordance grounding on the proposed 360-AGD dataset",
+    "locator": "page 6, Table I (a)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table I(a) 逐字给出 OOAL 2.868 0.117 1.267 3.067 0.097 1.484、OS-AGDO 2.853 0.124 1.299 2.965 0.115 1.484、Ours 1.270 0.506 4.490 1.306 0.474 4.398；claim 的每组数值与『Easy/Hard 两分裂全指标领先』的方向均由表行直接蕴含（KLD 越低越好、SIM/NSS 越高越好）。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C08",
+   "claim": "跨域泛化（透视 AGD20K）：Seen Split 上 Ours 0.739/0.616/1.750 与 OOAL 0.740/0.577/1.745 基本持平（KLD 略好、SIM/NSS 更好）；Unseen Split 上 Ours 1.185/0.475/1.419 vs OOAL 1.070/0.461/1.503——SIM 略好但 KLD 与 NSS 劣于 OOAL。两个分裂上均优于弱监督基线 LOCATE/WSMA/LoopTrans 的对应值（如 Seen KLD 1.226/1.176/1.088 vs 0.739）。全景化设计迁移到透视域时呈『分布更平滑』的交换：部分点敏感指标受损。",
+   "stance": "conditional",
+   "relation": "条件化综述命题（效果/局限）：全景专用模块带来的分布平滑偏置在透视域是双刃剑——Seen 可保持、Unseen 的点敏感指标（KLD/NSS）受损；综述引用全景方法时应标注其跨域指标交换，不能当作全域无条件领先。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I(b) 全量数值：弱监督三基线 + 两个 one-shot 方法在 Seen/Unseen 的三元组指标。",
+   "locator": "page 6, Table I (b) and Section V-B",
+   "source_context": "(b) Generalization Results on the Perspective AGD20K Dataset\nMethod Supervision \nSeen Split Unseen Split\nKLD↓ SIM↑ NSS↑ KLD↓ SIM↑ NSS↑\nLOCATE [7] Weakly 1.226 0.401 1.177 1.405 0.372 1.157\nWSMA [18] Weakly 1.176 0.416 1.247 1.335 0.382 1.220\nLoopTrans [36] Weakly 1.088 0.445 1.322 1.247 0.403 1.315\nOS-AGDO [35] One-shot \n1.320 0.390 1.021 1.398 0.382 1.174\nOOAL [9] One-shot 0.740 0.577 1.745 1.070 0.461 1.503\nOurs One-shot 0.739 0.616 1.750 1.185 0.475 1.419",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "KLD, SIM, NSS on AGD20K Seen and Unseen splits",
+    "value_or_direction": "Seen 0.739/0.616/1.750 vs OOAL 0.740/0.577/1.745; Unseen 1.185/0.475/1.419 vs OOAL 1.070/0.461/1.503; weakly supervised LOCATE 1.226/0.401/1.177, WSMA 1.176/0.416/1.247, LoopTrans 1.088/0.445/1.322 on Seen",
+    "comparator": "OOAL and OS-AGDO (one-shot); LOCATE, WSMA, LoopTrans (weakly supervised)",
+    "task_or_sample": "cross-domain generalization to the perspective AGD20K dataset",
+    "locator": "page 6, Table I (b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table I(b) 逐字给出 LOCATE 1.226 0.401 1.177 1.405 0.372 1.157、WSMA 1.176 0.416 1.247 1.335 0.382 1.220、LoopTrans 1.088 0.445 1.322 1.247 0.403 1.315、OS-AGDO 1.320 0.390 1.021 1.398 0.382 1.174、OOAL 0.740 0.577 1.745 1.070 0.461 1.503、Ours 0.739 0.616 1.750 1.185 0.475 1.419；claim 的全部数值与『Seen 持平、Unseen SIM 略好但 KLD/NSS 劣于 OOAL』的方向均由表行直接蕴含；『分布平滑偏置』归因表述出自正文 V-B（panoramic-specific modules produce smoother affordance distributions），claim 仅以交换式措辞复述，未扩大。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C09",
+   "claim": "组件消融（360-AGD Hard Split）：各组件提供渐进且可区分的收益——LoRA 参数高效适配带来初始性能提升（任务特定特征调优的必要性）；DASM 的集成为几何扭曲提供关键修正、显著降低 KLD 误差；OSDH 补充精化空间一致性、从稀疏激活恢复拓扑连续；完整模型取得最佳整体表现（1.306 KLD、0.474 SIM），印证模块化设计针对全景 affordance 预测的独特挑战有效。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：全景化收益可分解为『适配（LoRA）+ 畸变修正（DASM）+ 稠密化（OSDH）』三个可分离成分——畸变修正与稀疏恢复各司其职，为具身系统按需选配全景模块提供消融证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 V-D 节 Effects of Model Components 段 + Table II：三组件各自职责 + 完整模型最佳数值。",
+   "locator": "page 6, Section V-D (Effects of Model Components) and Table II",
+   "source_context": "Effects of Model Components. As shown in Table II,\neach component provides incremental but distinct gains. The\nintroduction of LoRA-based parameter-efficient adaptation\nyields an initial performance boost, demonstrating the neces-\nsity of task-specific feature tuning. Notably, the integration\nof Distortion-Aware Spectral Modulator (DASM) provides\na critical correction for geometric warping, significantly\nreducing the KLD error. Furthermore, Omni-Spherical Den-\nsification Head (OSDH) complements this by refining spatial\nconsistency, effectively restoring topological continuity from\nsparse activations. The full model achieves the best overall\nperformance (1.306 KLD and 0.474 SIM)",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "KLD and SIM of the full model vs component-removed variants",
+    "value_or_direction": "full model (LoRA + DASM + OSDH) achieves the best overall performance: 1.306 KLD and 0.474 SIM",
+    "comparator": "component-removed ablation variants on the 360-AGD Hard Split",
+    "task_or_sample": "component ablation under a unified one-shot setting",
+    "locator": "page 6, Table II and Section V-D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 逐字给出 each component provides incremental but distinct gains、The introduction of LoRA-based parameter-efficient adaptation yields an initial performance boost、integration of Distortion-Aware Spectral Modulator (DASM) provides a critical correction for geometric warping, significantly reducing the KLD error、OSDH complements this by refining spatial consistency, effectively restoring topological continuity from sparse activations、The full model achieves the best overall performance (1.306 KLD and 0.474 SIM)；claim 的组件职责与完整模型数值均由 context 直接蕴含（Table II 行值 1.475→1.421→1.380→1.359→1.306 与叙述一致）。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C10",
+   "claim": "损失消融（360-AGD Hard Split，Table III）：单项损失配置最弱（1.596 KLD/0.395 SIM/3.891 NSS）；两项损失配置居中（1.430–1.459 KLD）；完整三级损失（像素级 BCE + 分布级 KL + 区域—文本对比 RTC）取得最强配置 1.306/0.474/4.398——像素、分布、语义三层监督的协同效应得到验证。",
+   "stance": "support",
+   "relation": "支持综述命题（机制）：低监督（one-shot）全景 affordance 学习需要像素/分布/语义三级约束共同抑制语义漂移——全景输入下监督设计的方法论证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table III 五行损失配置数值 + 第 V-D 节 Effects of Training Objectives 叙述（BCE 基线难从稀疏标注捕获功能形状、KL 引入分布级监督、RTC 消歧特征）。",
+   "locator": "page 6, Table III and Section V-D (Effects of Training Objectives)",
+   "source_context": "TABLE III: Ablation study of loss components on the 360-AGD\nHard Split. We investigate the impact of the L\nKL\n, L\nRTC \nand L\nBCE\n.\nL\nKL \nL\nRTC \nL\nBCE \nKLD ↓ SIM ↑ NSS ↑\n✓ 1.596 0.395 3.891\n✓ ✓ 1.459 0.442 4.374\n✓ ✓ 1.430 0.450 4.041\n✓ ✓ 1.331 0.493 4.361\n✓ ✓ ✓ 1.306 0.474 4.398",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "KLD, SIM, NSS across loss configurations",
+    "value_or_direction": "single-loss 1.596/0.395/3.891; two-loss 1.459/0.442/4.374 and 1.430/0.450/4.041; full three-loss 1.306/0.474/4.398",
+    "comparator": "loss-component ablation variants (L_BCE, L_KL, L_RTC)",
+    "task_or_sample": "training-objective ablation on the 360-AGD Hard Split",
+    "locator": "page 6, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Table III 逐字给出 ✓ 1.596 0.395 3.891、✓ ✓ 1.459 0.442 4.374、✓ ✓ 1.430 0.450 4.041、✓ ✓ ✓ 1.331 0.493 4.361、✓ ✓ ✓ 1.306 0.474 4.398；claim 按 ✓ 数量读表（单损失/两损失/三损失配置），全部数值与『完整配置最强』的方向由表行直接蕴含；三层损失的语义命名（BCE/KL/RTC）出自表题与第 V-D 节叙述。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C11",
+   "claim": "超参边界（LoRA rank r，Table IV）：性能随 r 增大呈近似倒 U 型——低秩（r=4, 8）表征容量不足以捕获 ERP 投影引入的复杂非线性几何畸变，跨域对齐次优；过高秩（r≥24）出现明显性能退化（r=32 时 KLD 升至 1.403），提示过参数化可能在稀缺 one-shot 样本上过拟合或破坏预训练 DINOv2 的鲁棒语义先验；r=16 取得适配灵活性与语义保存的最优平衡（1.306/0.474/4.398），为作者默认配置。",
+   "stance": "conditional",
+   "relation": "条件化综述命题（部署边界）：全景适配容量存在倒 U 最优（r=16），既非越大越好也非越小越好——在稀疏监督下过参数化有害；具身系统为全景任务调 LoRA 秩时应以中庸值为起点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 V-E 节 Impact of LoRA Adaptation Rank 段：倒 U 趋势、低/高秩失效归因、r=16 最优。",
+   "locator": "page 7, Table IV and Section V-E (Impact of LoRA Adaptation Rank)",
+   "source_context": "Impact of LoRA Adaptation Rank r. As shown in\nTable IV , model performance exhibits an approximately\ninverted-U trend as r increases. When the rank is low (r =\n4, 8), the representation capacity is insufficient to capture the\ncomplex nonlinear geometric distortions introduced by ERP\nprojection, leading to suboptimal cross-domain alignment.\nConversely, excessively high ranks (r ≥ 24) result in notice-\nable performance degradation (e.g., KLD rises to 1.403 at\nr = 32). This suggests that over-parameterization may cause\noverfitting on the scarce one-shot samples or disrupt the\nrobust semantic priors inherent in the pre-trained DINOv2\nbackbone. Our experiments indicate that r = 16 achieves the\noptimal balance between adaptation flexibility and semantic\npreservation, which we adopt as our default configuration.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "KLD, SIM, NSS as a function of LoRA rank r",
+    "value_or_direction": "approximately inverted-U trend; r=16 optimal 1.306/0.474/4.398; KLD rises to 1.403 at r=32; low ranks r=4, 8 insufficient capacity",
+    "comparator": "LoRA rank values 4, 8, 16, 24, 32 on the 360-AGD Hard Split",
+    "task_or_sample": "hyperparameter analysis of the visual-encoder LoRA rank",
+    "locator": "page 7, Table IV and Section V-E"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 model performance exhibits an approximately inverted-U trend as r increases、When the rank is low (r = 4, 8), the representation capacity is insufficient to capture the complex nonlinear geometric distortions introduced by ERP projection、excessively high ranks (r ≥ 24) result in noticeable performance degradation (e.g., KLD rises to 1.403 at r = 32)、over-parameterization may cause overfitting on the scarce one-shot samples or disrupt the robust semantic priors inherent in the pre-trained DINOv2 backbone、r = 16 achieves the optimal balance；claim 的趋势、失效归因与最优值均由 context 直接蕴含（Table IV 行值 1.343/1.341/1.306/1.356/1.403 与叙述一致）。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C12",
+   "claim": "超参鲁棒性（OSDH top-k，Table V）：方法在 top-k∈[5, 20] 宽区间内高度稳定——KLD 仅波动 0.006（1.306→1.312），SIM 近乎恒定；鲁棒性源于 OSDH 以球面自相似为结构先验并配合置信引导噪声抑制，无需精细调种子阈值即可从稀疏激活可靠恢复拓扑连续功能区——显著提升真实部署实用性。",
+   "stance": "support",
+   "relation": "支持综述命题（部署）：全景稠密化机制对关键超参不敏感——降低具身系统落地全景功能感知的调参成本，是『可用性』层面的部署证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 V-E 节 Robustness to Top-k Selection 段：区间稳定性数值 + 机制归因 + 部署实用性结论。",
+   "locator": "page 7, Table V and Section V-E (Robustness to Top-k Selection)",
+   "source_context": "Robustness to Top-k Selection. We further examine the\nsensitivity of the OSDH module to the top-k value. Table V\nshows that our method exhibits remarkable stability across\na wide range of top-k ∈ [5, 20]: KLD fluctuates by only\n0.006 (from 1.306 to 1.312), while SIM remains nearly\nconstant. This robustness stems from OSDH’s integration of\nspherical self-similarity as a structural prior, coupled with\na confidence-guided noise suppression mechanism, enabling\nreliable recovery of topologically continuous affordance re-\ngions from sparse activations without precise hyperparameter\ntuning. Consequently, even when the top-k varies, the model\nreliably recovers topologically continuous functional regions\nfrom sparse initial activations without fine-grained tuning of\nthe seed threshold. This characteristic significantly enhances\nthe practicality of our approach in real-world deployment.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "KLD and SIM stability across OSDH top-k values",
+    "value_or_direction": "KLD fluctuates by only 0.006 (from 1.306 to 1.312) across top-k in [5, 20]; SIM remains nearly constant",
+    "comparator": "top-k values 1, 5, 10, 20, 30 on the 360-AGD Hard Split",
+    "task_or_sample": "sensitivity analysis of the OSDH seed-count hyperparameter",
+    "locator": "page 7, Table V and Section V-E"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 逐字给出 remarkable stability across a wide range of top-k ∈ [5, 20]: KLD fluctuates by only 0.006 (from 1.306 to 1.312), while SIM remains nearly constant、This robustness stems from OSDH's integration of spherical self-similarity as a structural prior, coupled with a confidence-guided noise suppression mechanism、significantly enhances the practicality of our approach in real-world deployment；claim 的波动数值、机制归因与部署结论均由 context 直接蕴含（Table V 行值 1.315/1.308/1.306/1.312/1.320 与叙述一致）。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C13",
+   "claim": "真实具身场景（可穿戴 360° egocentric）：作者构建可穿戴采集系统——将 Insta360 X4 全景相机安装在头戴帽上，模拟具身智能体的 360° egocentric 视角；在复杂办公与家居场景中，模型在光照变化与严重几何畸变下仍准确局部化关键功能区域（如 sit 与 display），为服务机器人的全局决策与任务规划提供可靠功能先验。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式/具身性）：360° 消费级全景相机（Insta360 X4）头戴部署形成 egocentric 全局感知通道——全景相机接入具身功能感知的真实场景证据，是本批三篇中唯一触及具身任务层（功能先验→动作规划）的论文。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "第 V-F 节 + Fig 6：可穿戴采集设定（Insta360 X4 + 头戴帽）+ 办公/家居定性结果 + 服务机器人动机。",
+   "locator": "pages 7-8, Section V-F (Performance in Real-World Scenarios) and Figure 6",
+   "source_context": "we build a wearable data collection system by\nmounting an Insta360 X4 panoramic camera on a head-\nmounted cap to simulate the 360\n◦ \negocentric perspective\n\n## page 8\n\ndisplay sit\n(a) \n(b)\nFig. 6: Real-world evaluation. (a) Wearable data collection setup.\n(b) Qualitative grounding results.\nof an embodied agent. In complex office and domestic\nscenarios, our model accurately localizes key functional\nregions (e.g., sit and display), despite varying illumination\nconditions and severe geometric distortions. The experimen-\ntal results demonstrate that, by explicitly accounting for\nthe geometric characteristics of 360\n◦ \nimagery, our method\nachieves superior robustness in previously unseen real-world\nenvironments. This provides reliable functional priors for\nglobal decision-making and task planning in service robots.",
+   "evidence_type": "application-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7-8 逐字给出 mounting an Insta360 X4 panoramic camera on a head-mounted cap to simulate the 360° egocentric perspective of an embodied agent、In complex office and domestic scenarios, our model accurately localizes key functional regions (e.g., sit and display), despite varying illumination conditions and severe geometric distortions、provides reliable functional priors for global decision-making and task planning in service robots；claim 的硬件设定、场景、任务（sit/display）与服务机器人定位均由 context 直接蕴含；该实验为定性展示（Fig 6），无量化指标。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C14",
+   "claim": "作者自述边界（结论 future work）：当前工作为具身智能体在真实 360° 环境提供基础，但未来研究才将探索动态场景的时序推理与 3D 空间表征的跨模态协同——即本框架不覆盖动态场景时序建模，也未与 3D 空间表征集成。",
+   "stance": "limit",
+   "relation": "限制综述命题（局限）：全景 affordance grounding 路线的当前边界——静态场景、无时序推理、无 3D 空间协同；全景相机的具身应用在动态环境与 3D 执行层仍属开放问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 VI 节结论末句：两条 future work 方向隐含当前方法的覆盖边界。",
+   "locator": "page 8, Section VI (Conclusion)",
+   "source_context": "We believe this work provides a solid foundation\nfor embodied agents in real-world 360\n◦ \nenvironments. Future\nresearch will explore temporal reasoning for dynamic scenes\nand cross-modal synergy with 3D spatial representations.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 逐字给出 We believe this work provides a solid foundation for embodied agents in real-world 360° environments. Future research will explore temporal reasoning for dynamic scenes and cross-modal synergy with 3D spatial representations；claim 把 future work 两方向反读为当前边界（不支持动态场景、未集成 3D 表征），措辞与原文一一对应，未扩大为其他缺陷；论文未设独立 Limitations 节，此为作者边界声明的唯一原文依据。"
+   }
+  },
+  {
+   "card_id": "2603.09760-C15",
+   "claim": "实现细节与全景特定增强：视觉编码器用 ImageNet 预训练的 DINOv2-Base，文本编码器用预训练 CLIP；AdamW（初始 lr 1e-5、余弦退火）、2×NVIDIA A6000、20k 迭代、batch size 4；全景输入统一 resize 到 560×1120。增强除常规翻转/颜色抖动外，引入全景特定增强——±3° 随机旋转、±5% 随机缩放、水平环绕平移（horizontal wraparound shifts），以强化 360° 拓扑固有的旋转不变性；训练时对二值标注掩码施加高斯模糊得到软监督热图。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式）：ERP 全景训练的工程配方——环绕平移等全景拓扑感知增强是把 360° 几何注入训练分布的通用手法，供具身系统复用全景训练管线时对号入座。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 V-A 节 Implementation Details：骨干/优化器/算力/分辨率 + 全景特定增强清单。",
+   "locator": "page 5, Section V-A (Experimental Setup, Implementation Details)",
+   "source_context": "Implementation Details The visual encoder adopts a\nDINOv2-Base model [27] pre-trained on ImageNet, while\nthe text encoder uses a pre-trained CLIP model [29]. The\nmodel is trained end-to-end using the AdamW optimizer\nwith an initial learning rate of 1e−5 and a cosine annealing\nschedule. Training is performed on two NVIDIA A6000\nGPUs for a total of 20k iterations with a batch size of 4.\nAll panoramic inputs are uniformly resized to a resolution\nof 560×1120. To enhance robustness, in addition to standard\nrandom flipping and color jittering, we introduce panoramic-\nspecific data augmentations, including random rotations of\n±3\n◦\n, random scaling by ±5%, and horizontal wraparound\nshifts, tailored to enforce the rotational invariance inherent to\nthe 360\n◦ \ntopology. Furthermore, during training, a Gaussian\nblur is then applied to each binary annotation mask to obtain\nthe final soft supervision heatmaps.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "training configuration and panorama-specific augmentation",
+    "value_or_direction": "input resolution 560x1120; two NVIDIA A6000 GPUs; 20k iterations; batch size 4; AdamW with initial learning rate 1e-5; random rotations of 3 degrees, random scaling by 5%, and horizontal wraparound shifts",
+    "comparator": "standard random flipping and color jittering only",
+    "task_or_sample": "one-shot panoramic affordance grounding training setup",
+    "locator": "page 5, Section V-A (Implementation Details)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 逐字给出 visual encoder adopts a DINOv2-Base model、text encoder uses a pre-trained CLIP model、AdamW optimizer with an initial learning rate of 1e−5、two NVIDIA A6000 GPUs for a total of 20k iterations with a batch size of 4、uniformly resized to a resolution of 560×1120、panoramic-specific data augmentations, including random rotations of ±3◦, random scaling by ±5%, and horizontal wraparound shifts, tailored to enforce the rotational invariance inherent to the 360° topology、Gaussian blur is then applied to each binary annotation mask；claim 的全部配置项与增强清单均由 context 直接蕴含。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[9] OOAL: One-shot open affordance learning with foundation models (CVPR 2024)",
+   "reason": "主基线：one-shot 透视 affordance 代表方法，360-AGD 与 AGD20K 双表的最强对照。"
+  },
+  {
+   "ref": "[35] OS-AGDO: One-shot affordance grounding of deformable objects in egocentric organizing scenes (IROS 2025)",
+   "reason": "第二基线：同为 one-shot 范式，同协议适配 ERP 对比。"
+  },
+  {
+   "ref": "[13] AGD20K / Learning affordance grounding from exocentric images (CVPR 2022)",
+   "reason": "透视域跨域泛化基准（Seen/Unseen），支撑『全景方法在透视域的条件化交换』结论。"
+  },
+  {
+   "ref": "[27] DINOv2: Learning robust visual features without labels (TMLR 2023)",
+   "reason": "视觉骨干，LoRA rank 倒 U 分析的适配对象。"
+  },
+  {
+   "ref": "[29] CLIP (ICML 2021) 与 [30] CoOp (IJCV 2022)",
+   "reason": "文本编码器与提示学习，区域—文本对比损失的对齐端。"
+  },
+  {
+   "ref": "[28] LoRA (ICLR 2022)",
+   "reason": "参数高效适配组件，Table IV 超参边界的分析对象。"
+  },
+  {
+   "ref": "[2] Thinking in 360°: Humanoid visual search in the wild (CVPR 2026)",
+   "reason": "360° 具身动作空间动机的核心引文，连接本任务与具身智能语境。"
+  },
+  {
+   "ref": "[11] SphereNet (ECCV 2018) 与 [12] 几何感知全景分割 (NeurIPS 2024)",
+   "reason": "ERP 畸变处理的近邻工作（球面卷积/几何利用），本文 related work 定位的参照系。"
+  }
+ ],
+ "notes": "alphaxiv 文本层提取（extraction.method 按规范记为 pdf-text；来源 alphaxiv-fulltext-api 非 OCR 文本层），8 页 IEEE 会议格式（arXiv 2603.09760v2，2026-07-16）。与综述连接：这是本批三篇中唯一把全景相机推进到具身任务层（affordance grounding → 动作规划先验）并做真实可穿戴实验的论文——RePer-360（2603.05999）是 ERP 全景深度估计（几何恢复任务），RayTun3R（2607.02711）是鱼眼相机在线适配 3D 基础模型（位姿/深度，且明确全景不在范围），PanoAffordanceNet 补上『全景 → 功能语义 → 机器人动作先验』一环；三篇合起来覆盖『全景/鱼眼输入的几何恢复—基础模型适配—具身功能感知』谱系。注意：Fig 2 提取文本含未清理的中文公式占位符（『zz在此处键入公式。』），成稿质量信号；A_refined 公式（式 7）的 α 与 max(S·C) 逐字对齐提取文本核对。"
+}

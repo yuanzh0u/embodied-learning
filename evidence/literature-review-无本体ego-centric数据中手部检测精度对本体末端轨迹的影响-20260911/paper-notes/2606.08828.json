@@ -1,0 +1,422 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.08828",
+  "title": "Video2Sim2Real: Full-Stack Autonomous Dexterous Skill Acquisition from a Single Human Video",
+  "published": "2026-06-07",
+  "url": "https://arxiv.org/abs/2606.08828",
+  "authors": [
+   "Yunhai Han",
+   "Jianuo Qiu",
+   "Linhao Bai",
+   "Ziyu Xiao",
+   "Zihang Zeng",
+   "Yangcen Liu",
+   "Zhaodong Yang",
+   "Shalin Jain",
+   "Wenrui Ma",
+   "Jiaqi Fu",
+   "Yuqian Zheng",
+   "Manisha Natarajan",
+   "Muhammad Zubair Irshad",
+   "Kenneth Shaw",
+   "Matthew Gombolay",
+   "Zsolt Kira",
+   "Harish Ravichandar"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "单 RGB-D 人类视频→灵巧手全栈管线，明确把手部自遮挡/手-物遮挡导致的 HaMeR 估计退化列为首要误差来源，并用五个'对重定向轨迹信任度递减'的基线实验证明检测误差如何限制直接细化；其对象中心关键帧锚定+仿真回环优化+解耦 sim-to-real 蒸馏正是'仿真回环补偿检测误差'的核心机制证据，且给出厘米级操作化阈值。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "遮挡致手部估计退化与重定向后鸿沟的两难陈述"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "按对人类运动信任度排序的细化方法谱系"
+   },
+   {
+    "locator": "3 Problem Setup",
+    "role": "data-or-setting",
+    "purpose": "单 RGB-D 相机、无机器人数据、无动捕的输入假设"
+   },
+   {
+    "locator": "4.1 Off-the-shelf Estimation Modules",
+    "role": "method-or-design",
+    "purpose": "HaMeR 手部 21 关键点+Mink 重定向、CoTracker 物体流工具链"
+   },
+   {
+    "locator": "4.2 Refinement Modules",
+    "role": "method-or-design",
+    "purpose": "对象中心关键帧检测与锚定插值修正机制"
+   },
+   {
+    "locator": "4.3 Sim-to-Real Transfer Modules",
+    "role": "method-or-design",
+    "purpose": "IL 几何适应+残差 RL 手指物理适应的解耦设计与 ±5cm/±10° 随机化"
+   },
+   {
+    "locator": "4.4 Spatial Generalization Modules",
+    "role": "method-or-design",
+    "purpose": "CuRobo 碰撞感知规划的作用边界"
+   },
+   {
+    "locator": "5.1 Experiment Design",
+    "role": "results-or-analysis",
+    "purpose": "任务集与 Table 1 跨任务细化对比"
+   },
+   {
+    "locator": "5.2 Evaluation of Refinement Strategy",
+    "role": "results-or-analysis",
+    "purpose": "五基线对比与轨迹质量限制的归因"
+   },
+   {
+    "locator": "5.3 Evaluation of Sim-to-Real Transfer",
+    "role": "results-or-analysis",
+    "purpose": "Table 2 真实世界 95.7% vs FoundationPose 15.7%"
+   },
+   {
+    "locator": "5.4 Spatial Generalization beyond the Single Video",
+    "role": "results-or-analysis",
+    "purpose": "空间泛化模块评估"
+   },
+   {
+    "locator": "6 Conclusion, Limitations, and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限（稀疏关键帧、启发式关键帧检测、非关节物体）"
+   },
+   {
+    "locator": "Appendix A Module details",
+    "role": "appendix-or-supplement",
+    "purpose": "A.1.2 重定向 IK 细节、A.2 关键帧细化、A.4 约 1cm 规划偏差与短视界 IK 精修"
+   },
+   {
+    "locator": "Appendix D Refinement Experiment Details",
+    "role": "appendix-or-supplement",
+    "purpose": "Fig.5/6 遮挡实例归因、Steak Seasoning 高质量重定向轨迹与残差 RL 表现的反向印证、Table 4 成功条件"
+   },
+   {
+    "locator": "Appendix E Sim-to-Real Experiment Details",
+    "role": "appendix-or-supplement",
+    "purpose": "Table 11 基线真实失败模式、Table 12 蒸馏/残差消融"
+   },
+   {
+    "locator": "Appendix G Spatial Generalization Results",
+    "role": "appendix-or-supplement",
+    "purpose": "约 2cm 路点位姿误差导致精密任务失败的容差证据"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "not-applicable: 参考文献仅用于核对引文身份"
+   }
+  ]
+ },
+ "research_question": "能否从单段无本体人类操作视频（单 RGB-D 相机、无机器人演示、无专家标注）出发，全自动地完成数字孪生重建、运动提取、轨迹细化与 sim-to-real 策略学习，使灵巧手机器人习得真实可执行的操作技能？",
+ "contributions": [
+  "对象中心关键帧细化：从物体运动检测接触/交互/脱离三关键帧，用仿真器物体信息优化对应机器人构型作为锚点插值修正重定向轨迹",
+  "解耦 sim-to-real 策略学习：IL 从点云蒸馏关键帧手部姿态处理几何 gap，残差 RL 做手指级局部适应处理物理 gap",
+  "全栈框架 Video2Sim2Real：现成基础模型重建数字孪生（Gemini/SAM3/SAM3D）+ 运动先验提取（HaMeR/Mink/CoTracker）+ CuRobo 空间泛化",
+  "七个日常任务上仿真细化成功率 91.4%（五基线最好 52.9%）、安全率 100%，真实世界 95.7%（FoundationPose 路线 15.7%）"
+ ],
+ "method": {
+  "summary": "输入单段 RGB-D 人类操作视频与参考场景图。HaMeR 估计 21 个手部 3D 关键点并变换到机器人基座坐标系，以指尖位置+腕部位姿为目标用 Mink 微分 IK 重定向到 Kinova Gen 臂+Leap Hand（16 自由度），高斯滤波平滑；CoTracker 追踪物体 2D 流点经深度升维到 3D。因遮挡致手部估计与重定向轨迹不可直接执行，系统在数字孪生中以物体运动识别接触/交互/脱离关键帧，用物体几何优化这些帧的机器人构型（抓取用 Lightning Grasp+仿真稳定性筛选，推拉用指尖法向对齐运动方向），锚点插值修正全轨迹。Sim-to-real 阶段以 ±5cm/±10° 几何随机化训练 IL 蒸馏策略（部署时入工作区前查询一次避免执行期遮挡），以物理随机化训练手指残差 RL（PPO，关节修正限幅 0.06）。",
+  "assumptions": [
+   "单固定 RGB-D 相机（RealSense D455）与已知内外参（含 AprilTag 标定的相机-桌面-机器人变换）",
+   "场景物体为非关节刚体且可被 SAM3D 重建",
+   "物体运动比手部运动更可靠：关键帧从物体流而非手部轨迹检测",
+   "数字孪生重建误差可被几何/物理随机化下的策略学习吸收"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "七个任务各一段人类操作视频（apple/peach 备果、steak 调味、toy 归位、tissue 传递、book 传递、tray 取回）"
+  ],
+  "tasks": [
+   "抓取放置（4 个交互任务）",
+   "推/拉（3 个任务）"
+  ],
+  "embodiments": [
+   "7-DoF Kinova Gen 臂 + 16-DoF Leap Hand 灵巧手",
+   "IsaacGym 数字孪生"
+  ],
+  "sample_or_scale": "细化评测每任务 10 runs×3 seeds；sim-to-real 仿真测试 50 组随机参数；真实世界每任务 10 trials（基线 5 trials）"
+ },
+ "evaluation": {
+  "design": "仿真细化对比五个按'对重定向轨迹信任度递减'排列的 RL 基线（Residual RL/DeepMimic/Pre-Contact Init/Opt-Pre-Contact Init/Object-only，各配 flow 与 flow+aux 两种奖励）；sim-to-real 对比 Pure-RL（finger / arm+finger）、Pure-IL(DP3)、FoundationPose；真实世界物体位姿扰动下测成功率",
+  "baselines": [
+   "Residual RL",
+   "DeepMimic RL",
+   "Pre-Contact Init",
+   "Opt-Pre-Contact Init",
+   "Object-only RL",
+   "Pure-RL (finger)",
+   "Pure-RL (arm+finger)",
+   "Pure-IL (DP3)",
+   "FoundationPose"
+  ],
+  "metrics": [
+   "多阶段任务成功率（Table 4 逐任务成功条件）",
+   "安全率（20N 桌接触力阈值）",
+   "臂/手 RMS jerk",
+   "完成帧数",
+   "真实世界成功率"
+  ],
+  "ablations": [
+   "蒸馏-only vs 残差-only vs 两者（Table 12）",
+   "flow vs flow+aux 奖励",
+   "几何与物理随机化解耦"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "跨任务仿真细化：Ours 成功率 91.4%、安全率 100%、臂 jerk 3.7；五个基线成功率 1.9%-52.9%，且作者明确归因'RL 基线受制于含噪重定向轨迹或高维状态空间'",
+   "scope": "七任务仿真",
+   "locator": "5.1 Experiment Design, Table 1; 5.2 Evaluation of Refinement Strategy"
+  },
+  {
+   "finding": "附录 Fig.6 逐任务展示 HaMeR 估计中的手部自遮挡与手-物遮挡实例，用于解释重定向轨迹为何偏离演示意图；Steak Seasoning 原始重定向轨迹质量较高，对应 Residual RL 在该任务取得第二好表现——反向印证轨迹质量决定直接细化的成败",
+   "scope": "接触帧定性归因",
+   "locator": "Appendix D.1 Keyfrema Refinement, Fig. 5/6"
+  },
+  {
+   "finding": "真实世界：Ours 95.7% vs FoundationPose 15.7% vs Pure-IL 5.7% vs Pure-RL(finger) 45.7% vs Pure-RL(arm+finger) 3.0%；Pure-IL 失败主因是执行期持续读取点云受手-物遮挡 sim-to-real 差异影响，Pure-RL(arm+finger) 出现撞桌等不安全行为",
+   "scope": "七任务真实世界",
+   "locator": "5.3 Evaluation of Sim-to-Real Transfer, Table 2; Appendix E.5, Table 11"
+  },
+  {
+   "finding": "消融：仅蒸馏 33.3%、仅残差 RL 60.0%、两者结合 90.0%（Peach/Toy/Tissue 平均）——几何适应与物理适应缺一不可",
+   "scope": "三任务真实世界",
+   "locator": "Appendix E.6 Ablation of Sim-to-Real Policies, Table 12"
+  },
+  {
+   "finding": "规划器路点位姿典型偏差约 1cm 即需短视界 IK 精修对齐期望接触位姿；空间泛化中约 2cm 的路点误差即可导致 Apple/Toy 精密任务 replay 失败——末端位姿误差的可用容差在厘米级下限",
+   "scope": "规划与空间泛化模块",
+   "locator": "Appendix A.4 Spatial Generalization Module; Appendix G.2"
+  },
+  {
+   "finding": "IL 蒸馏在物体位姿 ±5cm/±10° 局部随机化下训练，部署时在机器人进入工作区前查询一次，使观测不被执行期机器人遮挡污染",
+   "scope": "sim-to-real 设计",
+   "locator": "4.3 Sim-to-Real Transfer Modules"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "细化只作用于稀疏关键帧，需要复杂手内重定向的任务需连续调整（未来工作）",
+    "locator": "6 Conclusion, Limitations, and Future Work"
+   },
+   {
+    "limitation": "关键帧检测依赖启发式物体运动规则，长时程灵巧操作需更可泛化的运动分析",
+    "locator": "6 Conclusion, Limitations, and Future Work"
+   },
+   {
+    "limitation": "重建管线仅支持非关节物体",
+    "locator": "6 Conclusion, Limitations, and Future Work"
+   },
+   {
+    "limitation": "当前需 RGB-D 与预置 AprilTag 标定；未来以深度估计与自动标定支持 in-the-wild",
+    "locator": "6 Conclusion, Limitations, and Future Work"
+   },
+   {
+    "limitation": "残差 RL 未来可引入触觉以更好适应接触动态并应对手-物遮挡",
+    "locator": "6 Conclusion, Limitations, and Future Work"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全程未报告手部关键点估计本身的定量误差（如 MPJPE/关节角误差）；检测精度→轨迹质量的因果链依靠 Fig.5/6 定性归因与基线对比间接支撑，非定量分解",
+    "basis": "5.2 与附录 D.1 的归因方式"
+   },
+   {
+    "boundary": "相机为固定第三视角 RGB-D 而非严格 ego-centric；遮挡模式与 ego 头戴视角不同，结论向 ego 管线迁移时需重新验证",
+    "basis": "5.1 Experiment Design 的硬件设置"
+   },
+   {
+    "boundary": "95.7% 真实成功率在每任务 10 trials、作者设定的局部扰动范围（附录 Table 9/10：0.5-5cm）下测得；阈值外泛化依赖 CuRobo 规划且精密任务仍失败",
+    "basis": "5.3 与附录 E.2/G.2"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：单固定 RGB-D 第三视角、桌面非关节物体、7-DoF 臂+多指灵巧手、可构建数字孪生的场景。核心可迁移判断：当手部检测轨迹因遮挡不可信时，不应直接细化/跟踪重定向轨迹，而应改用物体运动锚定+仿真回环优化+部署时蒸馏。±5cm/±10° 鲁棒范围与 1-2cm 规划容差是该系统的操作化数值，不可直接外推到其他硬件、ego 视角或关节物体。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "五个细化基线横跨'信任重定向轨迹'的完整谱系并共享奖励设计，使'轨迹质量限制'的归因有据",
+   "几何 gap 与物理 gap 解耦并有概率化表述（附录 B 边缘化论证）",
+   "真实世界 10 trials×7 任务+基线失败模式逐类归因+策略消融，证据链完整",
+   "附录公开 Fig.6 遮挡实例，把误差来源可视化归因到 HaMeR 估计"
+  ],
+  "design_risks": [
+   "无手部检测精度的定量测量（无 MPJPE 类指标），核心归因链条是定性的",
+   "每任务仅一段人类视频、单相机单场景",
+   "Toy 任务细化与 RL 训练时间异常长（6h24m），小物体抓取优化仍脆弱",
+   "安全率仅在仿真中以 20N 阈值操作化，真实世界 unsafe 行为靠人工中止"
+  ],
+  "baseline_fairness": "细化基线共享 flow-tracking 奖励与训练预算（3 seeds、≤10h、8192 Isaac Gym 环境）；FoundationPose 基线与本文共用同一残差 RL 策略，对比公平",
+  "metric_validity": "成功条件逐任务明确定义（Table 4，含位置/高度/倾斜/接触力阈值）；jerk 分臂/手报告；但无手部轨迹级精度指标，检测质量仅以任务结果间接反映",
+  "reproducibility": "超参数完整（Table 3 蒸馏超参、PPO 细节、Table 13 时间成本分解、关键帧检测阈值 δc=4/Lc=50 等）；未见代码开源声明",
+  "external_validity": "覆盖 7 个日常任务与杂乱场景空间泛化；但仅支持非关节物体、固定第三视角 RGB-D、需 AprilTag 标定，ego 视角与跨本体迁移未测"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.08828-C01",
+   "claim": "在无本体人类操作视频管线中，严重的手部自遮挡与手-物遮挡会显著降低手部运动估计精度；作者将其列为直接迁移的两大首要障碍之一，并在附录逐任务展示 HaMeR 估计的遮挡实例以解释重定向轨迹偏离演示意图。",
+   "stance": "limit",
+   "relation": "支持综述问题的误差来源环节：ego/第三视角人类视频中手部检测误差的首要机制是遮挡（自遮挡+手-物遮挡），它使 HaMeR 类单目估计输出的手部轨迹失真，进而污染重定向后的机器人末端轨迹。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言明确将'severe hand self-occlusion and hand-object occlusion→motion estimation accuracy 显著退化'列为第一挑战；附录 D.1 Fig.6 为七个任务逐一标注遮挡类型（self-occlusion / hand-object occlusion / 两者叠加）并说明其解释了重定向轨迹的偏离。",
+   "locator": "1 Introduction",
+   "source_context": "lenges hinder direct transfer. First, severe hand self-occlusion and hand–object occlusion during\nmanipulation can significantly degrade motion estimation accuracy. Second, a substantial embod-",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原文逐句核对；附录 D.1 的 Fig.6 遮挡标注与'artifacts help explain why the retargeted trajectories deviate'一句佐证；claim 限于遮挡致估计退化这一来源陈述，未声称具体误差数值。"
+   }
+  },
+  {
+   "card_id": "2606.08828-C02",
+   "claim": "跨七任务仿真细化评测显示：对含噪重定向轨迹依赖越强的细化策略整体越差——Residual RL 成功率 49.5/52.9%、DeepMimic RL 19.5/24.3%、Pre-Contact Init 6.2/19.5%、Opt-Pre-Contact Init 1.9/14.3%、Object-only 9.5/15.7%，而本文对象中心关键帧锚定法达 91.4% 且安全率 100%；作者据此结论：直接细化重定向人类运动受限于含噪/不准的运动先验。",
+   "stance": "limit",
+   "relation": "支持传播路径命题：手部检测误差经重定向进入机器人轨迹后，会成为一切'信任该轨迹'的下游细化/学习方法（残差 RL、运动奖励 RL）的性能上限；缓解必须绕开对原始轨迹的直接依赖。附录反向印证：Steak Seasoning 原始重定向轨迹质量较高，Residual RL 即取得第二好表现。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 跨任务均值：Success 行 RRL-F 49.5±47.7 / RRL-A 52.9±49.8 / DM-F 19.5 / DM-A 24.3 / PCI-F 6.2 / PCI-A 19.5 / OPCI-F 1.9 / OPCI-A 14.3 / Obj-F 9.5 / Obj-A 15.7 / Ours 91.4±22.7；Safety 行 Ours 100.0。5.2 正文'RL-based baselines can be limited by noisy retargeted trajectories or high-dimensional state spaces'与附录 D.1 Steak Seasoning 案例共同支撑归因。",
+   "locator": "5.1 Experiment Design",
+   "source_context": "Metric RRL-F RRL-A DM-F DM-A PCI-F PCI-A OPCI-F OPCI-A Obj-F Obj-A Ours\nSuccess ↑ 49.5±47.7 52.9±49.8 19.5±33.4 24.3±41.5 6.2±12.5 19.5±37.5 1.9±2.6 14.3±26.2 9.5±25.2 15.7±26.9 91.4±22.7",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "simulated task success rate (across-task average)",
+    "value_or_direction": "Ours 91.4% vs Residual-RL 49.5/52.9%, DeepMimic 19.5/24.3%, Pre-Contact-Init 6.2/19.5%, Opt-PCI 1.9/14.3%, Object-only 9.5/15.7%",
+    "comparator": "five RL-based refinement baselines spanning decreasing trust in the retargeted trajectory",
+    "task_or_sample": "seven everyday manipulation tasks, 10 runs per task, 3 seeds per baseline",
+    "locator": "5.1 Experiment Design, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 数值逐格核对（含注脚 RRL/DM/PCI/OPCI/Obj 缩写与 F/A 奖励变体）；claim 的排序论断与基线'信任度递减'设计出自 5.2 正文；附录 D.1 的 Steak Seasoning 反向案例已在 summary 注明出处，未混入数值。"
+   }
+  },
+  {
+   "card_id": "2606.08828-C03",
+   "claim": "对象中心关键帧细化是一种不依赖手部轨迹精度的缓解机制：从物体运动中检测接触/交互/脱离关键帧，用仿真器中的物体几何与位姿优化这些帧的机器人构型，再以锚点插值修正原始重定向轨迹——即把可信来源从'含噪的手部估计'换成'仿真回环中的物体信息'。",
+   "stance": "support",
+   "relation": "支持缓解手段命题：仿真回环补偿检测误差的具体机制是用物体状态（比手部估计更可靠的监督源）在关键帧上重新优化机器人构型，手部重定向轨迹只保留时间相干性的骨架作用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 正文明确'Rather than treating the extracted robot motion as a reliable reference'，关键帧构型由物体信息优化后作为锚点插值修正重定向轨迹；附录 A.2.2 进一步说明接触帧位姿'carries perception, reconstruction, and retargeting error'故需几何校正+抓取搜索。",
+   "locator": "4.2 Refinement Modules",
+   "source_context": "The refinement module aims to improve the retargeted robot trajectory. In this work, we propose\nan object-centric keyframe refinement method. Rather than learning to refine the trajectory directly,\nour method identifies key manipulation frames and uses the object configurations at these frames\nto optimize the desired robot configurations. These optimized configurations then serve as anchor\npoints for interpolating and correcting the retargeted trajectory.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.2 原文核对；A.2.2 'carries perception, reconstruction, and retargeting error' 一句确证该机制针对的正是检测+重定向误差；claim 未夸大——锚定仅作用于稀疏关键帧（作者在局限中承认）。"
+   }
+  },
+  {
+   "card_id": "2606.08828-C04",
+   "claim": "解耦 sim-to-real 策略（IL 从点云蒸馏关键帧手部姿态处理几何误差 + 残差 RL 做手指级物理适应）在真实世界物体位姿扰动下取得 95.7% 平均成功率；而依赖预训练 6D 位姿估计（FoundationPose）直接校正机器人姿态的路线仅 15.7%——部署时策略蒸馏比信赖检测/位姿估计模型的精度更鲁棒。",
+   "stance": "support",
+   "relation": "支持缓解手段与可用性命题：检测/位姿估计误差传入真实世界后，靠'更强预训练检测模型'（FoundationPose 路线）不能解决，而'几何随机化+部署前一次蒸馏查询+手指残差 RL'的解耦设计能把含噪感知下的真实成功率从 15.7% 提到 95.7%。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2：FoundationPose 0/10,0/10,1/10,0/10,0/10,0/10,10/10（15.7%）vs Ours 10/10,9/10,10/10,8/10,10/10,10/10,10/10（95.7%），两法共用同一手指残差 RL 策略；附录 E.5 Table 11 补充 Pure-IL 5.7%、Pure-RL(finger) 45.7%、Pure-RL(arm+finger) 3.0%。",
+   "locator": "5.3 Evaluation of Sim-to-Real Transfer",
+   "source_context": "Table 2: Real-world task success rate under object pose variations.\nMethod Apple Peach Steak Toy Tissue Book Tray Avg.\nFoundationPose 0/10 0/10 1/10 0/10 0/10 0/10 10/10 15.7%\nOurs 10/10 9/10 10/10 8/10 10/10 10/10 10/10 95.7%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-world task success rate under object pose variations",
+    "value_or_direction": "95.7% vs 15.7%",
+    "comparator": "FoundationPose-based pose-estimation pipeline, same finger residual RL policy, 10 trials per task",
+    "task_or_sample": "seven real-world tasks, Kinova Gen + Leap Hand",
+    "locator": "5.3 Evaluation of Sim-to-Real Transfer, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 2 逐格核对；'same trained finger-level residual RL policy'出自 5.3 正文，保证对比只反映位姿来源差异；附录 E.5 基线数值单独核对并在 summary 标注位置。"
+   }
+  },
+  {
+   "card_id": "2606.08828-C05",
+   "claim": "该系统为'可接受误差范围'提供了一个操作化锚点：IL 蒸馏策略在物体位姿局部随机化（平面 ±5 cm、朝向 ±10°）下训练，使机器人对检测与重建误差在该局部范围内保持鲁棒；超出局部范围则需改用碰撞感知运动规划，而规划路点约 1-2 cm 的末端位姿偏差即可导致精密任务失败。",
+   "stance": "conditional",
+   "relation": "支持可接受阈值命题：在仿真回环+蒸馏补偿下，可容忍的物体位姿/几何误差操作化范围为 ±5cm/±10°；而无策略学习补偿时（纯规划 replay），末端位姿误差的容忍度收紧到厘米级下限（1-2cm）。两个数值共同划出'有补偿/无补偿'的阈值带。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3.1 给出 ±5cm/±10° 训练随机化范围（附录 A.3.1 同为 ±5cm/±10°，测试扰动 0.5-5cm 见 Table 9/10）；附录 A.4 报告规划 EE 位姿与期望接触位姿典型偏差约 1cm 需短视界 IK 精修，附录 G.2 报告约 2cm 路点误差导致 Apple/Toy replay 失败。",
+   "locator": "4.3 Sim-to-Real Transfer Modules",
+   "source_context": "Randomization: In training, we randomize the object position and orientation within a local range\n(e.g., ±5 cm and ±10\n◦\n, respectively) and collect pairs of point cloud and the corresponding robot\nhand poses in the table frame.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "object pose perturbation robustness range (training-time randomization)",
+    "value_or_direction": "±5 cm position and ±10° orientation local range",
+    "comparator": "deployment-time robustness under geometry randomization vs unaugmented replay",
+    "task_or_sample": "all seven tasks, IL distillation policy training",
+    "locator": "4.3 Sim-to-Real Transfer Modules"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "±5cm/±10° 出自 4.3.1 与 A.3.1 两处一致；1cm/2cm 数值出自附录 A.4/G.2 原文（'typically around 1 cm'、'around 2 cm at the waypoint pose, can cause task failure'），在 claim 中明确归属规划模块而非检测环节，未混淆误差类型。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[11] Pavlakos et al., HaMeR, CVPR 2024",
+   "why": "单目 3D 手部估计工具链核心，21 关键点来源"
+  },
+  {
+   "ref": "[58] Zakka, Mink, 2025",
+   "why": "微分 IK 重定向求解器"
+  },
+  {
+   "ref": "[59] Karaev et al., CoTracker, 2023",
+   "why": "物体 2D 流追踪，关键帧检测与物体位姿估计的输入"
+  },
+  {
+   "ref": "[14] Chen et al., Object-centric dexterous manipulation, 2024",
+   "why": "Residual RL 基线来源，'信任重定向轨迹'谱系的强端"
+  },
+  {
+   "ref": "[19] Lum et al., Crossing the human-robot embodiment gap, 2025",
+   "why": "Pre-Contact Init 基线来源"
+  }
+ ],
+ "notes": "相机为固定第三视角 RGB-D（非严格 ego-centric），但误差机制（遮挡→HaMeR 退化→重定向轨迹不可用→物体锚定+仿真回环补偿）与综述问题直接对应，作 include。IDs 计划：0416-0420。附录 D.1 标题原文拼作 'Keyfrema Refinement'。"
+}

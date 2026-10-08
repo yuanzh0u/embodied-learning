@@ -1,0 +1,346 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.22609",
+  "title": "MG-Nav: Dual-Scale Visual Navigation via Sparse Spatial Memory",
+  "published": "2025-11-27",
+  "url": "https://arxiv.org/abs/2511.22609",
+  "authors": [
+   "Bo Wang",
+   "Jiehong Lin",
+   "Chenzhi Liu",
+   "Xinting Hu",
+   "Yifei Yu",
+   "Tianjia Liu",
+   "Zhongrui Wang",
+   "Xiaojuan Qi"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "导航环节'替代 SLAM 式稠密地图基础设施'的直接样本：MG-Nav 用离线构建的稀疏空间记忆图（SMG，拓扑-语义图，RGB-only）+ 导航基础策略（NavDP）+ 前馈几何基础模型（VGGT）实现零样本图像目标导航，在 HM3D/MP3D 上超过全部稠密 RGBD 地图方法，且在动态重排场景下远比地图类方法稳健。全文 'SLAM' 一词零出现，在线阶段无度量建图与度量定位（重定位为图像-节点检索）。但其替代是不彻底的：SMG 构建显式依赖带位姿的示教游览（仿真真值位姿），节点 3D 中心与点目标模式继承度量信息——对综述问题提供了'替代发生在运行时而非数据基础设施层'的细分证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract 与 Sec 1 Introduction",
+    "role": "problem",
+    "purpose": "确认论文动机：未见环境零样本视觉导航；现有三族方法（基础策略/RL/记忆型）的局限，尤其是记忆型方法依赖稠密 RGB-D 重建的昂贵与脆弱"
+   },
+   {
+    "locator": "page 3, Sec 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位方法谱系：无记忆基础策略（GNM/ViNT/NoMaD/NavDP）、无记忆 RL、记忆型（稠密地图 BSC-Nav/GOAT/IEVE/MOD-IIN、神经体积模型 GaussNav/GSplatVNM、稀疏图 UniGoal/Astra/Mobility-VLN）"
+   },
+   {
+    "locator": "page 3-6, Sec 3.1-3.5 Memory-Guided Navigation",
+    "role": "method-or-design",
+    "purpose": "理解 SMG 构建（带位姿示教游览+FPS 采样、关键帧/物体嵌入、时间邻接边）、图像-节点混合检索、A* 全局规划、VGGT-adapter 局部几何增强、双频率异步循环与周期性重定位"
+   },
+   {
+    "locator": "page 6, Sec 4.1 Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "确认基准（HM3D InstanceImageNav-v3 1000 episodes/36 场景；MP3D ImageNav 1014 episodes/5 场景）、指标（SR/SPL）、实现（Habitat、DINOv2、Grounded-SAM-2、VGGT、NavDP、成功阈值 1.0 m/500 步）"
+   },
+   {
+    "locator": "page 6-8, Sec 4.2 Main Results、Sec 4.3 Ablation、Sec 4.4 Robustness",
+    "role": "results-or-analysis",
+    "purpose": "核对 Table 1/2 主结果、组件/检索/图稀疏度三组消融数字、动态障碍鲁棒性对照（Table 4）及作者归因"
+   },
+   {
+    "locator": "page 8, Sec 5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论声明；确认正文无显式局限段（局限均需读者推断）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-10, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（VGGT、NavDP、GaussNav、BSC-Nav、UniGoal），无需逐条精读"
+   },
+   {
+    "locator": "论文附录（超参数细节）",
+    "role": "appendix-or-supplement",
+    "reason": "正文称 'Hyperparameters are detailed in appendix'（page 6），但提取全文（10 页，止于 References）未包含附录内容，无法核读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在无需稠密 3D 重建与任务级训练的前提下，实现未见环境中对图像目标/实例图像目标的零样本视觉导航，并保持对动态场景变化的鲁棒性。作者方案：以稀疏空间记忆图（SMG）承载全局规划、以导航基础策略（NavDP）+VGGT 几何适配器执行局部控制的双尺度异步架构。对综述问题的意义：这是'导航环节以稀疏空间记忆+基础模型替代稠密重建/SLAM式地图'的直接样本——需要考察它替代了什么（稠密度量重建、在线度量定位）、替代到什么程度（在线阶段完全替代 vs 离线记忆构建仍依赖外部相机位姿）、以及保留/隐性依赖了哪些显式几何模块（节点 3D 中心、点目标模式的度量位姿、VGGT 前馈几何特征）。",
+ "contributions": [
+  "双尺度记忆引导导航框架：全局 SMG 规划与局部几何增强控制解耦并按不同频率异步运行，配合周期性重定位与重规划，实现零样本图像目标导航",
+  "稀疏空间记忆图（SMG）：区域中心节点聚合多视角关键帧嵌入（DINOv2 CLS）与实例级物体嵌入（Grounded-SAM 分割+DINOv2），边由示教游览时间邻接导出可通行连接；无需稠密 3D 重建，且仅需 RGB 输入（对比基线的 RGBD）",
+  "VGGT-adapter：将预训练 VGGT 前馈几何特征经轻量 MLP 注入导航基础策略，在共享 3D 感知空间对齐观测与目标嵌入，提升视点变化下的视觉目标匹配",
+  "在 HM3D InstanceImageNav（SR 78.5/SPL 59.3）与 MP3D ImageNav（SR 83.77/SPL 57.15）上取得零样本 SOTA，并在动态障碍插入场景下保持鲁棒（SR 73.53→68.63）"
+ ],
+ "method": {
+  "summary": "MG-Nav 是双尺度零样本视觉导航框架。全局层：离线为每个场景构建稀疏空间记忆图 SMG——对带位姿示教游览（posed tour demonstrations，标准做法引自 GaussNav/BSC-Nav）的外参相机位姿做最远点采样（FPS）得到空间代表位置，每个位置定义半径 r 的区域为节点，节点 3D 中心 P 即采样相机位置，节点特征为多视角关键帧嵌入（DINOv2 CLS，按特征相似度最低+相机旋转方差最大挑选）与实例物体嵌入（Grounded-SAM 开放词表分割+DINOv2，同类相似度超阈值合并平均），边由游览时间邻接导出。导航时通过图像-节点混合检索（关键帧全局相似+物体级语义校验）把当前观测与目标图像定位到节点，A* 在图上规划节点级路径。局部层：以预训练扩散策略 NavDP 为基础策略，节点间用点目标模式（π(I_k, P_k, −)），末段切换图像目标模式（π(I_k, −, I_goal)）；VGGT-adapter 把观测与目标的 VGGT 几何特征 token 化后投影进策略嵌入空间以强化目标对齐。运行时全局环（每 T_g 步或置信度下降时检索重定位+重规划）与局部环（每 T_l 步执行+避障）异步协作。关键架构事实：全文无 SLAM 组件、无在线度量建图；在线'重定位'是图像-节点检索（拓扑层面）而非度量位姿估计；但记忆构建是离线过程且显式输入外部相机位姿，节点度量坐标与点目标模式继承度量信息。",
+  "assumptions": [
+   "每个场景可获得带位姿的示教游览（extrinsic camera poses 由外部提供，本文实验中为仿真真值），记忆构建为离线过程",
+   "稀疏关键帧+物体语义嵌入足以表征区域的空间结构与可达性——图稀疏度消融显示过度稀疏会显著伤害 SPL",
+   "预训练导航基础策略（NavDP）的短视距控制与避障能力可零样本泛化到新场景",
+   "局部点目标模式所需的自我中心目标向量可由平台提供（论文未讨论其在真实平台上的来源）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HM3D（Habitat-Matterport 3D）：Instance ImageNav-v3，36 个验证场景 1000 episodes",
+   "MP3D（Matterport3D）：ImageNav，5 个测试场景 1014 episodes",
+   "动态鲁棒性子集：HM3D 100 episodes，导航阶段插入 0/5/10 个随机障碍物"
+  ],
+  "tasks": [
+   "Instance Image-Goal Navigation（HM3D）：目标为特定物体实例的图像",
+   "Image-Goal Navigation（MP3D）：目标为场景/视点图像",
+   "动态场景鲁棒性测试：记忆在原场景构建后插入新障碍物"
+  ],
+  "embodiments": [
+   "Habitat 仿真器中的具身智能体（RGB 输入；无实体机器人实验）",
+   "局部策略底座：NavDP 预训练扩散策略",
+   "感知底座：DINOv2-ViT-L/14、Grounded-SAM-2、VGGT"
+  ],
+  "sample_or_scale": "HM3D 1000 episodes/36 场景；MP3D 1014 episodes/5 场景；动态鲁棒性 100 episodes；成功阈值 1.0 m、最长 500 步；'零样本'指无任务级训练，但每个场景需预先离线构建 SMG"
+ },
+ "evaluation": {
+  "design": "两个基准的零样本评测（SR/SPL）+ 三组消融（组件、检索策略、图稀疏度）+ 动态障碍鲁棒性对照（与作者重实现的 BSC-Nav、UniGoal 同场比较）",
+  "baselines": [
+   "无记忆基础策略（作者按官方代码重实现）：ViNT、GNM、NoMaD、NavDP",
+   "RL 方法：RL Baseline、FGPrompt、OVRL-v2 IIN、CompassNav（HM3D）；RSFG、REGNav（MP3D，转引或重实现）",
+   "记忆/地图方法（RGBD 输入）：GOAT、MOD-IIN（Scene Map）、UniGoal（Object Graph）、IEVE（Scene Map）、BSC-Nav（Scene Map）、GaussNav（3DGS Map）"
+  ],
+  "metrics": [
+   "SR（成功率）",
+   "SPL（按路径长度加权成功率）"
+  ],
+  "ablations": [
+   "组件消融：NavDP 24.7/12.6 → +SMG 74.04/56.14 → +VGGT-adapter 78.50/59.27",
+   "检索策略消融：仅关键帧 73.52/52.90、仅物体 72.20/52.79 vs 混合检索 78.50/59.27",
+   "图稀疏度消融：d=1.0 m/r=0.5 m 最优 78.50/59.27；d=1.5/r=0.8 降至 77.10/54.79；d=2.0/r=1.0 降至 70.69/46.89"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "RGB-only 稀疏记忆超过稠密 RGBD 地图方法：HM3D InstanceImageNav 上 MG-Nav（SMG, RGB）达 SR 78.5/SPL 59.3，高于 GaussNav（3DGS Map, RGBD）72.5/57.8 与 BSC-Nav（Scene Map, RGBD）71.4/57.2；MP3D ImageNav 达 83.77/57.15，超最强 RL 基线 FGPrompt-EF 77.71/51.09（+6.06/+6.06），超 NavDP 基础策略 68.28/49.19。",
+   "scope": "HM3D InstanceImageNav（1000 episodes/36 场景）与 MP3D ImageNav（1014 episodes/5 场景）零样本评测",
+   "locator": "page 6, Tables 1-2 与 Sec 4.2"
+  },
+  {
+   "finding": "显式全局记忆是基础策略可用性的关键：纯 NavDP 基础策略仅 24.7/12.6（作者归因于纯反应式控制与缺乏长程规划），加入 SMG 全局规划升至 74.04/56.14，再加 VGGT-adapter 达 78.50/59.27。",
+   "scope": "HM3D 组件消融（Table 3）",
+   "locator": "page 7, Sec 4.3"
+  },
+  {
+   "finding": "动态障碍鲁棒性：插入 10 个随机障碍物后 BSC-Nav SR 从 25.49 骤降至 7.84、UniGoal 从 56.43 降至 44.21，而 MG-Nav 仅从 73.53 降至 68.63（SPL 56.28→50.15）；作者归因于解耦双尺度设计——稀疏 SMG 维持区域级全局规划稳定，零样本局部策略不依赖全局地图即可避开未建模障碍。",
+   "scope": "HM3D 100 episodes 动态场景（0/5/10 个随机障碍物，BSC-Nav/UniGoal 为作者重实现）",
+   "locator": "page 7-8, Sec 4.4 与 Table 4"
+  },
+  {
+   "finding": "混合检索与图密度均影响性能：仅关键帧检索降至 73.52/52.90、仅物体检索降至 72.20/52.79；图稀疏到 d=2.0 m/r=1.0 m 时降至 70.69/46.89，SPL 降幅（−12.38）远大于 SR（−7.81），说明过稀疏图削弱视点多样性与拓扑连通，导致绕路。",
+   "scope": "HM3D 检索策略与图稀疏度消融",
+   "locator": "page 7, Sec 4.3"
+  },
+  {
+   "finding": "SMG 构建显式依赖位姿基础设施：对示教帧的外参相机位姿做 FPS 得到稀疏代表位置，节点 3D 中心 P 即采样相机位置，边由游览时间邻接导出——即记忆图的几何骨架直接来自外部位姿输入，而非在线估计。",
+   "scope": "离线记忆构建阶段（每场景）",
+   "locator": "page 3, Sec 3.2"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "全部实验在 Habitat 仿真（HM3D/MP3D 室内场景）进行，无真实机器人验证；SMG 构建与点目标控制所需的位姿在仿真中由仿真器真值提供，论文未讨论真实部署时位姿来源（即未处理在线定位问题）",
+    "basis": "page 3（posed tour demonstrations、extrinsic camera poses）、page 4 Fig 2 输入标注（RGB + 6-DoF Cam. Pose）、page 6（deployed in Habitat Simulator）；全文无真实实验章节"
+   },
+   {
+    "boundary": "'零样本'指无任务级训练，但每个评测场景仍需预先采集带位姿示教游览来构建 SMG；对全新场景的在线自主探索-建图能力未评测",
+    "basis": "page 3 Sec 3.2 记忆构建流程与 page 6 Sec 4.1 实验协议（无在线探索基线）"
+   },
+   {
+    "boundary": "与记忆类基线的比较是系统级而非受控比较：MG-Nav 用 RGB 输入而基线用 RGBD，且双方策略/规划器不同，无法把性能差单独归因于地图表示；动态鲁棒性对照中 UniGoal 与 BSC-Nav 数字为作者重实现（非原论文报告），可能低估原方法",
+    "basis": "page 6 Table 1/2 备注与 page 8 Table 4 caption（'Results for UniGoal and BSC-Nav are obtained from our re-implementations'）"
+   },
+   {
+    "boundary": "MP3D ImageNav 仅 5 个测试场景；所有结果无方差/显著性报告；动态测试限于插入静态障碍物，不含移动行人等真实动态",
+    "basis": "page 6 Sec 4.1（1014 episodes of 5 testing scenes）与 page 7 Sec 4.4 设置"
+   },
+   {
+    "boundary": "超参数细节称在附录但提取全文未包含附录；正文未提及代码开源，运行时细节（重置信阈值、T_g/T_l 取值）不全",
+    "basis": "page 6（'Hyperparameters are detailed in appendix'）与全文（10 页止于 References）"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 Habitat 仿真的室内导航基准（HM3D InstanceImageNav-v3、MP3D ImageNav）上，以离线带位姿示教游览构建的 RGB 稀疏拓扑-语义记忆图 + 预训练导航基础策略（NavDP）+ VGGT 几何特征适配，可实现超过稠密 RGBD 地图方法（GaussNav/BSC-Nav 等）的零样本 SR/SPL，并对静态障碍物插入式动态变化保持稳健。该结论不覆盖：真实机器人部署、无位姿真值条件下的在线记忆构建与定位、移动动态物体/行人场景、户外环境，以及全新场景无示教游览时的自主探索。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "组件消融清晰隔离了全局记忆（SMG）与几何特征（VGGT-adapter）各自的贡献（24.7→74.04→78.50），使'显式记忆必要'的结论有直接因果支撑",
+   "动态鲁棒性协议（记忆在原场景构建、导航时插入 0/5/10 随机障碍）直接针对稠密地图脆性主张设计，并与两类地图基线同场对照",
+   "MG-Nav 用 RGB-only 输入对比基线的 RGBD，若比较公平则对'稠密深度重建非必需'的主张是强证据"
+  ],
+  "design_risks": [
+   "基线数字来源混杂：部分为作者重实现（*标记）、部分转引 GaussNav（†标记），未统一复测条件；动态对照中 BSC-Nav/UniGoal 为重实现，其原版动态表现未直接验证",
+   "记忆构建依赖带位姿示教游览且位姿为仿真真值，未检验位姿噪声/真实 SLAM 输入下 SMG 质量的退化",
+   "无真实机器人实验；MP3D 仅 5 个场景；无方差/显著性报告",
+   "动态场景限于插入静态障碍物，未覆盖移动智能体/行人等真实动态"
+  ],
+  "baseline_fairness": "三类基线（基础策略/RL/记忆地图）覆盖较全，但记忆类基线与 MG-Nav 在感知输入（RGBD vs RGB）、策略与规划器上均不同，系统级比较无法归因到地图表示单一因素；动态实验中 BSC-Nav/UniGoal 为作者重实现，存在低估原方法的风险；基础策略（ViNT/GNM/NoMaD/NavDP）为作者按官方代码重实现。",
+  "metric_validity": "SR/SPL 为该领域标准指标，成功阈值 1.0 m、500 步上限明确；动态实验明确 100 episodes 口径；但所有比较无方差/置信区间与显著性检验，小样本（MP3D 5 场景、动态 100 episodes）下的排名差异可信度存疑。",
+  "reproducibility": "框架、基准与评测协议描述完整（Habitat、1000/1014 episodes、DINOv2-ViT-L/14、Grounded-SAM-2、VGGT、NavDP、FPS/检索/A* 各环节）；但超参数称在附录而提取全文未含附录，正文未声明代码开源，重定位置信阈值与 T_g/T_l 等运行时细节不全。",
+  "external_validity": "结论限于 Habitat 仿真室内场景与图像目标类任务；'零样本'不含在线探索（每场景需离线记忆构建）；对真实世界动态（移动物体、光照、传感器噪声）与户外环境未验证；VGGT/NavDP 的泛化边界继承自其预训练分布。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.22609-C01",
+   "claim": "作者主张：现有记忆型零样本导航方法依赖稠密 RGB-D 重建，这类重建构建昂贵且在记忆构建完成后对轻微场景重排或动态变化脆弱；并以人类导航为据，主张稀疏视觉记忆（少量标志性快照）即可提供粗粒度而可靠的全局引导。",
+   "stance": "limit",
+   "relation": "限制'稠密重建类地图基础设施（SLAM式建图产物）在导航中不可或缺'的判断：作者把稠密 RGB-D 重建定性为昂贵且脆弱，并以稀疏空间记忆（SMG）作为替代物——支持'显式稠密地图正被稀疏空间记忆替代'的叙事一侧。但需注意替代物本身仍是一种显式图结构记忆（拓扑+语义+节点度量坐标），并非把空间信息完全隐式化进网络权重。",
+   "summary": "作者定性主张：稠密 RGB-D 重建昂贵且对重排脆弱，稀疏视觉记忆足以提供全局引导",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Sec 1 Introduction",
+   "source_context": "Memory-based zero-shot approaches construct persis- tent global maps [9, 12, 24] or scene graphs [36] to enable long-horizon planning without retraining. However, these methods typically rely on dense RGB-D reconstructions, which are expensive to build and brittle to even mild rear- rangements or dynamic changes after memory construction.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 2 原文（Sec 1 第三段）：'dense RGB-D reconstructions'、'expensive to build and brittle to even mild rearrangements or dynamic changes after memory construction' 均为原文措辞；'稀疏视觉记忆提供粗粒度可靠全局引导'对应同页下文 'humans navigate effectively through sparse visual memories ... provide coarse yet reliable global guidance'。claim 限定为作者主张（author-claim），未把它当作已验证事实。"
+   }
+  },
+  {
+   "card_id": "2511.22609-C02",
+   "claim": "在 HM3D InstanceImageNav 上，MG-Nav 以仅 RGB 输入的稀疏记忆图（SMG）取得 SR 78.5/SPL 59.3，超过全部稠密 RGBD 地图方法——GaussNav（3DGS Map）72.5/57.8、BSC-Nav（Scene Map）71.4/57.2、IEVE 70.2/25.2；在 MP3D ImageNav 上取得 SR 83.77/SPL 57.15，超过最强 RL 基线 FGPrompt-EF 77.71/51.09。",
+   "stance": "limit",
+   "relation": "对'导航中稠密 RGBD 地图是否必需'给出定量否定证据：仅用 RGB 稀疏拓扑-语义记忆即可在两个基准上同时取得 SOTA——替代稠密重建不是以精度换鲁棒的妥协。但比较是系统级（记忆表示+检索+策略整体不同），不能把全部差距归因于地图表示本身；且 MG-Nav 的稀疏图仍继承示教游览的度量位姿骨架（见 C05）。",
+   "summary": "RGB-only 稀疏记忆图在 HM3D/MP3D 两个基准上全面超过稠密 RGBD 地图方法",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 6, Table 1 与 Table 2",
+   "source_context": "BSC-Nav [24] Scene Map (RGBD) 71.4 57.2 GaussNav [13] 3DGS Map (RGBD) 72.5 57.8 MG-Nav(Ours) SMG (RGB) 78.5 59.3",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL",
+    "value_or_direction": "MG-Nav (SMG, RGB) 78.5/59.3 on HM3D; 83.77/57.15 on MP3D",
+    "comparator": "GaussNav 3DGS Map (RGBD) 72.5/57.8; BSC-Nav Scene Map (RGBD) 71.4/57.2; IEVE 70.2/25.2; FGPrompt-EF 77.71/51.09",
+    "task_or_sample": "HM3D InstanceImageNav 1000 episodes/36 scenes; MP3D ImageNav 1014 episodes/5 scenes, zero-shot",
+    "locator": "page 6, Tables 1-2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 6：Table 1 行 'GaussNav [13] 3DGS Map (RGBD) 72.5 57.8'、'BSC-Nav [24] Scene Map (RGBD) 71.4 57.2'、'IEVE [12] Scene Map (RGBD) 70.2 25.2'、'MG-Nav(Ours) SMG (RGB) 78.5 59.3'；Table 2 行 'MG-Nav(Ours) SMG (RGB) 83.77 57.15'、'FGPrompt-EF [30] 77.71 51.09'；正文 Sec 4.2 'surpassing the strongest RL baseline FGPrompt-EF [30] 77.71/51.09 by 6.06/6.06'。claim 范围限于这两个基准的零样本评测，未外推。"
+   }
+  },
+  {
+   "card_id": "2511.22609-C03",
+   "claim": "在动态障碍测试（HM3D 100 episodes，导航阶段插入 0/5/10 个随机障碍物）中，地图类方法性能骤降（BSC-Nav SR 25.49→7.84，UniGoal 56.43→44.21），而 MG-Nav 仅小幅下降（SR 73.53→68.63，SPL 56.28→50.15）；作者归因于解耦的双尺度设计：稀疏 SMG 维持区域级全局规划稳定，零样本局部策略在不依赖全局地图的情况下避开未建模障碍。",
+   "stance": "limit",
+   "relation": "支持'稠密/静态地图在动态环境下的脆性'并划清职能边界：避障职能已由端到端基础策略承担（不依赖全局地图），全局地图退化为粗粒度拓扑引导——即 SLAM 式全局度量地图在动态导航中的'不可或缺性'被进一步削弱；替代后的分工是'稀疏拓扑记忆管长程意图、反应式基础策略管局部避障'。",
+   "summary": "动态障碍下地图类方法 SR 骤降，MG-Nav 仅微降；局部避障由基础策略承担、不依赖全局地图",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 8, Table 4 与 Sec 4.4 归因段",
+   "source_context": "Obs. Num 0 5 10 Method SR SPL SR SPL SR SPL BSC-Nav [24] 25.49 19.91 8.64 4.63 7.84 4.94 UniGoal [36] 56.43 20.44 52.94 19.68 44.21 17.17 Ours 73.53 56.28 72.55 52.20 68.63 50.15 → 50.15). This resilience stems from a decoupled dual- scale design. The sparse SMG delivers robust region-level global planning, keeping the navigational goal stable, while the zero-shot local policy handles unmodeled obstacles and avoids them without relying on the global map, resulting in only minor drops in SR and SPL.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL under inserted obstacles (0/5/10)",
+    "value_or_direction": "Ours SR 73.53 → 68.63, SPL 56.28 → 50.15; BSC-Nav SR 25.49 → 7.84; UniGoal SR 56.43 → 44.21",
+    "comparator": "BSC-Nav (Scene Map), UniGoal (Object Graph), both re-implemented",
+    "task_or_sample": "100 episodes, HM3D, dynamic-scene setting with 0/5/10 random obstacles",
+    "locator": "page 8, Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 8 Table 4 全部行（BSC-Nav 25.49/19.91、8.64/4.63、7.84/4.94；UniGoal 56.43/20.44、52.94/19.68、44.21/17.17；Ours 73.53/56.28、72.55/52.20、68.63/50.15）与同页归因句 'the zero-shot local policy handles unmodeled obstacles and avoids them without relying on the global map'。已注明 UniGoal/BSC-Nav 为作者重实现（Table 4 caption），claim 未超出该 100 episodes 动态设置。"
+   }
+  },
+  {
+   "card_id": "2511.22609-C04",
+   "claim": "组件消融显示端到端基础策略单独不可行：纯 NavDP 基础策略在 HM3D InstanceImageNav 上仅 24.7/12.6（SR/SPL），作者归因于其纯反应式控制与缺乏长程规划；引入 SMG 全局规划后升至 74.04/56.14，再加 VGGT-adapter 达 78.50/59.27。",
+   "stance": "support",
+   "relation": "支持综述问题中'显式空间记忆基础设施仍必要'的一侧：在长程视觉导航上，纯端到端基础模型（无记忆）远不能替代显式空间记忆（24.7 vs 74.04）——替代 SLAM 的载体不是端到端基础策略本身，而是'基础策略+显式稀疏图记忆'的组合。同时它精确化了替代叙事：被替代的是稠密度量重建，保留的是显式拓扑-语义图结构与显式几何特征（VGGT 前馈几何，而非在线几何估计）。",
+   "summary": "纯 NavDP 基础策略 SR 仅 24.7，加 SMG 升至 74.04——端到端基础模型不能单独替代显式空间记忆",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Sec 4.3 Component ablation",
+   "source_context": "Component ablation. Table 3 reports a detailed ablation on model components. The foundation model achieves only 24.7/12.6 (SR/SPL), limited by its purely reactive con- trol and lack of long-range planning. Introducing SMG for global planning significantly boosts performance to 74.04/56.14, as it decomposes long-range navigation into reachable node-to-node subgoals, providing global guid- ance for the agent. Further incorporating the VGGT-adapter improves results to 78.50/59.27, confirming that geometry- aware observation–goal alignment enhances robustness dur- ing viewpoint shifts and final approach stages.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL (component ablation, HM3D)",
+    "value_or_direction": "NavDP foundation policy 24.7/12.6 → +SMG 74.04/56.14 → +VGGT-adapter 78.50/59.27",
+    "comparator": "NavDP foundation policy alone (ablation baseline)",
+    "task_or_sample": "HM3D InstanceImageNav component ablation (Table 3)",
+    "locator": "page 7, Sec 4.3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 7 Sec 4.3 首段（'only 24.7/12.6 (SR/SPL)'、'significantly boosts performance to 74.04/56.14'、'improves results to 78.50/59.27'）并与 page 8 Table 3 行（Foundation Policy 24.70/12.60；+SMG 74.04/56.14；+VGGT-adapter 78.50/59.27）交叉一致。归因措辞（reactive control、lack of long-range planning）为原文。claim 限于该消融设置。"
+   }
+  },
+  {
+   "card_id": "2511.22609-C05",
+   "claim": "SMG 的构建显式依赖外部相机位姿：作者按标准做法（引 GaussNav、BSC-Nav）为每个室内场景采集带位姿的示教游览，对示教帧的外参相机位姿做最远点采样（FPS）得到稀疏空间代表位置，据此定义节点区域——即记忆图的几何骨架来自离线位姿输入，而非在线估计；论文未讨论这些位姿在真实部署中的来源。",
+   "stance": "conditional",
+   "relation": "条件性证据：MG-Nav 对显式几何/位姿基础设施的替代只发生在在线导航阶段（检索式拓扑重定位、无度量建图、局部避障不依赖全局地图）；离线记忆构建阶段仍以外部相机位姿为前提（本文实验中为仿真真值），节点 3D 中心与点目标模式都继承度量信息。因此'SLAM 被稀疏记忆替代'的成立条件是：位姿可由外部（仿真真值/数据集标注）提供——在需要自主探索与在线定位的真实部署中，该前提本身仍需 SLAM 或等价定位手段，论文对此留空。",
+   "summary": "SMG 构建依赖带位姿示教游览（FPS 作用于外参相机位姿）——离线记忆构建仍需位姿基础设施",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3, Sec 3.2",
+   "source_context": "More specifically, for each indoor scene, we first fol- low standard practice to collect posed tour demonstrations [13, 24]. We then apply Farthest-Point Sampling (FPS) to the extrinsic camera poses of the demonstration frames to obtain sparse but spatially representative locations.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 Sec 3.2 首段：'collect posed tour demonstrations [13, 24]' 与 'apply Farthest-Point Sampling (FPS) to the extrinsic camera poses' 均为原文。节点 3D 中心取自采样位姿的补充（'P is set as the sampled camera location of v'）见同页下文。'论文未讨论位姿来源'为对全文（含 Sec 4.1 Habitat 部署与结论）的核查结论，属 not reported 性质的范围声明，非虚构。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "VGGT: Visual Geometry Grounded Transformer",
+   "arxiv_id": "2503.11651",
+   "role": "局部控制的几何特征来源：前馈式 3D 几何基础模型，替代显式在线几何估计的角色（MG-Nav 用其特征而非其重建输出）"
+  },
+  {
+   "title": "NavDP: Learning Sim-to-Real Navigation Diffusion Policy with Privileged Information Guidance",
+   "arxiv_id": "2505.08712",
+   "role": "局部导航基础策略底座（MG-Nav 的端到端控制组件与组件消融基线）"
+  },
+  {
+   "title": "GaussNav: Gaussian Splatting for Visual Navigation",
+   "arxiv_id": "2407.14105",
+   "role": "3DGS 稠密地图导航代表（HM3D 上最强的稠密重建类对照，也是 posed tour demonstrations 标准做法来源之一）"
+  },
+  {
+   "title": "From Reactive to Cognitive: Brain-Inspired Spatial Intelligence for Embodied Agents (BSC-Nav)",
+   "arxiv_id": "2508.17198",
+   "role": "场景地图记忆基线（动态鲁棒性对照对象）与 posed tour demonstrations 标准做法来源"
+  },
+  {
+   "title": "UniGoal: Towards Universal Zero-Shot Goal-Oriented Navigation",
+   "arxiv_id": "2412.05524",
+   "role": "物体图（稀疏图）导航基线：同为稀疏路线但物体中心图丢失局部上下文（MG-Nav 相关工作定位）"
+  }
+ ],
+ "notes": "补充观察：(1) 全文 'SLAM' 一词零出现。替代显式 SLAM 地图的完整方案 = 离线稀疏拓扑-语义记忆图（DINOv2 关键帧嵌入+Grounded-SAM 物体嵌入+A* 图搜索）+ 检索式拓扑重定位 + NavDP 扩散策略 + VGGT 前馈几何特征。替代程度：在线导航阶段完全无度量建图/度量定位（'re-localization' 是图像-节点混合检索）；但离线记忆构建显式输入外参相机位姿（本文为仿真真值），节点 3D 中心与点目标模式继承度量信息——'替代'发生在运行时而非数据/位姿基础设施层。(2) 消融证明端到端基础策略不能单独替代显式空间记忆（24.7 vs 74.04），替代 SLAM 的载体是'稀疏显式图记忆+基础策略'组合，而非纯端到端模型或纯隐式记忆。(3) 与 GaussNav（3DGS 稠密地图）同基准对比 + 动态重排鲁棒性实验，使本文成为'导航环节显式稠密地图被稀疏记忆替代'叙事的最直接定量样本之一。(4) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。"
+}

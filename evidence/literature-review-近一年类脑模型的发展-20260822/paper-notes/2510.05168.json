@@ -1,0 +1,370 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2510.05168",
+  "title": "Discretized Quadratic Integrate-and-Fire Neuron Model for Deep Spiking Neural Networks",
+  "published": "2025-10-05T02:30:10Z",
+  "url": "https://arxiv.org/abs/2510.05168",
+  "authors": [
+   "Eric Jahns",
+   "Davi Moreno",
+   "Milan Stojkov",
+   "Michel A. Kinsy"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "首个面向深层 SNN 的 QIF 神经元离散化及配套代理梯度推导,代表'更复杂神经元动力学替代 LIF'这条机制路线在 ImageNet 规模的系统验证,是综述中脉冲神经元机制方向的直接证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:LIF 线性衰减动力学受限,QIF 因训练不稳定从未进入深层 SNN。"
+   },
+   {
+    "locator": "3.2 Quadratic Integrate-and-Fire Neuron Model",
+    "role": "relevant-core",
+    "purpose": "理解 QIF 连续动力学与非线性平方项来源。"
+   },
+   {
+    "locator": "4.1 Discretized Quadratic Integrate-and-Fire Neuron Model",
+    "role": "method-or-design",
+    "purpose": "理解欧拉离散化与迭代更新规则如何嵌入深层 SNN。"
+   },
+   {
+    "locator": "4.2 Model Dynamics and Parameter Selection",
+    "role": "method-or-design",
+    "purpose": "核查不动点稳定性分析与参数选择(增益、阈值约束)。"
+   },
+   {
+    "locator": "4.3 Surrogate Gradient Formulation",
+    "role": "method-or-design",
+    "purpose": "理解从参数集解析推导代理梯度窗口(定理 4.1)的方法。"
+   },
+   {
+    "locator": "5.1 Comparison to Recent Works",
+    "role": "results-or-analysis",
+    "purpose": "核查 CIFAR-10/100、ImageNet、CIFAR-10 DVS 上与 SOTA 方法的对比数字。"
+   },
+   {
+    "locator": "5.2 Energy Consumption",
+    "role": "results-or-analysis",
+    "purpose": "核查相对 LIF 的能耗开销估计。"
+   },
+   {
+    "locator": "6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述限制(tdBN 依赖、额外计算、超参数)。"
+   },
+   {
+    "locator": "7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认总体结论与定位。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "reason": "相关工作梳理,必要脉络已从引言与 2.2 获得。"
+   },
+   {
+    "locator": "3.1 Spiking Neural Networks / 3.3 Threshold-Dependent Batch Normalization / 3.4 Training Spiking Neural Networks",
+    "reason": "SNN/tdBN/STBP 预备知识,属标准背景。"
+   },
+   {
+    "locator": "Appendix A/B/C/D",
+    "reason": "数据增广、超参数表、离散化推导与定理证明;主文已覆盖综述所需定量主张,仅抽取 B 中训练设置要点。"
+   }
+  ]
+ },
+ "research_question": "能否将具有非线性动力学的二次积分发放(QIF)神经元离散化后稳定地用于深层 SNN,并以可忽略的能耗开销超过基于 LIF 的直接训练 SOTA?",
+ "contributions": [
+  "提出首个面向高性能深层 SNN 的 QIF 神经元离散化(作者称首个基于 QIF 的深层 SNN 演示),能表达阈下振荡与输入变化敏感性等 LIF 不具备的动力学",
+  "对该离散化做系统动力学分析(不动点稳定性、三个行为区域、阈值约束),给出固定的参数选择准则",
+  "从离散化参数集解析推导代理梯度窗口(定理 4.1:tdBN 归一化输入下膜电位的均值/方差),降低窗口误选导致的梯度失配",
+  "在 CIFAR-10/100、ImageNet、CIFAR-10 DVS 上系统评估,多数设置超过 LIF 系 SOTA,并给出相对 LIF 的能耗开销分析"
+ ],
+ "method": {
+  "summary": "用欧拉法离散化 QIF 神经元并重写为带增益参数的递推形式,嵌入 Wu et al. 2018 式时空迭代更新规则;通过固定点稳定性分析选择参数并约束发放阈值,保证衰减行为与 LIF 类似的稳定不动点。在训练侧,基于 tdBN 归一化假设推导膜电位分布的解析均值/方差(定理 4.1),据此从参数集直接计算代理梯度窗口宽度,而非手工试选。",
+  "assumptions": [
+   "预突触输入经 tdBN 归一化(近似零均值单位方差),定理 4.1 的统计性质才成立",
+   "发放阈值受稳定性约束(不超过不稳定不动点附近),只保留衰减型非线性区",
+   "能耗按 45nm 工艺下 AC/MAC 操作数折算估计,非神经形态芯片实测"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "CIFAR-10",
+   "CIFAR-100",
+   "ImageNet",
+   "CIFAR-10 DVS"
+  ],
+  "tasks": [
+   "静态图像分类(ResNet-19/ResNet-34)",
+   "神经形态视频分类(VGGSNN/ResNet-19)"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "CIFAR 级到 ImageNet 级;CIFAR/DVS 报告 3 次试验均值±标准差,ImageNet 单次试验;单张 A100(CIFAR/DVS)或 4 张 A100(ImageNet)"
+ },
+ "evaluation": {
+  "design": "与 15 个左右直接训练 SNN 方法在相同训练设置下对比(区分'改神经元模型'与'改其他组件'两类),另报告能耗折算与相对 LIF 的 MAC 开销;附带 TET 损失的兼容性实验",
+  "baselines": [
+   "STBP-tdBN",
+   "TEBN",
+   "TET",
+   "IM-Loss",
+   "LocalZO + TET",
+   "Surrogate Module",
+   "MPBN",
+   "Backpropagation Shortcuts",
+   "PLIF",
+   "GLIF",
+   "LSG",
+   "IM-LIF",
+   "Ternary Spike"
+  ],
+  "metrics": [
+   "分类准确率(均值±标准差)",
+   "时间步数(2/4/10)",
+   "估计能耗(MAC/AC 操作折算)与相对 LIF 的 QIF 开销"
+  ],
+  "ablations": [
+   "有无 TET 损失",
+   "2 与 4 时间步",
+   "VGGSNN 与 ResNet-19 两种架构(DVS)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "CIFAR-10/100(ResNet-19)上,QIF+TET 以 4 时间步达 96.86%/80.62%,2 时间步达 96.70%/80.31%,超过表内此前最佳(如 Surrogate Module 96.82%、Ternary Spike 80.20%)",
+   "scope": "表 1 静态数据集对比",
+   "locator": "5.1 Comparison to Recent Works"
+  },
+  {
+   "finding": "ImageNet(ResNet-34)上 4 时间步无 TET 达 70.52%,超过 TEBN 68.28% 等先前方法,但低于使用三元脉冲的 Ternary Spike(70.74%)",
+   "scope": "表 1 ImageNet 列,单次试验",
+   "locator": "5.1 Comparison to Recent Works"
+  },
+  {
+   "finding": "CIFAR-10 DVS 上 VGGSNN 架构 10 时间步达 83.00%(±0.50),超过 LSG 77.90% 等神经形态对比方法,但仍低于 TEBN 的 84.90%;ResNet-19 上 80.70% 超过 Ternary Spike 的 79.84%",
+   "scope": "表 2",
+   "locator": "5.1 Comparison to Recent Works"
+  },
+  {
+   "finding": "作者估计该离散化相对 LIF 只引入很小的能耗开销(每次更新多一次乘法与一次加法)",
+   "scope": "能耗折算模型",
+   "locator": "5.2 Energy Consumption"
+  },
+  {
+   "finding": "作者自述限制:依赖 tdBN 计算代理梯度,阻碍事件驱动反向传播;相对 LIF 每次更新多一次乘加,对神经形态系统计算性能的影响因商用芯片稀缺而不确定;额外超参数可能加大其他场景的训练难度",
+   "scope": "限制一节",
+   "locator": "6 Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "依赖 tdBN 计算代理梯度,阻碍事件驱动反向传播(tdBN 同时在时空维度归一化);但事件驱动推理不受影响,tdBN 参数可折叠进相邻层",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "相对 LIF 每次更新增加一次乘法与一次加法,能耗开销可忽略,但对神经形态系统计算性能的影响因商用芯片有限而不确定",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "QIF 神经元的额外超参数可能加大其他场景下深层 SNN 的训练难度",
+    "locator": "6 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "验证止步于 ImageNet 分类与 CIFAR-10 DVS,未涉及语言建模、检测或更大规模模型;'深层'指 ResNet-19/34 级别,不能外推到数十层 Transformer 或亿级参数",
+    "basis": "5 Experiments 仅列四个视觉数据集与 ResNet/VGGSNN 架构"
+   },
+   {
+    "boundary": "ImageNet 结果为单次试验且低于 Ternary Spike,机制增益在 ImageNet 上尚未确立优势;'更复杂动力学带来收益'的因果解释停留在定性层面",
+    "basis": "表 1 ImageNet 单次试验、70.52% 对 70.74%;正文承认 Guo et al. 2024b 以更大差距胜出"
+   },
+   {
+    "boundary": "能耗为 AC/MAC 操作折算值而非芯片实测,且正文部分具体百分比数字在提取文本中缺失,只能定性引用'开销很小'",
+    "basis": "5.2 Energy Consumption 采用 Su et al. 2023 折算公式"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于直接训练的视觉 SNN(ResNet-19/34、VGGSNN,CIFAR 到 ImageNet、10 时间步 DVS);不能外推到脉冲大模型/语言建模、事件驱动训练范式,也不能把折算能耗当作神经形态芯片上的实测收益,更复杂的神经元动力学在 ImageNet 规模尚未证明优于三元脉冲等信息保真路线。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "与 SOTA 采用相同训练设置并区分'神经元模型改进'与'其他组件改进'两类对比,公平性意识强",
+   "CIFAR/DVS 报告 3 次试验的均值与标准差,ImageNet 明示单次试验",
+   "方法配套动力学分析(不动点稳定性)与可解析推导的代理梯度窗口,机制解释完整",
+   "同时报告准确率、时间步与能耗开销三个维度"
+  ],
+  "design_risks": [
+   "ImageNet 单次试验,与 Ternary Spike 的 0.22% 差距可能落在噪声范围内",
+   "参数(增益、阈值、sharpness)按经验选定,对其他任务/架构的迁移性未验证",
+   "能耗为折算估计,且提取文本中部分量化数字缺失,能量主张只能定性使用",
+   "DVS 上仍低于 TEBN,事件流场景的优势不全面"
+  ],
+  "baseline_fairness": "采用与近期 SOTA 相同的训练设置,并把神经元模型类方法与其他改进类方法分列;但 Ternary Spike 用 2 时间步仍更高,对比存在时间步不齐的细节差异",
+  "metric_validity": "准确率/时间步/能耗开销指标一致可比;能耗基于 AC/MAC 折算,是标准做法但非实测",
+  "reproducibility": "附录给出超参数表与训练时长/硬件;参数选择有明确规则;未见代码发布声明",
+  "external_validity": "仅覆盖视觉分类任务;未在语言、时序决策或更大规模网络上验证,跨任务外推未知"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2510.05168-C01",
+   "claim": "作者提出首个面向深层 SNN 的 QIF 神经元离散化,据其所知是首个基于 QIF 的深层 SNN 演示,能表达 LIF 不具备的阈下振荡与输入变化敏感性,并证明可稳定训练。",
+   "stance": "support",
+   "relation": "支持综述问题中'脉冲神经元机制路线(超越 LIF 的动力学)取得实质进展'的主张:非线性动力学神经元首次在深层网络规模落地。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言明确 first 声明与动力学优势;4.2 节给出稳定性分析支撑'可稳定训练'。",
+   "locator": "1 Introduction",
+   "source_context": "To the best of our knowledge, this is the first demonstration of deep SNNs based on QIF neurons.",
+   "evidence_type": "method-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对;'首个深层 QIF SNN'为作者自述优先权声明而非第三方验证,使用时应保留'作者称'的措辞;动力学优势在 4.2 节三个行为区域分析中有机制支撑。"
+   }
+  },
+  {
+   "card_id": "2510.05168-C02",
+   "claim": "在 CIFAR-10/CIFAR-100(ResNet-19)上,该 QIF 离散化配合 TET 损失以 4 时间步分别达 96.86%(±0.13)与 80.62%(±0.24),2 时间步达 96.70/80.31,超过表内此前最佳直接训练方法(如 Surrogate Module 的 96.82%、Ternary Spike 的 80.20%)。",
+   "stance": "support",
+   "relation": "支持'更丰富神经元动力学可转化为中小规模视觉基准的精度增益'的进展主张。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 1 给出 QIF 与 QIF+TET 在 2/4 时间步下的三数据集结果及标准差。",
+   "locator": "5.1 Comparison to Recent Works",
+   "source_context": "QIF (Ours) + TET Neuron Model 4 / 4 / 4 96.86 0.13% 80.62 0.24% 70.38% 2 / 2 / 96.70 0.08% 80.31 0.27%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "accuracy",
+    "value_or_direction": "96.86 and 80.62 at 4 timesteps; 96.70 and 80.31 at 2 timesteps",
+    "comparator": "Surrogate Module 96.82; Ternary Spike 80.20",
+    "task_or_sample": "CIFAR-10 / CIFAR-100 with ResNet-19",
+    "locator": "5.1 Comparison to Recent Works"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "96.86/0.13/80.62/0.24/70.38/96.70/80.31 均为表 1 QIF+TET 行原样数字;对比值 96.82(Surrogate Module)与 80.20(Ternary Spike)也在同一表内,均值±标准差来自 3 次试验,措辞范围限于直接训练视觉基准。"
+   }
+  },
+  {
+   "card_id": "2510.05168-C03",
+   "claim": "ImageNet(ResNet-34)上该离散化 4 时间步无 TET 达 70.52%(单次试验),超过 TEBN 68.28% 等先前方法,但被使用三元脉冲的 Ternary Spike(70.74%)以小差距超越;作者将此定位为'提高神经元动力学复杂度'这条生物合理替代路线的竞争力证据。",
+   "stance": "conditional",
+   "relation": "既支持机制路线在 ImageNet 规模可行的主张,又限定其增益边界:在最大规模基准上尚未全面胜过信息保真类改进。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 1 ImageNet 列与正文承认 Guo et al. 2024b 更优,并给出路线定位陈述。",
+   "locator": "5.1 Comparison to Recent Works",
+   "source_context": "The work of Guo et al. 2024b outperforms ours by a margin of , due to their use of ternary spikes to mitigate information loss and enhance accuracy. In contrast, our results demonstrate that increasing the complexity of neuron dynamics offers a competitive and biologically plausible alternative for improving performance.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "accuracy",
+    "value_or_direction": "70.52 without TET; 70.38 with TET",
+    "comparator": "Ternary Spike 70.74; TEBN 68.28",
+    "task_or_sample": "ImageNet with ResNet-34, 4 timesteps, single trial",
+    "locator": "5.1 Comparison to Recent Works"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "70.52/70.38 出自表 1 QIF 行、70.74 出自 Ternary Spike 行、68.28 出自 TEBN 行,均在 5.1 节内;正文原句确认 Guo et al. 2024b 胜出并给出作者的路线定位,差距数字在提取文本中缺失故不引用具体值,单次试验限制已在 ImageNet 段落明示。"
+   }
+  },
+  {
+   "card_id": "2510.05168-C04",
+   "claim": "CIFAR-10 DVS 上,该 QIF 离散化以 VGGSNN 架构 10 时间步达 83.00%(±0.50),超过 LSG(77.90%)等专注神经元模型改进的方法,但仍低于 TEBN 的 84.90%;ResNet-19 上达 80.70%(±0.10),超过 Ternary Spike 的 79.84%。",
+   "stance": "support",
+   "relation": "支持'非线性神经元机制在神经形态事件流数据上同样带来增益'的主张,同时暴露 TEBN 类归一化方法仍占优的边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 2 汇总 DVS 上各方法准确率,正文说明 TEBN 因无法折叠归一化参数而引入推理开销。",
+   "locator": "5.1 Comparison to Recent Works",
+   "source_context": "QIF (Ours) Neuron Model VGGSNN 10 83.00 0.50% ResNet-19 10 80.70 0.10%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "accuracy",
+    "value_or_direction": "83.00 with VGGSNN; 80.70 with ResNet-19",
+    "comparator": "TEBN 84.90; Ternary Spike 79.84; LSG 77.90",
+    "task_or_sample": "CIFAR-10 DVS, 10 timesteps",
+    "locator": "5.1 Comparison to Recent Works"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "83.00/0.50/80.70/0.10 为表 2 QIF 行原样数字;84.90(TEBN)、79.84(Ternary Spike)、77.90(LSG)均见于同表;正文另说明 TEBN 无法把归一化参数折叠进前层权重而带来推理开销,该上下文支撑对比措辞。"
+   }
+  },
+  {
+   "card_id": "2510.05168-C05",
+   "claim": "路线边界:该 QIF 离散化依赖 tdBN 计算代理梯度,阻碍事件驱动反向传播;每次更新比 LIF 多一次乘法与一次加法,对神经形态芯片实际计算性能的影响不确定;额外超参数可能加大其他场景的训练难度。",
+   "stance": "limit",
+   "relation": "限定'非线性神经元可直接替换 LIF'的推广强度:事件驱动训练与芯片级收益仍未验证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "限制一节明确列出三点,均由作者自述。",
+   "locator": "6 Limitations",
+   "source_context": "One limitation of our QIF discretization is its reliance on tdBN ( 6 ) for surrogate gradient calculation, which hinders event-driven backpropagation [ 34 ] since each tdBN layer performs normalization across both spatial and temporal dimensions.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "限制一节原句逐字核对;'每次更新多一次乘加'与'超参数加大训练难度'两点亦在同节原文出现,均属作者自述边界,综述引用时应作为机制路线的已知约束。"
+   }
+  },
+  {
+   "card_id": "2510.05168-C06",
+   "claim": "训练稳定性来自从离散化参数集解析推导代理梯度窗口:在 tdBN 归一化假设下,定理 4.1 给出膜电位分布的均值与方差,据此计算窗口宽度以降低误选窗口与梯度失配风险——该方法的有效性以 tdBN 归一化假设为前提。",
+   "stance": "conditional",
+   "relation": "说明该机制路线的训练方法贡献(解析代理梯度)依赖于归一化假设,为综述中'神经元机制与训练方法耦合'提供例证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.3 节提出解析窗口计算并陈述动机;定理证明在附录 D。",
+   "locator": "4.3 Surrogate Gradient Formulation",
+   "source_context": "To remedy this issue, we propose an analytical means to calculate the surrogate gradient window based on the parameter set of our QIF discretization.",
+   "evidence_type": "method-claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.3 节原句逐字核对;该句前后文明确'naïvely applying surrogate gradient leads to severe gradient mismatch'与 tdBN 假设(all pre-synaptic input normalized),故以条件式措辞记录其适用前提,避免读成无条件的通用训练技巧。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Wu et al. 2018 (STBP: spatio-temporal backpropagation with surrogate gradient, LIF 迭代更新规则来源)",
+  "Zheng et al. 2021 (tdBN, ResNet-19, Going Deeper With Directly-Trained Larger SNNs)",
+  "Deng et al. 2022 (TET loss 与 VGGSNN)",
+  "Guo et al. 2024b (Ternary Spike, 三元脉冲)",
+  "Lian et al. 2023 / Lian et al. 2024 (LSG 学习型代理梯度; 时间注意力)",
+  "Izhikevich / Hodgkin-Huxley 神经元模型谱系(经 3.2 节讨论)"
+ ],
+ "notes": "作者来自 Texas A&M / Rice 系团队(Eric Jahns, Michel A. Kinsy 的神经形态计算组),发表于 2025 年 10 月;定位是'神经元机制'而非'大模型'路线,可与 SpikingBrain、GLIF 等自适应神经元工作并列比较。提取文本中数学符号(latexml 丢符号)导致部分正文数字缺失,本文所有引用数字均改以表格原文为准。"
+}

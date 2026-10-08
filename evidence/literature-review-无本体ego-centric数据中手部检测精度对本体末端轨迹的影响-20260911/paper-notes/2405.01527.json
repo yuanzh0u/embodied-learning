@@ -1,0 +1,400 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2405.01527",
+  "title": "Track2Act: Predicting Point Tracks from Internet Videos enables Generalizable Robot Manipulation",
+  "published": "2024-05-02",
+  "url": "https://arxiv.org/abs/2405.01527",
+  "authors": [
+   "Homanga Bharadhwaj",
+   "Roozbeh Mottaghi",
+   "Abhinav Gupta",
+   "Shubham Tulsiani"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文以点轨（point tracks）作为本体无关的中间表征，直接从含 ego-centric 人类视频（EpicKitchens）的网络视频中学习交互计划，再经深度+刚体变换优化提升为 3D 末端执行器轨迹，正是综述问题中'用点轨绕开显式手部姿态估计'及'2D→3D lifting 误差传导'路线的代表工作，并提供了开环轨迹误差与残差策略缓解的定量证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题设定（用网络视频学习可泛化操控）与作者声称的贡献。"
+   },
+   {
+    "locator": "2 Related Works",
+    "role": "relevant-core",
+    "purpose": "定位与手部姿态估计、hand-object mask、affordance 等替代中间表征的对比定位。"
+   },
+   {
+    "locator": "3 Approach",
+    "role": "method-or-design",
+    "purpose": "理解点轨预测（DiT diffusion）、2D 轨迹经深度+PnP 求解刚体变换得到末端轨迹、残差策略校正的三阶段设计。"
+   },
+   {
+    "locator": "4 Experiment Setup",
+    "role": "data-or-setting",
+    "purpose": "确认训练数据来源（EpicKitchens ego-centric 人类视频、SmthSmthv2、RT1、BridgeData）、Co-Tracker 伪标签、评测指标与基线。"
+   },
+   {
+    "locator": "5 Results",
+    "role": "results-or-analysis",
+    "purpose": "提取点轨预测精度（Table 1）与机器人成功率（Table 2）及失败模式分析。"
+   },
+   {
+    "locator": "6 Discussion and Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者陈述的局限（短时程、单物体）。"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "核对机器人平台细节（Spot、RealSense、5Hz、IK）、训练数据规模与 ego-centric 片段的手部可见性筛选标准。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "reason": "参考文献列表不承载与综述问题直接相关的证据，仅按需回查引文编号。"
+   }
+  ]
+ },
+ "research_question": "能否用大规模网络视频（含人类与机器人操作视频）学习本体无关的交互计划（2D 点轨预测），并将其转换为机器人末端执行器动作，从而在无需测试时训练的前提下实现对新任务、新物体、新场景的可泛化操控？",
+ "contributions": [
+  "提出从多样网络视频预测本体无关交互计划（点轨）的框架 Track2Act（DiT 扩散模型，条件为首帧+目标帧+初始点集）。",
+  "给出将预测 2D 点轨经初始帧深度与 PnP 式优化推断物体刚体变换序列、进而得到开环 3D 末端执行器轨迹的方法，无需任何机器人数据。",
+  "用约 400 条本体示教训练目标条件残差策略，对开环计划逐步预测校正量，实现闭环部署，并在 25 个任务、5 个真实场景上验证四级泛化。"
+ ],
+ "method": {
+  "summary": "三阶段：(1) 在 40 万个网络视频片段（EpicKitchens ego-centric 人类视频、SmthSmthv2、RT1、BridgeData）上，以 Co-Tracker 生成的点轨为监督训练 DiT 扩散模型，给定首帧、目标帧与初始点集预测未来 2D 点轨；(2) 部署时结合初始帧深度得到 3D 点，通过使刚体变换后投影匹配预测 2D 轨迹的优化（可用 PnP 求解器+RANSAC 离群过滤）推断物体刚体变换序列，施加于末端执行器得到开环轨迹；(3) 用约 400 条 Spot 遥操作示教训练残差策略，对开环动作逐步预测 h=4 步校正量并只执行首步，实现闭环纠错。",
+  "assumptions": [
+   "部署时机器人配有 RGBD 相机（Intel RealSense），可获得初始帧深度以完成 2D→3D 提升。",
+   "单物体操作、相机固定（机器人实验中背景点静止用于区分物体点轨）。",
+   "Co-Tracker 的自动追踪输出可作为训练与评估的 ground truth。",
+   "残差策略只需少量本体数据即可，因为开环计划已接近可行。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EpicKitchens (ego-centric 人类厨房视频，剪为 4-5 秒片段)",
+   "Something-Something-v2",
+   "RT1 data",
+   "BridgeData v2"
+  ],
+  "tasks": [
+   "关微波炉、拉抽屉、翻开烤面包机、从罐子倾倒等 25 个日常操控任务",
+   "四级泛化评测：MG/G/CG/TG"
+  ],
+  "embodiments": [
+   "Boston Dynamics Spot 移动操作臂（双指夹爪，前置 RealSense RGBD，IK 控制，5Hz）"
+  ],
+  "sample_or_scale": "点轨模型训练用约 400,000 个视频片段；残差策略用约 400 条遥操作轨迹（10 个任务、3 个地点）；机器人评测每泛化级别 20 次 rollout。"
+ },
+ "evaluation": {
+  "design": "点轨预测在四个 held-out 网络视频数据集上以改进的 δ_x^t 曲线下面积 ∆(0-1) 评测，Co-Tracker 输出作为 ground truth；机器人实验按四级泛化（MG/G/CG/TG）各 20 次 rollout 统计成功率，与 4 个基线及 2 个自身变体对比。",
+  "baselines": [
+   "Goal-Conditioned BC",
+   "Affordance-Conditioned BC (Bahl et al. 2023)",
+   "Video-Conditioned BC",
+   "Hand-Object Mask-Conditioned BC (Bharadhwaj et al. 2024)",
+   "Ours (Open-Loop)",
+   "Ours (actions; not residuals)"
+  ],
+  "metrics": [
+   "∆：预测点与 Co-Tracker ground truth 在 1-10 像素阈值内的比例之曲线下面积（0-1，越高越好）",
+   "真实机器人成功率（目标物最终位姿与目标图一致）"
+  ],
+  "ablations": [
+   "开环执行 vs 闭环残差策略",
+   "预测残差 vs 直接预测完整动作"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "点轨预测在四个 held-out 数据集上 ∆=0.67-0.77，远高于 flow 基线（0.21-0.42）与 video-inpainting+tracking 基线（0.17-0.30）。",
+   "scope": "以 Co-Tracker 伪标签为 ground truth 的网络视频片段评测。",
+   "locator": "5.1 Point Track Prediction Results, Table 1"
+  },
+  {
+   "finding": "开环执行由点轨提升得到的 3D 末端轨迹成功率仅 25-35%，残差策略闭环校正后升至 40-70%；主要失败模式为抓取位置不准与无法从中间失败恢复。",
+   "scope": "Spot 机器人、25 任务、5 场景、每级 20 次 rollout 的实时真机评测。",
+   "locator": "5.2 Robot Manipulation Results, Table 2; 5.3 Analysis of Failures"
+  },
+  {
+   "finding": "EpicKitchens ego-centric 训练片段的筛选标准是'画面中可见人手'，以此近似保证片段内发生了物体操作。",
+   "scope": "点轨模型训练数据构建（附录）。",
+   "locator": "Appendix, 6.5 Training Data for Track Prediction"
+  },
+  {
+   "finding": "在更高泛化级别（CG/TG）残差策略成功率仍只有 55%/40%，作者归因于错误抓取、不可行动作卡死及轨迹不符合目标图。",
+   "scope": "作者失败分析，限短时程单物体任务。",
+   "locator": "5.3 Analysis of Failures"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "任务仍为短时程且只操作单个物体；扩展到多物体长时程任务留作未来工作。",
+    "locator": "6 Discussion and Conclusion"
+   },
+   {
+    "limitation": "开环计划因预测小误差与缺乏接触推理而失败（抓不准、无法从中间失败恢复）；高泛化级别成功率仍不高。",
+    "locator": "5.3 Analysis of Failures"
+   },
+   {
+    "limitation": "机器人实验假设单物体、相机固定；多物体或相机运动时需额外区分各运动组。",
+    "locator": "3.2 Point Track Prediction from Web Videos"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "2D→3D 提升依赖初始帧 RGBD 深度与相机内参，单目 RGB（无深度）的 ego-centric 视频无法直接套用该 lifting，深度歧义会直接进入刚体变换优化。",
+    "basis": "3.3 节要求初始帧 3D 点 P_3D 与相机内参 K 作为优化输入；机器人平台明确配备 RealSense 深度（4 节、附录 6.2）。"
+   },
+   {
+    "boundary": "点轨监督质量上限即 Co-Tracker 在被遮挡、快速手部运动场景下的追踪精度；该文未对 ego-centric 视频中手部遮挡导致的伪标签噪声做任何测量或鲁棒性分析。",
+    "basis": "4.1 与 6.5 均以 Co-Tracker 输出为 ground truth，全文未见对伪标签误差的敏感性实验。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：短时程单物体操控、固定相机、部署端有 RGBD 与标定内参、允许约数百条本体遥操作数据训练残差校正的场景；训练侧可混合 ego-centric 人类视频与机器人视频。不适用于：单目无深度输入的纯 ego-centric 重定向、多物体长时程任务、需要精确接触/力控的任务，以及要求绝对轨迹精度保证（其点轨精度仅相对 Co-Tracker 伪标签度量）的场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "训练/评测覆盖 ego-centric 人类视频与两种机器人视频，跨本体设计直接回应数据稀缺问题。",
+   "开环 vs 闭环残差的消融直接量化了'预测误差传导到执行'的程度与残差校正的缓解幅度。",
+   "真机评测覆盖 5 个真实场景与四级泛化分级，超越单桌面的常见设定。"
+  ],
+  "design_risks": [
+   "点轨评估以 Co-Tracker 输出为 ground truth，评估与监督同源，报告的 ∆ 是相对一致性而非绝对精度，且无法暴露追踪器自身误差。",
+   "每级仅 20 次 rollout，成功率置信区间宽；未报告方差或统计检验。",
+   "EpicKitchens 片段用'手部可见'启发式筛选，未说明所用检测器及其精度，可能引入选择偏差。"
+  ],
+  "baseline_fairness": "基线与本文方法使用相同的约 400 条本体示教数据训练，affordance 与 video 基线直接采用原作者发布的网络数据预训练模型，资源大体对等；但 hand-object mask 基线因无配对人-机数据而与原文设定略有差异（作者已声明）。",
+  "metric_validity": "∆ 指标度量的是与 Co-Tracker 伪标签的像素级一致性，是轨迹可用性的代理指标；机器人成功率（目标物最终位姿匹配目标图）是部署效用的直接度量但为二值、粒度粗，未报告末端轨迹的连续误差（如位置/姿态偏差）。",
+  "reproducibility": "方法细节（DiT 配置、数据规模、机器人频率与 IK）在正文与附录披露较完整，作者承诺接收后开源代码与模型；但任务清单细节在补充材料 PDF 中，本抽取未含。",
+  "external_validity": "结论限于短时程单物体、固定相机的家居/办公场景与 Spot+双指夹爪本体；对手部遮挡严重、相机运动的 ego-centric 场景（正是综述问题的核心设定）未做直接实验，泛化性存疑。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2405.01527-C01",
+   "claim": "以点轨作为本体无关中间表征的预测模型（Track2Act）可直接在含 ego-centric 人类视频（EpicKitchens）的网络视频混合语料上训练，且在 held-out 视频上的点轨预测精度（∆=0.67-0.77）显著优于 flow 基线（0.21-0.42）与先生成视频再追踪的基线（0.17-0.30），说明绕开显式手部姿态估计、改用点轨从人类视频中学习运动计划是可行的。",
+   "stance": "support",
+   "relation": "支持综述命题：点轨/中间表征路线可以绕开显式手部检测与姿态估计，直接从 ego-centric 人类视频获取可用于下游操控的运动监督。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 在 EpicKitchens、SmthSmthv2（人类视频）与 BridgeData、RT1（机器人视频）四个 held-out 集上报告单一模型的 ∆ 指标，Ours 行 0.67/0.70/0.77/0.75，均大幅高于 Flow 与 Video 基线；4.3 与附录 6.5 确认训练混合了 EpicKitchens ego-centric 片段。",
+   "locator": "5.1 Point Track Prediction Results, Table 1",
+   "source_context": "Table 1: Evaluation of track prediction performance on held-out videos from different datasets on the web. EpicKitchens [10] and SmthSmthv2 [21] are datsets of human videos, and BridgeData [61] and RT1 data [8] are datasets of robot videos. Note that we train a single model that we evaluate on these different datasets. The metric ∆ is defined in section 4.1. Higher is better and the range is from 0 to 1. EpicKitchens [10] SmthSmthv2 [21] BridgeData [61] RT1 Data [8] Flow [67] 0.21 0.27 0.42 0.38 Video [17] 0.30 0.17 - - Ours 0.67 0.70 0.77 0.75",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "点轨预测精度 ∆（δ_x^t 在 1-10 像素阈值上的曲线下面积，0-1）",
+    "value_or_direction": "Ours 0.67/0.70/0.77/0.75（EpicKitchens/SmthSmthv2/BridgeData/RT1）",
+    "comparator": "Flow 基线 0.21/0.27/0.42/0.38；Video 基线 0.30/0.17/-/-",
+    "task_or_sample": "四个 held-out 网络视频数据集的片段（单一模型跨集评测），ground truth 为 Co-Tracker 输出",
+    "locator": "5.1 Point Track Prediction Results, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 原文给出与 claim 完全一致的数据集、数值与基线；4.3 节确认 EpicKitchens 为训练来源之一；claim 未超出这四个数据集与单一模型设定做外推。"
+   }
+  },
+  {
+   "card_id": "2405.01527-C02",
+   "claim": "由 2D 点轨预测经初始帧深度+刚体变换优化（PnP）提升得到的开环 3D 末端执行器轨迹，真机成功率仅 25-35%（MG/G/CG/TG 四级），主要失败于抓取位置不准与无法从中间失败恢复；叠加用约 400 条本体遥操作示教训练的闭环残差策略后成功率升至 40-70%，说明预测/提升误差会直接传导到末端轨迹并降低可用性，但可被少量本体数据的残差校正部分缓解。",
+   "stance": "conditional",
+   "relation": "既证实误差传播路径（2D 点轨误差→深度 lifting→刚体变换→末端轨迹误差→执行失败），又给出缓解手段（闭环残差策略）及其幅度，是综述'传播路径与缓解'问题的核心定量证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 报告 Ours (Open-Loop) 35/25/30/25% vs Ours（残差闭环）70/60/55/40%；3.4 节说明开环失败源于预测小误差与缺乏接触推理；5.3 节列出失败模式。残差策略训练数据约 400 条轨迹见 4.3 与附录 6.6。",
+   "locator": "5.2 Robot Manipulation Results, Table 2",
+   "source_context": "MG G CG TG Behavior Cloning (BC) 60% 20% 0% 0% Affordance-Conditioned 65% 30% 10% 5% Video-Conditioned 60% 25% 0% 0% Hand-Object Mask-Conditioned 70% 40% 25% 20% Ours (Open-Loop) 35% 25% 30% 25% Ours (Ablation; actions not residuals) 70% 45% 30% 30% Ours 70% 60% 55% 40%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "真实机器人操控成功率（目标物最终位姿与目标图一致）",
+    "value_or_direction": "开环 35%/25%/30%/25% → 闭环残差 70%/60%/55%/40%（MG/G/CG/TG）",
+    "comparator": "同一 track 预测模型的开环执行 vs 闭环残差策略；亦高于全部网络数据基线（最高 70/40/25/20%）",
+    "task_or_sample": "Spot 机器人，25 个任务、5 个真实场景，每泛化级别 20 次 rollout",
+    "locator": "5.2 Robot Manipulation Results, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 2 数值与 claim 一致；开环失败原因有 3.4 与 5.3 原文支撑；残差策略数据量（约 400 条）见 4.3 与 6.6；claim 限定在该真机评测设定内，未外推。"
+   }
+  },
+  {
+   "card_id": "2405.01527-C03",
+   "claim": "该管线的点轨监督与评估均以 Co-Tracker 自动追踪输出为 ground truth（训练时用 Co-Tracker 在 40 万片段上生成监督轨迹，评估时同样以 Co-Tracker 输出为参照），因此报告的点轨精度是相对于该现成追踪器的一致性，其绝对精度上限受追踪器误差约束，且评估存在同源循环。",
+   "stance": "limit",
+   "relation": "限制综述命题：点轨路线的'精度'证据依赖现成追踪器伪标签；在 ego-centric 手部遮挡场景中追踪器自身误差未被测量，无法据此推断绝对轨迹精度或可接受阈值。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.1 节明确'we consider the output of Co-Tracker to be the ground-truth'；附录 6.5 明确训练监督来自对 400,000 个片段运行 Co-Tracker。两处均为作者直接陈述的设计事实。",
+   "locator": "4.1 Evaluation Details",
+   "source_context": "For evaluation videos, we consider the output of Co-Tracker [29] to be the ground- truth and compare the difference with respect to the predictions, based on the δ x t metric.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.1 原文逐字支持评估以 Co-Tracker 为 ground truth；6.5 原文支持训练监督同源（'we run Co-Tracker on these clips, for obtaining the ground-truth intermediate tracks of points'）；循环依赖的表述是这两处作者陈述的直接推论，未引入外部假设。"
+   }
+  },
+  {
+   "card_id": "2405.01527-C04",
+   "claim": "在利用 ego-centric 人类视频（EpicKitchens）构建训练数据时，作者以'片段画面中可见人手'作为筛选标准（将长视频切成 4-5 秒片段并保留手部可见者），以此近似保证片段内发生了物体操作；即在该点轨管线中，手部检测只作为数据清洗信号，而非姿态监督来源。",
+   "stance": "support",
+   "relation": "支持综述命题：点轨路线将手部检测的角色从'提供重定向姿态监督'降级为'数据筛选启发式'，从而绕开手部姿态估计误差向轨迹的传导；同时提示数据筛选本身引入了对手部可见性的依赖。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 6.5 逐字说明 EpicKitchens 片段筛选标准；全文方法（3.2）不含任何手部姿态估计模块，与'仅作筛选信号'的表述一致。",
+   "locator": "Appendix, 6.5 Training Data for Track Prediction",
+   "source_context": "Epic- Kitchens contains ego-centric videos of humans in different locations performing diverse tasks in kitchens. Since these videos are long (≥ 20 min each), we choose clips of duration 4-5 seconds by cutting the long videos, and choosing clips where a human hand is visible in the scene (so as to have clips where an object is being manipulated, instead of a person just moving around).",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "附录 6.5 原文逐字支持筛选标准；'无手部姿态估计模块'由 3.1-3.4 的方法描述核实；claim 未声称筛选精度或具体检测器，与原文边界一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "reference": "Karaev et al., CoTracker (arXiv:2307.07635, 2023)",
+   "why_core": "训练监督与评估的 ground truth 来源；其追踪精度是该管线轨迹精度的实际上限。"
+  },
+  {
+   "reference": "Bharadhwaj et al., Towards generalizable zero-shot manipulation via translating human interaction plans (ICRA 2024)",
+   "why_core": "被对比的 hand-object mask 中间表征路线，本文声称点轨更具表达力。"
+  }
+ ],
+ "notes": "综述相关问题以'点轨替代显式手部姿态'与'2D→3D lifting 误差传导'两条线读取。文中未提供以像素/毫米为单位的末端轨迹绝对误差，阈值类证据缺失（gap）。",
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Evaluation of track prediction performance on held-out videos from different datasets on the web.",
+   "section": "5.1 Point Track Prediction Results",
+   "rows": [
+    [
+     "",
+     "EpicKitchens",
+     "SmthSmthv2",
+     "BridgeData",
+     "RT1 Data"
+    ],
+    [
+     "Flow",
+     "0.21",
+     "0.27",
+     "0.42",
+     "0.38"
+    ],
+    [
+     "Video",
+     "0.30",
+     "0.17",
+     "-",
+     "-"
+    ],
+    [
+     "Ours",
+     "0.67",
+     "0.70",
+     "0.77",
+     "0.75"
+    ]
+   ],
+   "usage": "作者用该表证明点轨预测优于 flow/video 基线；本笔记用于 C01。"
+  },
+  {
+   "table_id": "T2",
+   "caption": "Evaluation of goal-conditioned robot manipulation experiments (success rate over 20 rollouts per generalization axis).",
+   "section": "5.2 Robot Manipulation Results",
+   "rows": [
+    [
+     "",
+     "MG",
+     "G",
+     "CG",
+     "TG"
+    ],
+    [
+     "Behavior Cloning (BC)",
+     "60%",
+     "20%",
+     "0%",
+     "0%"
+    ],
+    [
+     "Affordance-Conditioned",
+     "65%",
+     "30%",
+     "10%",
+     "5%"
+    ],
+    [
+     "Video-Conditioned",
+     "60%",
+     "25%",
+     "0%",
+     "0%"
+    ],
+    [
+     "Hand-Object Mask-Conditioned",
+     "70%",
+     "40%",
+     "25%",
+     "20%"
+    ],
+    [
+     "Ours (Open-Loop)",
+     "35%",
+     "25%",
+     "30%",
+     "25%"
+    ],
+    [
+     "Ours (Ablation; actions not residuals)",
+     "70%",
+     "45%",
+     "30%",
+     "30%"
+    ],
+    [
+     "Ours",
+     "70%",
+     "60%",
+     "55%",
+     "40%"
+    ]
+   ],
+   "usage": "作者用该表比较各方法在四级泛化下的真机成功率；本笔记用于 C02（开环 vs 闭环残差量化误差传导与缓解幅度）。"
+  }
+ ]
+}

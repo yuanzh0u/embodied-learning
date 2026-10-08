@@ -1,0 +1,555 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.25895",
+  "title": "HiFi-UMI: Learning Deployable Manipulation Policies from High-Fidelity UMI Data Alone",
+  "published": "2026-07",
+  "url": "https://arxiv.org/abs/2607.25895",
+  "authors": [
+   "Yuteng Wei",
+   "Jinming Ma",
+   "Jiawei Wang",
+   "Weitao Zhou",
+   "Yushen Zuo",
+   "Ke Rui",
+   "Minglei Li"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是鱼眼/超广角相机在具身智能数据采集层的最直接证据：明确把 UMI 原版『每手单 155° 腕鱼眼导致盲区+弱深度线索』列为待修复的保真度缺陷，并以『每手两个非平行鱼眼相机 ~200° 水平/垂直覆盖』为核心硬件升级之一；策略训练与部署只消费四个腕部鱼眼视图（224×224），头部立体对不进策略。它给出鱼眼 FoV 扩展的效果证据（零机器人 post-training 三 backbone 平价 teleop：-2.5/+3.1/-0.6pp；最强 85% 精密插入）与明确的局限声明（fidelity 未分解消融，FoV 边际贡献未隔离；非样本匹配 ~10×）。对『哪些任务获益（采集规模/双臂协调/精密插入）、哪些受限（恢复行为、任务级统计分辨率）』给出量化边界。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：免机器人 UMI 数据保真度不足使其被限制在预训练角色；提出零机器人 post-training 假设与四轴保真度（轨迹精度/双手相对位姿/同步/FoV）。"
+   },
+   {
+    "locator": "page 4-6, 2 Related Work (2.1 Manipulation Datasets, 2.2 UMI and Portable Devices, 2.3 Foundation Models)",
+    "role": "relevant-core",
+    "purpose": "定位与 UMI/FastUMI/ActiveUMI/XRZero-G0/RDT2/VISTA 的差异：头戴离线 SLAM、GPIO 硬件触发、超广角双相机、原生相对位姿；确认 UMI 原版 155° 单鱼眼+侧镜设计及其被批评点。"
+   },
+   {
+    "locator": "page 6-8, 3.1 HiFi-UMI Capture Device (pose, gripper, cameras and sensors, quality control)",
+    "role": "method-or-design",
+    "purpose": "精读硬件设计：头戴离线 stereo-inertial SLAM+marker cube（3mm、原生相对位姿）、每手两个非平行鱼眼 ~200°、六相机+IMU+编码器、单一 GPIO 微秒级触发、全掌手套夹爪。"
+   },
+   {
+    "locator": "page 8-12, 3.2-3.4 Data-Quality Criteria, Processing Pipeline, Processed-Data Quality (Table 1, Table 2)",
+    "role": "method-or-design",
+    "purpose": "精读数据飞轮六阶段（重建 98%、重放 98%、累计 ~96%）与端到端保真度指标（3mm、<40μs、<0.1°）；核对 Table 1 与代表系统的 FoV/同步/相对位姿对比。"
+   },
+   {
+    "locator": "page 12-13, 4 Dataset and Release",
+    "role": "data-or-setting",
+    "purpose": "核对语料规模：20,000+ 小时全量 / HiFi-UMI-2K 发布 2,000 小时（482,100+ episodes、110+ scenes、6 视图/episode）。"
+   },
+   {
+    "locator": "page 13-17, 5 Baselines and Training Setup (StarVLA-QwenPI, OpenPI-π0.5, LingBot-VA, variants, deployment)",
+    "role": "method-or-design",
+    "purpose": "精读策略接口：观测只用四个腕视图（每手两个），头部立体对仅用于重建不进策略；三 backbone 七训练条件；VLA/WAM 部署协议。"
+   },
+   {
+    "locator": "page 17-25, 6.1-6.2 Experimental Design and UMI-vs-Teleoperation Comparison (Figs. 9-12, Tables 3-4)",
+    "role": "results-or-analysis",
+    "purpose": "精读 960 rollouts 评估协议（冻结基准、双操作员分离、随机化）与三 backbone 平价结果（51.3% vs 53.8%；77.5% vs 74.4%；56.9% vs 57.5%）、数据 scaling（400→3200 episodes）与 WAM ground-truth-video 诊断。"
+   },
+   {
+    "locator": "page 25-28, 6.3 Does Large-Scale UMI Pre-Training Yield a Better Base Model? (Figs. 13-15)",
+    "role": "results-or-analysis",
+    "purpose": "精读 4,000 小时预训练：held-out 误差 -61%（单遍）、OOD 十任务 -41%、power law α=0.268/R²=0.993、StarVLA 真机 +18.1pp 与数据效率（800 episodes 超 4× 数据基线）。"
+   },
+   {
+    "locator": "page 28-29, 7 Discussion and Limitations, 8 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者四条明确限制：评估范围（4 任务 3 backbone）、40-rollout 统计分辨率、fidelity 整体验证未分解、非样本匹配 ~10×。"
+   },
+   {
+    "locator": "page 30, Author Contributions and References",
+    "role": "appendix-or-supplement",
+    "purpose": "确认署名（Simple AI 机构署名，core contributors 列表）与关键引文（UMI [6]、AirExo-2 [9]、VISTA [22]）。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "免机器人 UMI 演示能否不经任何真机遥操作数据直接完成 post-training 并部署？具体地：把腕部视觉从 UMI 原版每手单 155° 鱼眼升级为每手两个非平行鱼眼（~200° 覆盖）、辅以头戴离线 SLAM 3mm 轨迹、原生双手相对位姿与微秒 GPIO 同步后，纯 UMI 数据 post-training 的策略能否在真机上与同场景遥操作 post-training 匹敌，且大规模同源预训练能否进一步提升上限？",
+ "contributions": [
+  "HiFi-UMI 便携采集系统：头戴离线 stereo-inertial SLAM + 每手 marker cube 原生局部化（3mm 工作区末端精度、无外部跟踪设施）、每手两个非平行鱼眼相机 ~200° 水平/垂直覆盖（整机六相机）、单一 GPIO 硬件触发微秒级同步、全掌手套形夹爪、在线质量监控与实时语音反馈。",
+  "六阶段数据飞轮（采集上传→轨迹重建自动清洗→仿真重定向重放验证→AI 辅助标注→人工验证→分析导出）：重建 98% × 重放 98% ≈ 96% 累计可用率，每个 episode 带六视图同步视频、标定轨迹、夹爪状态、语言标注与质检元数据。",
+  "零机器人 post-training 的受控验证：三个 backbone（StarVLA-QwenPI、OpenPI-π0.5、LingBot-VA）上仅用 HiFi-UMI 演示 post-training 即直接部署真机，与同场景遥操作 post-training 聚合平价（-2.5/+3.1/-0.6pp，960 rollouts，冻结基准+双操作员分离+随机化）。",
+  "同源大规模预训练证据：4,000 小时预训练使十个未见任务 OOD 动作误差 -41%（power law α=0.268, R²=0.993），StarVLA-QwenPI 真机成功率 +18.1pp（匹配 3,200 episodes 数据下 51.3%→69.4%），800 episodes 即超 4× 数据的 scratch 基线。",
+  "开源 HiFi-UMI-2K：2,000 小时微秒同步、可重放、超广 FoV 演示子集（482,100+ episodes，110+ scenes，CC BY 4.0）。"
+ ],
+ "method": {
+  "summary": "HiFi-UMI 把『保真度』作为端到端设计原则重建 UMI 采集链：(1) 位姿——头戴立体相机+IMU 跑离线 stereo-inertial SLAM 得全局头轨迹，双手通过刚连 marker cube 在同头相机帧内局部化，组合后双手轨迹全局一致且 inter-gripper 相对位姿原生测量（避免跨相机共视重建误差）；头部视角比腕部稳定，累积漂移被头相对化压缩到厘米级。(2) 传感——每手两个非平行鱼眼相机（上下布置）覆盖 ~200° 水平/垂直，减少遮挡并改善夹爪周围可观测性；整机六相机+三 IMU+高精度夹爪编码器由单一 GPIO 外部触发做微秒级同步。(3) 数据飞轮——轨迹重建（98% 通过）→ 全身运动控制算法在仿真中重放验证运动学/动力学可行性（98% 通过）→ AI 多视图联合标注 + 人工抽验 → 统计分析平衡导出。(4) 策略接口——动作表示为机器人中心末端系的相对位姿增量+绝对夹爪开度（双臂 20 物理通道，chunk 锚定式），三个 backbone 各自张量化；策略视觉观测固定为四个腕视图（每手两个，224×224），头部立体对从不进策略。(5) 部署——Tianji Marvin M6 双臂平台带同款夹爪+四腕相机，采集与部署物理同接口，残余本体差距限于臂运动学；VLA 用时间戳 receding-horizon 控制（UMI 延迟匹配原则），WAM 用原生 block-causal 流式协议。",
+  "assumptions": [
+   "腕部超广角双视图（4 视图）携带的策略所需视觉信息足以支撑部署级操作（头部视图仅服务重建）。",
+   "毫米级轨迹精度+原生相对位姿+微秒同步+超广 FoV 的联合保真度（而非其中单项）是 UMI 数据可作 post-training 的充分条件。",
+   "仿真重放验证可代理真机运动学/动力学可行性判定。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HiFi-UMI 全量语料：20,000+ 小时 / 4,320,000+ episodes / 480+ scenes",
+   "HiFi-UMI-2K 发布子集：2,000 小时 / 482,100+ episodes / 110+ scenes / 6 视图 per episode（CC BY 4.0）",
+   "任务级 post-training 语料：每任务 3,200 条 UMI 轨迹（~10-20 小时，多操作员多场地）vs 每任务 ~300 条遥操作轨迹（~3-7 小时，同评估场景采集）",
+   "预训练混合：4,000 小时多任务 UMI 数据（180k steps 一遍）"
+  ],
+  "tasks": [
+   "Stain Wiping（持续接触+空间覆盖）",
+   "Shirt Folding（双臂可变形物体协调）",
+   "Remote Insertion（精密约束放置）",
+   "Produce Sorting（语义类别条件操作）",
+   "预训练 OOD 评测十个未见任务（fold dress/short-sleeve/trousers/socks、flour to bowl/pan、spatula to wok、spoon to cooker/saucer、place tableware）"
+  ],
+  "embodiments": [
+   "Tianji Robotics Marvin M6 双七关节力控臂（部署平台，带同款全掌夹爪+四腕相机）",
+   "人类操作员（头戴立体+IMU、双手 marker cube、全掌手套夹爪、每手双鱼眼）",
+   "三策略 backbone：StarVLA-QwenPI（Qwen3-VL-4B+DiT flow-matching）、OpenPI-π0.5（PaliGemma+Gemma 专家）、LingBot-VA（因果 WAM，从预测未来解码动作）"
+  ],
+  "sample_or_scale": "960 真机 rollouts（6 条件 × 4 任务 × 40 rollouts）；数据 scaling 研究 5 档（400/800/1,600/3,200/6,400 episodes）各 40 rollouts；WAM ground-truth-video 诊断用 95% bootstrap 置信区间（20,000 重采样）。"
+ },
+ "evaluation": {
+  "design": "冻结基准（任务定义/物体集/指令/初始条件库/超时/安全规则先于评测冻结）+ 双操作员职责分离（policy operator vs scene operator）+ 随机策略顺序 + 记录终止原因；UMI 数据多场地采集、评测场景零 UMI 轨迹（对 UMI 不利的场景级偏移），teleop 数据同场景采集（对 teleop 有利）；每任务-策略对 40 rollouts。",
+  "baselines": [
+   "同 backbone 的真机遥操作 post-training（C2/C4/C6，同架构/初始化/优化/动作表示/部署栈，仅换数据源）",
+   "Qwen-VL 初始化的 scratch action head（C1，用于预训练初始化对照 C7）",
+   "OpenPI-π0.5 作为跨架构参考（非受控基线）",
+   "true-random action 参考（WAM 诊断，117.57mm/126.47°）"
+  ],
+  "metrics": [
+   "二值任务成功率（完整目标达成+2 秒稳定+无安全干预；部分完成记失败）",
+   "held-out / OOD flow-matching 动作误差（MSE，power-law 拟合 α、R²）",
+   "WAM 全 chunk XYZ RMSE（mm）与相邻帧 SO(3) 误差（°，ground-truth-video 条件下）",
+   "端到端保真度：3mm 末端精度、<40μs 同步、98% 重建、<0.1° 夹爪误差（Table 2）"
+  ],
+  "ablations": [
+   "数据源：UMI vs teleop post-training（三 backbone × 四任务）",
+   "初始化：UMI 预训练 vs Qwen-VL scratch（同 3,200 episodes post-training，四任务）",
+   "数据量：400→6,400 episodes（Remote Insertion, OpenPI）",
+   "Fisheye/WAM 诊断：UMI→Real vs UMI→UMI vs Real→Real pose 解码误差（ground-truth-video oracle）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "零机器人 post-training 成立：三个 backbone 上仅用 HiFi-UMI 演示 post-training 的策略直接部署真机，与同场景遥操作 post-training 聚合平价——StarVLA 51.3% vs 53.8%（-2.5pp）、OpenPI 77.5% vs 74.4%（+3.1pp）、LingBot-VA 56.9% vs 57.5%（-0.6pp），差异双向且在采样噪声内。",
+   "scope": "4 桌面双臂任务 × 40 rollouts × 3 backbone，960 rollouts 总量，冻结基准协议",
+   "locator": "page 4, Section 1 and page 20, Section 6.2"
+  },
+  {
+   "finding": "腕部四鱼眼视图是该平价的唯一视觉通道：策略观测固定取自采集装置的四腕视图（每手两个），头部立体对只用于轨迹重建、从不作为策略输入；部署平台带同款夹爪+四腕相机，采集与部署观测接口物理同一。",
+   "scope": "全部三 backbone 全部条件（Sec. 5 接口约定 + Sec. 6.1.1 部署平台）",
+   "locator": "page 13, Section 5 and page 17, Section 6.1.1"
+  },
+  {
+   "finding": "鱼眼 FoV 升级是四轴保真度之一但未单独消融：作者明确声明 fidelity 作为整体设计原则验证、未通过受控降解分离轨迹精度/相对位姿/同步/FoV 各自边际贡献——『high fidelity suffices, but not how much of each property a deployable policy requires』。",
+   "scope": "作者限制声明（Sec. 7 Limitations）",
+   "locator": "page 29, Section 7, Fidelity is validated as a whole, not decomposed"
+  },
+  {
+   "finding": "数据量-性能曲线：Remote Insertion 上 UMI 演示从 400 条（37.5%）到 800 条（65.0%）、1,600 条（70.0%）、3,200 条（85.0%）持续提升，6,400 条（82.5%）饱和——腕视图策略的部署级性能可用纯免机器人数据规模化获得。",
+   "scope": "OpenPI-π0.5 backbone，Remote Insertion 任务，每档 40 rollouts",
+   "locator": "page 22, Section 6.2.1 and Fig. 10a"
+  },
+  {
+   "finding": "同源预训练抬升上限：4,000 小时 HiFi-UMI 预训练使 StarVLA-QwenPI 在匹配 3,200 episodes post-training 下真机成功率 +18.1pp，800 episodes 即超过 4× 数据的 scratch 基线；OOD 十未见任务动作误差 -41%，且迁移由交互动力学覆盖决定而非物体是否见过。",
+   "scope": "StarVLA-QwenPI 仅预训练臂；4 任务真机 + 10 OOD 任务离线评测",
+   "locator": "page 26-27, Section 6.3 and Figs. 13-15"
+  },
+  {
+   "finding": "parity 对比非样本匹配：无预训练时 UMI-only post-training 用约十倍于遥操作的演示量（3,200 vs ~300 条/任务），结论限定为『实用数据生产管线对比』而非每轨迹效率。",
+   "scope": "作者限制声明（Sec. 7）",
+   "locator": "page 29, Section 7, Data efficiency and transfer across post-training sources"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "评估范围与普适性：零机器人 post-training 证据仅覆盖 4 个桌面双臂任务、3 个 backbone、场景级分布偏移；对其他任务、本体与偏移的普适性未测试；预训练证据更窄（仅 StarVLA-QwenPI）。",
+    "locator": "page 28, Section 7 Limitations, Evaluation scope and generality"
+   },
+   {
+    "limitation": "任务级统计分辨率：每任务-策略对 40 rollouts，一次成功即 2.5pp，任务级差异只能作描述性解读，parity 主张基于跨任务聚合证据。",
+    "locator": "page 28, Section 7 Limitations, Task-level statistical resolution"
+   },
+   {
+    "limitation": "保真度整体验证未分解：轨迹精度、双手相对位姿、同步与 FoV 作为联合设计原则验证，无受控降解消融分离各因素边际贡献；结果只说明高保真足够、不说明部署需要每个属性多少。",
+    "locator": "page 29, Section 7 Limitations, Fidelity is validated as a whole, not decomposed"
+   },
+   {
+    "limitation": "数据效率对比不对称：parity 比较非样本匹配（UMI ~10× teleop 轨迹量），衡量的是实用管线而非每轨迹效率；预训练增益是否随规模继续、是否同样惠及遥操作 post-training 均未知。",
+    "locator": "page 29, Section 7 Limitations, Data efficiency and transfer across post-training sources"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "『每手两个非平行鱼眼 ~200°』的 FoV 主张停留在系统描述层：论文未报告鱼眼相机型号/分辨率/畸变模型或任何针对鱼眼图像的校正/预处理，也未做 FoV 变量消融（如单鱼眼 vs 双鱼眼、200° vs 更窄），因此『超广 FoV 对策略性能的净贡献』与『轨迹精度/同步/样本量的贡献』不可分离，综述引用时应表述为四轴联合设计的一部分。",
+    "basis": "Sec. 3.1.3 仅给出两非平行鱼眼 ~200° 覆盖的配置描述；Table 2 只报告整链保真度；作者在 Sec. 7 自认未做受控降解消融（page 29）。"
+   },
+   {
+    "boundary": "全部结论限定于桌面双臂任务族与单一部署平台（Marvin M6 + 同款夹爪）：鱼眼腕视图在移动操作、大空间导航、野外/光照剧变场景的表现未测；teleop 基线本身在同一评估场景采集，对比方向有利于 teleop 但任务族本身窄。",
+    "basis": "任务套件为 4 桌面任务（Sec. 6.1.2）；部署平台描述见 Sec. 6.1.1；作者在 Sec. 7 声明对其他任务/本体/偏移未测试（page 28）。"
+   },
+   {
+    "boundary": "Remote Insertion 上 UMI-post-trained WAM 策略成功率最低（42.5% vs teleop 50.0%）且伴随多次重试：精密接触条件下的恢复行为弱于名义执行效率，提示鱼眼腕视图的闭环纠错监督仍依赖恢复-重抓数据的覆盖而非 FoV 本身。",
+    "basis": "Sec. 6.2.2 任务级对比与 qualitative 观察（UMI 策略动作更大更连续但多次尝试、recovery 鲁棒性区分，page 24）。"
+   }
+  ]
+ },
+ "transfer_boundary": "对综述的迁移边界：本文是『鱼眼 FoV 升级作为 UMI 数据保真度工程的一轴』的最强系统级证据——每手两个非平行鱼眼（~200°）替换 UMI 原版单 155° 鱼眼，配合 3mm 轨迹/原生相对位姿/微秒同步，使纯免机器人数据 post-training 达到遥操作平价并可开源 2,000 小时语料。但其证据形态是四轴联合设计+端到端验证：FoV 单独的贡献、鱼眼畸变对策略视觉的影响、鱼眼 vs 等效多针孔的对比均未隔离；结论域限定桌面双臂任务与单一平台。综述应把它用作『腕装超广角鱼眼支撑部署级操作学习的充分性证据』而非『FoV 增益的定量证据』。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "零机器人 post-training 假设的检验设计干净：每 backbone 内固定架构/初始化/优化/动作表示/部署栈，仅切换任务特定数据源（UMI vs teleop），三 backbone 一致即数据层证据的收敛验证。",
+   "评测协议工程化程度高：基准冻结、policy/scene 操作员分离、随机策略顺序、终止原因记录、硬件故障记为无效并重试，960 rollouts 规模在同类工作里扎实。",
+   "对 UMI 不利的偏移设计（UMI 多场地采集、评测场景零 UMI 轨迹 vs teleop 同场景）使 parity 结论保守。",
+   "WAM ground-truth-video oracle 诊断把未来视频生成误差与动作解码误差解耦（UMI→Real 24.33mm vs Real→Real 21.64mm）。"
+  ],
+  "design_risks": [
+   "保真度四轴无分解消融，任何一轴（含 200° FoV）的必要性都不能从结果中单独推断——作者自认。",
+   "非样本匹配（UMI 3,200 vs teleop ~300 条/任务）：parity 可能部分来自 UMI 的 10× 样本量与多样性，而非纯保真度。",
+   "预训练证据仅在自建 StarVLA-QwenPI 上测得，OpenPI/LingBot 用各自公开基线，预训练结论的 backbone 普适性未验证。",
+   "85% 精密插入是 OpenPI 在 3,200 episodes 下的单点最好结果，跨 backbone 绝对成功率差异（51.3%-77.5%）远大于数据源差异，任务-架构交互未分析。"
+  ],
+  "baseline_fairness": "数据源对比（C1vsC2 等）在 backbone 内严格受控且方向性偏置有利于 teleop（同场景采集），公平性高；但样本量不对称（10×）由实用管线吞吐决定而非实验设计缺陷，作者如实披露并以『管线对比』限定解释；预训练对照（C1vsC7）同数据同配方仅换初始化，干净。",
+  "metric_validity": "二值成功率（完整目标+2s 稳定+无安全干预）口径严格且冻结；WAM 诊断用全 chunk RMSE+相邻帧 SO(3) 与 95% 分层 bootstrap，统计处理规范；held-out 动作 MSE 作为预训练代理指标与真机成功率的关系经 Fig. 10b/15 间接验证。",
+  "reproducibility": "硬件（六相机布局、GPIO 触发、marker cube）、数据飞轮、三 backbone 训练配方（超参/调度/批量）均有细粒度描述，HiFi-UMI-2K 与代码开源（HF 数据集+网站），复现条件在同类工作里最强；鱼眼相机内参/畸变模型与去畸变流程未披露是主要缺口。",
+  "external_validity": "结论域：4 桌面双臂任务、1 个部署平台、3 backbone、场景级视觉偏移；对其他任务族（移动/导航/野外）、其他本体、更大 FoV 需求场景的外推未测；预训练 scaling 仅在 4,000 小时单遍内验证，是否持续饱和开放。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.25895-C01",
+   "claim": "本文在 Introduction 中明确列举 UMI 原版手持采集的保真度缺陷（本卡摘录覆盖其中三项）：跨相机共视重建的双手相对位姿在协调任务上引入误差、软件/无线时间对齐、以及每手单个 155° 腕鱼眼留下盲区与弱深度线索——单鱼眼窄 FoV 被作者列为待修复缺陷而非可接受配置。",
+   "stance": "limit",
+   "relation": "界定『受限配置』层命题：UMI 系单 155° 腕鱼眼的盲区与弱深度线索是该范式的结构性短板，是近一年超广角升级的直接动机。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 列举现行手持采集的保真度缺陷链（完整列表另含页 1 的视觉(-惯性) SLAM 位姿漂移项，不在本摘录内），本摘录覆盖共视重建相对位姿、软件时间对齐与单 155° 腕鱼眼盲区三项，末项直指 one 155° wrist fisheye per hand 的盲区与深度线索问题。",
+   "locator": "page 2, Section 1 Introduction",
+   "source_context": "is reconstructed from cross-camera co-visibility rather than measured natively, introducing error precisely on the coordinated tasks where it matters most; sensor streams use software or wireless alignment rather than hardware triggers; and one 155 ◦ wrist fisheye per hand leaves blind spots and weak depth cues [6, 9].",
+   "evidence_type": "motivation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Introduction 逐字给出摘录内三项缺陷（共视重建相对位姿误差、软件/无线时间对齐、one 155 ◦ wrist fisheye per hand 盲区与弱深度线索），claim 忠实转述摘录并显式声明仅覆盖缺陷列表的三项，保持其针对 UMI 原版配置的限定。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C02",
+   "claim": "HiFi-UMI 的核心 FoV 升级：每手搭载两个非平行鱼眼相机（上下布置），实现约 200° 的水平与垂直覆盖；该超广视图减少遮挡并改善夹爪周围的可观测性，与头部立体对合计整机六相机。",
+   "stance": "support",
+   "relation": "支持『应用方式』层命题：近一年具身数据采集硬件把腕部视觉从单鱼眼升级为双非平行鱼眼超广角配置，以遮挡鲁棒性与夹爪周边可观测性为设计目标。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 3.1.3 逐字给出每手两个非平行鱼眼、~200° 水平/垂直覆盖、减少遮挡改善可观测性的设计陈述。",
+   "locator": "page 8, Section 3.1.3 Cameras and Sensors",
+   "source_context": "Each hand carries two non-parallel fisheye cameras, yielding about 200 ◦ of horizontal and vertical coverage. This ultra-wide view reduces occlusion and improves observability around the gripper. Together with the stereo head cameras, the complete device integrates six cameras.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Sec. 3.1.3 首句逐字给出两非平行鱼眼 ~200° 覆盖与减少遮挡/改善可观测性，claim 无外推；『上下布置』来自 page 7 Fig. 3 caption（top and bottom）。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C03",
+   "claim": "Table 1 对八款免机器人采集系统的横比中，HiFi-UMI 是唯一达到微秒级 GPIO 硬件触发同步与最宽双腕覆盖（6 视图 / 200°）的系统：UMI 原版为 2 视图 / 155° + ~6ms 软件同步，FastUMI Pro 为 2 视图 / 180°。",
+   "stance": "support",
+   "relation": "支持『应用方式与效果』层命题：双非平行鱼眼 200° 配置使 HiFi-UMI 在同类免机器人采集系统中获得最宽腕部感知覆盖，是近一年鱼眼 FoV 工程化的代表性顶点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 横比 pose 采集/精度/同步/视图-FoV/相对位姿/夹爪形态/便携性八轴；caption 总结 HiFi-UMI 优势为 ~3mm 精度、GPIO 微秒同步、最宽双腕覆盖与免基站便携。",
+   "locator": "page 9, Table 1 and caption",
+   "source_context": "Together, these choices yield HiFi-UMI’s main advantages over prior systems: millimeter-level end-effector accuracy (∼3 mm) obtained from head-mounted offline stereo-inertial SLAM without external tracking infrastructure; the tightest, microsecond-level synchronization via a GPIO hardware trigger; the widest sensing coverage at both hands; and greater ease of use—fully portable with no external base stations, and operated through a full-palm glove rather than a trigger for more natural manipulation.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "camera views / peak FoV coverage and cross-sensor synchronization",
+    "value_or_direction": "HiFi-UMI: 6 views / 200◦ with ∼3 μs GPIO hardware trigger; UMI: 2 views / 155◦ with ∼6 ms software sync; FastUMI Pro: 2 views / 180◦",
+    "comparator": "vs UMI, FastUMI, DAS fingers, ActiveUMI, TacUMI, RDT2, FastUMI Pro, XRZero-G0 in Table 1",
+    "task_or_sample": "eight representative robot-free data-collection systems (Table 1 comparison)",
+    "locator": "page 9, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 Table 1 caption 逐字给出『the widest sensing coverage at both hands』与微秒 GPIO 触发优势；表格行数据给出 UMI 2/155◦ ∼6 ms、FastUMI Pro 2/180◦、HiFi-UMI 6/200◦ ∼3 μs，claim 数字全部来自表内。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C04",
+   "claim": "整机传感集成：六相机（头部立体对+每手双非平行鱼眼）+ 头/双手 IMU + 夹爪高精度编码器，全部传感器由单一统一 GPIO 外部触发驱动，实现跨所有相机、IMU 与编码器的微秒级时间同步，取代先前系统的软件/无线对齐并消除一类动作标签噪声。",
+   "stance": "support",
+   "relation": "支持『应用方式』层命题：多鱼眼腕视图的价值以硬件级同步为前提——超广角双鱼眼与微秒触发是联合设计的传感底座。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 3.1.3 逐字描述六相机+IMU+编码器由单一 GPIO 外部触发做微秒级同步，并声明其取代软件对齐消除动作标签噪声。",
+   "locator": "page 8, Section 3.1.3 Cameras and Sensors",
+   "source_context": "Together with the stereo head cameras, the complete device integrates six cameras. It further carries IMUs on the head and both hands—for pose estimation and motion-state monitoring—and high-precision encoders on the grippers to measure opening angle. Critically, every sensor is driven by a single, unified GPIO external trigger [53], providing microsecond-level temporal synchronization across all cameras, IMUs, and encoders.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 Sec. 3.1.3 逐字给出整机六相机、IMU、编码器与单一 GPIO 触发微秒同步的陈述，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C05",
+   "claim": "策略的全部视觉观测固定取自采集装置的四个腕视图（每手两个鱼眼视图），对每个 backbone 与每个训练条件一致；头部立体对只用于采集期轨迹重建、从不作为策略输入——腕部鱼眼多视图是策略学习的唯一视觉接口。",
+   "stance": "support",
+   "relation": "支持『应用方式与效果』层命题：部署级操作策略可以仅以腕装鱼眼多视图为视觉输入训练得到，效果证据（平价 teleop）因此直接归属于腕部鱼眼视图通道。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 5 接口约定逐字声明视觉观测取自四腕视图、头部立体对从不进策略，且 UMI 与 teleop 变体用相同相机选择/时间偏移/张量布局。",
+   "locator": "page 13, Section 5 Baselines and Training Setup",
+   "source_context": "The visual observation o (m) t is drawn from the four wrist views of the capture rig—two per hand—for every backbone and every condition; the head-mounted stereo pair is used only for trajectory reconstruction during capture and is never provided as input to the policy.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 Sec. 5 逐字给出视觉观测取自四腕视图（每手两个）、头部立体对仅重建不进策略、对每 backbone 每条件一致，claim 无外推。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C06",
+   "claim": "全部真机实验使用双七关节 Tianji Robotics Marvin M6 力控臂的固定双臂平台，其搭载与采集装置同款的夹爪与四个腕相机（Sec. 3.1）；头部立体对仅用于离线采集重建并在部署中被排除，策略只接收录制视图的严格子集——采集与部署的接触和观测接口物理同一。",
+   "stance": "support",
+   "relation": "支持『效果归因』层命题：腕部四鱼眼视图在采集与部署间的物理一致性（同夹爪同相机）是纯 UMI 数据能落地真机的接口前提，缩小了该证据向其他本体外推时的不确定性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 6.1.1 逐字声明实验平台（Tianji Robotics Marvin M6 双臂）匹配 HiFi-UMI 末端（同夹爪+四腕相机）、头部对仅离线重建且部署排除、策略接收录制视图严格子集、采集与部署接触/观测接口物理同一；『残余差距限于臂运动学』一句位于下一页，未纳入本卡摘录。",
+   "locator": "page 17, Section 6.1.1 Evaluation Benchmark",
+   "source_context": "All real-robot experiments use a stationary bimanual platform with two seven-joint Tianji Robotics Marvin M6 force-controlled arms. At deployment, the platform matches the HiFi-UMI end effector: it carries the same gripper and four wrist cameras described in Sec. 3.1. The head stereo pair is used only for offline capture reconstruction and excluded from deployment, so the policy receives a strict subset of the recorded views. Capture and deployment thus have physically identical contact and observation interfaces",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 17 Sec. 6.1.1 逐字给出 Marvin M6 双七关节力控臂平台、同款夹爪+四腕相机、头部对仅离线重建并排除部署、策略接收录制视图严格子集与接触/观测接口物理同一，claim 为直接转述且未超出摘录范围。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C07",
+   "claim": "端到端数据保真度：处理管线交付 3mm 末端执行器精度（~2m 工作区内对基站跟踪真值的平均平移误差）、<40μs 跨传感器时序偏移、每小时少于两帧丢帧、98% 轨迹重建成功率与 <0.1° 夹爪开角误差——作者据此主张其轨迹精度/时序/夹爪重建与真机遥操作同级。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：双鱼眼腕视图+硬件同步+头戴 SLAM 的采集链达到毫米级动作标签质量，是 UMI 数据可作 post-training 的保真度前提。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec. 3.4 + Table 2 报告五项端到端保真度指标；3mm 精度对基站真值测量（仅用于精度评估）。",
+   "locator": "page 12, Section 3.4 and Table 2",
+   "source_context": "The pipeline delivers 3 mm end-effector accuracy, cross-sensor timing offsets below 40 μs, fewer than two dropped frames per hour of capture, a 98% trajectory- reconstruction success rate, and gripper-state error below 0.1 ◦",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "end-effector pose accuracy / sync offset / reconstruction success / gripper-state error",
+    "value_or_direction": "3 mm; < 40 μs; 98% reconstruction; < 0.1◦ opening-angle error",
+    "comparator": "vs base-station tracking ground truth (accuracy eval only); on par with real-robot teleoperation per authors",
+    "task_or_sample": "HiFi-UMI processed corpus, ~2 m accumulated head-trajectory workspace",
+    "locator": "page 12, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 12 Sec. 3.4 首段逐字给出五个保真度数字（Table 2 同值），claim 逐项对应且保留作者『与遥操作同级』主张的归属。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C08",
+   "claim": "零机器人 post-training 的聚合结论：三个 backbone（两 VLA + 一 WAM）上仅用 HiFi-UMI 演示 post-training 与同域遥操作匹配，差异为 -2.5、+3.1、-0.6 个百分点，双向且均在协议采样噪声内——免机器人鱼眼腕视图数据可独立承载部署级 post-training。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：腕装双非平行鱼眼采集的数据在无需任何真机锚点条件下达到与遥操作 post-training 相当的部署性能，是鱼眼配置获益任务（桌面双臂操作）的最强量化证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec. 1 与 Sec. 6.2 一致报告三 backbone 差异数字；960 rollouts、冻结基准、双操作员分离协议。",
+   "locator": "page 4, Section 1 and page 20, Section 6.2",
+   "source_context": "On three backbones spanning both the vision-language- action (VLA) and world-action-model (WAM) families, HiFi-UMI-only post-training matches in-domain tele- operation: the differences are −2.5, +3.1, and −0.6 percentage points, of both signs and each within the sampling noise of our protocol.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "aggregate real-robot success-rate difference (UMI minus teleoperation, percentage points)",
+    "value_or_direction": "−2.5 / +3.1 / −0.6 pp on StarVLA-QwenPI / OpenPI-π 0.5 / LingBot-VA",
+    "comparator": "vs in-domain real-robot teleoperation post-training on the same robot and deployment stack",
+    "task_or_sample": "4 tabletop bimanual tasks × 40 rollouts × 3 backbones (960 rollouts total)",
+    "locator": "page 4, Section 1; page 20, Section 6.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Sec. 1 逐字给出三个差异数字与『both signs / within sampling noise』限定，page 20 Sec. 6.2 重述同一结论，claim 数字逐项对应。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C09",
+   "claim": "VLA 轨道任务级数字：StarVLA-QwenPI 上 UMI post-training 51.3%（82/160）vs 遥操作 53.8%（86/160）；OpenPI-π0.5 上 UMI 77.5%（124/160）vs 遥操作 74.4%（119/160），其中 UMI 在 Remote Insertion 达 85.0%——teleop 数据在评估场景内采集而 UMI 零轨迹在该场景。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：最强策略在精密插入任务上以纯鱼眼腕视图数据达 85%，且整体优势在场景级偏移不利于 UMI 的条件下保持。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec. 6.2.1 聚合比较段给出两 VLA backbone 的四任务汇总数字；Remote Insertion 85.0% 见任务级对比与 Fig. 9。",
+   "locator": "page 20-21, Section 6.2.1 and Fig. 9",
+   "source_context": "On StarVLA-QwenPI, the UMI-post-trained policy achieves 51.3% success (82/160), compared with 53.8% (86/160) for its teleoperation-trained counterpart, corresponding to a difference of only 2.5 percentage points. On OpenPI-π 0.5 , UMI post-training achieves 77.5% success (124/160), exceeding teleoperation post-training at 74.4% (119/160) by 3.1 percentage points.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "aggregate real-robot success rate (4 tasks pooled, 160 rollouts each)",
+    "value_or_direction": "StarVLA-QwenPI: 51.3% UMI vs 53.8% teleop; OpenPI-π 0.5 : 77.5% UMI vs 74.4% teleop; UMI best task-level 85.0% on Remote Insertion",
+    "comparator": "vs teleoperation post-training collected in the evaluation scene (no UMI trajectory in that scene)",
+    "task_or_sample": "4 tabletop bimanual tasks, 40 rollouts per task-policy pair, 160 rollouts per policy",
+    "locator": "page 20, Section 6.2.1; page 21, Fig. 9"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 20 Sec. 6.2.1 逐字给出 51.3%/53.8%/77.5%/74.4% 及计数；85.0% 出现在 page 21 任务级对比句（Remote Insertion: StarVLA 52.5% vs 50.0%, OpenPI 85.0% vs 77.5%）与 Fig. 9 数据，claim 数字逐项可核。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C10",
+   "claim": "腕视图策略的纯 UMI 数据量-性能曲线：Remote Insertion 上 400 条演示 37.5% → 800 条 65.0% → 1,600 条 70.0% → 3,200 条 85.0%，6,400 条 82.5% 饱和——部署级性能可通过规模化免机器人鱼眼腕视图数据获得，无需真机锚点。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：鱼眼腕视图演示的可扩展性（多操作员并发多场地采集）转化为单调可预期的策略性能增益，3,200 条即达该任务峰值。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec. 6.2.1 data-scaling 研究：OpenPI-π0.5 五档数据量各 40 rollouts；低数据区增益陡峭，~3,200 条后平台化。",
+   "locator": "page 22, Section 6.2.1 and Fig. 10a",
+   "source_context": "The success rate improves from 37.5% with 400 demonstrations to 65.0% with 800 demonstrations, indicating that additional UMI trajectories rapidly improve the policy’s ability to acquire the basic manipulation skill. Further scaling to 1,600 and 3,200 demonstrations continues to improve performance, reaching 70.0% and 85.0% success rates, respectively.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "real-robot success rate vs number of UMI post-training episodes",
+    "value_or_direction": "37.5% (400) → 65.0% (800) → 70.0% (1,600) → 85.0% (3,200) → 82.5% (6,400, saturated)",
+    "comparator": "within-backbone scaling sweep on OpenPI-π 0.5 , identical init/optimization/protocol",
+    "task_or_sample": "Remote Insertion task, 40 rollouts per episode count",
+    "locator": "page 22, Section 6.2.1 and Fig. 10a"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 22 Sec. 6.2.1 逐字给出 37.5%→65.0% 与 1,600/3,200 档 70.0%/85.0%；6,400 档 82.5% 饱和在紧随段落（page 22-23），claim 数字逐项可核。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C11",
+   "claim": "同源大规模预训练的下游增益：4,000 小时 HiFi-UMI 预训练在架构与 post-training 配方固定的对照下使 StarVLA-QwenPI 聚合真机成功率 +18.1 个百分点（擦拭/折叠/插入增益最强），且 800 条任务数据即超过 4× 数据的 scratch 基线——鱼眼腕视图语料的预训练先验同时改善数据效率与性能上限。",
+   "stance": "support",
+   "relation": "支持『效果』层命题：腕装超广角鱼眼采集的规模化语料（20,000+ 小时级）可作为操作基础模型的预训练底座，增益可迁移到真机部署。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec. 6.3：C1 vs C7 初始化对照（同 3,200 episodes post-training，仅换初始化）；+18.1pp 见 Fig. 15 与正文；800-episode 超基线见 Fig. 10b。",
+   "locator": "page 27, Section 6.3 and Fig. 15 / Fig. 10b",
+   "source_context": "UMI pre-training raises aggregate StarVLA-QwenPI success by 18.1 percentage points, with particularly strong gains on wiping, folding, and insertion. Because the architecture and post-training recipe are fixed, this improvement can be attributed to the visual-motor initialization rather than additional task-specific supervision.",
+   "evidence_type": "quantitative-result",
+   "quantitative": {
+    "metric": "aggregate real-robot success-rate gain from UMI pre-training (matched post-training data)",
+    "value_or_direction": "+18.1 pp (51.3% → 69.4% aggregate); 800 episodes already exceeds the 3,200-episode scratch baseline",
+    "comparator": "vs Qwen-VL initialization with randomly initialized action policy (C1), same 3,200 episodes post-training",
+    "task_or_sample": "4 benchmark tasks × 40 rollouts, StarVLA-QwenPI backbone",
+    "locator": "page 27, Section 6.3 and Fig. 15"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 27 Sec. 6.3 逐字给出 +18.1pp 与归因于视觉-运动初始化的受控说明；69.4% 与 800-episode 结论见 Fig. 15 数据与 page 26『exceeds the Qwen-VL-initialized baseline trained on four times as much data』句。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C12",
+   "claim": "作者明确声明保真度整体验证未分解：轨迹精度、双手相对位姿、同步与 FoV 作为联合设计原则实现，未通过受控降解隔离各因素；结果只证明高保真充分、不说明部署级策略需要每项属性多少——FoV（含 200° 双鱼眼配置）的边际贡献未被量化。",
+   "stance": "limit",
+   "relation": "界定『证据边界』：本篇的 FoV 升级效果证据是四轴联合的，综述不能从中提取『超广角 FoV 单独带来 X pp』式的归因。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 7 Limitations 第三条：fidelity as a design principle / no controlled degradation / high fidelity suffices but not how much of each property。",
+   "locator": "page 29, Section 7 Limitations, Fidelity is validated as a whole, not decomposed",
+   "source_context": "We treat fidelity as a design principle realized jointly by trajectory accuracy, inter-gripper relative pose, synchronization, and field of view, and we do not isolate these factors through controlled degradation.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 29 Sec. 7 逐字给出四轴联合验证、无受控降解的声明，claim 为忠实转述并把 FoV 边际贡献未量化这一含义限定在作者原文范围内。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C13",
+   "claim": "作者明确声明 parity 对比非样本匹配：无预训练时 UMI-only post-training 使用约十倍于遥操作基线的演示量，结论是实用数据生产管线对比而非每轨迹数据效率——鱼眼腕视图的平价结论应在此口径下引用。",
+   "stance": "limit",
+   "relation": "界定『效果解释边界』：零机器人平价以 ~10× 样本量为前提，不能解读为等样本下 UMI 数据效率与遥操作相当。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 7 Limitations 第四条：not sample-matched / roughly ten times as many demonstrations / practical data-production pipelines。",
+   "locator": "page 29, Section 7 Limitations, Data efficiency and transfer across post-training sources",
+   "source_context": "Our parity comparison is not sample- matched: without pre-training, UMI-only post-training uses roughly ten times as many demonstrations as the teleoperation baseline, so the result compares practical data-production pipelines rather than per-trajectory efficiency.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 29 Sec. 7 逐字给出非样本匹配、~10× 演示量与管线对比限定，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C14",
+   "claim": "作者明确声明评估范围限制：零机器人 post-training 证据仅覆盖四个桌面双臂任务与三个 backbone（场景级分布偏移下），对其他任务、本体与偏移的普适性未测试；预训练证据更窄，仅在 StarVLA-QwenPI 上测量。",
+   "stance": "limit",
+   "relation": "界定『受限任务域』：腕装鱼眼视图的部署级证据限于桌面双臂操作族；移动操作、导航、野外场景与其他本体不在验证域内。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec. 7 Limitations 第一条：four tabletop bimanual tasks and three backbones / generality remains untested / pre-training evidence narrower。",
+   "locator": "page 28, Section 7 Limitations, Evaluation scope and generality",
+   "source_context": "Our zero-robot post-training evidence covers four tabletop bimanual tasks and three backbones under scene-level distribution shift; its generality to other tasks, embodiments, and shifts remains untested. The pre-training evidence is narrower: scaling and downstream gains are measured only on StarVLA-QwenPI.",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 28 Sec. 7 逐字给出评估范围与普适性未测试、预训练证据更窄的声明，claim 为直接转述。"
+   }
+  },
+  {
+   "card_id": "2607.25895-C15",
+   "claim": "（读者推断）『每手双非平行鱼眼 200°』的 FoV 主张缺三个可核验细节：鱼眼相机型号/分辨率/畸变模型未披露、图像进入策略前的几何预处理（是否去畸变/如何标定）未描述、且没有任何 FoV 变量消融——超广角配置对策略性能的净贡献与轨迹精度/同步/样本量不可分离，论文自己也承认不知道每项属性需要多少。",
+   "stance": "limit",
+   "relation": "界定证据强度：本篇是超广角鱼眼配置的充分性证据而非 FoV 增益的定量证据；传感器规格不透明限制其作为硬件选型参考的价值。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "Sec. 3.1.3 仅有覆盖度数描述；全文无相机型号/内参/去畸变流程；作者在 Sec. 7 自认 fidelity 未分解——三项缺失均为文本直接观察，联合推断已标注为读者推断。",
+   "locator": "page 8, Section 3.1.3 and page 29, Section 7 Limitations",
+   "source_context": "Our results thus show that high fidelity suffices, but not how much of each property a deployable policy requires. A systematic ablation—selectively degrading each factor while holding sample count and scene coverage fixed—would quantify its marginal contribution and turn “high fidelity helps” into an actionable specification of the fidelity required for deployment.",
+   "evidence_type": "critical-appraisal",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "推断依据：page 29 作者原句承认不知每项属性需要多少（本卡 context）；相机规格/预处理缺失是对 Sec. 3.1.3 与全文的直接文本观察；『FoV 净贡献不可分离』由作者未分解声明直接蕴含，推断部分已显式标注。"
+   }
+  }
+ ],
+ "core_citations": [
+  "UMI (Chi et al., RSS 2024) [6]——被修复的原型：每手单 155° 腕鱼眼+侧镜、在线 SLAM、软件同步、重建式相对位姿",
+  "AirExo-2 (Fang et al., 2025) [9]——把手持 UMI 缺陷归因于 SLAM 位姿误差与有限 FoV 妨碍深度感知的引证",
+  "VISTA (Yang et al., 2026) [22]——最接近的前作：纯手持数据 post-training 部署真机，但基线全在同语料上训练，未对比遥操作",
+  "RDT2 (Liu et al., 2026) [14]——10,000 小时 UMI 规模化+零样本跨本体，但部署级性能仍混入真机数据",
+  "ActiveUMI (Zeng et al., 2025) [12] / XRZero-G0 [13]——VR 头显追踪系 portable 采集，未消除真机锚点"
+ ],
+ "notes": "论文以机构 Simple AI 署名，作者列表取自 Author Contributions 的 Core Contributors（Yuteng Wei*, Jinming Ma*, Jiawei Wang*†, Weitao Zhou*†, Yushen Zuo, Ke Rui, Minglei Li†✉，*共同一作 †项目负责人 ✉通讯），另有 10 名 Contributors 见原文 page 30。arXiv:2607.25895v1（2026-07-28）。"
+}

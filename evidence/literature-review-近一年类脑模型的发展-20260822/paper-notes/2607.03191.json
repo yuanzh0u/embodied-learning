@@ -1,0 +1,375 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.03191",
+  "title": "AIGOR: A Modular, Event-Driven Neuromorphic Architecture for Configurable SNN Inference",
+  "published": "2026-07-03T10:52:38Z",
+  "url": "https://arxiv.org/abs/2607.03191",
+  "authors": [
+   "Pierpaolo Perticaroli",
+   "Roberto Ammendola",
+   "Andrea Biagioni",
+   "Ottorino Frezza",
+   "Francesca Lo Cicero",
+   "Michele Martinelli",
+   "Pier Stanislao Paolucci",
+   "Elena Pastorelli",
+   "Luca Pontisso",
+   "Cristian Rossi",
+   "Francesco Simula",
+   "Piero Vicini",
+   "Alessandro Lonardo"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "代表'FPGA 生成式可配置 SNN 加速器'路线的近一年新作:以配置轴替代设计期固化,并在同一套核上实证承载前馈分类与循环神经动力学两类负载,是类脑架构灵活性主张的对照证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:SNN 硬件生态碎片化,固定神经元模型/精度/互连的专用设计难以重定向到不同网络类。"
+   },
+   {
+    "locator": "3 AIGOR Architecture",
+    "role": "method-or-design",
+    "purpose": "理解配置轴设计:神经元模型、数值格式、并行度、划分在实例生成时解析。"
+   },
+   {
+    "locator": "3.1 System organization",
+    "role": "method-or-design",
+    "purpose": "理解核/IO 核/Apeiron 路由 IP 与 3D torus 拓扑的跨 FPGA 组织。"
+   },
+   {
+    "locator": "4 Configuration and Generation Flow",
+    "role": "method-or-design",
+    "purpose": "理解单一 YAML 声明式规范到 RTL/HLS 内核/突触存储图像的生成流与 SystemC 预综合仿真。"
+   },
+   {
+    "locator": "5.2 Functional validation and precision",
+    "role": "results-or-analysis",
+    "purpose": "理解正确性判定标准:与 snnTorch/NEST 软件参考在脉冲级/精度级对齐。"
+   },
+   {
+    "locator": "6.1 Functional correctness",
+    "role": "results-or-analysis",
+    "purpose": "核查 95% MNIST 精度复现与 NEST 参考 3 ms/8 核跨两 FPGA 的逐脉冲一致区间。"
+   },
+   {
+    "locator": "6.2 Throughput",
+    "role": "results-or-analysis",
+    "purpose": "核查单核 568 样本/s 吞吐与突触存储取回瓶颈定位。"
+   },
+   {
+    "locator": "6.3 Resource utilization",
+    "role": "results-or-analysis",
+    "purpose": "核查 LUT/BRAM/URAM 后实现占用与布局布线扩展限制。"
+   },
+   {
+    "locator": "7.5 Design-space characterization",
+    "role": "conclusion-or-limitations",
+    "purpose": "理解能耗数字的定位:仅作配置间相对比较,不作对 ASIC 的绝对主张。"
+   },
+   {
+    "locator": "8 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认双负载同核结论、千核同步为仿真验证、瓶颈与改进路线。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Background and Related Work / 3.2 The SNN core / 3.3 Neuron model and numeric format",
+    "reason": "相关工作与内核微架构细节;配置轴与验证结论已由第 3、4、6 节覆盖。"
+   },
+   {
+    "locator": "7.1-7.4 Architectural Refinements",
+    "reason": "改进方案(分组累加器、路由拓扑、融合协议)为在研设计而非实测结果,仅在结论层引用其动机。"
+   }
+  ]
+ },
+ "research_question": "能否用一个由参数化 IP 块组装、结构选择在实例生成时才解析的模块化事件驱动架构,在同一套处理核上同时承载前馈脉冲分类与循环神经动力学两类通常由不同系统处理的 SNN 工作负载,并保持对软件参考的功能正确性?",
+ "contributions": [
+  "AIGOR 模块化事件驱动架构:神经元模型、数值格式、并行度与核间划分均为配置轴(表 1),同一架构可实例化不同网络类,而非为单一网络一次性设计",
+  "单一 YAML 声明式规范驱动的自动生成流:输出可综合 RTL(SystemC→Catapult HLS)、Vitis HLS 内核与初始化突触存储图像;SystemC 模型兼作预综合功能仿真器,TLM 模型支持超 FPGA 数的拓扑仿真",
+  "Versal VPK180 双负载实证:前馈 snnTorch 分类器复现参考精度;NEST Brunel 循环网络跨两 FPGA 在脉冲级匹配参考(固定点下 2 ms 内逐脉冲精确)",
+  "实测定位吞吐瓶颈(突触投递数据通路+全局时间步屏障)并提出分组突触累加器、融合 spike/sync 协议、邻居局部同步等改进,均可表达为同一可配置核的变更"
+ ],
+ "method": {
+  "summary": "AIGOR 将 SNN 推理组织为时间步同步的处理核,核间通过包交换通信层(Apeiron 路由 IP,逻辑 3D torus 拓扑)交换脉冲包,IO 核构成与外界边界并由主机(板载 Arm APU)注入激励。计算、存储、通信由参数化 IP 库组装,结构选择在实例生成时由单一 YAML 声明式规范解析,生成流程产出 RTL、HLS 内核与突触存储图像三类工件。验证方法是将配置实例部署到 FPGA 并与软件参考(snnTorch/NEST)在相同激励下逐脉冲或按精度对齐,同时报告后实现资源占用,并以 SystemC/TLM 仿真验证超出硬件数量的多节点同步。",
+  "assumptions": [
+   "时间步同步执行+包交换脉冲通信足以统一前馈与循环两类 SNN 负载",
+   "配置轴延迟到实例生成可在不牺牲功能正确性的情况下换取重定向能力",
+   "与软件参考的脉冲级对齐是功能正确性的充分判据"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "MNIST(片上降采样,25 时间步速率编码)",
+   "Brunel 式平衡随机网络:1638 兴奋/410 抑制 LIF 神经元,Poisson 源驱动(NEST 建模)"
+  ],
+  "tasks": [
+   "前馈脉冲图像分类(snnTorch 训练)",
+   "循环网络神经动力学仿真(iaf_psc_delta)"
+  ],
+  "embodiments": [
+   "AMD Versal VPK180 FPGA(1-2 块),逻辑 3D torus 拓扑"
+  ],
+  "sample_or_scale": "硬件实测最多 8 核/2 FPGA;多节点同步仿真验证至 1000 核"
+ },
+ "evaluation": {
+  "design": "同一架构上部署两类刻意不同的负载,与各自软件参考对齐验证功能正确性;报告后实现资源利用;以 SystemC/TLM 仿真验证多节点同步;吞吐用片上周期计数器实测",
+  "baselines": [
+   "snnTorch 软件参考(前馈分类器)",
+   "NEST 软件参考(循环网络)",
+   "SystemC 周期精确模型(预综合检查)"
+  ],
+  "metrics": [
+   "分类精度(相对参考复现)",
+   "逐脉冲一致区间与舍入累积行为",
+   "吞吐(samples/s,片上周期计数器)",
+   "LUT/FF/DSP/BRAM/URAM 后实现占用率"
+  ],
+  "ablations": [
+   "workers × neurons/worker 扫描(表 2,后实现占用)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "结构选择(神经元模型、数值格式、并行度、划分)在实例生成时解析而非设计期固化,单一 YAML 规范生成 RTL/HLS 内核/突触存储图像,架构变体是'一行改动'而非跨源文件手工重连",
+   "scope": "架构与生成流设计",
+   "locator": "3 AIGOR Architecture; 4 Configuration and Generation Flow"
+  },
+  {
+   "finding": "功能正确性:前馈分类器复现 snnTorch 参考精度(MNIST 测试集 95%,25 时间步编码);循环网络在 0.1 ms 步长下复现 NEST 放电模式至 3 ms 模拟时间,最多 8 核跨两 FPGA;32 位定点(12 整数位)下前 2 ms 逐脉冲精确一致,其后定点舍入逐渐累积",
+   "scope": "VPK180 实测,两类负载",
+   "locator": "6.1 Functional correctness"
+  },
+  {
+   "finding": "吞吐:单核实例在 10,000 个 MNIST 样本上维持 568 样本/s(片上周期计数器实测);吞吐由每时间步脉冲负载决定,全连接网络下突触存储取回为主导瓶颈",
+   "scope": "单核前馈负载",
+   "locator": "6.2 Throughput"
+  },
+  {
+   "finding": "资源占用:2048 神经元单核约占器件 LUT 五分之一、BRAM 小占比,突触图像保持片上;空间组织下 2k 神经元仅状态存储就占约 33% 器件 BRAM;全连接层 4M 突触存 URAM 达器件 38%;单核再扩展受布局布线而非逻辑/存储容量限制",
+   "scope": "VPK180 后实现,表 2 扫描",
+   "locator": "6.3 Resource utilization"
+  },
+  {
+   "finding": "多节点同步方案在仿真中验证至 1000 核(3D torus);硬件实测上限为 2 FPGA。吞吐瓶颈定位在突触投递数据通路与全局时间步屏障,对应改进仍在开发",
+   "scope": "原型实测限制",
+   "locator": "8 Conclusion"
+  },
+  {
+   "finding": "能耗口径:每突触操作/每推理能耗仅作为 AIGOR 配置间的相对比较,用于在设计空间内按效率排序,而非对 ASIC 神经形态处理器作绝对比较主张",
+   "scope": "设计空间表征计划",
+   "locator": "7.5 Design-space characterization"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "实测吞吐瓶颈位于突触投递数据通路与全局时间步屏障;缓解手段(分组突触累加器、融合 spike/sync 协议、邻居局部同步)仍在开发,尚未实现",
+    "locator": "8 Conclusion"
+   },
+   {
+    "limitation": "代表性定点设置(32 位、12 整数位)下硬件仅前 2 ms 逐脉冲精确复现参考,之后定点舍入逐渐累积(退化为群体统计一致);完整位宽扫描属计划中的表征工作",
+    "locator": "6.1 Functional correctness"
+   },
+   {
+    "limitation": "单核扩展受布局布线限制而非逻辑/存储容量;超出片上容量后突触图像须迁移到片外 DRAM,其更高且更不可预测的访问延迟对稀疏 SNN 的短而不规则扇出读尤其昂贵",
+    "locator": "6.3 Resource utilization"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "原型为 FPGA 实现,资源与吞吐数字不能外推到 ASIC;能耗口径被作者自我限定为配置间相对比较,本文实际未报告任何能效实测数字",
+    "basis": "7.5 明言能量流程(SAIF+功耗分析)属设计空间表征计划;全文无能效表"
+   },
+   {
+    "boundary": "验证规模有限:硬件仅最多 2 FPGA/8 核,千核仅仿真;负载为降采样 MNIST 与 2048 神经元 Brunel 网络,不能代表现代大规模或大模型级 SNN 负载",
+    "basis": "6.1 与结论中的验证范围陈述"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于 FPGA 原型、小规模双负载的功能正确性与资源维度;不能外推为 ASIC 级能效或大规模系统验证(千核同步仅为仿真),也不能把 568 样本/s 的单核吞吐当作该路线的性能上限——作者已定位瓶颈且改进未落地。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "双负载同核部署直接检验'可配置性'主张,而非只给框架",
+   "与权威软件参考(snnTorch/NEST)在脉冲级/精度级对齐,正确性标准明确",
+   "资源为后实现实测,含 workers×neurons 扫描",
+   "生成流程可复现:单一声明式规范,变体为一行改动"
+  ],
+  "design_risks": [
+   "无能效实测,能效仅作为计划中的相对比较口径",
+   "负载规模小(MNIST 降采样、2048 神经元),吞吐数字低且瓶颈已知",
+   "千核同步仅 TLM 仿真验证,未在硬件复现"
+  ],
+  "baseline_fairness": "与软件参考的对比用于功能正确性而非性能竞争;未与其他神经形态硬件(SpiNNaker/Loihi/专用加速器)做性能基线对比,公平性无从评判但也未夸大",
+  "metric_validity": "正确性指标(精度复现、逐脉冲一致区间、舍入累积行为)定义清晰;吞吐用片上周期计数器实测;资源为后实现数据,内部一致",
+  "reproducibility": "声明式规范+自动生成流结构上利于复现;未见代码/规范开源链接声明",
+  "external_validity": "两类小规模负载;对 LLM 级脉冲模型或大规模科学仿真负载的适用性未验证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.03191-C01",
+   "claim": "AIGOR 把神经元模型、数值格式、数据通路宽度、并行度与神经元在核/工作者间的划分设为实例生成时才解析的配置轴,而非对所有实例一次性固化,以此应对 SNN 硬件生态碎片化。",
+   "stance": "support",
+   "relation": "支持'类脑架构近一年从固定专用设计转向可配置生成式平台'的路线主张,是 SpiNNaker2(固定硬件软件编程)之外的另一条灵活性路线。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 3 节开篇明确结构选择在实例生成时设定,配置轴见其表 1。",
+   "locator": "3 AIGOR Architecture",
+   "source_context": "The structural choices below, the neuron model, the numeric format, the datapath width, the degree of parallelism, and the partitioning of neurons across cores and workers, are set when an instance is generated rather than fixed once for all instances",
+   "evidence_type": "system-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 3 节原句逐字核对,配置轴清单与原文一致;该主张为架构设计声明,其后续双负载实例化(6.1)提供部分实证支撑,措辞未超出原文范围。"
+   }
+  },
+  {
+   "card_id": "2607.03191-C02",
+   "claim": "功能正确性实测:前馈分类器在 MNIST 测试集复现 snnTorch 参考精度 95%(25 时间步编码窗口);循环网络在 0.1 ms 时间步下复现 NEST 参考放电模式至 3 ms 模拟时间,最多 4 核单 FPGA、8 核跨两 FPGA。",
+   "stance": "support",
+   "relation": "为'同一套可配置核承载两类异质 SNN 工作负载'提供功能级实证,是可配置架构路线的核心验证证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.1 节给出两个负载对软件参考的复现结果与跨 FPGA 核数。",
+   "locator": "6.1 Functional correctness",
+   "source_context": "On the feedforward benchmark, the deployed classifier reproduces the classification accuracy of its snnTorch reference ( 95% on the MNIST test set) at the 25-timestep encoding window. On the recurrent benchmark, the FPGA reproduces the firing pattern of the NEST reference over the exercised interval (up to 3 ms of simulated time at a 0.1 ms timestep), on up to 4 cores on a single FPGA and up to 8 cores across two FPGAs.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "classification accuracy reproduction / spike-level agreement",
+    "value_or_direction": "95% MNIST accuracy reproduced; NEST firing pattern reproduced up to 3 ms at 0.1 ms timestep",
+    "comparator": "snnTorch reference (feedforward) and NEST reference (recurrent)",
+    "task_or_sample": "spiking MNIST classifier (25-timestep rate encoding) and Brunel balanced random network",
+    "locator": "6.1 Functional correctness"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "6.1 节两句原文逐字复制,95%、25 时间步、3 ms、0.1 ms、4 核/8 核数字均一致;该结果为功能正确性验证,不含性能或能效主张,适用范围限于所测两类小规模负载。"
+   }
+  },
+  {
+   "card_id": "2607.03191-C03",
+   "claim": "定点精度边界:在代表性定点设置(32 总位、12 整数位)下,硬件仅在最多 2 ms 模拟时间内逐脉冲精确复现参考,之后定点舍入逐渐累积(退化为群体统计层面一致)。",
+   "stance": "limit",
+   "relation": "限定 FPGA 定点 SNN 路线的数值验证强度:脉冲级一致性有时限,长时程仿真只能主张统计一致。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.1 节给出定点设置下的精确一致区间与舍入累积行为。",
+   "locator": "6.1 Functional correctness",
+   "source_context": "Under the representative fixed-point setting (32 total bits, 12 integer), the hardware reproduces the reference spike times exactly for up to 2 ms of simulated time",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "exact spike-time reproduction window",
+    "value_or_direction": "exact reproduction up to 2 ms of simulated time, rounding accumulates beyond",
+    "comparator": "NEST software reference",
+    "task_or_sample": "recurrent balanced random network, 32-bit fixed-point (12 integer bits)",
+    "locator": "6.1 Functional correctness"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "6.1 节原句逐字核对,32/12 位与 2 ms 数字一致;'之后舍入逐渐累积'出自紧随其后的原句(beyond that, fixed-point rounding gradually accumulates),边界主张与原文措辞吻合。"
+   }
+  },
+  {
+   "card_id": "2607.03191-C04",
+   "claim": "吞吐实测与瓶颈:单核实例在 10,000 个 MNIST 样本上维持 568 样本/s(片上周期计数器测量);吞吐由每时间步脉冲负载决定,全连接规模下突触存储取回成为主导瓶颈。",
+   "stance": "support",
+   "relation": "为综述提供 FPGA 可配置路线的吞吐锚点与已知瓶颈,用于与 ASIC 神经形态平台的容量/吞吐对照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.2 节给出单核吞吐实测与瓶颈归因。",
+   "locator": "6.2 Throughput",
+   "source_context": "On the classifier, over 10,000 MNIST samples, the single-core instance sustains 568 samples/s, measured with an on-chip cycle counter.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "throughput",
+    "value_or_direction": "568 samples/s sustained on a single core",
+    "comparator": "none (single-core absolute measurement)",
+    "task_or_sample": "spiking MNIST classifier, 10,000 samples, fully-connected network",
+    "locator": "6.2 Throughput"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "6.2 节原句逐字核对,10,000 与 568 samples/s 一致;突触存储取回瓶颈的归因出自同节后续原句(synaptic-memory fetch dominates),数字与归因均未超出原文。"
+   }
+  },
+  {
+   "card_id": "2607.03191-C05",
+   "claim": "资源边界实测:空间(工作者并行)组织下单核 2k 神经元仅神经元状态存储就占约 33% 器件 BRAM;全连接层突触随神经元数平方增长,同一 2k 神经元核携带 4M 突触,存 URAM 达器件 38% 并保持片上;2048 神经元单核约占器件 LUT 五分之一,再扩展受布局布线而非逻辑/存储容量限制。",
+   "stance": "limit",
+   "relation": "限定 FPGA 可配置路线的容量边界:片上存储(状态+突触)而非逻辑是规模上限的主导因素,定义该路线可承载网络规模。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.3 节给出状态/突触两类存储的不同缩放规律与后实现占用。",
+   "locator": "6.3 Resource utilization",
+   "source_context": "in the spatial organization every neuron datapath must read and write its own state in the same cycle, so each neuron’s state occupies an independent memory block, and a single core of 2k such neurons uses of order 33% of the device BRAM on state alone.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "device resource utilization (BRAM, URAM, LUT)",
+    "value_or_direction": "33% of device BRAM on state alone; 4M synapses reaching 38% of device in URAM; one fifth of device LUTs at 2048 neurons",
+    "comparator": "AMD Versal VPK180 device capacity",
+    "task_or_sample": "single core, 2048 neurons, fully-connected layer",
+    "locator": "6.3 Resource utilization"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "6.3 节原句逐字核对(33% BRAM 主引文);4M 突触与 38% URAM 出自同节紧邻原句(the same 2k-neuron core carries 4M synapses. Held in URAM this reaches 38% of the device),LUT 五分之一出自同节首段原句,数字均在同节文本范围内核对一致。"
+   }
+  },
+  {
+   "card_id": "2607.03191-C06",
+   "claim": "条件性口径:多节点同步方案仅在仿真中验证至 1000 核(3D torus),硬件实测上限为 2 FPGA;能耗数字(每突触操作/每推理)被作者明确限定为 AIGOR 配置间的相对比较,用于设计空间内按效率排序,而非对 ASIC 神经形态处理器的绝对主张。",
+   "stance": "conditional",
+   "relation": "限定该文的证据等级:规模化与能效两个关键维度分别停留在仿真验证与计划口径,不能读作已验证的系统级能效或千核系统能力。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论与 7.5 节分别声明千核仅为仿真验证、能耗仅作相对比较。",
+   "locator": "7.5 Design-space characterization",
+   "source_context": "Reported in neuromorphic conventions, energy per synaptic operation ( /SOP) and energy per inference ( /inference), these figures are read as relative comparisons across AIGOR configurations, letting the design space be ranked by efficiency rather than compared as absolute claims against ASIC neuromorphic processors.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "7.5 节原句逐字核对,相对比较口径为作者自述;千核仿真验证出自 8 Conclusion 原句(validated the multi-node synchronization scheme in simulation up to one thousand cores),两处合并构成条件性边界主张,范围限于本文原型。"
+   }
+  }
+ ],
+ "core_citations": [
+  "snnTorch (surrogate-gradient SNN training)",
+  "NEST simulator",
+  "Brunel balanced random network",
+  "Apeiron packet-switching routing framework",
+  "SpiNNaker / Loihi (fixed-hardware programmable neuromorphic platforms)",
+  "FPGA SNN accelerator generation frameworks"
+ ],
+ "notes": "INFN(意大利国家核物理研究院)团队(罗马/弗拉斯卡蒂;P.S. Paolucci、A. Lonardo、A. Biagioni 等为 Apeiron 低延迟 FPGA 通信框架作者群),高能物理实时触发技术外溢到神经形态;原型为 AMD Versal VPK180(1-2 块)。定位:与 SpiNNaker2(ASIC many-core、软件编程)互补的'FPGA 生成式可配置加速器'路线;本文价值在功能正确性与资源边界的诚实报告,能效维度尚未交付,引用时应与实测能效论文区分。LaTeXML 提取丢失表 2 部分数值与公式符号,关键数字均以正文原句核对。"
+}

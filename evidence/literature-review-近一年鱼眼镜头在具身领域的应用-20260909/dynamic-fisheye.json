@@ -1,0 +1,159 @@
+{
+  "sources": [
+    {
+      "source": "web-calibration",
+      "confidence": "high",
+      "notes": "Web calibration on 2026-09-09 found direct-topic papers (arXiv:2603.02139 fisheye camera choice in robotic manipulation; arXiv:2608.02257 panorama-aware VLA; arXiv:2604.13476 RobotPan surround-view; arXiv:2606.04708 VISTA fisheye UMI adaptation; arXiv:2603.05868 AnyCamVLA zero-shot camera adaptation), plus industrial signals (AGIBOT G2 humanoid ships fisheye cameras) and adjacent families (ODGS-SLAM omnidirectional GS-SLAM, SysNav 360-camera navigation, RoboSense fisheye-equipped dataset)."
+    }
+  ],
+  "knowledge_ids": ["EA-SENSOR", "EA-HARDWARE"],
+  "families": [],
+  "queries": [
+    {
+      "label": "dynamic-fisheye-robot-broad",
+      "tier": "dynamic-direct",
+      "query": "all:fisheye AND all:robot",
+      "why": "Broadest recall for fisheye lenses used in any robotic context; downstream screening separates embodied applications from ADAS surround-view.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-fisheye-manipulation",
+      "tier": "dynamic-direct",
+      "query": "all:fisheye AND all:manipulation",
+      "why": "Direct: fisheye wrist/body cameras in manipulation policies (e.g. Rethinking Camera Choice, Give Human a Robot Hand).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-fisheye-vla",
+      "tier": "dynamic-direct",
+      "query": "all:fisheye AND (all:\"vision-language-action\" OR all:VLA)",
+      "why": "Direct: VLA policies trained on or adapted to fisheye observations (VISTA, PanoVLA family).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-panorama-vla-mobile",
+      "tier": "dynamic-direct",
+      "query": "all:panorama AND all:\"robot manipulation\"",
+      "why": "Panorama-aware VLA for mobile manipulation is a 2026 direct-topic family (PanoVLA).",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-wide-fov-robot",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"wide field of view\" AND all:robot",
+      "why": "Mechanism: wide-FoV benefits (spatial localization, context) phrased without the word fisheye.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-fisheye-distortion-policy",
+      "tier": "dynamic-mechanism",
+      "query": "all:fisheye AND all:distortion",
+      "why": "Mechanism: radial distortion modeling, rectification, and their interaction with learned policies.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-cross-camera-generalization",
+      "tier": "dynamic-limit",
+      "query": "all:\"camera generalization\" AND all:robot",
+      "why": "Limit surface: policies that overfit to one camera model (pinhole vs fisheye); AnyCamVLA/ICWM family.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-camera-adaptation-robot",
+      "tier": "dynamic-limit",
+      "query": "all:\"camera adaptation\" AND all:robot",
+      "why": "Limit surface: zero-shot camera/viewpoint adaptation as the response to fisheye-vs-pinhole domain gaps.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-fisheye-benchmark",
+      "tier": "dynamic-eval",
+      "query": "all:fisheye AND all:benchmark",
+      "why": "Evaluation: benchmarks and datasets that include fisheye sensors for robot perception (RoboSense-style).",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-omnidirectional-navigation",
+      "tier": "dynamic-eval",
+      "query": "all:omnidirectional AND all:navigation AND all:robot",
+      "why": "Evaluation/deployment: omnidirectional-camera navigation systems (SysNav 360-camera object navigation).",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-fisheye-humanoid",
+      "tier": "dynamic-deploy",
+      "query": "all:fisheye AND all:humanoid",
+      "why": "Deployment: humanoid platforms shipping fisheye cameras (AGIBOT G2, NICO stereo fisheye).",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-surround-view-robot",
+      "tier": "dynamic-deploy",
+      "query": "all:\"surround view\" AND all:robot AND all:perception",
+      "why": "Deployment: 360 surround-view vision systems on embodied platforms (RobotPan on Tiangong humanoid).",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-360-camera-robot",
+      "tier": "dynamic-deploy",
+      "query": "all:\"360 camera\" AND all:robot",
+      "why": "Deployment: 360-degree panoramic cameras as robot input or teleoperation interface.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-fisheye-slam",
+      "tier": "dynamic-adjacent",
+      "query": "all:fisheye AND all:SLAM",
+      "why": "Adjacent: fisheye/omnidirectional SLAM underpins embodied localization (ODGS-SLAM, multi-fisheye VIO); screen for robot context.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-panoramic-teleop-data",
+      "tier": "dynamic-adjacent",
+      "query": "all:panoramic AND all:teleoperation",
+      "why": "Adjacent: panoramic cameras in whole-body teleoperation and demonstration data collection.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-fisheye-detection",
+      "tier": "dynamic-adjacent",
+      "query": "all:fisheye AND (all:detection OR all:segmentation) AND all:robot",
+      "why": "Adjacent: fisheye perception modules (detection/segmentation) consumed by robot stacks.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-fisheye-embodied-browser",
+      "query": "fisheye camera \"vision-language-action\" OR manipulation site:arxiv.org 2026",
+      "why": "Recover papers whose abstracts use fisheye-adjacent wording missed by API field search.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-fisheye-vlm-robustness-web",
+      "query": "fisheye distortion VLM robustness robot 2026 arXiv",
+      "why": "Check whether VLM-on-fisheye robustness studies form a distinct 2026 paper family.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    }
+  ]
+}

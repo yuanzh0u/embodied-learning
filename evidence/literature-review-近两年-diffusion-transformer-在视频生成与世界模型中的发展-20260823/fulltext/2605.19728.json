@@ -1,0 +1,973 @@
+{
+  "generated_at": "2026-08-23T09:36:13.399002+00:00",
+  "paper_id": "2605.19728",
+  "html_url": "https://arxiv.org/html/2605.19728",
+  "available": true,
+  "cache_file": "/var/folders/sb/fr7nzcvd5dv7w1f9tyhrg6780000gn/T/embodied-ai-literature-hub/html/2605.19728.html",
+  "structure": "latexml",
+  "text_chars": 23706,
+  "sections": [
+    {
+      "index": 0,
+      "id": "abstract1",
+      "kind": "ltx_abstract",
+      "title": "Abstract",
+      "path": "Abstract",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 1863
+    },
+    {
+      "index": 1,
+      "id": "S1",
+      "kind": "ltx_section",
+      "title": "1 Introduction",
+      "path": "1 Introduction",
+      "level": 1,
+      "para_count": 12,
+      "char_count": 5940
+    },
+    {
+      "index": 2,
+      "id": "S2",
+      "kind": "ltx_section",
+      "title": "2 Related Work",
+      "path": "2 Related Work",
+      "level": 1,
+      "para_count": 3,
+      "char_count": 2691
+    },
+    {
+      "index": 3,
+      "id": "S3",
+      "kind": "ltx_section",
+      "title": "3 Methodology",
+      "path": "3 Methodology",
+      "level": 1,
+      "para_count": 2,
+      "char_count": 1223
+    },
+    {
+      "index": 4,
+      "id": "S3.SS1",
+      "kind": "ltx_subsection",
+      "title": "3.1 Physics Probe",
+      "path": "3 Methodology > 3.1 Physics Probe",
+      "level": 2,
+      "para_count": 4,
+      "char_count": 1748
+    },
+    {
+      "index": 5,
+      "id": "S3.SS2",
+      "kind": "ltx_subsection",
+      "title": "3.2 Probe-Regularized LoRA Finetuning",
+      "path": "3 Methodology > 3.2 Probe-Regularized LoRA Finetuning",
+      "level": 2,
+      "para_count": 6,
+      "char_count": 1861
+    },
+    {
+      "index": 6,
+      "id": "S4",
+      "kind": "ltx_section",
+      "title": "4 Experiments",
+      "path": "4 Experiments",
+      "level": 1,
+      "para_count": 1,
+      "char_count": 298
+    },
+    {
+      "index": 7,
+      "id": "S4.SS1",
+      "kind": "ltx_subsection",
+      "title": "4.1 Experimental Setup",
+      "path": "4 Experiments > 4.1 Experimental Setup",
+      "level": 2,
+      "para_count": 6,
+      "char_count": 2286
+    },
+    {
+      "index": 8,
+      "id": "S4.SS2",
+      "kind": "ltx_subsection",
+      "title": "4.2 Evaluation Metrics",
+      "path": "4 Experiments > 4.2 Evaluation Metrics",
+      "level": 2,
+      "para_count": 5,
+      "char_count": 889
+    },
+    {
+      "index": 9,
+      "id": "S4.SS3",
+      "kind": "ltx_subsection",
+      "title": "4.3 Quantitative Results",
+      "path": "4 Experiments > 4.3 Quantitative Results",
+      "level": 2,
+      "para_count": 4,
+      "char_count": 2104
+    },
+    {
+      "index": 10,
+      "id": "S4.SS4",
+      "kind": "ltx_subsection",
+      "title": "4.4 Auxiliary Independent Flow-IMU Validation",
+      "path": "4 Experiments > 4.4 Auxiliary Independent Flow-IMU Validation",
+      "level": 2,
+      "para_count": 2,
+      "char_count": 729
+    },
+    {
+      "index": 11,
+      "id": "S4.SS5",
+      "kind": "ltx_subsection",
+      "title": "4.5 Qualitative Results",
+      "path": "4 Experiments > 4.5 Qualitative Results",
+      "level": 2,
+      "para_count": 4,
+      "char_count": 1414
+    },
+    {
+      "index": 12,
+      "id": "S5",
+      "kind": "ltx_section",
+      "title": "5 Conclusion",
+      "path": "5 Conclusion",
+      "level": 1,
+      "para_count": 1,
+      "char_count": 660
+    },
+    {
+      "index": 13,
+      "id": "bib",
+      "kind": "ltx_bibliography",
+      "title": "References",
+      "path": "References",
+      "level": 1,
+      "para_count": 0,
+      "char_count": 0
+    }
+  ],
+  "ranked_sections": [
+    {
+      "section_index": 2,
+      "path": "2 Related Work",
+      "score": 8.328,
+      "hits": 8,
+      "matched_terms": [
+        "action-conditioned",
+        "temporal consistency",
+        "video generation",
+        "world model"
+      ],
+      "text": "Foundation Video Models. Large-scale video generation has rapidly advanced through diffusion and transformer-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 . Recent systems emphasize improved temporal consistency, stronger video autoencoders, and scalable denoising transformers, enabling high-quality image-to-video generation at large model sizes. However, these models are primarily designed for visual realism and prompt adherence ; they typically provide only coarse control signals like text, style 33 , or sparse conditioning and do not natively support precise low-level action inputs required for robotics control. Models such as LTX-Video 9 exemplify this trend: strong long-horizon generation with limited fine-grained controllability 38 ; 3 ; 21 ; 28 ; 27 . These models nevertheless provide strong visual priors, which motivates our approach: rather than training a generator from scratch, we adapt a pretrained video model and guide it toward more action-consistent motion. Figure 2 : The proposed architecture. A pretrained diffusion backbone generates video latents conditioned on IMU actions. A frozen physics probe evaluates latent motion consistency and provides supervision during LoRA finetuning. Action-Conditioned and Controllable Video Generation. A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 . These approaches can provide meaningful steering, but often require additional sensors or annotations, and may not align with the control interfaces used in robotics like IMU-derived 6-DoF velocities. In contrast, Aero-World directly conditions on 6-DoF inertial actions and optimizes the generator to reflect those actions in its visual motion, enabling a control interface that is compatible with embodied agents. Vision-Language-Action Models and Embodied Foundation Models. Vision-language-action (VLA) models and embodied foundation models learn to map sensory observations and language to action sequences, often trained from large-scale demonstrations 18 ; 8 ; 25 ; 40 . While VLA models aim to produce actions, they typically assume an external environment (real or simulated) for interaction. Aero-World is complementary: it focuses on learning an action-conditioned visual generator that produces aerial video sequences aligned with 6-DoF control inputs. Combining VLA policies with controllable generative world models is a promising direction for scalable embodied agent training 22 ; 26 ; 10 ."
+    },
+    {
+      "section_index": 1,
+      "path": "1 Introduction",
+      "score": 7.212,
+      "hits": 11,
+      "matched_terms": [
+        "action-conditioned",
+        "physical consistency",
+        "scaling",
+        "video generation"
+      ],
+      "text": "Recent large-scale video diffusion models exhibit impressive perceptual realism 33 ; 9 ; 19 ; 38 ; 29 . These models hold the potential to become simulators for embodied agents, which can be utilized for learning policies. However, in order to be a reliable proxy to real-world data or expensive simulations, these models need to possess action-faithfulness and physical consistency, where they are currently lacking 39 ; 37 . This gap is more acute in aerial videos because an aerial object like drone operates in unconstrained 6 degree-of-freedom (6-DoF) space, and the translational and rotational dynamics of drones interact non-linearly 20 . Small errors in roll or pitch induce large spatial drift, and aggressive maneuvers amplify temporal inconsistency. A video model which can produce action-faithful aerial videos thus provides a critical benefit: the ability to safely and scalably train robust control policies entirely in software, reducing cost of operating in extreme environments. Figure 1 : (a) Standard Approach: Language-conditioned video models generate plausible motion without explicit action grounding. (b) Aero-World: injects latent-space physics supervision and 6-DoF IMU conditioning into a pretrained diffusion backbone. (c) The result is stable, action-faithful aerial motion, even in out-of-distribution scenes. In order to solve this, existing literature has introduced simple actions like forward, backwards, left, and right 5 ; 13 ; 1 ; 10 . But this framing has one issue, where there is no way to increase the actuation forces, meaning there is no way to rapidly increase or decrease speed in the ego-motion videos, which is prevalent in most drone flights. Another direction is to add camera parameters, optical flow, pose/depth guidance 15 ; 35 ; 32 to steer the video generation. However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 . Recent literature has also confirmed that scaling up data and the model does not correlate well with action adherence 16 ; 24 . Obtaining annotations for aerial videos is also very difficult and costly. This is why most pretraining corpora consists primarily of captioned videos rather than paired control signals such as linear acceleration and angular velocity. The low-level 6-DoF inertial signals required for control, namely linear acceleration and angular velocity, are rarely observed as supervision in natural video corpora 23 ; 2 ; 30 . Thus, scaling primarily improves visual realism, not low-level controllability, motivating explicit action-consistency supervision during adaptation. To summarize, we have identified generating aerial videos adhering to control signals is an important challenge for embodied AI. We aim to solve this problem leveraging the existing visual knowledge of video generation models. Rather than retraining a video generation model from scratch, we propose a physics probe-regularized conversion mechanism that reshapes the latent dynamics of a pretrained video diffusion model through inertial-consistency supervision. Because inertial trajectories describe platform-level motion rather than drone-specific motor commands, they provide a control interface that is less tied to a particular actuator model. This also addresses the lack of fine-grained control like rapidly increasing or reducing speed. Working in latent space also means there is no need for heavy decoding during finetuning. Our key idea is to introduce a frozen physics probe that estimates 6-DoF inertial signals (linear acceleration, and angular velocity) from generated video latents, providing a data-driven surrogate for enforcing motion consistency during finetuning. During finetuning, the generator is encouraged to produce motion that matches the commanded inertial sequence by penalizing discrepancies between probe-inferred motion and the input actions. Importantly, the probe is trained independently on real video–IMU pairs and remains frozen during generator adaptation, providing a stable supervision signal without modifying the pretrained DiT backbone. This mechanism can be attached to any existing diffusion video models with minimal architectural changes, enabling them to generate IMU-conditioned aerial videos while preserving the visual priors learned from large-scale video pretraining. Our approach, illustrated in Fig. 2 , instantiates this conversion on a pretrained diffusion video backbone. We train on synchronized frames with IMU sequences from drone flight datasets 4 ; 7 , where high angular velocities and rapid vertical transitions stress temporal coherence. By injecting action embeddings and applying latent-space inertial-consistency regularization, the model learns to respect 6-DoF motion constraints while preserving perceptual realism inherited from large-scale pretraining. We evaluate this framework on our proposed AeroBench , a new benchmark designed for action-conditioned aerial generation. To quantify controllability, we introduce the Action Alignment Score (AAS) , which measures bin-level agreement between commanded IMU actions and probe-inferred motion, and the Physical Consistency Rate (PCR) , which captures frame-to-frame oscillatory instability. Our contributions are: • Inertia-Guided Adaptation: A method for adapting a pretrained diffusion video backbone for IMU-conditioned aerial video generation using latent-space inertial supervision. • Physics Probe Supervision: A frozen differentiable probe that encourages action–motion consistency during lightweight LoRA finetuning. • AeroBench and Metrics: A benchmark with AAS and PCR for evaluating 6-DoF action alignment and temporal stability in action-conditioned aerial video generation."
+    },
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 3.546,
+      "hits": 2,
+      "matched_terms": [
+        "diffusion transformer",
+        "physical consistency"
+      ],
+      "text": "Abstract Foundation video models produce visually impressive results, but their use in embodied AI remains limited because they are primarily trained on natural language rather than low-level control signals. This limitation is especially pronounced for aerial flight, where motion occurs in unconstrained 6-DoF space and small errors in ego-motion can produce large trajectory drift. Generating aerial videos that follow fine-grained inertial actions can support scalable training and evaluation of aerial agents by providing a controllable proxy for real-world or expensive simulation data. To address this problem, we propose Aero-World , a method for converting a pretrained image-to-video diffusion model into a controllable aerial video generator. Aero-World injects sequences of translational acceleration and angular velocity into a pretrained latent diffusion transformer through an action-token stream. A frozen latent-space Physics Probe, trained independently on real video–IMU pairs, provides differentiable inertial-consistency supervision during LoRA finetuning while avoiding computationally expensive video decoding. We further propose AeroBench , a benchmark for evaluating whether generated drone videos adhere to low-level action signals. AeroBench uses Action Alignment Score (AAS) to measure agreement with commanded inertial actions and Physical Consistency Rate (PCR) to measure temporal motion stability. On AeroBench, Aero-World improves mean AAS from 57.7 to 63.6 over action-only finetuning and gives a stronger quality-control trade-off than AirScape, with lower FVD (596.5 vs. 1058.6), higher SSIM (0.595 vs. 0.505), and higher Flow-IMU correlation (0.44 vs. 0.20). These results suggest that frozen Physics Probe supervision is a practical mechanism for adapting pretrained video generators toward more action-aligned aerial motion."
+    },
+    {
+      "section_index": 12,
+      "path": "5 Conclusion",
+      "score": 2.328,
+      "hits": 1,
+      "matched_terms": [
+        "action-conditioned"
+      ],
+      "text": "We presented Aero-World , a lightweight framework for adapting pretrained video diffusion models to generate aerial videos conditioned on dense 6-DoF IMU trajectories. By combining explicit action conditioning with a frozen latent Physics Probe during LoRA finetuning, Aero-World improves inertial alignment over matched action-conditioned finetuning, with gains also reflected by an independent RGB-space Flow-IMU evaluator. These results suggest that frozen probe supervision is a practical way to make pretrained video generators more responsive to low-level aerial motion controls, while highlighting a remaining fidelity-control trade-off for future work."
+    },
+    {
+      "section_index": 8,
+      "path": "4 Experiments > 4.2 Evaluation Metrics",
+      "score": 2.183,
+      "hits": 1,
+      "matched_terms": [
+        "physical consistency"
+      ],
+      "text": "Action Alignment Score (AAS). Action-faithfulness is measured using a probe-based Action Alignment Score (AAS). For each IMU axis , a frozen probe predicts a -way discretized bin from VAE latents. Continuous IMU values are quantized as equation 1 . Actions are causally aligned by left-shifting the IMU sequence to match the transition . Given a generated video , the alignment score is We report per-axis AAS and the mean across axes. Physical Consistency Rate (PCR). While AAS measures bin-level alignment, it does not capture temporal stability. We therefore define PCR using first-order derivatives of probe-predicted IMU bins. For each axis , Let denote the probe-predicted IMU bin for axis at frame . We define Lower PCR indicates smoother probe-inferred inertial motion. PCR is defined as the mean absolute bin jump between consecutive frames; lower values indicate smoother motion."
+    },
+    {
+      "section_index": 3,
+      "path": "3 Methodology",
+      "score": 2.012,
+      "hits": 1,
+      "matched_terms": [
+        "diffusion transformer"
+      ],
+      "text": "Overview. We study the problem of converting a pretrained image-to-video latent diffusion model into an aerial video generator controlled by dense inertial commands. Given an initial frame and a 30Hz action sequence where contains translational acceleration and angular velocity, the goal is to generate a rollout whose ego-motion follows the commanded inertial trajectory. A key difficulty is that standard diffusion finetuning can reconstruct training videos without necessarily using the action signal; the denoising loss alone does not explicitly penalize action-motion mismatch. Aero-World therefore combines two mechanisms. First, an action-token stream embeds IMU commands and injects them into the diffusion transformer, giving the generator a low-level control interface. Second, a frozen latent-space Physics Probe provides a differentiable motion-consistency signal during finetuning. The probe is trained independently on real synchronized video–IMU pairs, then kept fixed so that generator adaptation is guided by an external inertial evaluator rather than a co-adapted loss network. At inference time, the probe is discarded and the model generates videos using only the initial frame and IMU action sequence."
+    },
+    {
+      "section_index": 4,
+      "path": "3 Methodology > 3.1 Physics Probe",
+      "score": 1.81,
+      "hits": 1,
+      "matched_terms": [
+        "action-conditioned"
+      ],
+      "text": "The Physics Probe is a frozen latent-space evaluator that maps video motion to inertial states. Its purpose is not to replace the generator, but to provide a differentiable training signal indicating whether the generated latent trajectory contains motion consistent with the commanded IMU sequence. We train the probe before generator finetuning using only real synchronized video–IMU pairs. Let denote the latent tensor produced by the frozen video autoencoder. For each IMU axis , a lightweight probe predicts per-timestep logits over discretized inertial bins. We use axis-specific prediction heads because the six inertial dimensions have different dynamic ranges and class imbalance patterns. The probe architecture consists of lightweight 3D convolutional layers over latent space, global spatial pooling, and an MLP classifier. The 3D convolutions preserve local spatio-temporal inductive bias while avoiding the cost of decoding generated videos back to RGB during finetuning. Rather than regressing continuous IMU values, we discretize each axis into bins over an axis-specific physical range . The bin label is (1) Binned supervision is used for two reasons. First, aggressive drone flight produces heavy-tailed IMU distributions, making direct regression sensitive to rare high-magnitude maneuvers. Second, for action-conditioned generation, the model mainly needs to recover the correct motion regime, such as accelerating, turning, or yawing, rather than sensor-grade IMU reconstruction. Given ground-truth bin labels , the probe is trained with (2) After training, is frozen. During generator adaptation, gradients are allowed to pass through to the generated latent prediction, but the probe parameters themselves are never updated."
+    },
+    {
+      "section_index": 7,
+      "path": "4 Experiments > 4.1 Experimental Setup",
+      "score": 1.655,
+      "hits": 1,
+      "matched_terms": [
+        "diffusion transformer"
+      ],
+      "text": "Dataset. We use the UZH FPV drone racing dataset 7 ; 6 ; 17 and the TII drone racing dataset 4 , both providing synchronized RGB video and IMU measurements. We focus on FPV footage to preserve raw ego-motion without camera stabilization artifacts. Videos are resampled to 30 Hz while IMU signals (originally 500 Hz) are temporally aligned to the video frames. Each sequence is clipped to 81 frames to match the diffusion context window and to reduce repetitive motion patterns in the TII dataset. The resulting dataset contains 7k training clips, 1k validation clips, and 1k test clips. Physics probe training. The Physics Probe is trained using cached VAE latents paired with synchronized IMU sequences. We chose CogVideoX-1.5-5B I2V 33 as our diffusion transformer backbone. Its 3D VAE encoder is frozen and produces latent tensors with channels for clips of length . We train one lightweight probe per IMU axis because the six inertial dimensions have different dynamic ranges and class imbalance patterns. All probes are trained using AdamW with learning rate and batch size 32 for 25 epochs under bfloat16 mixed precision. Model checkpoints are selected based on validation accuracy. Figure 3 : Physics Probe accuracy vs. baselines. Per-axis classification accuracy over discretized bins. The blue indicates the accuracy of choosing a random bin uniformly, the red indicates the accuracy if always the majority bin is chosen. The Physics Probe substantially outperforms both random and majority-bin baselines across all six axes. LoRA finetuning. We finetune the diffusion backbone using Low-Rank Adaptation (LoRA) 14 , keeping the pretrained model and the Physics Probe frozen. Training proceeds in two stages: a warm-up phase with for 10k steps, followed by joint optimization with . We also show sensitivity of and performance of different DiT backbones to show generalization in the supplementary material. The model is trained for 70k steps using 2 H100 GPUs with batch size 8 and 81-frame clips. All baselines use the same test split, initial frames, prompts, 81-frame horizon, and metric code; Cosmos is evaluated zero-shot, while AirScape is evaluated through its released motion-intention interface using the closest IMU-to-intention conversion without rejection sampling."
+    }
+  ],
+  "term_matches": [
+    {
+      "term": "diffusion transformer",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 859,
+      "snippet": "ress this problem, we propose Aero-World , a method for converting a pretrained image-to-video diffusion model into a controllable aerial video generator. Aero-World injects sequences of translational acceleration and angular velocity into a pretrained latent diffusion transformer through an action-token stream. A frozen latent-space Physics Probe, trained independently on real video–IMU pairs, provides differentiable inertial-consistency supervision during LoRA finetuning while avoiding computationally expensive video decoding. We fur"
+    },
+    {
+      "term": "physical consistency",
+      "locator": "Abstract",
+      "section_index": 0,
+      "char_start": 1360,
+      "snippet": "ionally expensive video decoding. We further propose AeroBench , a benchmark for evaluating whether generated drone videos adhere to low-level action signals. AeroBench uses Action Alignment Score (AAS) to measure agreement with commanded inertial actions and Physical Consistency Rate (PCR) to measure temporal motion stability. On AeroBench, Aero-World improves mean AAS from 57.7 to 63.6 over action-only finetuning and gives a stronger quality-control trade-off than AirScape, with lower FVD (596.5 vs. 1058.6), higher SSIM (0.595 vs. 0"
+    },
+    {
+      "term": "video generation",
+      "locator": "1 Introduction ¶ S1.p2",
+      "section_index": 1,
+      "char_start": 1799,
+      "snippet": "the actuation forces, meaning there is no way to rapidly increase or decrease speed in the ego-motion videos, which is prevalent in most drone flights. Another direction is to add camera parameters, optical flow, pose/depth guidance 15 ; 35 ; 32 to steer the video generation. However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicit"
+    },
+    {
+      "term": "video generation",
+      "locator": "1 Introduction ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 3030,
+      "snippet": "xplicit action-consistency supervision during adaptation. To summarize, we have identified generating aerial videos adhering to control signals is an important challenge for embodied AI. We aim to solve this problem leveraging the existing visual knowledge of video generation models. Rather than retraining a video generation model from scratch, we propose a physics probe-regularized conversion mechanism that reshapes the latent dynamics of a pretrained video diffusion model through inertial-consistency supervision. Because inertia"
+    },
+    {
+      "term": "video generation",
+      "locator": "1 Introduction ¶ S1.p5",
+      "section_index": 1,
+      "char_start": 3080,
+      "snippet": "tation. To summarize, we have identified generating aerial videos adhering to control signals is an important challenge for embodied AI. We aim to solve this problem leveraging the existing visual knowledge of video generation models. Rather than retraining a video generation model from scratch, we propose a physics probe-regularized conversion mechanism that reshapes the latent dynamics of a pretrained video diffusion model through inertial-consistency supervision. Because inertial trajectories describe platform-level motion rath"
+    },
+    {
+      "term": "video generation",
+      "locator": "1 Introduction ¶ S1.I1.i1.p1",
+      "section_index": 1,
+      "char_start": 5584,
+      "snippet": "probe-inferred motion, and the Physical Consistency Rate (PCR) , which captures frame-to-frame oscillatory instability. Our contributions are: • Inertia-Guided Adaptation: A method for adapting a pretrained diffusion video backbone for IMU-conditioned aerial video generation using latent-space inertial supervision. • Physics Probe Supervision: A frozen differentiable probe that encourages action–motion consistency during lightweight LoRA finetuning. • AeroBench and Metrics: A benchmark with AAS and PCR for evaluating 6-DoF action"
+    },
+    {
+      "term": "video generation",
+      "locator": "1 Introduction ¶ S1.I1.i3.p1",
+      "section_index": 1,
+      "char_start": 5923,
+      "snippet": "vision: A frozen differentiable probe that encourages action–motion consistency during lightweight LoRA finetuning. • AeroBench and Metrics: A benchmark with AAS and PCR for evaluating 6-DoF action alignment and temporal stability in action-conditioned aerial video generation."
+    },
+    {
+      "term": "physical consistency",
+      "locator": "1 Introduction ¶ S1.p1",
+      "section_index": 1,
+      "char_start": 362,
+      "snippet": ". These models hold the potential to become simulators for embodied agents, which can be utilized for learning policies. However, in order to be a reliable proxy to real-world data or expensive simulations, these models need to possess action-faithfulness and physical consistency, where they are currently lacking 39 ; 37 . This gap is more acute in aerial videos because an aerial object like drone operates in unconstrained 6 degree-of-freedom (6-DoF) space, and the translational and rotational dynamics of drones interact non-linearly"
+    },
+    {
+      "term": "physical consistency",
+      "locator": "1 Introduction ¶ S1.p8",
+      "section_index": 1,
+      "char_start": 5356,
+      "snippet": "sed AeroBench , a new benchmark designed for action-conditioned aerial generation. To quantify controllability, we introduce the Action Alignment Score (AAS) , which measures bin-level agreement between commanded IMU actions and probe-inferred motion, and the Physical Consistency Rate (PCR) , which captures frame-to-frame oscillatory instability. Our contributions are: • Inertia-Guided Adaptation: A method for adapting a pretrained diffusion video backbone for IMU-conditioned aerial video generation using latent-space inertial supervi"
+    },
+    {
+      "term": "action-conditioned",
+      "locator": "1 Introduction ¶ S1.p8",
+      "section_index": 1,
+      "char_start": 5141,
+      "snippet": "ent-space inertial-consistency regularization, the model learns to respect 6-DoF motion constraints while preserving perceptual realism inherited from large-scale pretraining. We evaluate this framework on our proposed AeroBench , a new benchmark designed for action-conditioned aerial generation. To quantify controllability, we introduce the Action Alignment Score (AAS) , which measures bin-level agreement between commanded IMU actions and probe-inferred motion, and the Physical Consistency Rate (PCR) , which captures frame-to-frame"
+    },
+    {
+      "term": "action-conditioned",
+      "locator": "1 Introduction ¶ S1.I1.i3.p1",
+      "section_index": 1,
+      "char_start": 5897,
+      "snippet": "ion. • Physics Probe Supervision: A frozen differentiable probe that encourages action–motion consistency during lightweight LoRA finetuning. • AeroBench and Metrics: A benchmark with AAS and PCR for evaluating 6-DoF action alignment and temporal stability in action-conditioned aerial video generation."
+    },
+    {
+      "term": "scaling",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 2174,
+      "snippet": "embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 . Recent literature has also confirmed that scaling up data and the model does not correlate well with action adherence 16 ; 24 . Obtaining annotations for aerial videos is also very difficult and costly. This is why most pretraining corpora consists primarily of captioned videos rather than paired control sig"
+    },
+    {
+      "term": "scaling",
+      "locator": "1 Introduction ¶ S1.p3",
+      "section_index": 1,
+      "char_start": 2684,
+      "snippet": "aired control signals such as linear acceleration and angular velocity. The low-level 6-DoF inertial signals required for control, namely linear acceleration and angular velocity, are rarely observed as supervision in natural video corpora 23 ; 2 ; 30 . Thus, scaling primarily improves visual realism, not low-level controllability, motivating explicit action-consistency supervision during adaptation. To summarize, we have identified generating aerial videos adhering to control signals is an important challenge for embodie"
+    },
+    {
+      "term": "video generation",
+      "locator": "2 Related Work ¶ S2.p1",
+      "section_index": 2,
+      "char_start": 37,
+      "snippet": "Foundation Video Models. Large-scale video generation has rapidly advanced through diffusion and transformer-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 . Recent systems emphasize improved temporal consistency, stronger video autoencoders, and scalable"
+    },
+    {
+      "term": "video generation",
+      "locator": "2 Related Work ¶ S2.p1",
+      "section_index": 2,
+      "char_start": 368,
+      "snippet": "-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 . Recent systems emphasize improved temporal consistency, stronger video autoencoders, and scalable denoising transformers, enabling high-quality image-to-video generation at large model sizes. However, these models are primarily designed for visual realism and prompt adherence ; they typically provide only coarse control signals like text, style 33 , or sparse conditioning and do not natively support precise low-level action i"
+    },
+    {
+      "term": "video generation",
+      "locator": "2 Related Work ¶ S2.p2",
+      "section_index": 2,
+      "char_start": 1311,
+      "snippet": "2 : The proposed architecture. A pretrained diffusion backbone generates video latents conditioned on IMU actions. A frozen physics probe evaluates latent motion consistency and provides supervision during LoRA finetuning. Action-Conditioned and Controllable Video Generation. A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 . Th"
+    },
+    {
+      "term": "video generation",
+      "locator": "2 Related Work ¶ S2.p2",
+      "section_index": 2,
+      "char_start": 1361,
+      "snippet": "sion backbone generates video latents conditioned on IMU actions. A frozen physics probe evaluates latent motion consistency and provides supervision during LoRA finetuning. Action-Conditioned and Controllable Video Generation. A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 . These approaches can provide meaningful steering, bu"
+    },
+    {
+      "term": "world model",
+      "locator": "2 Related Work ¶ S2.p3",
+      "section_index": 2,
+      "char_start": 2602,
+      "snippet": "ronment (real or simulated) for interaction. Aero-World is complementary: it focuses on learning an action-conditioned visual generator that produces aerial video sequences aligned with 6-DoF control inputs. Combining VLA policies with controllable generative world models is a promising direction for scalable embodied agent training 22 ; 26 ; 10 ."
+    },
+    {
+      "term": "temporal consistency",
+      "locator": "2 Related Work ¶ S2.p1",
+      "section_index": 2,
+      "char_start": 249,
+      "snippet": "Foundation Video Models. Large-scale video generation has rapidly advanced through diffusion and transformer-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 . Recent systems emphasize improved temporal consistency, stronger video autoencoders, and scalable denoising transformers, enabling high-quality image-to-video generation at large model sizes. However, these models are primarily designed for visual realism and prompt adherence ; they typically provide only coarse"
+    },
+    {
+      "term": "action-conditioned",
+      "locator": "2 Related Work ¶ S2.p2",
+      "section_index": 2,
+      "char_start": 1275,
+      "snippet": "ore action-consistent motion. Figure 2 : The proposed architecture. A pretrained diffusion backbone generates video latents conditioned on IMU actions. A frozen physics probe evaluates latent motion consistency and provides supervision during LoRA finetuning. Action-Conditioned and Controllable Video Generation. A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate"
+    },
+    {
+      "term": "action-conditioned",
+      "locator": "2 Related Work ¶ S2.p3",
+      "section_index": 2,
+      "char_start": 2442,
+      "snippet": "tion sequences, often trained from large-scale demonstrations 18 ; 8 ; 25 ; 40 . While VLA models aim to produce actions, they typically assume an external environment (real or simulated) for interaction. Aero-World is complementary: it focuses on learning an action-conditioned visual generator that produces aerial video sequences aligned with 6-DoF control inputs. Combining VLA policies with controllable generative world models is a promising direction for scalable embodied agent training 22 ; 26 ; 10 ."
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "3 Methodology ¶ S3.p2",
+      "section_index": 3,
+      "char_start": 706,
+      "snippet": "raining videos without necessarily using the action signal; the denoising loss alone does not explicitly penalize action-motion mismatch. Aero-World therefore combines two mechanisms. First, an action-token stream embeds IMU commands and injects them into the diffusion transformer, giving the generator a low-level control interface. Second, a frozen latent-space Physics Probe provides a differentiable motion-consistency signal during finetuning. The probe is trained independently on real synchronized video–IMU pairs, then kept fixed so"
+    },
+    {
+      "term": "action-conditioned",
+      "locator": "3 Methodology > 3.1 Physics Probe ¶ S3.SS1.p4",
+      "section_index": 4,
+      "char_start": 1323,
+      "snippet": "ns over an axis-specific physical range . The bin label is (1) Binned supervision is used for two reasons. First, aggressive drone flight produces heavy-tailed IMU distributions, making direct regression sensitive to rare high-magnitude maneuvers. Second, for action-conditioned generation, the model mainly needs to recover the correct motion regime, such as accelerating, turning, or yawing, rather than sensor-grade IMU reconstruction. Given ground-truth bin labels , the probe is trained with (2) After training, is frozen. During gen"
+    },
+    {
+      "term": "diffusion transformer",
+      "locator": "4 Experiments > 4.1 Experimental Setup ¶ S4.SS1.p3",
+      "section_index": 7,
+      "char_start": 745,
+      "snippet": "II dataset. The resulting dataset contains 7k training clips, 1k validation clips, and 1k test clips. Physics probe training. The Physics Probe is trained using cached VAE latents paired with synchronized IMU sequences. We chose CogVideoX-1.5-5B I2V 33 as our diffusion transformer backbone. Its 3D VAE encoder is frozen and produces latent tensors with channels for clips of length . We train one lightweight probe per IMU axis because the six inertial dimensions have different dynamic ranges and class imbalance patterns. All probes are t"
+    },
+    {
+      "term": "physical consistency",
+      "locator": "4 Experiments > 4.2 Evaluation Metrics ¶ S4.SS2.p4",
+      "section_index": 8,
+      "char_start": 436,
+      "snippet": "in from VAE latents. Continuous IMU values are quantized as equation 1 . Actions are causally aligned by left-shifting the IMU sequence to match the transition . Given a generated video , the alignment score is We report per-axis AAS and the mean across axes. Physical Consistency Rate (PCR). While AAS measures bin-level alignment, it does not capture temporal stability. We therefore define PCR using first-order derivatives of probe-predicted IMU bins. For each axis , Let denote the probe-predicted IMU bin for axis at frame . We define"
+    },
+    {
+      "term": "action-conditioned",
+      "locator": "5 Conclusion ¶ S5.p1",
+      "section_index": 12,
+      "char_start": 321,
+      "snippet": "g pretrained video diffusion models to generate aerial videos conditioned on dense 6-DoF IMU trajectories. By combining explicit action conditioning with a frozen latent Physics Probe during LoRA finetuning, Aero-World improves inertial alignment over matched action-conditioned finetuning, with gains also reflected by an independent RGB-space Flow-IMU evaluator. These results suggest that frozen probe supervision is a practical way to make pretrained video generators more responsive to low-level aerial motion controls, while highlig"
+    }
+  ],
+  "citation_contexts": [
+    {
+      "section": "1 Introduction",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib7",
+        "bib.bib8",
+        "bib.bib9",
+        "bib.bib10",
+        "bib.bib11"
+      ],
+      "arxiv_ids": [
+        "2408.06072",
+        "2412.03603",
+        "2412.20404",
+        "2501.00103",
+        "2503.20314"
+      ],
+      "sentence": "Recent large-scale video diffusion models exhibit impressive perceptual realism 33 ; 9 ; 19 ; 38 ; 29 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib36",
+        "bib.bib37"
+      ],
+      "arxiv_ids": [
+        "2503.21755",
+        "2601.01528"
+      ],
+      "sentence": "However, in order to be a reliable proxy to real-world data or expensive simulations, these models need to possess action-faithfulness and physical consistency, where they are currently lacking 39 ; 37 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p1",
+      "bib_keys": [
+        "bib.bib21"
+      ],
+      "arxiv_ids": [],
+      "sentence": "This gap is more acute in aerial videos because an aerial object like drone operates in unconstrained 6 degree-of-freedom (6-DoF) space, and the translational and rotational dynamics of drones interact non-linearly 20 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib17",
+        "bib.bib18",
+        "bib.bib19",
+        "bib.bib20"
+      ],
+      "arxiv_ids": [
+        "2301.04104",
+        "2309.17080",
+        "2501.03575"
+      ],
+      "sentence": "In order to solve this, existing literature has introduced simple actions like forward, backwards, left, and right 5 ; 13 ; 1 ; 10 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib23",
+        "bib.bib22",
+        "bib.bib24"
+      ],
+      "arxiv_ids": [
+        "2510.14179"
+      ],
+      "sentence": "Another direction is to add camera parameters, optical flow, pose/depth guidance 15 ; 35 ; 32 to steer the video generation."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib38"
+      ],
+      "arxiv_ids": [
+        "2604.01001"
+      ],
+      "sentence": "However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib39"
+      ],
+      "arxiv_ids": [
+        "2604.21686"
+      ],
+      "sentence": "However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p2",
+      "bib_keys": [
+        "bib.bib40"
+      ],
+      "arxiv_ids": [
+        "2509.17125"
+      ],
+      "sentence": "However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p3",
+      "bib_keys": [
+        "bib.bib1",
+        "bib.bib35"
+      ],
+      "arxiv_ids": [
+        "2411.02385",
+        "2501.09038"
+      ],
+      "sentence": "Recent literature has also confirmed that scaling up data and the model does not correlate well with action adherence 16 ; 24 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p3",
+      "bib_keys": [
+        "bib.bib25",
+        "bib.bib26",
+        "bib.bib27"
+      ],
+      "arxiv_ids": [
+        "2307.06942"
+      ],
+      "sentence": "The low-level 6-DoF inertial signals required for control, namely linear acceleration and angular velocity, are rarely observed as supervision in natural video corpora 23 ; 2 ; 30 ."
+    },
+    {
+      "section": "1 Introduction",
+      "para": "S1.p7",
+      "bib_keys": [
+        "bib.bib6",
+        "bib.bib3"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We train on synchronized frames with IMU sequences from drone flight datasets 4 ; 7 , where high angular velocities and rapid vertical transitions stress temporal coherence."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib7",
+        "bib.bib8",
+        "bib.bib9",
+        "bib.bib11"
+      ],
+      "arxiv_ids": [
+        "2408.06072",
+        "2412.03603",
+        "2501.00103",
+        "2503.20314"
+      ],
+      "sentence": "Large-scale video generation has rapidly advanced through diffusion and transformer-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib7"
+      ],
+      "arxiv_ids": [
+        "2408.06072"
+      ],
+      "sentence": "However, these models are primarily designed for visual realism and prompt adherence ; they typically provide only coarse control signals like text, style 33 , or sparse conditioning and do not natively support precise low-level action inputs required for robotics control."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib8"
+      ],
+      "arxiv_ids": [
+        "2501.00103"
+      ],
+      "sentence": "Models such as LTX-Video 9 exemplify this trend: strong long-horizon generation with limited fine-grained controllability 38 ; 3 ; 21 ; 28 ; 27 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p1",
+      "bib_keys": [
+        "bib.bib10",
+        "bib.bib12",
+        "bib.bib13",
+        "bib.bib14",
+        "bib.bib15"
+      ],
+      "arxiv_ids": [
+        "2209.14792",
+        "2210.02399",
+        "2311.15127",
+        "2401.03048",
+        "2412.20404"
+      ],
+      "sentence": "Models such as LTX-Video 9 exemplify this trend: strong long-horizon generation with limited fine-grained controllability 38 ; 3 ; 21 ; 28 ; 27 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p2",
+      "bib_keys": [
+        "bib.bib24"
+      ],
+      "arxiv_ids": [
+        "2510.14179"
+      ],
+      "sentence": "A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p2",
+      "bib_keys": [
+        "bib.bib23"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p2",
+      "bib_keys": [
+        "bib.bib28"
+      ],
+      "arxiv_ids": [
+        "2308.08089"
+      ],
+      "sentence": "A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p2",
+      "bib_keys": [
+        "bib.bib22",
+        "bib.bib21",
+        "bib.bib2"
+      ],
+      "arxiv_ids": [],
+      "sentence": "A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p3",
+      "bib_keys": [
+        "bib.bib31",
+        "bib.bib30",
+        "bib.bib32",
+        "bib.bib29"
+      ],
+      "arxiv_ids": [
+        "2205.06175",
+        "2303.03378",
+        "2406.09246"
+      ],
+      "sentence": "Vision-language-action (VLA) models and embodied foundation models learn to map sensory observations and language to action sequences, often trained from large-scale demonstrations 18 ; 8 ; 25 ; 40 ."
+    },
+    {
+      "section": "2 Related Work",
+      "para": "S2.p3",
+      "bib_keys": [
+        "bib.bib33",
+        "bib.bib34",
+        "bib.bib20"
+      ],
+      "arxiv_ids": [
+        "2301.04104",
+        "2503.02572",
+        "2601.13809"
+      ],
+      "sentence": "Combining VLA policies with controllable generative world models is a promising direction for scalable embodied agent training 22 ; 26 ; 10 ."
+    },
+    {
+      "section": "4 Experiments > 4.1 Experimental Setup",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib3",
+        "bib.bib4",
+        "bib.bib5"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We use the UZH FPV drone racing dataset 7 ; 6 ; 17 and the TII drone racing dataset 4 , both providing synchronized RGB video and IMU measurements."
+    },
+    {
+      "section": "4 Experiments > 4.1 Experimental Setup",
+      "para": "S4.SS1.p1",
+      "bib_keys": [
+        "bib.bib6"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We use the UZH FPV drone racing dataset 7 ; 6 ; 17 and the TII drone racing dataset 4 , both providing synchronized RGB video and IMU measurements."
+    },
+    {
+      "section": "4 Experiments > 4.1 Experimental Setup",
+      "para": "S4.SS1.p3",
+      "bib_keys": [
+        "bib.bib7"
+      ],
+      "arxiv_ids": [
+        "2408.06072"
+      ],
+      "sentence": "We chose CogVideoX-1.5-5B I2V 33 as our diffusion transformer backbone."
+    },
+    {
+      "section": "4 Experiments > 4.1 Experimental Setup",
+      "para": "S4.SS1.p5",
+      "bib_keys": [
+        "bib.bib16"
+      ],
+      "arxiv_ids": [],
+      "sentence": "We finetune the diffusion backbone using Low-Rank Adaptation (LoRA) 14 , keeping the pretrained model and the Physics Probe frozen."
+    },
+    {
+      "section": "4 Experiments > 4.3 Quantitative Results",
+      "para": "S4.SS3.p2",
+      "bib_keys": [
+        "bib.bib2"
+      ],
+      "arxiv_ids": [],
+      "sentence": "Aero-World gives a better usable trade-off than AirScape 36 : lower FVD, higher SSIM, higher AAS, and higher Flow-IMU."
+    },
+    {
+      "section": "4 Experiments > 4.3 Quantitative Results",
+      "para": "S4.SS3.p3",
+      "bib_keys": [
+        "bib.bib19"
+      ],
+      "arxiv_ids": [
+        "2501.03575"
+      ],
+      "sentence": "We observe cosmos 1 having similar temporal stability, but worse visual fidelity as well as action alignment."
+    }
+  ],
+  "reference_hints": [
+    {
+      "arxiv_id": "2411.02385",
+      "snippet": "Kang et al. (2024) B. Kang, Y. Yue, R. Lu, Z. Lin, Y. Zhao, K. Wang, G. Huang, and J. Feng How far is video generation from world model: a physical law perspective . arXiv preprint arXiv:2411.02385 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2412.20404",
+      "snippet": "Zheng et al. (2024) Z. Zheng, X. Peng, T. Yang, C. Shen, S. Li, H. Liu, Y. Zhou, T. Li, and Y. You Open-sora: democratizing efficient video production for all . arXiv preprint arXiv:2412.20404 . Cited by: §1 , §2 ."
+    },
+    {
+      "arxiv_id": "2503.20314",
+      "snippet": "Wan et al. (2025) T. Wan, A. Wang, B. Ai, B. Wen, C. Mao, C. Xie, D. Chen, F. Yu, H. Zhao, J. Yang, et al. Wan: open and advanced large-scale video generative models . arXiv preprint arXiv:2503.20314 . Cited by: §1 , §2 ."
+    },
+    {
+      "arxiv_id": "2311.15127",
+      "snippet": "Blattmann et al. (2023) A. Blattmann, T. Dockhorn, S. Kulal, D. Mendelevitch, M. Kilian, D. Lorenz, Y. Levi, Z. English, V. Voleti, A. Letts, et al. Stable video diffusion: scaling latent video diffusion models to large datasets . arXiv preprint arXiv:2311.15127 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2401.03048",
+      "snippet": "Ma et al. (2024) X. Ma, Y. Wang, X. Chen, G. Jia, Z. Liu, Y. Li, C. Chen, and Y. Qiao Latte: latent diffusion transformer for video generation . arXiv preprint arXiv:2401.03048 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2210.02399",
+      "snippet": "Villegas et al. (2022) R. Villegas, M. Babaeizadeh, P. Kindermans, H. Moraldo, H. Zhang, M. T. Saffar, S. Castro, J. Kunze, and D. Erhan Phenaki: variable length video generation from open domain textual description . arXiv preprint arXiv:2210.02399 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2209.14792",
+      "snippet": "Singer et al. (2022) U. Singer, A. Polyak, T. Hayes, X. Yin, J. An, S. Zhang, Q. Hu, H. Yang, O. Ashual, O. Gafni, et al. Make-a-video: text-to-video generation without text-video data . arXiv preprint arXiv:2209.14792 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2309.17080",
+      "snippet": "Hu et al. (2023) A. Hu, L. Russell, H. Yeo, Z. Murez, G. Fedoseev, A. Kendall, J. Shotton, and G. Corrado Gaia-1: a generative world model for autonomous driving . arXiv preprint arXiv:2309.17080 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2501.03575",
+      "snippet": "Agarwal et al. (2025) N. Agarwal, A. Ali, M. Bala, Y. Balaji, E. Barker, T. Cai, P. Chattopadhyay, Y. Chen, Y. Cui, Y. Ding, et al. Cosmos world foundation model platform for physical ai . arXiv preprint arXiv:2501.03575 . Cited by: §1 , §4.3 ."
+    },
+    {
+      "arxiv_id": "2301.04104",
+      "snippet": "Hafner et al. (2023) D. Hafner, J. Pasukonis, J. Ba, and T. Lillicrap Mastering diverse domains through world models . arXiv preprint arXiv:2301.04104 . Cited by: §1 , §2 ."
+    },
+    {
+      "arxiv_id": "2510.14179",
+      "snippet": "Xu et al. (2025) Y. Xu, W. Xian, L. Ma, J. Philip, A. L. Taşel, Y. Zhao, R. Burgert, M. He, O. Hermann, O. Pilarski, et al. Virtually being: customizing camera-controllable video diffusion models with multi-view performance captures . arXiv preprint arXiv:2510.14179 . Cited by: §1 , §2 ."
+    },
+    {
+      "arxiv_id": "2307.06942",
+      "snippet": "Wang et al. (2023) Y. Wang, Y. He, Y. Li, K. Li, J. Yu, X. Ma, X. Li, G. Chen, X. Chen, Y. Wang, et al. Internvid: a large-scale video-text dataset for multimodal understanding and generation . arXiv preprint arXiv:2307.06942 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2308.08089",
+      "snippet": "Yin et al. (2023) S. Yin, C. Wu, J. Liang, J. Shi, H. Li, G. Ming, and N. Duan Dragnuwa: fine-grained control in video generation by integrating text, image, and trajectory . arXiv preprint arXiv:2308.08089 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2303.03378",
+      "snippet": "Driess et al. (2023) D. Driess, F. Xia, M. S. Sajjadi, C. Lynch, A. Chowdhery, B. Ichter, A. Wahid, J. Tompson, Q. Vuong, T. Yu, et al. Palm-e: an embodied multimodal language model . arXiv preprint arXiv:2303.03378 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2406.09246",
+      "snippet": "Kim et al. (2024) M. J. Kim, K. Pertsch, S. Karamcheti, T. Xiao, A. Balakrishna, S. Nair, R. Rafailov, E. Foster, G. Lam, P. Sanketi, et al. Openvla: an open-source vision-language-action model . arXiv preprint arXiv:2406.09246 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2205.06175",
+      "snippet": "Reed et al. (2022) S. Reed, K. Zolna, E. Parisotto, S. G. Colmenarejo, A. Novikov, G. Barth-Maron, M. Gimenez, Y. Sulsky, J. Kay, J. T. Springenberg, et al. A generalist agent . arXiv preprint arXiv:2205.06175 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2601.13809",
+      "snippet": "Mehboob et al. (2026) F. Mehboob, M. James, A. Habel, J. Sam, M. A. Cabrera, and D. Tsetserukou DroneVLA: vla based aerial manipulation . arXiv preprint arXiv:2601.13809 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2503.02572",
+      "snippet": "Serpiva et al. (2025) V. Serpiva, A. Lykov, A. Myshlyaev, M. H. Khan, A. A. Abdulkarim, O. Sautenkov, and D. Tsetserukou RaceVLA: vla-based racing drone navigation with human-like behaviour . arXiv preprint arXiv:2503.02572 . Cited by: §2 ."
+    },
+    {
+      "arxiv_id": "2501.09038",
+      "snippet": "Motamed et al. (2025) S. Motamed, L. Culp, K. Swersky, P. Jaini, and R. Geirhos Do generative video models understand physical principles? . arXiv preprint arXiv:2501.09038 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2601.01528",
+      "snippet": "Zhou et al. (2026) Y. Zhou, H. Shao, L. Wang, Z. Zong, H. Li, and S. L. Waslander DrivingGen: a comprehensive benchmark for generative video world models in autonomous driving . arXiv preprint arXiv:2601.01528 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2503.21755",
+      "snippet": "Zheng et al. (2025) D. Zheng, Z. Huang, H. Liu, K. Zou, Y. He, F. Zhang, L. Gu, Y. Zhang, J. He, W. Zheng, et al. Vbench-2.0: advancing video generation benchmark suite for intrinsic faithfulness . arXiv preprint arXiv:2503.21755 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2604.01001",
+      "snippet": "Hao et al. (2026) J. Hao, M. Jia, R. Wang, X. Liu, R. Yi, L. Ma, J. Pang, and X. Xu EgoSim: egocentric world simulator for embodied interaction generation . arXiv preprint arXiv:2604.01001 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2604.21686",
+      "snippet": "Xu et al. (2026) X. Xu, Z. Lin, K. He, Y. Feng, X. Mao, Y. Yin, K. Zhang, and Y. Ge WorldMark: a unified benchmark suite for interactive video world models . arXiv preprint arXiv:2604.21686 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2509.17125",
+      "snippet": "Heng et al. (2025) L. Heng, J. Xu, Y. Wang, X. Li, M. Cai, Y. Shen, J. Zhu, G. Ren, and H. Dong Imagine2Act: leveraging object-action motion consistency from imagined goals for robotic manipulation . arXiv preprint arXiv:2509.17125 . Cited by: §1 ."
+    },
+    {
+      "arxiv_id": "2408.06072",
+      "snippet": "Yang et al. (2024) Z. Yang, J. Teng, W. Zheng, M. Ding, S. Huang, J. Xu, Y. Yang, W. Hong, X. Zhang, G. Feng, et al. Cogvideox: text-to-video diffusion models with an expert transformer . arXiv preprint arXiv:2408.06072 . Cited by: §1 , §2 , §4.1 ."
+    },
+    {
+      "arxiv_id": "2501.00103",
+      "snippet": "HaCohen et al. (2024) Y. HaCohen, N. Chiprut, B. Brazowski, D. Shalem, D. Moshe, E. Richardson, E. Levin, G. Shiran, N. Zabari, O. Gordon, et al. Ltx-video: realtime video latent diffusion . arXiv preprint arXiv:2501.00103 . Cited by: §1 , §2 ."
+    },
+    {
+      "arxiv_id": "2412.03603",
+      "snippet": "Kong et al. (2024) W. Kong, Q. Tian, Z. Zhang, R. Min, Z. Dai, J. Zhou, J. Xiong, X. Li, B. Wu, J. Zhang, et al. Hunyuanvideo: a systematic framework for large video generative models . arXiv preprint arXiv:2412.03603 . Cited by: §1 , §2 ."
+    }
+  ],
+  "text": "## Abstract\nAbstract Foundation video models produce visually impressive results, but their use in embodied AI remains limited because they are primarily trained on natural language rather than low-level control signals. This limitation is especially pronounced for aerial flight, where motion occurs in unconstrained 6-DoF space and small errors in ego-motion can produce large trajectory drift. Generating aerial videos that follow fine-grained inertial actions can support scalable training and evaluation of aerial agents by providing a controllable proxy for real-world or expensive simulation data. To address this problem, we propose Aero-World , a method for converting a pretrained image-to-video diffusion model into a controllable aerial video generator. Aero-World injects sequences of translational acceleration and angular velocity into a pretrained latent diffusion transformer through an action-token stream. A frozen latent-space Physics Probe, trained independently on real video–IMU pairs, provides differentiable inertial-consistency supervision during LoRA finetuning while avoiding computationally expensive video decoding. We further propose AeroBench , a benchmark for evaluating whether generated drone videos adhere to low-level action signals. AeroBench uses Action Alignment Score (AAS) to measure agreement with commanded inertial actions and Physical Consistency Rate (PCR) to measure temporal motion stability. On AeroBench, Aero-World improves mean AAS from 57.7 to 63.6 over action-only finetuning and gives a stronger quality-control trade-off than AirScape, with lower FVD (596.5 vs. 1058.6), higher SSIM (0.595 vs. 0.505), and higher Flow-IMU correlation (0.44 vs. 0.20). These results suggest that frozen Physics Probe supervision is a practical mechanism for adapting pretrained video generators toward more action-aligned aerial motion.\n\n## 1 Introduction\nRecent large-scale video diffusion models exhibit impressive perceptual realism 33 ; 9 ; 19 ; 38 ; 29 . These models hold the potential to become simulators for embodied agents, which can be utilized for learning policies. However, in order to be a reliable proxy to real-world data or expensive simulations, these models need to possess action-faithfulness and physical consistency, where they are currently lacking 39 ; 37 . This gap is more acute in aerial videos because an aerial object like drone operates in unconstrained 6 degree-of-freedom (6-DoF) space, and the translational and rotational dynamics of drones interact non-linearly 20 . Small errors in roll or pitch induce large spatial drift, and aggressive maneuvers amplify temporal inconsistency. A video model which can produce action-faithful aerial videos thus provides a critical benefit: the ability to safely and scalably train robust control policies entirely in software, reducing cost of operating in extreme environments. Figure 1 : (a) Standard Approach: Language-conditioned video models generate plausible motion without explicit action grounding. (b) Aero-World: injects latent-space physics supervision and 6-DoF IMU conditioning into a pretrained diffusion backbone. (c) The result is stable, action-faithful aerial motion, even in out-of-distribution scenes. In order to solve this, existing literature has introduced simple actions like forward, backwards, left, and right 5 ; 13 ; 1 ; 10 . But this framing has one issue, where there is no way to increase the actuation forces, meaning there is no way to rapidly increase or decrease speed in the ego-motion videos, which is prevalent in most drone flights. Another direction is to add camera parameters, optical flow, pose/depth guidance 15 ; 35 ; 32 to steer the video generation. However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 . Recent literature has also confirmed that scaling up data and the model does not correlate well with action adherence 16 ; 24 . Obtaining annotations for aerial videos is also very difficult and costly. This is why most pretraining corpora consists primarily of captioned videos rather than paired control signals such as linear acceleration and angular velocity. The low-level 6-DoF inertial signals required for control, namely linear acceleration and angular velocity, are rarely observed as supervision in natural video corpora 23 ; 2 ; 30 . Thus, scaling primarily improves visual realism, not low-level controllability, motivating explicit action-consistency supervision during adaptation. To summarize, we have identified generating aerial videos adhering to control signals is an important challenge for embodied AI. We aim to solve this problem leveraging the existing visual knowledge of video generation models. Rather than retraining a video generation model from scratch, we propose a physics probe-regularized conversion mechanism that reshapes the latent dynamics of a pretrained video diffusion model through inertial-consistency supervision. Because inertial trajectories describe platform-level motion rather than drone-specific motor commands, they provide a control interface that is less tied to a particular actuator model. This also addresses the lack of fine-grained control like rapidly increasing or reducing speed. Working in latent space also means there is no need for heavy decoding during finetuning. Our key idea is to introduce a frozen physics probe that estimates 6-DoF inertial signals (linear acceleration, and angular velocity) from generated video latents, providing a data-driven surrogate for enforcing motion consistency during finetuning. During finetuning, the generator is encouraged to produce motion that matches the commanded inertial sequence by penalizing discrepancies between probe-inferred motion and the input actions. Importantly, the probe is trained independently on real video–IMU pairs and remains frozen during generator adaptation, providing a stable supervision signal without modifying the pretrained DiT backbone. This mechanism can be attached to any existing diffusion video models with minimal architectural changes, enabling them to generate IMU-conditioned aerial videos while preserving the visual priors learned from large-scale video pretraining. Our approach, illustrated in Fig. 2 , instantiates this conversion on a pretrained diffusion video backbone. We train on synchronized frames with IMU sequences from drone flight datasets 4 ; 7 , where high angular velocities and rapid vertical transitions stress temporal coherence. By injecting action embeddings and applying latent-space inertial-consistency regularization, the model learns to respect 6-DoF motion constraints while preserving perceptual realism inherited from large-scale pretraining. We evaluate this framework on our proposed AeroBench , a new benchmark designed for action-conditioned aerial generation. To quantify controllability, we introduce the Action Alignment Score (AAS) , which measures bin-level agreement between commanded IMU actions and probe-inferred motion, and the Physical Consistency Rate (PCR) , which captures frame-to-frame oscillatory instability. Our contributions are: • Inertia-Guided Adaptation: A method for adapting a pretrained diffusion video backbone for IMU-conditioned aerial video generation using latent-space inertial supervision. • Physics Probe Supervision: A frozen differentiable probe that encourages action–motion consistency during lightweight LoRA finetuning. • AeroBench and Metrics: A benchmark with AAS and PCR for evaluating 6-DoF action alignment and temporal stability in action-conditioned aerial video generation.\n\n## 2 Related Work\nFoundation Video Models. Large-scale video generation has rapidly advanced through diffusion and transformer-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 . Recent systems emphasize improved temporal consistency, stronger video autoencoders, and scalable denoising transformers, enabling high-quality image-to-video generation at large model sizes. However, these models are primarily designed for visual realism and prompt adherence ; they typically provide only coarse control signals like text, style 33 , or sparse conditioning and do not natively support precise low-level action inputs required for robotics control. Models such as LTX-Video 9 exemplify this trend: strong long-horizon generation with limited fine-grained controllability 38 ; 3 ; 21 ; 28 ; 27 . These models nevertheless provide strong visual priors, which motivates our approach: rather than training a generator from scratch, we adapt a pretrained video model and guide it toward more action-consistent motion. Figure 2 : The proposed architecture. A pretrained diffusion backbone generates video latents conditioned on IMU actions. A frozen physics probe evaluates latent motion consistency and provides supervision during LoRA finetuning. Action-Conditioned and Controllable Video Generation. A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 . These approaches can provide meaningful steering, but often require additional sensors or annotations, and may not align with the control interfaces used in robotics like IMU-derived 6-DoF velocities. In contrast, Aero-World directly conditions on 6-DoF inertial actions and optimizes the generator to reflect those actions in its visual motion, enabling a control interface that is compatible with embodied agents. Vision-Language-Action Models and Embodied Foundation Models. Vision-language-action (VLA) models and embodied foundation models learn to map sensory observations and language to action sequences, often trained from large-scale demonstrations 18 ; 8 ; 25 ; 40 . While VLA models aim to produce actions, they typically assume an external environment (real or simulated) for interaction. Aero-World is complementary: it focuses on learning an action-conditioned visual generator that produces aerial video sequences aligned with 6-DoF control inputs. Combining VLA policies with controllable generative world models is a promising direction for scalable embodied agent training 22 ; 26 ; 10 .\n\n## 3 Methodology\nOverview. We study the problem of converting a pretrained image-to-video latent diffusion model into an aerial video generator controlled by dense inertial commands. Given an initial frame and a 30Hz action sequence where contains translational acceleration and angular velocity, the goal is to generate a rollout whose ego-motion follows the commanded inertial trajectory. A key difficulty is that standard diffusion finetuning can reconstruct training videos without necessarily using the action signal; the denoising loss alone does not explicitly penalize action-motion mismatch. Aero-World therefore combines two mechanisms. First, an action-token stream embeds IMU commands and injects them into the diffusion transformer, giving the generator a low-level control interface. Second, a frozen latent-space Physics Probe provides a differentiable motion-consistency signal during finetuning. The probe is trained independently on real synchronized video–IMU pairs, then kept fixed so that generator adaptation is guided by an external inertial evaluator rather than a co-adapted loss network. At inference time, the probe is discarded and the model generates videos using only the initial frame and IMU action sequence.\n\n## 3.1 Physics Probe\nThe Physics Probe is a frozen latent-space evaluator that maps video motion to inertial states. Its purpose is not to replace the generator, but to provide a differentiable training signal indicating whether the generated latent trajectory contains motion consistent with the commanded IMU sequence. We train the probe before generator finetuning using only real synchronized video–IMU pairs. Let denote the latent tensor produced by the frozen video autoencoder. For each IMU axis , a lightweight probe predicts per-timestep logits over discretized inertial bins. We use axis-specific prediction heads because the six inertial dimensions have different dynamic ranges and class imbalance patterns. The probe architecture consists of lightweight 3D convolutional layers over latent space, global spatial pooling, and an MLP classifier. The 3D convolutions preserve local spatio-temporal inductive bias while avoiding the cost of decoding generated videos back to RGB during finetuning. Rather than regressing continuous IMU values, we discretize each axis into bins over an axis-specific physical range . The bin label is (1) Binned supervision is used for two reasons. First, aggressive drone flight produces heavy-tailed IMU distributions, making direct regression sensitive to rare high-magnitude maneuvers. Second, for action-conditioned generation, the model mainly needs to recover the correct motion regime, such as accelerating, turning, or yawing, rather than sensor-grade IMU reconstruction. Given ground-truth bin labels , the probe is trained with (2) After training, is frozen. During generator adaptation, gradients are allowed to pass through to the generated latent prediction, but the probe parameters themselves are never updated.\n\n## 3.2 Probe-Regularized LoRA Finetuning\nWe adapt the pretrained diffusion backbone using Low-Rank Adaptation (LoRA), while keeping the original backbone weights and the Physics Probe frozen. The trainable components are the LoRA adapters and the action embedding layers. Each action vector is embedded by a lightweight MLP and injected into transformer blocks through cross-attention, providing a separate action-token stream in addition to visual and timestep conditioning. We use a causal action alignment: the command conditions the transition into frame . This shift is important because IMU measurements describe changes in motion between consecutive frames rather than the static appearance of the current frame. Without this alignment, the model may learn a temporally offset mapping between actions and visual motion. Given a real training clip , we encode it into clean latents , sample diffusion noise and timestep , and optimize the standard denoising loss (3) with the final loss being . The denoising objective teaches the model to generate realistic aerial video latents, but does not by itself enforce that the generated motion uses the provided IMU commands. We therefore recover the denoised latent prediction from the model output and evaluate it with the frozen probe. The probe is applied to rather than the noisy latent because it was trained on clean VAE latents from real videos. For each IMU axis , the probe predicts logits , which are compared against the commanded action bin is same as equation 2 . This objective preserves the visual prior of the pretrained model through , while biases the LoRA update toward latent trajectories whose inferred inertial motion matches the input command. We use a warm-up stage with before enabling probe supervision, which stabilizes training by first teaching the newly introduced action pathway to interact with the pretrained backbone.\n\n## 4 Experiments\nWe evaluate Aero-World in terms of visual fidelity, action alignment, and temporal stability. This section first describes the experimental setup and training configuration, then we introduce our AeroBench benchmark, followed by the evaluation metrics and both quantitative and qualitative results.\n\n## 4.1 Experimental Setup\nDataset. We use the UZH FPV drone racing dataset 7 ; 6 ; 17 and the TII drone racing dataset 4 , both providing synchronized RGB video and IMU measurements. We focus on FPV footage to preserve raw ego-motion without camera stabilization artifacts. Videos are resampled to 30 Hz while IMU signals (originally 500 Hz) are temporally aligned to the video frames. Each sequence is clipped to 81 frames to match the diffusion context window and to reduce repetitive motion patterns in the TII dataset. The resulting dataset contains 7k training clips, 1k validation clips, and 1k test clips. Physics probe training. The Physics Probe is trained using cached VAE latents paired with synchronized IMU sequences. We chose CogVideoX-1.5-5B I2V 33 as our diffusion transformer backbone. Its 3D VAE encoder is frozen and produces latent tensors with channels for clips of length . We train one lightweight probe per IMU axis because the six inertial dimensions have different dynamic ranges and class imbalance patterns. All probes are trained using AdamW with learning rate and batch size 32 for 25 epochs under bfloat16 mixed precision. Model checkpoints are selected based on validation accuracy. Figure 3 : Physics Probe accuracy vs. baselines. Per-axis classification accuracy over discretized bins. The blue indicates the accuracy of choosing a random bin uniformly, the red indicates the accuracy if always the majority bin is chosen. The Physics Probe substantially outperforms both random and majority-bin baselines across all six axes. LoRA finetuning. We finetune the diffusion backbone using Low-Rank Adaptation (LoRA) 14 , keeping the pretrained model and the Physics Probe frozen. Training proceeds in two stages: a warm-up phase with for 10k steps, followed by joint optimization with . We also show sensitivity of and performance of different DiT backbones to show generalization in the supplementary material. The model is trained for 70k steps using 2 H100 GPUs with batch size 8 and 81-frame clips. All baselines use the same test split, initial frames, prompts, 81-frame horizon, and metric code; Cosmos is evaluated zero-shot, while AirScape is evaluated through its released motion-intention interface using the closest IMU-to-intention conversion without rejection sampling.\n\n## 4.2 Evaluation Metrics\nAction Alignment Score (AAS). Action-faithfulness is measured using a probe-based Action Alignment Score (AAS). For each IMU axis , a frozen probe predicts a -way discretized bin from VAE latents. Continuous IMU values are quantized as equation 1 . Actions are causally aligned by left-shifting the IMU sequence to match the transition . Given a generated video , the alignment score is We report per-axis AAS and the mean across axes. Physical Consistency Rate (PCR). While AAS measures bin-level alignment, it does not capture temporal stability. We therefore define PCR using first-order derivatives of probe-predicted IMU bins. For each axis , Let denote the probe-predicted IMU bin for axis at frame . We define Lower PCR indicates smoother probe-inferred inertial motion. PCR is defined as the mean absolute bin jump between consecutive frames; lower values indicate smoother motion.\n\n## 4.3 Quantitative Results\nWe evaluate Aero-World along two dimensions: visual fidelity and physical controllability. We test both visuals and physical controllability to show the trade-off between them. Visual fidelity. Figure 4 reports FVD and SSIM. Action finetune(FT) achieves the lowest FVD, but weaker controllability. AirScape obtains competitive AAS/PCR, but its videos are strongly off-distribution on AeroBench (FVD 1058.6, SSIM 0.505), so we do not interpret its control scores in isolation. Aero-World gives a better usable trade-off than AirScape 36 : lower FVD, higher SSIM, higher AAS, and higher Flow-IMU. Action alignment. As defined before, AAS measures how aligned the observed actions are with the given input action. Figure 5 (a) reports per-axis AAS. We observe that action conditioning enables measurable 6-DoF alignment, while physics supervision improves mean AAS from 57.67 to 63.62 . We observe cosmos 1 having similar temporal stability, but worse visual fidelity as well as action alignment. Temporal stability. Figure 5 (b) reports PCR. PCR measures how abruptly the probe-inferred inertial bins change between consecutive frames. A sudden change will mean jittery video or unrealistic trajectory. Physics supervision slightly reduces PCR (0.033 0.029), indicating smoother frame-to-frame dynamics. We see the PCR is marginally better for linear acceleration in x-axis for the variant without physics supervision suggesting that physics supervision does not uniformly improve smoothness across all motion axes. Figure 4 : Visual Fidelity Trade-off. While action-only finetuning achieves the lowest FVD, our physics-regularized model (Ours) maintains superior perceptual quality compared to base models and SOTA competitors like AirScape, without sacrificing structural similarity (SSIM). (a) Action Alignment Score (AAS) (b) Temporal Stability (PCR) (c) Independent Flow-IMU Validation Figure 5 : Quantitative Benchmarking. Aero-World (Ours) improves mean action alignment and independent RGB-space Flow-IMU correlation, while maintaining low temporal instability compared with action-only finetuning.\n\n## 4.4 Auxiliary Independent Flow-IMU Validation\nTo reduce probe-circularity, we introduce Flow-IMU, an independent RGB-space evaluator that maps decoded optical-flow features to 6-DoF IMU signals using a ridge regressor trained only on real video-IMU pairs. It shares no architecture with the latent probe and is never used during generator finetuning. Since monocular RGB-to-IMU estimation is ill-posed, Flow-IMU is a relative proxy rather than sensor-grade reconstruction. Figure 5 (c) shows that Aero-World achieves the highest mean Flow-IMU correlation (0.44), outperforming Action FT (0.30) and AirScape (0.20). AirScape has negative correlations on several axes, whereas Aero-World is positive on all six axes, suggesting that AAS gains also appear in decoded RGB motion.\n\n## 4.5 Qualitative Results\nFor qualitative results, we show both results from our validation set and from unseen images. Out-of-distribution scenes. Figure 6(a) demonstrate generation in unseen environments. Despite the novel scene distribution, Aero-World preserves stable ego-motion and action-faithful dynamics. (a) Out-of-distribution action-controlled flight. Prompt: “A drone surging forward fast then swaying left aggressively.” Rows correspond to model variants: Top: caption-conditioned backbone, Middle: action-only finetuning, Bottom: Aero-World. (b) In-distribution action-controlled flight. Seven uniformly spaced frames from 81-frame validation rollouts. The top row shows the ground-truth video, while the generated sequence follows the commanded inertial trajectory. Figure 6 : Qualitative action-controlled flight results. We show seven uniformly spaced frames from 81-frame rollouts. Aero-World produces stable, action-faithful motion in both unseen environments and validation-set maneuvers. Full prompts and videos are provided in the supplementary material. In-distribution maneuvers. Figure 6(b) show validation roll-outs under complex action prompts. The generated trajectories follow the commanded inertial signals while maintaining stable orientation. Full-resolution videos and additional prompts are provided in the supplementary material , as well as details of converting the IMU values into meaningful captions.\n\n## 5 Conclusion\nWe presented Aero-World , a lightweight framework for adapting pretrained video diffusion models to generate aerial videos conditioned on dense 6-DoF IMU trajectories. By combining explicit action conditioning with a frozen latent Physics Probe during LoRA finetuning, Aero-World improves inertial alignment over matched action-conditioned finetuning, with gains also reflected by an independent RGB-space Flow-IMU evaluator. These results suggest that frozen probe supervision is a practical way to make pretrained video generators more responsive to low-level aerial motion controls, while highlighting a remaining fidelity-control trade-off for future work.",
+  "quality": {
+    "grade": "high",
+    "text_chars": 23706,
+    "structure": "latexml"
+  },
+  "extraction_method": "html-latexml",
+  "source_format": "html",
+  "evidence_eligible": true,
+  "needs_visual_validation": false,
+  "selected_passages": [
+    {
+      "section_index": 2,
+      "path": "2 Related Work",
+      "score": 8.328,
+      "hits": 8,
+      "matched_terms": [
+        "action-conditioned",
+        "temporal consistency",
+        "video generation",
+        "world model"
+      ],
+      "text": "Foundation Video Models. Large-scale video generation has rapidly advanced through diffusion and transformer-based architectures, producing long, high-fidelity samples from text and image prompts 33 ; 9 ; 19 ; 29 . Recent systems emphasize improved temporal consistency, stronger video autoencoders, and scalable denoising transformers, enabling high-quality image-to-video generation at large model sizes. However, these models are primarily designed for visual realism and prompt adherence ; they typically provide only coarse control signals like text, style 33 , or sparse conditioning and do not natively support precise low-level action inputs required for robotics control. Models such as LTX-Video 9 exemplify this trend: strong long-horizon generation with limited fine-grained controllability 38 ; 3 ; 21 ; 28 ; 27 . These models nevertheless provide strong visual priors, which motivates our approach: rather than training a generator from scratch, we adapt a pretrained video model and guide it toward more action-consistent motion. Figure 2 : The proposed architecture. A pretrained diffusion backbone generates video latents conditioned on IMU actions. A frozen physics probe evaluates latent motion consistency and provides supervision during LoRA finetuning. Action-Conditioned and Controllable Video Generation. A growing body of work augments video generation with structured controls beyond text, including camera motion tokens 32 , depth/pose guidance 15 , keypoint trajectories 34 , optical-flow conditioning, and other intermediate representations 35 ; 20 ; 36 . These approaches can provide meaningful steering, but often require additional sensors or annotations, and may not align with the control interfaces used in robotics like IMU-derived 6-DoF velocities. In contrast, Aero-World directly conditions on 6-DoF inertial actions and optimizes the generator to reflect those actions in its visual motion, enabling a control interface that is compatible with embodied agents. Vision-Language-Action Models and Embodied Foundation Models. Vision-language-action (VLA) models and embodied foundation models learn to map sensory observations and language to action sequences, often trained from large-scale demonstrations 18 ; 8 ; 25 ; 40 . While VLA models aim to produce actions, they typically assume an external environment (real or simulated) for interaction. Aero-World is complementary: it focuses on learning an action-conditioned visual generator that produces aerial video sequences aligned with 6-DoF control inputs. Combining VLA policies with controllable generative world models is a promising direction for scalable embodied agent training 22 ; 26 ; 10 ."
+    },
+    {
+      "section_index": 1,
+      "path": "1 Introduction",
+      "score": 7.212,
+      "hits": 11,
+      "matched_terms": [
+        "action-conditioned",
+        "physical consistency",
+        "scaling",
+        "video generation"
+      ],
+      "text": "Recent large-scale video diffusion models exhibit impressive perceptual realism 33 ; 9 ; 19 ; 38 ; 29 . These models hold the potential to become simulators for embodied agents, which can be utilized for learning policies. However, in order to be a reliable proxy to real-world data or expensive simulations, these models need to possess action-faithfulness and physical consistency, where they are currently lacking 39 ; 37 . This gap is more acute in aerial videos because an aerial object like drone operates in unconstrained 6 degree-of-freedom (6-DoF) space, and the translational and rotational dynamics of drones interact non-linearly 20 . Small errors in roll or pitch induce large spatial drift, and aggressive maneuvers amplify temporal inconsistency. A video model which can produce action-faithful aerial videos thus provides a critical benefit: the ability to safely and scalably train robust control policies entirely in software, reducing cost of operating in extreme environments. Figure 1 : (a) Standard Approach: Language-conditioned video models generate plausible motion without explicit action grounding. (b) Aero-World: injects latent-space physics supervision and 6-DoF IMU conditioning into a pretrained diffusion backbone. (c) The result is stable, action-faithful aerial motion, even in out-of-distribution scenes. In order to solve this, existing literature has introduced simple actions like forward, backwards, left, and right 5 ; 13 ; 1 ; 10 . But this framing has one issue, where there is no way to increase the actuation forces, meaning there is no way to rapidly increase or decrease speed in the ego-motion videos, which is prevalent in most drone flights. Another direction is to add camera parameters, optical flow, pose/depth guidance 15 ; 35 ; 32 to steer the video generation. However, these controls often (i) rely on intermediate annotations or sensors not available to an embodied agent during training 11 , (ii) do not match the agent’s native control interface 31 , and (iii) typically lack a training-time objective that explicitly enforces action-motion consistency of ego-motion 12 . Recent literature has also confirmed that scaling up data and the model does not correlate well with action adherence 16 ; 24 . Obtaining annotations for aerial videos is also very difficult and costly. This is why most pretraining corpora consists primarily of captioned videos rather than paired control signals such as linear acceleration and angular velocity. The low-level 6-DoF inertial signals required for control, namely linear acceleration and angular velocity, are rarely observed as supervision in natural video corpora 23 ; 2 ; 30 . Thus, scaling primarily improves visual realism, not low-level controllability, motivating explicit action-consistency supervision during adaptation. To summarize, we have identified generating aerial videos adhering to control signals is an important challenge for embodied AI. We aim to solve this problem leveraging the existing visual knowledge of video generation models. Rather than retraining a video generation model from scratch, we propose a physics probe-regularized conversion mechanism that reshapes the latent dynamics of a pretrained video diffusion model through inertial-consistency supervision. Because inertial trajectories describe platform-level motion rather than drone-specific motor commands, they provide a control interface that is less tied to a particular actuator model. This also addresses the lack of fine-grained control like rapidly increasing or reducing speed. Working in latent space also means there is no need for heavy decoding during finetuning. Our key idea is to introduce a frozen physics probe that estimates 6-DoF inertial signals (linear acceleration, and angular velocity) from generated video latents, providing a data-driven surrogate for enforcing motion consistency during finetuning. During finetuning, the generator is encouraged to produce motion that matches the commanded inertial sequence by penalizing discrepancies between probe-inferred motion and the input actions. Importantly, the probe is trained independently on real video–IMU pairs and remains frozen during generator adaptation, providing a stable supervision signal without modifying the pretrained DiT backbone. This mechanism can be attached to any existing diffusion video models with minimal architectural changes, enabling them to generate IMU-conditioned aerial videos while preserving the visual priors learned from large-scale video pretraining. Our approach, illustrated in Fig. 2 , instantiates this conversion on a pretrained diffusion video backbone. We train on synchronized frames with IMU sequences from drone flight datasets 4 ; 7 , where high angular velocities and rapid vertical transitions stress temporal coherence. By injecting action embeddings and applying latent-space inertial-consistency regularization, the model learns to respect 6-DoF motion constraints while preserving perceptual realism inherited from large-scale pretraining. We evaluate this framework on our proposed AeroBench , a new benchmark designed for action-conditioned aerial generation. To quantify controllability, we introduce the Action Alignment Score (AAS) , which measures bin-level agreement between commanded IMU actions and probe-inferred motion, and the Physical Consistency Rate (PCR) , which captures frame-to-frame oscillatory instability. Our contributions are: • Inertia-Guided Adaptation: A method for adapting a pretrained diffusion video backbone for IMU-conditioned aerial video generation using latent-space inertial supervision. • Physics Probe Supervision: A frozen differentiable probe that encourages action–motion consistency during lightweight LoRA finetuning. • AeroBench and Metrics: A benchmark with AAS and PCR for evaluating 6-DoF action alignment and temporal stability in action-conditioned aerial video generation."
+    },
+    {
+      "section_index": 0,
+      "path": "Abstract",
+      "score": 3.546,
+      "hits": 2,
+      "matched_terms": [
+        "diffusion transformer",
+        "physical consistency"
+      ],
+      "text": "Abstract Foundation video models produce visually impressive results, but their use in embodied AI remains limited because they are primarily trained on natural language rather than low-level control signals. This limitation is especially pronounced for aerial flight, where motion occurs in unconstrained 6-DoF space and small errors in ego-motion can produce large trajectory drift. Generating aerial videos that follow fine-grained inertial actions can support scalable training and evaluation of aerial agents by providing a controllable proxy for real-world or expensive simulation data. To address this problem, we propose Aero-World , a method for converting a pretrained image-to-video diffusion model into a controllable aerial video generator. Aero-World injects sequences of translational acceleration and angular velocity into a pretrained latent diffusion transformer through an action-token stream. A frozen latent-space Physics Probe, trained independently on real video–IMU pairs, provides differentiable inertial-consistency supervision during LoRA finetuning while avoiding computationally expensive video decoding. We further propose AeroBench , a benchmark for evaluating whether generated drone videos adhere to low-level action signals. AeroBench uses Action Alignment Score (AAS) to measure agreement with commanded inertial actions and Physical Consistency Rate (PCR) to measure temporal motion stability. On AeroBench, Aero-World improves mean AAS from 57.7 to 63.6 over action-only finetuning and gives a stronger quality-control trade-off than AirScape, with lower FVD (596.5 vs. 1058.6), higher SSIM (0.595 vs. 0.505), and higher Flow-IMU correlation (0.44 vs. 0.20). These results suggest that frozen Physics Probe supervision is a practical mechanism for adapting pretrained video generators toward more action-aligned aerial motion."
+    },
+    {
+      "section_index": 12,
+      "path": "5 Conclusion",
+      "score": 2.328,
+      "hits": 1,
+      "matched_terms": [
+        "action-conditioned"
+      ],
+      "text": "We presented Aero-World , a lightweight framework for adapting pretrained video diffusion models to generate aerial videos conditioned on dense 6-DoF IMU trajectories. By combining explicit action conditioning with a frozen latent Physics Probe during LoRA finetuning, Aero-World improves inertial alignment over matched action-conditioned finetuning, with gains also reflected by an independent RGB-space Flow-IMU evaluator. These results suggest that frozen probe supervision is a practical way to make pretrained video generators more responsive to low-level aerial motion controls, while highlighting a remaining fidelity-control trade-off for future work."
+    },
+    {
+      "section_index": 8,
+      "path": "4 Experiments > 4.2 Evaluation Metrics",
+      "score": 2.183,
+      "hits": 1,
+      "matched_terms": [
+        "physical consistency"
+      ],
+      "text": "Action Alignment Score (AAS). Action-faithfulness is measured using a probe-based Action Alignment Score (AAS). For each IMU axis , a frozen probe predicts a -way discretized bin from VAE latents. Continuous IMU values are quantized as equation 1 . Actions are causally aligned by left-shifting the IMU sequence to match the transition . Given a generated video , the alignment score is We report per-axis AAS and the mean across axes. Physical Consistency Rate (PCR). While AAS measures bin-level alignment, it does not capture temporal stability. We therefore define PCR using first-order derivatives of probe-predicted IMU bins. For each axis , Let denote the probe-predicted IMU bin for axis at frame . We define Lower PCR indicates smoother probe-inferred inertial motion. PCR is defined as the mean absolute bin jump between consecutive frames; lower values indicate smoother motion."
+    },
+    {
+      "section_index": 3,
+      "path": "3 Methodology",
+      "score": 2.012,
+      "hits": 1,
+      "matched_terms": [
+        "diffusion transformer"
+      ],
+      "text": "Overview. We study the problem of converting a pretrained image-to-video latent diffusion model into an aerial video generator controlled by dense inertial commands. Given an initial frame and a 30Hz action sequence where contains translational acceleration and angular velocity, the goal is to generate a rollout whose ego-motion follows the commanded inertial trajectory. A key difficulty is that standard diffusion finetuning can reconstruct training videos without necessarily using the action signal; the denoising loss alone does not explicitly penalize action-motion mismatch. Aero-World therefore combines two mechanisms. First, an action-token stream embeds IMU commands and injects them into the diffusion transformer, giving the generator a low-level control interface. Second, a frozen latent-space Physics Probe provides a differentiable motion-consistency signal during finetuning. The probe is trained independently on real synchronized video–IMU pairs, then kept fixed so that generator adaptation is guided by an external inertial evaluator rather than a co-adapted loss network. At inference time, the probe is discarded and the model generates videos using only the initial frame and IMU action sequence."
+    },
+    {
+      "section_index": 4,
+      "path": "3 Methodology > 3.1 Physics Probe",
+      "score": 1.81,
+      "hits": 1,
+      "matched_terms": [
+        "action-conditioned"
+      ],
+      "text": "The Physics Probe is a frozen latent-space evaluator that maps video motion to inertial states. Its purpose is not to replace the generator, but to provide a differentiable training signal indicating whether the generated latent trajectory contains motion consistent with the commanded IMU sequence. We train the probe before generator finetuning using only real synchronized video–IMU pairs. Let denote the latent tensor produced by the frozen video autoencoder. For each IMU axis , a lightweight probe predicts per-timestep logits over discretized inertial bins. We use axis-specific prediction heads because the six inertial dimensions have different dynamic ranges and class imbalance patterns. The probe architecture consists of lightweight 3D convolutional layers over latent space, global spatial pooling, and an MLP classifier. The 3D convolutions preserve local spatio-temporal inductive bias while avoiding the cost of decoding generated videos back to RGB during finetuning. Rather than regressing continuous IMU values, we discretize each axis into bins over an axis-specific physical range . The bin label is (1) Binned supervision is used for two reasons. First, aggressive drone flight produces heavy-tailed IMU distributions, making direct regression sensitive to rare high-magnitude maneuvers. Second, for action-conditioned generation, the model mainly needs to recover the correct motion regime, such as accelerating, turning, or yawing, rather than sensor-grade IMU reconstruction. Given ground-truth bin labels , the probe is trained with (2) After training, is frozen. During generator adaptation, gradients are allowed to pass through to the generated latent prediction, but the probe parameters themselves are never updated."
+    },
+    {
+      "section_index": 7,
+      "path": "4 Experiments > 4.1 Experimental Setup",
+      "score": 1.655,
+      "hits": 1,
+      "matched_terms": [
+        "diffusion transformer"
+      ],
+      "text": "Dataset. We use the UZH FPV drone racing dataset 7 ; 6 ; 17 and the TII drone racing dataset 4 , both providing synchronized RGB video and IMU measurements. We focus on FPV footage to preserve raw ego-motion without camera stabilization artifacts. Videos are resampled to 30 Hz while IMU signals (originally 500 Hz) are temporally aligned to the video frames. Each sequence is clipped to 81 frames to match the diffusion context window and to reduce repetitive motion patterns in the TII dataset. The resulting dataset contains 7k training clips, 1k validation clips, and 1k test clips. Physics probe training. The Physics Probe is trained using cached VAE latents paired with synchronized IMU sequences. We chose CogVideoX-1.5-5B I2V 33 as our diffusion transformer backbone. Its 3D VAE encoder is frozen and produces latent tensors with channels for clips of length . We train one lightweight probe per IMU axis because the six inertial dimensions have different dynamic ranges and class imbalance patterns. All probes are trained using AdamW with learning rate and batch size 32 for 25 epochs under bfloat16 mixed precision. Model checkpoints are selected based on validation accuracy. Figure 3 : Physics Probe accuracy vs. baselines. Per-axis classification accuracy over discretized bins. The blue indicates the accuracy of choosing a random bin uniformly, the red indicates the accuracy if always the majority bin is chosen. The Physics Probe substantially outperforms both random and majority-bin baselines across all six axes. LoRA finetuning. We finetune the diffusion backbone using Low-Rank Adaptation (LoRA) 14 , keeping the pretrained model and the Physics Probe frozen. Training proceeds in two stages: a warm-up phase with for 10k steps, followed by joint optimization with . We also show sensitivity of and performance of different DiT backbones to show generalization in the supplementary material. The model is trained for 70k steps using 2 H100 GPUs with batch size 8 and 81-frame clips. All baselines use the same test split, initial frames, prompts, 81-frame horizon, and metric code; Cosmos is evaluated zero-shot, while AirScape is evaluated through its released motion-intention interface using the closest IMU-to-intention conversion without rejection sampling."
+    }
+  ],
+  "attempts": [
+    {
+      "method": "html-latexml",
+      "available": true,
+      "quality": "high"
+    }
+  ],
+  "fallback_reason": ""
+}

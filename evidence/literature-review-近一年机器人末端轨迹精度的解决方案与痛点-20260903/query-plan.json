@@ -1,0 +1,2018 @@
+{
+  "generated_at": "2026-09-03T11:20:52.166701+00:00",
+  "planner": "embodied-ai-query-planner",
+  "topic": "近一年机器人末端轨迹精度的解决方案与痛点",
+  "start_date": null,
+  "end_date": null,
+  "knowledge_ids": [
+    "EA-MODEL",
+    "EA-SENSOR",
+    "EA-EVAL",
+    "EA-BIZ"
+  ],
+  "families": [
+    "last-centimeter",
+    "industrial-deployment",
+    "sim2real"
+  ],
+  "suggested_categories": [
+    "cs.AI",
+    "cs.CV",
+    "cs.LG",
+    "cs.RO",
+    "eess.SY"
+  ],
+  "query_budget": 50,
+  "review_mode": "scoping",
+  "search_targets": {
+    "candidate_floor": 200,
+    "full_text_floor": 35,
+    "accepted_paper_floor": 15
+  },
+  "minimum_candidate_count": 200,
+  "coverage_dimensions": [
+    {
+      "dimension": "adjacent-and-transfer",
+      "query_labels": [
+        "dynamic-trajectory-tracking-control",
+        "dynamic-end-effector-accuracy",
+        "dynamic-positioning-accuracy-compensation",
+        "dynamic-kinematic-calibration",
+        "dynamic-dynamic-parameter-identification",
+        "dynamic-friction-compensation",
+        "dynamic-mpc-robot",
+        "dynamic-disturbance-observer",
+        "dynamic-iterative-learning-control",
+        "dynamic-residual-dynamics-learning",
+        "dynamic-vibration-suppression",
+        "elastic-joint-control",
+        "dynamic-lowlevel-control-vla",
+        "dynamic-diffusion-policy-tracking",
+        "dynamic-whole-body-control",
+        "dynamic-rl-tracking-control",
+        "last-centimeter-visual-servoing",
+        "last-centimeter-force-insertion",
+        "industrial-deployment-reliability",
+        "sim2real-synthetic-data",
+        "ea-model-finetuning",
+        "ea-sensor-tactile-force",
+        "ea-sensor-point-cloud",
+        "ea-eval-world-model"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "limits-and-counterevidence",
+      "query_labels": [
+        "dynamic-learning-tracking-error",
+        "dynamic-action-chunking-smoothness",
+        "dynamic-backlash-gear",
+        "ea-sensor-occlusion"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "deployment-and-operations",
+      "query_labels": [
+        "dynamic-visual-servoing-precision",
+        "last-centimeter-failure-recovery",
+        "last-centimeter-fixture",
+        "industrial-deployment-cycle-time",
+        "industrial-deployment-yield",
+        "industrial-deployment-roi"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "evaluation-and-validation",
+      "query_labels": [
+        "dynamic-iso9283-path-accuracy",
+        "dynamic-sim2real-tracking",
+        "industrial-deployment-acceptance-testing",
+        "sim2real-real-validation",
+        "sim2real-correlation",
+        "ea-eval-open-loop-benchmark",
+        "ea-eval-sim-real-correlation"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "direct-topic",
+      "query_labels": [
+        "last-centimeter-exact",
+        "industrial-deployment-core",
+        "sim2real-core",
+        "ea-model-vla",
+        "ea-model-named-foundation",
+        "ea-sensor-multimodal-policy",
+        "ea-eval-closed-loop"
+      ],
+      "minimum_unique_candidates": 3
+    },
+    {
+      "dimension": "mechanisms-and-interfaces",
+      "query_labels": [
+        "sim2real-domain-randomization",
+        "ea-model-action-tokenization"
+      ],
+      "minimum_unique_candidates": 3
+    }
+  ],
+  "stopping_rule": {
+    "minimum_batches": 3,
+    "saturation_rounds": 2,
+    "max_new_unique_rate": 0.1,
+    "requires_candidate_floor": true,
+    "requires_full_text_floor": true,
+    "requires_accepted_paper_floor": true,
+    "requires_all_coverage_dimensions": true,
+    "note": "Stop only when every requirement passes; source-count floors alone never establish coverage."
+  },
+  "notes": [
+    "llm dynamic expansion (medium): 末端轨迹精度是控制/标定/学习三条线的交叉词，静态分类法（last-centimeter 偏最后接近段）覆盖不足；Agent 依据机器人学控制文献常规术语推断动态扩展。"
+  ],
+  "dynamic_suggestions": [
+    {
+      "label": "dynamic-trajectory-tracking-control",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"trajectory tracking\" AND all:robot",
+      "why": "末端轨迹精度的直接文献用语是 trajectory tracking，控制类论文标题高频。"
+    },
+    {
+      "label": "dynamic-end-effector-accuracy",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"end-effector\" AND all:accuracy",
+      "why": "直接命中以末端执行器精度为题的论文。"
+    },
+    {
+      "label": "dynamic-positioning-accuracy-compensation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"positioning accuracy\" AND all:compensation AND all:robot",
+      "why": "工业机器人绝对定位精度补偿是解决方案主文献线。"
+    },
+    {
+      "label": "dynamic-kinematic-calibration",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"kinematic calibration\" AND all:robot",
+      "why": "运动学标定是提升末端精度的经典机制层方案。"
+    },
+    {
+      "label": "dynamic-dynamic-parameter-identification",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"dynamic parameter identification\" AND all:robot",
+      "why": "动力学参数辨识支撑模型基控制补偿。"
+    },
+    {
+      "label": "dynamic-friction-compensation",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"friction compensation\" AND all:robot",
+      "why": "摩擦是轨迹跟踪误差的高频来源，补偿文献密集。"
+    },
+    {
+      "label": "dynamic-mpc-robot",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"model predictive control\" AND all:manipulator",
+      "why": "MPC 是近年轨迹级精度控制主流方案之一。"
+    },
+    {
+      "label": "dynamic-disturbance-observer",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"disturbance observer\" AND all:robot AND all:manipulator",
+      "why": "扰动观测器针对未建模动态造成的跟踪误差。"
+    },
+    {
+      "label": "dynamic-iterative-learning-control",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"iterative learning control\" AND all:robot",
+      "why": "ILC 面向重复轨迹任务消除跟踪误差。"
+    },
+    {
+      "label": "dynamic-residual-dynamics-learning",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"residual dynamics\" AND all:learning AND all:robot",
+      "why": "学习残差动力学再叠加模型控制是近年混合方案主线。"
+    },
+    {
+      "label": "dynamic-vibration-suppression",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"vibration suppression\" AND all:robot",
+      "why": "柔性/振动直接破坏末端轨迹精度。"
+    },
+    {
+      "label": "elastic-joint-control",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"elastic joints\" AND all:manipulator",
+      "why": "谐波减速器弹性关节是跟踪误差的机制层痛点。"
+    },
+    {
+      "label": "dynamic-learning-tracking-error",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"tracking error\" AND all:\"neural network\" AND all:robot",
+      "why": "学习法消除跟踪误差的论文与痛点的实证来源。"
+    },
+    {
+      "label": "dynamic-action-chunking-smoothness",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"action chunking\" AND (all:smooth OR all:jerk OR all:oscillation)",
+      "why": "VLA/ACT 动作分块带来的末端抖动是学习侧轨迹精度痛点。"
+    },
+    {
+      "label": "dynamic-lowlevel-control-vla",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "high",
+      "query": "all:\"low-level control\" AND (all:\"vision-language-action\" OR all:VLA)",
+      "why": "VLA 与底层轨迹控制器的接口是近年精度讨论热点。"
+    },
+    {
+      "label": "dynamic-diffusion-policy-tracking",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"diffusion policy\" AND all:tracking",
+      "why": "扩散策略输出轨迹与跟踪控制器组合的精度证据。"
+    },
+    {
+      "label": "dynamic-whole-body-control",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"whole-body control\" AND (all:humanoid OR all:manipulator)",
+      "why": "全身控制把任务空间轨迹精度下沉到全身关节。"
+    },
+    {
+      "label": "dynamic-visual-servoing-precision",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"visual servoing\" AND all:precision",
+      "why": "视觉伺服用感知闭环补偿末端轨迹偏差。"
+    },
+    {
+      "label": "dynamic-iso9283-path-accuracy",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:ISO AND all:9283",
+      "why": "ISO 9283 规定轨迹精度/重复性的评测口径。"
+    },
+    {
+      "label": "dynamic-sim2real-tracking",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"sim-to-real\" AND all:\"tracking control\" AND all:robot",
+      "why": "sim-to-real 控制差距以跟踪精度为度量的证据。"
+    },
+    {
+      "label": "dynamic-backlash-gear",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:backlash AND all:robot AND all:joint",
+      "why": "传动间隙是精度痛点的硬件层语言。"
+    },
+    {
+      "label": "dynamic-rl-tracking-control",
+      "channel": "arxiv_api",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "all:\"reinforcement learning\" AND all:\"tracking control\" AND all:robot",
+      "why": "RL 直接学习跟踪控制器近年证据线。"
+    },
+    {
+      "label": "dynamic-trajectory-precision-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "low",
+      "query": "robot end-effector trajectory accuracy solutions 2026",
+      "why": "检查 arXiv 元数据之外是否有工业侧讨论。"
+    },
+    {
+      "label": "dynamic-vla-jitter-browser",
+      "channel": "browser_fallback",
+      "source": "llm",
+      "confidence": "low",
+      "query": "VLA action chunking jitter smoothing low-level control 2026",
+      "why": "学习侧末端抖动痛点的社区讨论校准。"
+    },
+    {
+      "label": "dynamic-trajectory-accuracy-terms",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "\"trajectory tracking accuracy\" robot manipulator compensation survey",
+      "why": "校准轨迹精度领域当前术语。"
+    },
+    {
+      "label": "dynamic-absolute-accuracy-repeatability",
+      "channel": "web_calibration",
+      "source": "llm",
+      "confidence": "medium",
+      "query": "industrial robot \"absolute accuracy\" repeatability gap",
+      "why": "确认绝对精度 vs 重复性术语仍在使用。"
+    }
+  ],
+  "calibration_notes": [
+    "No live web calibration was provided; generated offline baseline query plan."
+  ],
+  "queries": [
+    {
+      "label": "dynamic-trajectory-tracking-control",
+      "tier": "dynamic-direct",
+      "query": "all:\"trajectory tracking\" AND all:robot",
+      "why": "末端轨迹精度的直接文献用语是 trajectory tracking，控制类论文标题高频。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-trajectory-tracking-control"
+      ]
+    },
+    {
+      "label": "dynamic-end-effector-accuracy",
+      "tier": "dynamic-direct",
+      "query": "all:\"end-effector\" AND all:accuracy",
+      "why": "直接命中以末端执行器精度为题的论文。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-end-effector-accuracy"
+      ]
+    },
+    {
+      "label": "dynamic-positioning-accuracy-compensation",
+      "tier": "dynamic-direct",
+      "query": "all:\"positioning accuracy\" AND all:compensation AND all:robot",
+      "why": "工业机器人绝对定位精度补偿是解决方案主文献线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-positioning-accuracy-compensation"
+      ]
+    },
+    {
+      "label": "dynamic-kinematic-calibration",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"kinematic calibration\" AND all:robot",
+      "why": "运动学标定是提升末端精度的经典机制层方案。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-kinematic-calibration"
+      ]
+    },
+    {
+      "label": "dynamic-dynamic-parameter-identification",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"dynamic parameter identification\" AND all:robot",
+      "why": "动力学参数辨识支撑模型基控制补偿。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dynamic-parameter-identification"
+      ]
+    },
+    {
+      "label": "dynamic-friction-compensation",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"friction compensation\" AND all:robot",
+      "why": "摩擦是轨迹跟踪误差的高频来源，补偿文献密集。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-friction-compensation"
+      ]
+    },
+    {
+      "label": "dynamic-mpc-robot",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"model predictive control\" AND all:manipulator",
+      "why": "MPC 是近年轨迹级精度控制主流方案之一。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-mpc-robot"
+      ]
+    },
+    {
+      "label": "dynamic-disturbance-observer",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"disturbance observer\" AND all:robot AND all:manipulator",
+      "why": "扰动观测器针对未建模动态造成的跟踪误差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-disturbance-observer"
+      ]
+    },
+    {
+      "label": "dynamic-iterative-learning-control",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"iterative learning control\" AND all:robot",
+      "why": "ILC 面向重复轨迹任务消除跟踪误差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-iterative-learning-control"
+      ]
+    },
+    {
+      "label": "dynamic-residual-dynamics-learning",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"residual dynamics\" AND all:learning AND all:robot",
+      "why": "学习残差动力学再叠加模型控制是近年混合方案主线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-residual-dynamics-learning"
+      ]
+    },
+    {
+      "label": "dynamic-vibration-suppression",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"vibration suppression\" AND all:robot",
+      "why": "柔性/振动直接破坏末端轨迹精度。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vibration-suppression"
+      ]
+    },
+    {
+      "label": "elastic-joint-control",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"elastic joints\" AND all:manipulator",
+      "why": "谐波减速器弹性关节是跟踪误差的机制层痛点。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "elastic-joint-control"
+      ]
+    },
+    {
+      "label": "dynamic-learning-tracking-error",
+      "tier": "dynamic-limit",
+      "query": "all:\"tracking error\" AND all:\"neural network\" AND all:robot",
+      "why": "学习法消除跟踪误差的论文与痛点的实证来源。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-learning-tracking-error"
+      ]
+    },
+    {
+      "label": "dynamic-action-chunking-smoothness",
+      "tier": "dynamic-limit",
+      "query": "all:\"action chunking\" AND (all:smooth OR all:jerk OR all:oscillation)",
+      "why": "VLA/ACT 动作分块带来的末端抖动是学习侧轨迹精度痛点。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-chunking-smoothness"
+      ]
+    },
+    {
+      "label": "dynamic-lowlevel-control-vla",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"low-level control\" AND (all:\"vision-language-action\" OR all:VLA)",
+      "why": "VLA 与底层轨迹控制器的接口是近年精度讨论热点。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lowlevel-control-vla"
+      ]
+    },
+    {
+      "label": "dynamic-diffusion-policy-tracking",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"diffusion policy\" AND all:tracking",
+      "why": "扩散策略输出轨迹与跟踪控制器组合的精度证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-diffusion-policy-tracking"
+      ]
+    },
+    {
+      "label": "dynamic-whole-body-control",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"whole-body control\" AND (all:humanoid OR all:manipulator)",
+      "why": "全身控制把任务空间轨迹精度下沉到全身关节。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-whole-body-control"
+      ]
+    },
+    {
+      "label": "dynamic-visual-servoing-precision",
+      "tier": "dynamic-deployment",
+      "query": "all:\"visual servoing\" AND all:precision",
+      "why": "视觉伺服用感知闭环补偿末端轨迹偏差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visual-servoing-precision"
+      ]
+    },
+    {
+      "label": "dynamic-iso9283-path-accuracy",
+      "tier": "dynamic-evaluation",
+      "query": "all:ISO AND all:9283",
+      "why": "ISO 9283 规定轨迹精度/重复性的评测口径。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-iso9283-path-accuracy"
+      ]
+    },
+    {
+      "label": "dynamic-sim2real-tracking",
+      "tier": "dynamic-evaluation",
+      "query": "all:\"sim-to-real\" AND all:\"tracking control\" AND all:robot",
+      "why": "sim-to-real 控制差距以跟踪精度为度量的证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-sim2real-tracking"
+      ]
+    },
+    {
+      "label": "dynamic-backlash-gear",
+      "tier": "dynamic-limit",
+      "query": "all:backlash AND all:robot AND all:joint",
+      "why": "传动间隙是精度痛点的硬件层语言。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-backlash-gear"
+      ]
+    },
+    {
+      "label": "dynamic-rl-tracking-control",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"reinforcement learning\" AND all:\"tracking control\" AND all:robot",
+      "why": "RL 直接学习跟踪控制器近年证据线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-rl-tracking-control"
+      ]
+    },
+    {
+      "label": "last-centimeter-exact",
+      "tier": "core",
+      "query": "all:\"last centimeter\" AND all:robot",
+      "why": "Catch papers that explicitly name the deployment bottleneck.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-exact"
+      ]
+    },
+    {
+      "label": "last-centimeter-visual-servoing",
+      "tier": "pre-contact",
+      "query": "all:\"visual servoing\" AND all:\"robot manipulation\"",
+      "why": "Find close-range pose correction before contact closure.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "last-centimeter-visual-servoing"
+      ]
+    },
+    {
+      "label": "last-centimeter-force-insertion",
+      "tier": "contact",
+      "query": "all:\"force control\" AND all:insertion AND all:robot",
+      "why": "Surface insertion and compliant-contact methods for final alignment.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-force-insertion"
+      ]
+    },
+    {
+      "label": "last-centimeter-failure-recovery",
+      "tier": "recovery",
+      "query": "all:\"failure recovery\" AND all:\"robot manipulation\"",
+      "why": "Find retry, recovery, and takeover strategies after near-goal failures.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-failure-recovery"
+      ]
+    },
+    {
+      "label": "last-centimeter-fixture",
+      "tier": "deployment-adjacent",
+      "query": "(all:fixture OR all:fixturing) AND all:robot AND all:insertion",
+      "why": "Capture fixture and workcell design that reduces contact uncertainty.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-fixture"
+      ]
+    },
+    {
+      "label": "industrial-deployment-core",
+      "tier": "core",
+      "query": "all:\"industrial robot\" AND all:deployment",
+      "why": "Find deployment papers in manufacturing or production contexts.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-core"
+      ]
+    },
+    {
+      "label": "industrial-deployment-reliability",
+      "tier": "reliability",
+      "query": "all:reliability AND all:robot AND all:deployment",
+      "why": "Capture uptime, fault tolerance, and long-run operational evidence.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-reliability"
+      ]
+    },
+    {
+      "label": "industrial-deployment-cycle-time",
+      "tier": "production",
+      "query": "all:\"cycle time\" AND all:automation AND all:robot",
+      "why": "Find throughput constraints that affect ToB feasibility.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-cycle-time"
+      ]
+    },
+    {
+      "label": "industrial-deployment-yield",
+      "tier": "production-quality",
+      "query": "all:yield AND all:robot AND all:manufacturing",
+      "why": "Surface quality and yield discussions beyond one-off success rate.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-yield"
+      ]
+    },
+    {
+      "label": "industrial-deployment-acceptance-testing",
+      "tier": "evaluation",
+      "query": "all:\"acceptance testing\" AND all:robot",
+      "why": "Find validation and acceptance language for production handoff.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-acceptance-testing"
+      ]
+    },
+    {
+      "label": "industrial-deployment-roi",
+      "tier": "business-adjacent",
+      "query": "all:ROI AND all:robot AND all:automation",
+      "why": "Search for cost or return-on-investment framing when present in technical metadata.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-roi"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "arxiv_api_queries": [
+    {
+      "label": "dynamic-trajectory-tracking-control",
+      "tier": "dynamic-direct",
+      "query": "all:\"trajectory tracking\" AND all:robot",
+      "why": "末端轨迹精度的直接文献用语是 trajectory tracking，控制类论文标题高频。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-trajectory-tracking-control"
+      ]
+    },
+    {
+      "label": "dynamic-end-effector-accuracy",
+      "tier": "dynamic-direct",
+      "query": "all:\"end-effector\" AND all:accuracy",
+      "why": "直接命中以末端执行器精度为题的论文。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-end-effector-accuracy"
+      ]
+    },
+    {
+      "label": "dynamic-positioning-accuracy-compensation",
+      "tier": "dynamic-direct",
+      "query": "all:\"positioning accuracy\" AND all:compensation AND all:robot",
+      "why": "工业机器人绝对定位精度补偿是解决方案主文献线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-positioning-accuracy-compensation"
+      ]
+    },
+    {
+      "label": "dynamic-kinematic-calibration",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"kinematic calibration\" AND all:robot",
+      "why": "运动学标定是提升末端精度的经典机制层方案。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-kinematic-calibration"
+      ]
+    },
+    {
+      "label": "dynamic-dynamic-parameter-identification",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"dynamic parameter identification\" AND all:robot",
+      "why": "动力学参数辨识支撑模型基控制补偿。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-dynamic-parameter-identification"
+      ]
+    },
+    {
+      "label": "dynamic-friction-compensation",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"friction compensation\" AND all:robot",
+      "why": "摩擦是轨迹跟踪误差的高频来源，补偿文献密集。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-friction-compensation"
+      ]
+    },
+    {
+      "label": "dynamic-mpc-robot",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"model predictive control\" AND all:manipulator",
+      "why": "MPC 是近年轨迹级精度控制主流方案之一。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-mpc-robot"
+      ]
+    },
+    {
+      "label": "dynamic-disturbance-observer",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"disturbance observer\" AND all:robot AND all:manipulator",
+      "why": "扰动观测器针对未建模动态造成的跟踪误差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-disturbance-observer"
+      ]
+    },
+    {
+      "label": "dynamic-iterative-learning-control",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"iterative learning control\" AND all:robot",
+      "why": "ILC 面向重复轨迹任务消除跟踪误差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-iterative-learning-control"
+      ]
+    },
+    {
+      "label": "dynamic-residual-dynamics-learning",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"residual dynamics\" AND all:learning AND all:robot",
+      "why": "学习残差动力学再叠加模型控制是近年混合方案主线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-residual-dynamics-learning"
+      ]
+    },
+    {
+      "label": "dynamic-vibration-suppression",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"vibration suppression\" AND all:robot",
+      "why": "柔性/振动直接破坏末端轨迹精度。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-vibration-suppression"
+      ]
+    },
+    {
+      "label": "elastic-joint-control",
+      "tier": "dynamic-mechanism",
+      "query": "all:\"elastic joints\" AND all:manipulator",
+      "why": "谐波减速器弹性关节是跟踪误差的机制层痛点。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "elastic-joint-control"
+      ]
+    },
+    {
+      "label": "dynamic-learning-tracking-error",
+      "tier": "dynamic-limit",
+      "query": "all:\"tracking error\" AND all:\"neural network\" AND all:robot",
+      "why": "学习法消除跟踪误差的论文与痛点的实证来源。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-learning-tracking-error"
+      ]
+    },
+    {
+      "label": "dynamic-action-chunking-smoothness",
+      "tier": "dynamic-limit",
+      "query": "all:\"action chunking\" AND (all:smooth OR all:jerk OR all:oscillation)",
+      "why": "VLA/ACT 动作分块带来的末端抖动是学习侧轨迹精度痛点。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-action-chunking-smoothness"
+      ]
+    },
+    {
+      "label": "dynamic-lowlevel-control-vla",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"low-level control\" AND (all:\"vision-language-action\" OR all:VLA)",
+      "why": "VLA 与底层轨迹控制器的接口是近年精度讨论热点。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "high",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-lowlevel-control-vla"
+      ]
+    },
+    {
+      "label": "dynamic-diffusion-policy-tracking",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"diffusion policy\" AND all:tracking",
+      "why": "扩散策略输出轨迹与跟踪控制器组合的精度证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-diffusion-policy-tracking"
+      ]
+    },
+    {
+      "label": "dynamic-whole-body-control",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"whole-body control\" AND (all:humanoid OR all:manipulator)",
+      "why": "全身控制把任务空间轨迹精度下沉到全身关节。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-whole-body-control"
+      ]
+    },
+    {
+      "label": "dynamic-visual-servoing-precision",
+      "tier": "dynamic-deployment",
+      "query": "all:\"visual servoing\" AND all:precision",
+      "why": "视觉伺服用感知闭环补偿末端轨迹偏差。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-visual-servoing-precision"
+      ]
+    },
+    {
+      "label": "dynamic-iso9283-path-accuracy",
+      "tier": "dynamic-evaluation",
+      "query": "all:ISO AND all:9283",
+      "why": "ISO 9283 规定轨迹精度/重复性的评测口径。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-iso9283-path-accuracy"
+      ]
+    },
+    {
+      "label": "dynamic-sim2real-tracking",
+      "tier": "dynamic-evaluation",
+      "query": "all:\"sim-to-real\" AND all:\"tracking control\" AND all:robot",
+      "why": "sim-to-real 控制差距以跟踪精度为度量的证据。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-sim2real-tracking"
+      ]
+    },
+    {
+      "label": "dynamic-backlash-gear",
+      "tier": "dynamic-limit",
+      "query": "all:backlash AND all:robot AND all:joint",
+      "why": "传动间隙是精度痛点的硬件层语言。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-backlash-gear"
+      ]
+    },
+    {
+      "label": "dynamic-rl-tracking-control",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"reinforcement learning\" AND all:\"tracking control\" AND all:robot",
+      "why": "RL 直接学习跟踪控制器近年证据线。",
+      "source_key": "dynamic",
+      "source_type": "dynamic-suggestion",
+      "channel": "arxiv_api",
+      "dynamic_source": "llm",
+      "dynamic_confidence": "medium",
+      "evidence_role": "query-planning-only",
+      "merged_labels": [
+        "dynamic-rl-tracking-control"
+      ]
+    },
+    {
+      "label": "last-centimeter-exact",
+      "tier": "core",
+      "query": "all:\"last centimeter\" AND all:robot",
+      "why": "Catch papers that explicitly name the deployment bottleneck.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-exact"
+      ]
+    },
+    {
+      "label": "last-centimeter-visual-servoing",
+      "tier": "pre-contact",
+      "query": "all:\"visual servoing\" AND all:\"robot manipulation\"",
+      "why": "Find close-range pose correction before contact closure.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "last-centimeter-visual-servoing"
+      ]
+    },
+    {
+      "label": "last-centimeter-force-insertion",
+      "tier": "contact",
+      "query": "all:\"force control\" AND all:insertion AND all:robot",
+      "why": "Surface insertion and compliant-contact methods for final alignment.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-force-insertion"
+      ]
+    },
+    {
+      "label": "last-centimeter-failure-recovery",
+      "tier": "recovery",
+      "query": "all:\"failure recovery\" AND all:\"robot manipulation\"",
+      "why": "Find retry, recovery, and takeover strategies after near-goal failures.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-failure-recovery"
+      ]
+    },
+    {
+      "label": "last-centimeter-fixture",
+      "tier": "deployment-adjacent",
+      "query": "(all:fixture OR all:fixturing) AND all:robot AND all:insertion",
+      "why": "Capture fixture and workcell design that reduces contact uncertainty.",
+      "source_key": "last-centimeter",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "last-centimeter-fixture"
+      ]
+    },
+    {
+      "label": "industrial-deployment-core",
+      "tier": "core",
+      "query": "all:\"industrial robot\" AND all:deployment",
+      "why": "Find deployment papers in manufacturing or production contexts.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-core"
+      ]
+    },
+    {
+      "label": "industrial-deployment-reliability",
+      "tier": "reliability",
+      "query": "all:reliability AND all:robot AND all:deployment",
+      "why": "Capture uptime, fault tolerance, and long-run operational evidence.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-reliability"
+      ]
+    },
+    {
+      "label": "industrial-deployment-cycle-time",
+      "tier": "production",
+      "query": "all:\"cycle time\" AND all:automation AND all:robot",
+      "why": "Find throughput constraints that affect ToB feasibility.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-cycle-time"
+      ]
+    },
+    {
+      "label": "industrial-deployment-yield",
+      "tier": "production-quality",
+      "query": "all:yield AND all:robot AND all:manufacturing",
+      "why": "Surface quality and yield discussions beyond one-off success rate.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-yield"
+      ]
+    },
+    {
+      "label": "industrial-deployment-acceptance-testing",
+      "tier": "evaluation",
+      "query": "all:\"acceptance testing\" AND all:robot",
+      "why": "Find validation and acceptance language for production handoff.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-acceptance-testing"
+      ]
+    },
+    {
+      "label": "industrial-deployment-roi",
+      "tier": "business-adjacent",
+      "query": "all:ROI AND all:robot AND all:automation",
+      "why": "Search for cost or return-on-investment framing when present in technical metadata.",
+      "source_key": "industrial-deployment",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "industrial-deployment-roi"
+      ]
+    },
+    {
+      "label": "sim2real-core",
+      "tier": "core",
+      "query": "(all:sim2real OR all:\"sim-to-real\") AND all:robot",
+      "why": "Find the main simulation-to-real transfer literature surface.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-core"
+      ]
+    },
+    {
+      "label": "sim2real-real-validation",
+      "tier": "validation",
+      "query": "all:\"real robot\" AND all:validation AND all:simulation",
+      "why": "Find papers that verify simulation claims against real robot runs.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-real-validation"
+      ]
+    },
+    {
+      "label": "sim2real-synthetic-data",
+      "tier": "data-generation",
+      "query": "all:\"synthetic data\" AND all:\"robot manipulation\"",
+      "why": "Capture synthetic-data pipelines used to reduce real collection cost.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-synthetic-data"
+      ]
+    },
+    {
+      "label": "sim2real-domain-randomization",
+      "tier": "method",
+      "query": "all:\"domain randomization\" AND all:\"robot manipulation\"",
+      "why": "Find robustification methods for visual and physical sim-to-real gaps.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "sim2real-domain-randomization"
+      ]
+    },
+    {
+      "label": "sim2real-correlation",
+      "tier": "evaluation",
+      "query": "all:\"sim-real\" AND all:correlation AND all:evaluation",
+      "why": "Surface work that measures whether simulation rankings predict real performance.",
+      "source_key": "sim2real",
+      "source_type": "specialized-family",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "sim2real-correlation"
+      ]
+    },
+    {
+      "label": "ea-model-vla",
+      "tier": "core",
+      "query": "all:\"vision-language-action\" AND all:robot",
+      "why": "Find VLA papers that connect perception, language, and robot action.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-vla"
+      ]
+    },
+    {
+      "label": "ea-model-named-foundation",
+      "tier": "named-method",
+      "query": "(all:RT-X OR all:Octo OR all:OpenVLA) AND all:robot",
+      "why": "Capture named robot foundation model lineages and follow-on comparisons.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-named-foundation"
+      ]
+    },
+    {
+      "label": "ea-model-finetuning",
+      "tier": "transfer",
+      "query": "all:\"robot foundation model\" AND all:\"fine-tuning\"",
+      "why": "Find evidence about whether pretraining reduces target-task data needs.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-finetuning"
+      ]
+    },
+    {
+      "label": "ea-model-action-tokenization",
+      "tier": "representation",
+      "query": "all:\"action tokenization\" AND all:robot",
+      "why": "Surface model papers where action interfaces determine transfer behavior.",
+      "source_key": "EA-MODEL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-model-action-tokenization"
+      ]
+    },
+    {
+      "label": "ea-sensor-multimodal-policy",
+      "tier": "core",
+      "query": "all:multimodal AND all:\"robot manipulation\" AND all:policy",
+      "why": "Find policy papers where sensor fusion affects manipulation behavior.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-multimodal-policy"
+      ]
+    },
+    {
+      "label": "ea-sensor-tactile-force",
+      "tier": "contact",
+      "query": "all:tactile AND all:force AND all:\"robot manipulation\"",
+      "why": "Cover physical observability beyond RGB, especially contact and force cues.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-sensor-tactile-force"
+      ]
+    },
+    {
+      "label": "ea-sensor-point-cloud",
+      "tier": "geometry",
+      "query": "all:\"point cloud\" AND all:\"robot manipulation\"",
+      "why": "Find 3D perception papers relevant to spatial constraints and pose-sensitive tasks.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-point-cloud"
+      ]
+    },
+    {
+      "label": "ea-sensor-occlusion",
+      "tier": "limitation",
+      "query": "all:occlusion AND all:\"robot perception\" AND all:manipulation",
+      "why": "Expose perception failure cases where single-view RGB is insufficient.",
+      "source_key": "EA-SENSOR",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.CV",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-sensor-occlusion"
+      ]
+    },
+    {
+      "label": "ea-eval-closed-loop",
+      "tier": "core",
+      "query": "all:\"closed-loop\" AND all:evaluation AND all:robot",
+      "why": "Find evaluations that measure deployed policy behavior rather than offline loss only.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-closed-loop"
+      ]
+    },
+    {
+      "label": "ea-eval-open-loop-benchmark",
+      "tier": "benchmark",
+      "query": "all:\"open-loop\" AND all:benchmark AND all:robot",
+      "why": "Cover fast screening metrics and their mismatch with real execution.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-open-loop-benchmark"
+      ]
+    },
+    {
+      "label": "ea-eval-world-model",
+      "tier": "world-model",
+      "query": "all:\"world model\" AND all:\"robot manipulation\"",
+      "why": "Find predictive models used for robot planning, screening, or evaluation.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "merged_labels": [
+        "ea-eval-world-model"
+      ]
+    },
+    {
+      "label": "ea-eval-sim-real-correlation",
+      "tier": "sim-real",
+      "query": "all:\"sim-real\" AND all:correlation AND all:robot",
+      "why": "Find work that compares simulation rankings against real robot outcomes.",
+      "source_key": "EA-EVAL",
+      "source_type": "knowledge-topic",
+      "channel": "arxiv_api",
+      "suggested_categories": [
+        "cs.RO",
+        "eess.SY",
+        "cs.AI"
+      ],
+      "merged_labels": [
+        "ea-eval-sim-real-correlation"
+      ]
+    }
+  ],
+  "browser_fallback_queries": [
+    {
+      "label": "dynamic-trajectory-precision-browser",
+      "query": "robot end-effector trajectory accuracy solutions 2026",
+      "why": "检查 arXiv 元数据之外是否有工业侧讨论。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "dynamic-vla-jitter-browser",
+      "query": "VLA action chunking jitter smoothing low-level control 2026",
+      "why": "学习侧末端抖动痛点的社区讨论校准。",
+      "source_key": "dynamic",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-core",
+      "query": "site:arxiv.org/abs (sim2real OR \"sim-to-real\" OR \"simulation-to-real\") robot",
+      "why": "Find sim-to-real papers through web/arXiv pages when API search under-recovers variants.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-synthetic-validation",
+      "query": "site:arxiv.org/abs (\"synthetic data\" OR \"domain randomization\" OR simulation) (\"real robot\" OR validation) manipulation",
+      "why": "Find synthetic-data and domain-randomization papers that discuss whether simulated data transfers to real robots.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    },
+    {
+      "label": "browser-sim2real-eval-gap",
+      "query": "site:arxiv.org/abs (\"sim-real\" OR \"reality gap\" OR \"simulation gap\") (correlation OR evaluation OR benchmark) robot",
+      "why": "Find simulation evaluation and reality-gap discussions that may not use the sim2real keyword.",
+      "source_key": "sim2real",
+      "channel": "browser_fallback"
+    }
+  ],
+  "web_calibration_queries": [
+    {
+      "label": "dynamic-trajectory-accuracy-terms",
+      "query": "\"trajectory tracking accuracy\" robot manipulator compensation survey",
+      "why": "校准轨迹精度领域当前术语。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    },
+    {
+      "label": "dynamic-absolute-accuracy-repeatability",
+      "query": "industrial robot \"absolute accuracy\" repeatability gap",
+      "why": "确认绝对精度 vs 重复性术语仍在使用。",
+      "source_key": "dynamic",
+      "source_type": "llm",
+      "channel": "web_calibration"
+    }
+  ]
+}

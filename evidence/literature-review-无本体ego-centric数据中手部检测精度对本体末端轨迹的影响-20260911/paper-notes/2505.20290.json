@@ -1,0 +1,336 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2505.20290",
+  "title": "EgoZero: Robot Learning from Smart Glasses",
+  "published": "2025-05-27",
+  "url": "https://arxiv.org/abs/2505.20290",
+  "authors": [
+   "Vincent Liu",
+   "Ademi Adeniji",
+   "Haotian Zhan",
+   "Siddhant Haldar",
+   "Raunaq Bhirangi",
+   "Pieter Abbeel",
+   "Lerrel Pinto"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "ego-centric 智能眼镜(Aria)零机器人数据路线：手部/腕部轨迹由 Aria MPS 6DoF 手姿与 HaMeR 组合得到，论文明确量化动作标签残留 1-2cm 误差并指出其阻止高精度任务，是本批唯一给出厘米级误差阈值的证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "问题设定：仅用 Aria 智能眼镜的 ego-centric 人类数据零样本训练闭环策略。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "单目手部姿态估计模型脆性(遮挡/时序不一致)的领域综述性判断。"
+   },
+   {
+    "locator": "3.1 Human-Robot Domain Unification",
+    "role": "method-or-design",
+    "purpose": "核心节：Aria MPS 手姿+HaMeR 局部手型组合的动作提取、CoTracker3 三角化物体点、深度不可得下的状态表示。"
+   },
+   {
+    "locator": "3.2 Learning a Robot Policy on Human Data",
+    "role": "method-or-design",
+    "purpose": "策略训练、3D 增广、噪声样本剔除规则。"
+   },
+   {
+    "locator": "4.2 Baselines",
+    "role": "results-or-analysis",
+    "purpose": "Table 1：视觉/affordance 基线与消融的成功率矩阵。"
+   },
+   {
+    "locator": "4.3 Ablations",
+    "role": "results-or-analysis",
+    "purpose": "3D 增广必要性与单目深度 >5cm 误差导致策略全失败的消融。"
+   },
+   {
+    "locator": "4.5 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "手部模型误差 1-2cm 的定量上限、DIFT 对应误差、三角化约束。"
+   },
+   {
+    "locator": "5 Discussion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与硬件依赖的边界。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "4.1 Experimental Setup / 4.4 Zero-shot generalization",
+    "role": "data-or-setting",
+    "reason": "任务清单与泛化展示，已在主结果卡中覆盖所需信息。"
+   },
+   {
+    "locator": "Appendix A-D",
+    "role": "appendix-or-supplement",
+    "reason": "附录 B 三角化推导与附录 D 深度标定细节已在正文 3.1/4.3 覆盖要点；仅浏览未逐式核对。"
+   }
+  ]
+ },
+ "research_question": "机器人能否只从 Project Aria 智能眼镜采集的 in-the-wild ego-centric 人类演示(零机器人数据)学到可零样本部署的闭环操作策略？",
+ "contributions": [
+  "EGOZERO 系统：仅用 Aria 眼镜采集人类演示，以 ego-centric 3D 点集统一状态-动作空间，7 个任务零样本平均 70% 成功率。",
+  "提出无多相机标定/无深度条件下的动作提取：Aria MPS 6DoF 手姿提供相机系定位，HaMeR 提供手部局部形变，组合成动作标签；物体点经 CoTracker3 沿相机轨迹三角化获得。",
+  "消融证明 3D 增广与三角化深度缺一不可(去除后 7 任务全 0/15)，并量化单目深度模型 >5cm 误差不可用。"
+ ],
+ "method": {
+  "summary": "用 Aria 眼镜录制 RGB + MPS 6DoF 手姿 + 6DoF 相机外参；HaMeR 估计 21 关键点手部模型，其相机系末端预测不准但手系局部可靠，故用 Aria 手姿 H_t 校正 HaMeR 掌心帧并投影到首帧得到动作点；物体状态由标注 2D 点经 Grounding DINO/DIFT/CoTracker3 追踪后对极几何+RANSAC+带深度惩罚的最小二乘三角化到首帧；以点集状态-动作训练闭环 Transformer 策略(行为克隆+3D 增广)；推理时改用 iPhone 深度反投影物体点并一次性标定 iPhone-机器人变换。",
+  "assumptions": [
+   "物体在抓取前静止、相机有足够运动、环境非随机(三角化前提)",
+   "Aria MPS 手姿与 SLAM 外参准确",
+   "任务用拇指-食指二指抓取即可表达",
+   "推理时可用带深度的 iPhone 表示 ego-centric 视角"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "每任务 100 条 Aria 人类演示(约 20 分钟/任务)，2-3 个不同环境采集"
+  ],
+  "tasks": [
+   "Open oven door",
+   "Put bread on plate",
+   "Sweep board with broom",
+   "Erase board",
+   "Sort fruit",
+   "Fold towel",
+   "Insert book in shelf"
+  ],
+  "embodiments": [
+   "Franka Panda 平行夹爪",
+   "Project Aria 智能眼镜(采集)",
+   "iPhone(推理观测)"
+  ],
+  "sample_or_scale": "7 任务 × 100 演示；每配置每任务 15 次 rollout"
+ },
+ "evaluation": {
+  "design": "零样本迁移评估：训练环境与推理环境完全不重叠(新相机 iPhone、新物体位姿、新场景)；与图像策略(Baku 变体)和 affordance 基线对比；消融 3D 增广与三角化深度",
+  "baselines": [
+   "From vision (Baku [62] 变体)",
+   "From affordances ([18] 式开环抓取点)"
+  ],
+  "metrics": [
+   "每任务成功率 n/15",
+   "三角化平均 inlier 重投影误差(像素)",
+   "单目深度误差(cm)"
+  ],
+  "ablations": [
+   "EGOZERO - 3D augmentations",
+   "EGOZERO - triangulated depth(用单目度量深度替代)",
+   "Appendix D Aruco 标定的单目深度评估"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "EGOZERO 在 7 个任务零样本成功 9-13/15(平均 70%)，From vision 全 0/15，affordance 基线在需要复杂非线性运动的任务上失败。",
+   "scope": "Franka 夹爪、7 任务、每任务 15 rollout",
+   "locator": "Method, Table 1"
+  },
+  {
+   "finding": "去除 3D 增广或用单目度量深度替代三角化，7 个任务全部 0/15；最优单目深度模型即使经 Aruco 标定仍有 >5cm 误差。",
+   "scope": "Ablations, Table 1 与 4.3",
+   "locator": "4.3 Ablations"
+  },
+  {
+   "finding": "即使仔细调整动作组合公式，Aria 手姿与 HaMeR 的组合动作标签仍含 1-2cm 误差，使策略无法完成高精度任务。",
+   "scope": "Aria MPS + HaMeR 管线",
+   "locator": "4.5 Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "动作标签含 1-2cm 误差(Aria 手姿定位不一致 + HaMeR 旋转/平移分量不稳定)，阻止策略解决高精度任务。",
+    "locator": "4.5 Limitations"
+   },
+   {
+    "limitation": "推理最大误差源是 DIFT 对应模型；策略精度以 3D 点输入精度为上界，无法纠正 3D 测量误差。",
+    "locator": "4.5 Limitations"
+   },
+   {
+    "limitation": "三角化要求物体静止、相机运动充分，无法追踪物体；无法用单目深度替代。",
+    "locator": "4.5 Limitations 与 4.3 Ablations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "推理依赖 iPhone 深度与一次性 Aruco 标定，'纯眼镜'只覆盖采集端；部署端深度可得性是隐含前提。",
+    "basis": "3.2 Policy inference 明确用 iPhone 深度反投影物体点并做 iPhone-机器人标定。"
+   },
+   {
+    "boundary": "点集表示绕开像素级渲染误差，但把误差转移到对应(DIFT)与追踪(CoTracker3)模块；对透明/反光物体或弱纹理场景的适用性未验证。",
+    "basis": "4.5 指出策略以 3D 点输入精度为上界；对应模型是最大误差源。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：Aria 眼镜采集、二指抓取、准静态桌面任务、推理端有深度相机(iPhone)的闭环点集策略；动作标签固有 1-2cm 误差，不适合插入精度 <2cm 的任务；物体需抓取前静止且相机运动充分以支持三角化。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "消融直接命中表征选择(3D 增广、深度来源)，且全部 7 任务逐一报告",
+   "对动作标签误差给出罕见的厘米级定量估计(1-2cm)",
+   "基线与消融共用同一训练数据(各 100 演示)，控制了数据量变量"
+  ],
+  "design_risks": [
+   "1-2cm 误差的测量方法未在正文详述(如何对标真实轨迹未报告)",
+   "每配置仅 15 次 rollout，二值成功率置信区间宽",
+   "状态提取需人工标注物体 2D 点(expert-labeled)，非全自动管线"
+  ],
+  "baseline_fairness": "基线为适配性重建(Baku 变体、affordance 式)，作者明示'无完全同设定的前人工作'，公平性受限于重建质量。",
+  "metric_validity": "成功率直接反映部署可用性；三角化质量用像素重投影误差(2-4px)报告但未换算为 3D 毫米级误差。",
+  "reproducibility": "给出变换链公式、增广范围、过滤规则与算法伪代码；Aria MPS 为闭源服务，其结果不可完全复算。",
+  "external_validity": "结论限二指抓取到平行夹爪的映射；向灵巧手、动态物体或无深度推理端外推不成立。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2505.20290-C01",
+   "claim": "EgoZero 发现 HaMeR 在相机坐标系下的末端预测不准确，但其手坐标系内的局部预测更可靠；因此用 Aria MPS 的 6DoF 手姿(H_t)校正 HaMeR 构建的掌心坐标系，即把 HaMeR 的局部手部形变与 Aria 的 ego-centric 手部定位组合成最终动作标签。",
+   "stance": "conditional",
+   "relation": "揭示 ego-centric 采集端手部轨迹的误差结构与缓解：单目手部模型的相机系绝对位姿不可靠，需用 SLAM 级手姿(Aria MPS)提供绝对定位、手部模型仅提供局部形变——检测精度决定各组件的角色分配。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.1 节明确写出 HaMeR 相机系不准、手系可靠，并以 H_t 校正掌心帧的组合方案(式 1)。",
+   "locator": "3.1 Human-Robot Domain Unification",
+   "source_context": "Though HaMeR’s end-effector predictions in camera frame are inaccurate, its pre- dictions localized in hand frame are more reliable. Therefore, we compose local hand deformation from HaMeR with egocentric hand information from Aria.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 3.1；后续掌心帧构建与式 1 组合链已在全文核对，claim 限定在动作标签生成环节。"
+   }
+  },
+  {
+   "card_id": "2505.20290-C02",
+   "claim": "EgoZero 作者量化承认：Aria 手姿并不总是预测手上同一位置，HaMeR 对手部的旋转与平移分量预测不稳定；即使仔细调整动作组合公式(式 1)，最终动作标签仍含 1-2cm 误差，使策略无法解决高精度任务。",
+   "stance": "limit",
+   "relation": "为综述提供罕见的厘米级可接受阈值证据：智能眼镜+单目手部模型路线的动作标签固有 1-2cm 误差，直接界定可解任务的精度上限——末端轨迹误差在 1-2cm 量级时高精度任务不可用。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.5 Limitations of hand models 逐句给出 Aria/HaMeR 误差来源与 1-2cm 标签误差及其对高精度任务的阻断。",
+   "locator": "4.5 Limitations",
+   "source_context": "Aria’s hand pose does not always predict the same location on the hand and [54] predicts inconsistently incorrect rotational and translational components on the hand. Even when carefully Equation 1 is tuned, the action labels contain 1- 2cm error, preventing the policy from solving high-precision tasks.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": {
+    "metric": "action label error",
+    "value_or_direction": "1-2cm error even after tuning Equation 1",
+    "comparator": "high-precision tasks(不可解)",
+    "task_or_sample": "Aria MPS 手姿 + HaMeR 组合动作标签, 7 个操作任务",
+    "locator": "4.5 Limitations"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "1-2cm 数值与'preventing the policy from solving high-precision tasks'逐字出自 4.5；claim 未声称具体哪些任务受阻(原文亦未指定)。"
+   }
+  },
+  {
+   "card_id": "2505.20290-C03",
+   "claim": "在 ego-centric 无深度传感器设定下，最优单目度量深度模型即使经场景中多个 Aruco 标签标定仍产生 >5cm 的深度误差，用估计深度替代三角化训练的策略在全部 7 个任务上无一例外地失败(0/15)；EgoZero 因此改用 CoTracker3 追踪+沿相机轨迹三角化来恢复物体 3D 状态。",
+   "stance": "limit",
+   "relation": "支持'感知前端(深度/追踪)误差对下游策略是致命的'：>5cm 深度误差使策略完全不可用(0/15)，与 1-2cm 动作标签误差尚可得 70% 成功率形成阈值对照，说明状态(物体)侧误差比动作(手部)侧误差容忍度更低。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 消融报告 >5cm 深度误差与'All policies trained with estimated depth fail unequivocally'；Table 1 中 EGOZERO - triangulated depth 行 7 任务全 0/15。",
+   "locator": "4.3 Ablations; Method, Table 1",
+   "source_context": "We observe that the best metric depth models, even when grounded with many Aruco tags in the scene, produce depth measurements of >5cm error. This suggests that the depth maps are warped unevenly, potentially by the distortion caused by Aria’s fisheye. All policies trained with estimated depth fail unequivocally.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "monocular metric depth error / task success",
+    "value_or_direction": ">5cm depth error; all policies trained with estimated depth fail (0/15 on all 7 tasks)",
+    "comparator": "triangulation over the camera trajectory with CoTracker3 (ours)",
+    "task_or_sample": "7 个 Franka 操作任务, 每任务 15 次 rollout, Aruco 标定深度",
+    "locator": "4.3 Ablations; Method, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": ">5cm 与全失败表述出自 4.3；Table 1 'EGOZERO - triangulated depth' 行 0/15×7 已核对；claim 未夸大失败原因(原文推测鱼眼畸变)。"
+   }
+  },
+  {
+   "card_id": "2505.20290-C04",
+   "claim": "仅用 Aria 智能眼镜采集的人类演示(每任务 100 条、约 20 分钟采集、零机器人数据)训练的闭环策略，在 7 个操作任务上取得 13/15、11/15、9/15、11/15、11/15、10/15、9/15 的零样本成功率(平均约 70%)；图像策略基线全部 0/15。",
+   "stance": "support",
+   "relation": "支持'经感知-动作表示重设计后，带 1-2cm 级手部标签误差的 ego-centric 人类数据可训练出可用的闭环机器人策略'，给出该路线可用性的定量锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 给出 EGOZERO 逐任务成功率与基线对比；摘要报告 70% 平均成功率与 20 分钟/任务采集量。",
+   "locator": "Method, Table 1",
+   "source_context": "EGOZERO 13/15 11/15 9/15 11/15 11/15 10/15 9/15 Table 1: Success rates for all baselines and ablations. All models were trained on the same 100 demonstrations per task, and evaluated on zero-shot object poses (unseen from training), cameras (iPhone vs Aria), and environment (robot workspace vs in-the-wild).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate (n/15 per task)",
+    "value_or_direction": "13/15, 11/15, 9/15, 11/15, 11/15, 10/15, 9/15 (avg ~70%)",
+    "comparator": "From vision (Baku variant) 0/15 all tasks; From affordances 12/15, 0/15, 0/15, 0/15, 7/15, 10/15, 5/15",
+    "task_or_sample": "7 个操作任务(open oven/pick bread/sweep/erase/sort/fold/insert), 100 演示/任务",
+    "locator": "Method, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐任务 n/15 与 Table 1 完全一致；70% 平均与摘要一致(74/105≈70.5%)；基线数字亦核对无误。"
+   }
+  },
+  {
+   "card_id": "2505.20290-C05",
+   "claim": "作者综述指出：从单目视觉输入预测手部关键点的手部姿态估计模型(如 HaMeR 一类)虽在简单场景有效，但对遮挡脆弱、时序不一致、且对背景干扰物缺乏鲁棒性。",
+   "stance": "gap",
+   "relation": "为误差来源分类提供领域共识级证据：遮挡、时序不一致、背景干扰是单目手部检测的三类固有误差源，解释了为什么各管线都需要额外的时序平滑/过滤/外源定位补偿。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "Related Work 末段对手部姿态估计模型[54-57]的总体评价；依赖被引工作，属作者综合判断。",
+   "locator": "2 Related Work",
+   "source_context": "These models are trained with imitation learning to predict hand keypoints [58] from monocular visual input. Although effective in many simple domains, these models are brittle to occlusions, temporally inconsistent, and lack robustness to background distractors.",
+   "evidence_type": "author-stated-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自第 2 节末；该判断是作者对 [54-57] 一类模型的综合陈述，故标记 citation-supported 而非 direct。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Pavlakos et al., HaMeR: Reconstructing Hands in 3D with Transformers, CVPR 2024",
+   "reason": "手部局部形变估计来源，1-2cm 标签误差的部分来源"
+  },
+  {
+   "citation": "Engel et al., Project Aria, arXiv:2308.13561",
+   "reason": "MPS 6DoF 手姿与 SLAM 外参的采集硬件"
+  },
+  {
+   "citation": "Karaev et al., CoTracker3, 2024",
+   "reason": "物体点追踪与三角化的前端"
+  }
+ ],
+ "notes": "本批最贴近'ego-centric 采集端追踪质量边界'的论文：Aria MPS 手姿提供绝对定位、HaMeR 提供手系形变的分工，以及 1-2cm 动作标签误差上限、>5cm 深度误差全失败两组阈值性数字。注意推理端仍用 iPhone 深度，纯眼镜只覆盖采集。"
+}

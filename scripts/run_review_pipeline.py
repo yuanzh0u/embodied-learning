@@ -1022,12 +1022,16 @@ def run_stage(
     timeout: float | None = None,
     stream: bool = False,
     on_line: "callable | None" = None,
+    soft_exit_codes: frozenset[int] = frozenset(),
 ) -> str:
     """Idempotent stage runner: skip when outputs exist, else run the built
     command and verify the outputs landed. ``stream=True`` forwards the child's
     stdout line by line through ``on_line`` so long stages (full-text
     extraction) report per-paper progress into the wiki dialog instead of
-    buffering until completion."""
+    buffering until completion. ``soft_exit_codes`` lists non-zero exits that
+    still count as "ran" when the outputs landed (retrieval returns 1 for a
+    partial batch: some queries failed, the hits are saved, and the run should
+    proceed with the hole visible rather than abort)."""
     if not force and outputs_exist(*outputs):
         detail = "skipped (outputs present)"
         log(stage_line(name, detail))
@@ -1054,12 +1058,14 @@ def run_stage(
         result = subprocess.CompletedProcess(command, returncode, "\n".join(captured[-10:]), "")
     else:
         result = run_command(command, timeout=timeout)
-    if result.returncode:
+    if result.returncode and result.returncode not in soft_exit_codes:
         raise fail(name, f"exit {result.returncode}: {(result.stderr or result.stdout)[-400:]}")
     missing = [str(path) for path in outputs if not outputs_exist(path)]
     if missing:
         raise fail(name, f"outputs missing after run: {', '.join(missing)}")
     detail = f"ran: {command_label(command)}"
+    if result.returncode in soft_exit_codes:
+        detail += f" (exit {result.returncode} tolerated: partial batch, hits kept)"
     log(stage_line(name, detail))
     return detail
 
@@ -1331,7 +1337,12 @@ def _main_locked(
             # registry would fail confusingly later. Retry once after a cooldown
             # when a fresh first pass comes back empty (a skipped stage with
             # pre-existing outputs is trusted as-is).
-            arxiv_detail = run_stage("retrieval-arxiv", [arxiv_output], args.force, arxiv_cmd)
+            arxiv_detail = run_stage(
+                "retrieval-arxiv", [arxiv_output], args.force, arxiv_cmd,
+                # exit 1 = partial batch (some queries failed; hits saved) —
+                # proceed with the hole visible, matching the S2 degrade path.
+                soft_exit_codes=frozenset({1}),
+            )
             if arxiv_detail.startswith("ran") and arxiv_output.is_file():
                 try:
                     # paper_count lives at the top level of both the live and
@@ -1345,7 +1356,10 @@ def _main_locked(
                     log("[DRIVER-WARN] arXiv returned 0 results (rate limited?) — cooling down 120s and retrying once")
                     time.sleep(120)
                     arxiv_output.unlink(missing_ok=True)
-                    arxiv_detail = run_stage("retrieval-arxiv", [arxiv_output], True, arxiv_cmd)
+                    arxiv_detail = run_stage(
+                        "retrieval-arxiv", [arxiv_output], True, arxiv_cmd,
+                        soft_exit_codes=frozenset({1}),
+                    )
             if arxiv_output.is_file():
                 try:
                     arxiv_papers = json.loads(arxiv_output.read_text(encoding="utf-8")).get("paper_count") or 0

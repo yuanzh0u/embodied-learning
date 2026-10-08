@@ -1,0 +1,427 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.25706",
+  "title": "Learning Asynchronous Upper-body Task-space Trajectory Tracking Policy for Humanoid Robots",
+  "published": "2026-06-24",
+  "url": "https://arxiv.org/abs/2606.25706",
+  "authors": [
+   "Yumeng Liu",
+   "Dongqi Wang",
+   "Jiyu Yu",
+   "Yijun Fan",
+   "Rong Xiong",
+   "Yue Wang"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "'低率规划器-高率控制器接口异步失配'分支的核心方法论文：直接量化异步部署对任务空间末端（头/双手）跟踪精度的惩罚（同一同步跟踪器在同步评测 98.58% 成功、异步部署跌至 75.48%，异步区间误差 14.64 cm/15.15°），并提出时间索引条件化+滑窗规划帧奖励的隐式对齐方案与 MPC 补全+自引导的后训练方案，含 29-DoF Unitree G1 仿真+真机验证。注意：末端指标为头/手任务空间误差（cm/°）而非机械臂末端轨迹，默认 1 Hz 参考更新、50 Hz 控制；帧失配根因（规划时基座系参考 vs 执行时基座系状态）对人形/移动本体最具解释力。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "获取异步任务空间跟踪问题定义（1-10 Hz 规划 vs 约 50 Hz 控制、帧失配不可直接观测、结构不完整）与四项贡献"
+   },
+   {
+    "locator": "II. RELATED WORKS / B. Asynchronous Trajectory Tracking",
+    "role": "problem",
+    "purpose": "获取现有三类接口方案（缓存块选点、局部增量指令、几何重构/重规划）的缺陷论证：缓存路点留几何失配未解、增量指令误差累积、依赖全局定位且假设足底静止"
+   },
+   {
+    "locator": "II. RELATED WORKS / A. Task-level Planner; C. Tracking Policy Post-training",
+    "role": "problem",
+    "purpose": "确认 VLA/基础模型动作空间继承机械臂式接口导致执行鸿沟，以及稀疏参考下后训练失去模仿监督的痛点"
+   },
+   {
+    "locator": "III. OVERVIEW",
+    "role": "relevant-core",
+    "purpose": "理解两阶段框架结构：ASYNC-3PT 预训练 + ASYNC-CA 后训练"
+   },
+   {
+    "locator": "IV. ASYNC-3PT: TIME-INDEXED CONDITIONING FOR ASYNCHRONOUS TRACKING",
+    "role": "method-or-design",
+    "purpose": "理解问题形式化（SE(3) 规划时基座系稀疏参考）、帧失配推导与时间索引条件化策略设计"
+   },
+   {
+    "locator": "IV-B. Asynchronous Time-indexed Conditioning; IV-C. Teacher-Student Distillation",
+    "role": "method-or-design",
+    "purpose": "理解观测设计（完整缓存未来轨迹+时间索引+历史缓冲 L_h=25）、帧漂移估计器仅作辅助监督、滑窗全局跟踪奖励（规划帧内 SE(3) 误差、每参考更新重置）"
+   },
+   {
+    "locator": "V. ASYNC-CA: COMPLETION-AUGMENTED FOR POST-TRAINING",
+    "role": "method-or-design",
+    "purpose": "理解 MPC 补全（浮动基座+上半身关节参考）观测/奖励增广与动作级/FK 级双层自引导正则"
+   },
+   {
+    "locator": "VI-A. Experimental Setup and Metrics",
+    "role": "data-or-setting",
+    "purpose": "确认设置：29-DoF Unitree G1、50 Hz 控制、20 帧视野、默认 1 Hz 参考更新；指标定义（Succ./Pos_1s/Rot_1s/Pos_loc/Rot_loc/关节限位裕度）"
+   },
+   {
+    "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table I 主对比（同步部署退化 vs ASYNC-3PT）、时间索引消融（Table II）与重规划频率效应（Fig. 5b）"
+   },
+   {
+    "locator": "VI-C. Comparison of Base-augmented Tracking",
+    "role": "results-or-analysis",
+    "purpose": "提取解耦控制 vs 统一控制、状态估计器消融结果（Table I 后三行）"
+   },
+   {
+    "locator": "VI-D. OOD Post-Training with MPC Completion",
+    "role": "results-or-analysis",
+    "purpose": "提取 MPC 补全对帧漂移与关节限位安全的改善（Fig. 4）及双教师骨干泛化（SONIC：ood1 97.8%/ood2 95.3%）"
+   },
+   {
+    "locator": "VI-E. Real-world Hardware Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取真机自引导必要性与 OOD 后训练效果（Fig. 6/7：足外翻等异常下半身动作、仿真统计支撑）"
+   },
+   {
+    "locator": "VII. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与未来工作（规划器与控制器端到端联合训练）"
+   },
+   {
+    "locator": "APPENDIX I MPC FORMULATION",
+    "role": "method-or-design",
+    "purpose": "核对 OCS2 运动学 MPC 补全的状态/控制/约束设计（平滑正则、关节限位与自碰撞松弛障碍罚）"
+   },
+   {
+    "locator": "APPENDIX II PSEUDO-GLOBAL THREE-KEYPOINT TRACKING REWARD",
+    "role": "method-or-design",
+    "purpose": "核对滑窗全局奖励实现细节（伪全局帧、线性/球面插值、指数核超参 w_p=w_R=40、σ_p=0.05、σ_R=0.3 rad）"
+   },
+   {
+    "locator": "APPENDIX III ADDITIONAL HARDWARE DEMONSTRATIONS",
+    "role": "results-or-analysis",
+    "purpose": "确认真机多样化动作（挥手/操作/深蹲/行走）为定性演示而非量化评测"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "仅用于核对核心引用（OmniH2O/SONIC/HiWET/HERO/GR00T N1），无综述所需证据"
+   }
+  ]
+ },
+ "research_question": "论文自问：当高层规划器只以低频率（1-10 Hz）输出规划时基座系下的稀疏上半身（头+双手）任务空间轨迹，而人形全身控制器必须以约 50 Hz 高频运行时，如何在不显式估计帧变换、不依赖全局定位的前提下，让策略隐式对齐异步参考并稳定全身执行，且能在仅有稀疏参考的新任务上安全后训练？",
+ "contributions": [
+  "提出异步上半身任务空间跟踪学习框架，桥接低频、仅上半身的规划器输出与全身人形控制，同时处理时间异步（帧失配）与结构不完整（29-DoF 欠约束）两类问题",
+  "时间索引条件化策略 + 滑窗全局奖励：策略观测完整缓存未来轨迹与执行时间索引（不用于选取路点而保留在观测中），以规划帧内 SE(3) 误差的滑窗奖励惩罚每个规划区间内的漂移，实现隐式时空对齐而无需显式帧估计，保持端到端学习",
+  "后训练方法：OCS2 运动学 MPC 把稀疏头/手参考补全为浮动基座+上半身关节参考（含平滑/关节限位/自碰撞约束），作为观测与稠密辅助奖励；冻结预训练策略作伪教师，动作级+FK 级（下半身加权）双层自引导正则约束策略漂移",
+  "29-DoF Unitree G1 仿真+真机验证：异步与 OOD 运动下优于同步部署和解耦基线，并对未见运动实现更安全适配"
+ ],
+ "method": {
+  "summary": "两阶段框架。Stage 1（ASYNC-3PT 预训练）：以特权教师（OmniH2O/SONIC 类全身数据集）做师生蒸馏；学生策略在 50 Hz 控制步接收 [本体感受 o_prop（关节位置/速度、基座角速度、投影重力）、25 步历史缓冲 h_t、时间索引 î=(t−t_k)/τ、任务观测 o_task=[缓存稀疏轨迹 T_k, 更新时刻局部 SE(3) 误差 ΔT_k]]，输出 29 维 PD 关节目标；时间索引保留在观测中而非用于抽取路点，让策略隐式学习规划时参考与当前状态的一致性；辅助帧漂移估计头（预测 b_tk 与 b_t 间变换与高度）仅作正则监督、不用于变换参考；RL 部分用滑窗全局跟踪奖励——参考与执行末端位姿都表达在最近规划帧 b_tk 中计算 SE(3) 误差，每个新规划指令到达时重置，惩罚区间内累积漂移；训练损失 L_train=L_imit+L_PPO。Stage 2（ASYNC-CA 后训练）：对仅有稀疏头/手参考的新任务，用运动学 MPC 补全浮动基座与上半身关节参考，增广观测并提供稠密基座/上半身奖励；预训练策略 π0 冻结作伪教师，对适配策略 π1 施加动作级自引导（‖a1−a0‖²）与 FK 级自引导（选定身体位姿 FK 差、下半身加权），防止稀疏目标下下半身异常动作与分布漂移。",
+  "assumptions": [
+   "规划器输出为规划时基座系下的有限视野（H=20 帧）相对末端运动（头+双手三点），更新率低于控制频率",
+   "规划时基座系到当前基座系的相对变换不可直接获得（无可靠全局定位），故不做显式帧重建",
+   "预训练阶段可得大规模全身运动数据集（OMOMO/GRAB）与特权教师；后训练阶段仅有任务稀疏轨迹",
+   "MPC 补全依赖已知运动学模型、关节限位与自碰撞几何（OCS2），且基座运动可由上身运动学近似补全"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "OMOMO 与 GRAB 人体运动数据集（训练与评测全身运动分布）",
+   "ood1：80 条预训练控制器零样本失败或大误差的 OOD 动作（后训练用）；ood2：40 条 held-out 仅评测动作",
+   "任务特定稀疏上半身轨迹（真机折衣类演示由 MPC 补全）"
+  ],
+  "tasks": [
+   "稀疏头/手任务空间轨迹的异步跟踪（螺旋等复杂运动、大深蹲类 OOD 运动）",
+   "OOD 后训练与 held-out 泛化评测",
+   "真机全身协调动作：挥手、物体操作、深蹲、行走（定性演示）"
+  ],
+  "embodiments": [
+   "29-DoF Unitree G1 人形机器人（仿真 Isaac 系与真机）",
+   "控制器 50 Hz、稀疏参考默认 1 Hz 更新（1 s 规划区间）、参考视野 20 帧"
+  ],
+  "sample_or_scale": "仿真主表（Table I/II）为完整运动数据集评测；OOD 集 80+40 条动作；双教师骨干（OmniH2O、SONIC）重复验证；真机为多子任务定性演示+仿真统计支撑；表格未报告种子数/方差"
+ },
+ "evaluation": {
+  "design": "两轴评测：(1) 异步建模必要性——同步/异步部署、从零训练、时间索引消融、重规划频率扫描；(2) MPC 补全+自引导后训练——OOD 集（ood1 训练/ood2 held-out）、双教师骨干、真机验证；指标含成功率与异步区间/局部双层跟踪误差及关节限位安全裕度",
+  "baselines": [
+   "TEACHER：OmniH2O 框架特权教师策略（使用不可得信息，仅作参考线）",
+   "Sync W.SC：OmniH2O 框架同步稀疏跟踪器（同步评测，仅作参考线）",
+   "Sync W.ASC：同一同步跟踪器直接异步部署（核心痛点基线）",
+   "ASYNC-3PT from scratch：从零 RL 训练的 3 点异步控制器",
+   "Decoupled：基座与上半身分模块控制的解耦式基线（相关于 HoldMyBeer/PMP）",
+   "ASYNC-CA w.o. estimator：去帧漂移估计器消融"
+  ],
+  "metrics": [
+   "成功率 Succ.（摔倒即失败）",
+   "异步区间误差 Pos_1s/Rot_1s（规划帧内、一个参考区间上的帧漂移度量，cm/°）",
+   "局部误差 Pos_loc/Rot_loc（根相对系内局部末端跟踪精度，cm/°）",
+   "线/角速度误差（m/s、rad/s）与关节限位安全裕度（归一化裕度 5% 分位平均，负值为超限）"
+  ],
+  "ablations": [
+   "时间索引条件化消融（held-out 集，Table II：去索引 Pos_1s 8.6→14.6 cm、Rot_1s 12.8°→26.6°）",
+   "帧漂移估计器消融（Pos_1s 6.00→7.98 cm、Rot_1s 6.43°→9.53°）",
+   "MPC 补全消融（ASYNC-3PT 稀疏参考后训练 vs ASYNC-CA：区间漂移与关节限位裕度）",
+   "自引导消融（真机下半身自然性与迁移）",
+   "重规划频率扫描（OmniH2O/SONIC 双骨干，Fig. 5b）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "问题机制：低率规划器（1-10 Hz）输出规划时基座系下的稀疏参考，控制器高频（约 50 Hz）执行期间浮动基座持续移动，而 b_t T b_tk 变换无全局定位不可得，导致参考系失配、任务空间误差无法直接度量；同时仅头/手的参考对 29-DoF 全身控制结构不完整",
+   "scope": "问题形式化与帧失配推导（IV 节）",
+   "locator": "IV-A. Asynchronous Execution and Frame Mismatch"
+  },
+  {
+   "finding": "异步部署的量化惩罚：同一同步稀疏跟踪器在同步评测下达 98.58% 成功，直接部署到 1 Hz 异步参考更新下降至 75.48% 成功、异步区间误差 14.64 cm/15.15°——缓存参考被反复当作当前控制帧的瞬时目标，使每个参考区间内的执行相对累积帧失配近似开环；ASYNC-3PT 恢复到 99.50% 成功、6.90 cm/6.83°",
+   "scope": "Table I 主对比，OMOMO/GRAB 动作集，1 Hz 参考更新",
+   "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Table I"
+  },
+  {
+   "finding": "时间索引的机制归因：去掉时间索引成功率仅微降（99.4→98.9），但 Pos_1s 从 8.6 cm 增至 14.6 cm、Rot_1s 从 12.8° 增至 26.6°——时间索引主要解决每个异步参考区间内的相位失配；它还带来推理时速度调制能力（改变索引推进率可快/慢执行同一参考）",
+   "scope": "held-out 轨迹集消融（Table II）",
+   "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Table II"
+  },
+  {
+   "finding": "重规划频率效应：方法在全部测试更新率下稳定且不绑定特定频率；更高重规划频率降低位置与旋转误差，因为更短执行区间缓解帧失配与误差累积；该趋势在 OmniH2O 与 SONIC 两种教师骨干上一致",
+   "scope": "重规划频率扫描（Fig. 5b）",
+   "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Fig. 5(b)"
+  },
+  {
+   "finding": "局部精度与异步跟踪解离：解耦式基线取得最低局部位置误差（Pos_loc 2.61 cm）但成功率仅 92.30%、异步误差更差（9.11 cm/15.51°、角速度误差 1.77 rad/s）——局部跟踪精度不等于帧一致的全局执行，统一端到端异步建模（ASYNC-CA：99.60%、6.00 cm/6.43°）更稳",
+   "scope": "Table I 后三行，解耦 vs 统一控制对比",
+   "locator": "VI-C. Comparison of Base-augmented Tracking, Table I"
+  },
+  {
+   "finding": "帧漂移估计器的作用：去掉估计器成功率仍 99.17%，但 Pos_1s 从 6.00 cm 升至 7.98 cm、Rot_1s 从 6.43° 升至 9.53°，说明估计器帮助策略推断更准确的基座感知跟踪表征（其预测仅作辅助监督而非显式变换参考）",
+   "scope": "Table I 消融",
+   "locator": "VI-C. Comparison of Base-augmented Tracking, Table I"
+  },
+  {
+   "finding": "OOD 后训练：MPC 补全的全身指导显著降低异步区间漂移（ASYNC-3PT 稀疏参考后训练仍有更大旋转漂移），并把关节限位裕度从负值（不安全超限）变为正值；SONIC 教师骨干下 ASYNC-CA 在 ood1 达 97.8%、held-out ood2 达 95.3%，说明方法不绑定特定教师",
+   "scope": "ood1（80 条）/ood2（40 条）OOD 集，双教师骨干（Fig. 4）",
+   "locator": "VI-D. OOD Post-Training with MPC Completion, Fig. 4"
+  },
+  {
+   "finding": "真机自引导必要性：去掉自引导不立即降低成功率，但稀疏头/手命令使下半身关节欠约束，策略满足跟踪目标的同时下半身漂移到异常构型（足外翻、膝外翻），真机迁移差；带自引导则下半身自然稳定并可靠迁移到 G1 硬件",
+   "scope": "Unitree G1 真机，OOD 后训练设置（Fig. 7）",
+   "locator": "VI-E. Real-world Hardware Experiments, Fig. 7"
+  },
+  {
+   "finding": "真机 OOD 后训练效果：大深蹲类动作上零样本策略跟踪不准且前向踉跄失稳，后训练策略在仿真与真机上均更贴合参考并保持稳定全身姿态；仿真误差分布（位置/旋转）整体下移且大误差离群被抑制",
+   "scope": "大深蹲类 OOD 运动，仿真统计+真机观察（Fig. 6）",
+   "locator": "VI-E. Real-world Hardware Experiments, Fig. 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "作者未设独立局限小节，仅在结论中以未来工作形式指出：当前规划器与控制器分开训练，两者的端到端联合训练留待未来研究",
+    "locator": "VII. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "证据基于 29-DoF Unitree G1 单一本体；任务空间参考仅头+双手三点，未覆盖工具末端操作或腿部末端任务；数值绑定默认 1 Hz 参考更新与 50 Hz 控制（重规划频率扫描未给出各档具体数值）",
+    "basis": "VI-A 实验设置与 Fig. 5(b) 仅曲线展示"
+   },
+   {
+    "boundary": "真机证据以定性演示（Fig. 6/7/8）+仿真统计支撑为主，无真机量化跟踪误差表；'可靠迁移'结论由视频帧与仿真分布推断",
+    "basis": "VI-E 全节无真机数值表"
+   },
+   {
+    "boundary": "帧失配的幅度依赖基座运动速度与规划间隔（1 s），对更快基座运动/更长规划视野的极端失配未量化；滑窗奖励的伪全局帧假设两次更新间根位姿/航向可缓存使用",
+    "basis": "IV-B 与 Appendix II 的伪全局帧构造"
+   },
+   {
+    "boundary": "评测动作来自 OMOMO/GRAB 人体运动分布，OOD 集为按零样本失败挑选的 80+40 条动作，泛化结论限于该分布内；MPC 补全依赖运动学模型与已知约束，未处理模型误差",
+    "basis": "VI-B 数据集说明、VI-D OOD 构造与 Appendix I"
+   }
+  ]
+ },
+ "transfer_boundary": "证据限定于人形机器人（Unitree G1）头/双手三点任务空间稀疏参考的异步跟踪（默认 1 Hz 规划 vs 50 Hz 控制、OMOMO/GRAB 运动分布）：'时间索引条件化+滑窗规划帧奖励'的隐式对齐机制与'MPC 补全+自引导'的后训练机制可迁移到其他低率规划器-高率控制器接口，但数值（cm/° 级头手误差）与结论不覆盖机械臂末端操作、视觉伺服或更高频失配场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "定义并分离两类指标：异步区间误差（Pos_1s/Rot_1s，规划帧内帧漂移）与局部误差（Pos_loc/Rot_loc），使'局部精度好但异步漂移大'的解耦基线现象可被显式捕捉",
+   "对照设计完整：同步/异步部署、从零训练、解耦式、估计器/时间索引/MPC/自引导逐项消融，且双教师骨干（OmniH2O/SONIC）验证不绑定骨干",
+   "OOD 评测设置 held-out（ood2）避免后训练过拟合评测集的质疑；关节限位 5% 分位裕度指标有工程安全价值",
+   "帧失配根因有清晰的形式化推导（式 1-4），痛点-机制对应关系明确"
+  ],
+  "design_risks": [
+   "真机无量化误差表，全部真机结论为定性+仿真佐证",
+   "表格未报告随机种子数与方差，成功率差异（如 99.50 vs 99.60）的统计意义不明",
+   "Decoupled 基线为作者自建（仅'相关于'HoldMyBeer/PMP），非原实现直接对比；HiWET/HERO 等显式帧估计方法仅在相关工作讨论、无实证对比",
+   "1 Hz 默认更新率下帧漂移幅度依赖动作速度，跨任务数值不可直接比较"
+  ],
+  "baseline_fairness": "Sync W.ASC 与 ASYNC-3PT 用同一教师蒸馏与同一数据，对比公平；TEACHER/Sync W.SC 因使用不可得信息被明确标注为仅参考线；Decoupled 用相同参考与观测、仅改控制结构，设计合理但为自建实现；缺显式帧估计类方法（HiWET/HERO）的实证对比是主要缺口。",
+  "metric_validity": "Pos_1s/Rot_1s 直接度量异步帧漂移（综述核心量），与局部误差分离后能暴露'局部精度≠异步精度'的解离现象，指标设计效度高；但误差仅在成功 rollout 上平均，失败样本（摔倒）的误差被排除，可能低估困难动作的跟踪代价。",
+  "reproducibility": "观测/奖励/MPC 公式与关键超参（L_h=25、H=20、w_p=w_R=40、σ_p=0.05、σ_R=0.3 rad）在正文与附录 I/II 给出；但训练规模、种子数、OOD 动作列表与真机轨迹未公开，未见代码发布声明，完整复现仍需联系作者。",
+  "external_validity": "单一 29-DoG G1 本体、人体运动数据分布、头/手三点稀疏参考；机制（隐式时间索引对齐+滑窗帧奖励）对其他低率-高率接口（如 VLA 输出动作块给人形全身控制器）有直接借鉴意义，但数值与结论向机械臂操作、视觉反馈闭环、更高频规划器的迁移未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.25706-C01",
+   "claim": "在 1 Hz 参考更新、50 Hz 控制的人形任务空间跟踪设置下，把同步稀疏跟踪器直接部署到异步参考更新会使成功率跌至 75.48%（同步评测下同型跟踪器为 98.58%）、异步区间误差达 14.64 cm/15.15°；其机制是缓存参考被反复当作当前控制帧的瞬时目标，使每个参考区间内的执行相对累积帧失配近似开环——时间异步是末端任务空间跟踪精度的结构性痛点，而 ASYNC-3PT 隐式对齐将其恢复到 99.50% 成功、6.90 cm/6.83°。",
+   "stance": "limit",
+   "relation": "支撑综述中'低率规划器-高率控制器接口失配（感知-动作错位）损害末端任务空间轨迹精度'的核心痛点命题，并为异步对齐方案族提供动机与量化基线。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 显示 Sync W.ASC 75.48% 成功、Pos_1s 14.64 cm、Rot_1s 15.15°，而同步评测的 Sync W.SC 为 98.58%、ASYNC-3PT 为 99.50%/6.90/6.83；正文把退化机制明确表述为缓存参考被当作瞬时目标导致区间内近似开环执行。",
+   "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Table I",
+   "source_context": "Directly deploying a synchronous tracker under asynchronous refer- ence updates also leads to clear degradation: Sync W.ASC achieves only 75.48% success rate, with larger asynchronous tracking errors of 14.64 cm and 15.15 ◦ . This is because the cached reference is repeatedly treated as an instantaneous target in the current control frame, making execution within each reference interval approximately open-loop with respect to the accumulated frame mismatch.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "成功率 / 异步区间位置误差 Pos_1s / 旋转误差 Rot_1s",
+    "value_or_direction": "Sync W.ASC：75.48%、14.64 cm、15.15°；对比 Sync W.SC（同步评测）98.58%、ASYNC-3PT 99.50%、6.90 cm、6.83°",
+    "comparator": "同一稀疏跟踪器同步评测 vs 异步部署；ASYNC-3PT vs Sync W.ASC",
+    "task_or_sample": "29-DoF Unitree G1 仿真，OMOMO+GRAB 动作集，50 Hz 控制、1 Hz 参考更新（Table I）",
+    "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 VI-B 正文（75.48%/14.64 cm/15.15°、'approximately open-loop with respect to the accumulated frame mismatch'）与 Table I 各行数值（Sync W.SC 98.58、Sync W.ASC 75.48/14.64/15.15、ASYNC-3PT 99.50/6.90/6.83）一致；主张限定在该仿真设置内。"
+   }
+  },
+  {
+   "card_id": "2606.25706-C02",
+   "claim": "时间索引条件化的机制归因：在 held-out 轨迹集上移除时间索引仅轻微影响成功率（99.4→98.9），但使 Pos_1s 从 8.6 cm 增至 14.6 cm、Rot_1s 从 12.8° 增至 26.6°、速度误差同步增大——时间索引主要通过解决每个异步参考区间内的相位失配来抑制帧漂移。",
+   "stance": "support",
+   "relation": "支撑综述中'异步对齐方案族之隐式时间对齐机制'命题：以执行时间索引为观测条件（而非显式帧估计）即可显著抑制异步区间漂移。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 的受控消融显示时间索引对成功率影响小但对异步区间误差影响大；正文明确确认时间索引主要解决相位失配，并附带给策略推理时速度调制能力。",
+   "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Table II",
+   "source_context": "As shown in Table II, removing the time index only slightly affects success rate, but increases Pos 1s from 8.6 cm to 14.6 cm and Rot 1s from 12.8 ◦ to 26.6 ◦ . This confirms that the time index mainly helps resolve the phase mis- match within each asynchronous reference interval.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "异步区间位置误差 Pos_1s / 旋转误差 Rot_1s / 成功率（时间索引消融）",
+    "value_or_direction": "去时间索引：14.6 cm、26.6°、98.9%；带时间索引：8.6 cm、12.8°、99.4%（速度误差 0.550→0.416 m/s、角速度 1.298→1.048 rad/s）",
+    "comparator": "w/ time index vs w/o time index（同一策略架构）",
+    "task_or_sample": "held-out 未见轨迹集（Table II 消融）",
+    "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 VI-B 时间索引消融段（8.6→14.6 cm、12.8°→26.6°、'resolve the phase mismatch'）与 Table II 数值（98.9/14.6/26.6/0.550/1.298 vs 99.4/8.6/12.8/0.416/1.048）一致；主张限定在 held-out 集消融。"
+   }
+  },
+  {
+   "card_id": "2606.25706-C03",
+   "claim": "局部跟踪精度与异步帧一致执行解离：解耦式基线（基座与上半身分模块控制）取得最低局部位置误差（Pos_loc 2.61 cm），但成功率仅 92.30% 且异步误差更差（Pos_1s 9.11 cm、Rot_1s 15.51°）——在异步稀疏参考下解耦控制不足，统一端到端异步建模（ASYNC-CA：99.60%、6.00 cm/6.43°）才能实现稳定的全身跟踪。",
+   "stance": "support",
+   "relation": "支撑综述中'方案结构（统一端到端 vs 解耦模块化）决定异步失配下末端任务空间跟踪表现'的命题，并提示局部误差指标不足以评价异步方案。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 最后三行对比解耦基线、无估计器与完整 ASYNC-CA；正文明确指出解耦基线的局部精度未转化为更好的异步跟踪与成功率，统一端到端建模更有效。",
+   "locator": "VI-C. Comparison of Base-augmented Tracking, Table I",
+   "source_context": "However, this local accuracy does not lead to better asyn- chronous tracking and a lower success rate of 92.30%. This indicates that decoupled control alone is insufficient under asynchronous sparse references, while our unified end-to-end asynchronous modeling is more effective for stable whole- body tracking.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "局部位置误差 Pos_loc / 成功率 / 异步区间误差 Pos_1s、Rot_1s",
+    "value_or_direction": "Decoupled：Pos_loc 2.61 cm（最低）但 Succ. 92.30%、Pos_1s 9.11 cm、Rot_1s 15.51°、AngVel_1s 1.77 rad/s；ASYNC-CA：99.60%、6.00 cm、6.43°、0.82 rad/s",
+    "comparator": "Decoupled（分模块控制）vs ASYNC-CA（统一端到端），相同参考与观测",
+    "task_or_sample": "29-DoF Unitree G1 仿真异步跟踪（Table I）",
+    "locator": "VI-C. Comparison of Base-augmented Tracking, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 VI-C 'Unified control vs. decoupled control' 段（2.61 cm、92.30%、'decoupled control alone is insufficient'）与 Table I Decoupled 行（92.30/9.11/15.51/2.61/9.22/0.45/1.77/0.48/2.10）及 ASYNC-CA 行（99.60/6.00/6.43/4.84/6.49/0.45/0.82/0.45/0.83）一致。"
+   }
+  },
+  {
+   "card_id": "2606.25706-C04",
+   "claim": "适用条件（规划频率维度）：方法在全部测试重规划频率下保持稳定且不绑定特定控制器频率；更高的重规划频率降低位置与旋转误差，因为更短的执行区间缓解帧失配与误差累积——异步失配的代价随规划-控制频率比增大而增大，且该效应不依赖特定教师骨干（OmniH2O 与 SONIC 趋势一致）。",
+   "stance": "conditional",
+   "relation": "支撑综述中'异步方案的精度收益受规划-控制频率比/执行区间长度调节'的适用条件命题：任何异步对齐方案的量化效果都应以更新率扫描报告。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-B 重规划频率扫描（Fig. 5b）在两种教师骨干上重复，均显示误差随重规划频率升高而下降；正文将机理归因于更短执行区间缓解帧失配与误差累积。",
+   "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Fig. 5(b)",
+   "source_context": "Higher re-planning frequencies reduce position and rotation errors because shorter execution intervals alleviate frame mismatch and error accumulation. The same trend appears with both OmniH2O- and SONIC-based [11] teachers, sug- gesting that this frequency effect is not specific to a particular teacher backbone.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "asynchronous tracking errors (position and rotation) vs. re-planning frequency",
+    "value_or_direction": "position and rotation errors are reduced as re-planning frequency increases; the method remains stable for all tested rates and is not tied to a specific controller frequency; the same trend appears with both OmniH2O- and SONIC-based teachers (Fig. 5(b) curves, per-rate numeric values not reported)",
+    "comparator": "same method across re-planning frequencies; OmniH2O-based vs SONIC-based teachers",
+    "task_or_sample": "29-DoF Unitree G1 仿真异步跟踪，重规划频率扫描（Fig. 5b）",
+    "locator": "VI-B. Effect of Asynchronous Sparse Trajectory Tracking, Fig. 5(b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 VI-B 'Effect of re-planning frequency' 段：'remains stable for all tested rates'、'Higher re-planning frequencies reduce position and rotation errors'、'not specific to a particular teacher backbone'均为原话；量化块仅声明方向性（原文以曲线呈现、无各档数值），未外加数值。"
+   }
+  },
+  {
+   "card_id": "2606.25706-C05",
+   "claim": "结构不完整的量化后果与 MPC 补全条件：仅用稀疏 3 点参考做 OOD 后训练时，稀疏目标对高维全身动作空间欠约束，策略出现关节限位超限（安全裕度为负）且异步区间漂移更大；MPC 补全的基座+上半身稠密约束使异步跟踪误差降低并把关节限位裕度变为正值——稀疏任务空间参考的方案必须补全全身约束才能安全后训练。",
+   "stance": "conditional",
+   "relation": "支撑综述中'稀疏/欠约束参考下末端跟踪方案的安全适用条件'命题：任务空间精度目标必须配合全身约束补全（MPC/正则）才能避免不安全构型。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-D 的 Fig. 4(c) 显示 ASYNC-3PT（无 MPC 补全）后训练后关节限位裕度为负，Fig. 4(b) 显示其区间旋转漂移显著大于 ASYNC-CA；正文把根因归为稀疏 3 点目标欠约束高维动作空间。",
+   "locator": "VI-D. OOD Post-Training with MPC Completion, Fig. 4",
+   "source_context": "Moreover, Fig. 4(c) shows that ASYNC-3PT has a negative joint-limit margin, indicating unsafe joint-limit violations. Without MPC-completed motion guidance, the sparse 3- point objective under-constrains the high-dimensional whole- body action space, making post-training prone to unsafe joint configurations. In contrast, MPC-completed guidance provides denser base and upper-body constraints, leading to lower asynchronous tracking errors and a positive joint-limit margin.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "joint-limit safety margin (5% quantile, negative = violation) and asynchronous tracking errors",
+    "value_or_direction": "ASYNC-3PT (sparse 3-point references): negative joint-limit margin, unsafe joint-limit violations, larger interval rotation/position drift; ASYNC-CA (MPC completion): positive joint-limit margin and lower asynchronous tracking errors (Fig. 4b/4c, normalized bars; no absolute numbers reported)",
+    "comparator": "ASYNC-3PT without MPC-completed guidance vs ASYNC-CA with MPC-completed guidance, OOD post-training",
+    "task_or_sample": "ood1（80 条 OOD 动作）后训练、ood2（40 条 held-out）评测（Fig. 4b/4c）",
+    "locator": "VI-D. OOD Post-Training with MPC Completion, Fig. 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 VI-D 'Effect of MPC-completed guidance' 段：'negative joint-limit margin'、'under-constrains the high-dimensional whole-body action space'、'positive joint-limit margin'均为原话；量化块按原文以方向性/符号表述（原文用 Fig. 4 条形图归一化呈现，未给绝对数值），SONIC 骨干的 97.8%/95.3% 成功率另出自同节。"
+   }
+  },
+  {
+   "card_id": "2606.25706-C06",
+   "claim": "自引导正则的真机必要性：OOD 后训练中移除自引导不会立即降低（仿真）成功率，但由于稀疏头/手命令使下半身关节不受约束，策略在满足跟踪目标的同时下半身漂移到异常构型（足外翻、膝外翻），导致真机迁移差；启用自引导后下半身保持自然稳定并可靠迁移到 G1 硬件——末端跟踪精度目标之外的自由度需要运动先验正则约束。",
+   "stance": "support",
+   "relation": "支撑综述中'末端任务空间精度方案在欠约束自由度上的副作用与防御机制'命题：跟踪误差指标会掩盖未被指定自由度的异常，需自引导/正则类机制保证全身质量与真机迁移。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-E 真机实验第一项消融显示去自引导的失败模式是下半身异常构型而非跟踪失败（Fig. 7 足外翻示例），带自引导则可靠迁移；正文据此确认自引导对约束未观测下半身运动的必要性。",
+   "locator": "VI-E. Real-world Hardware Experiments, Fig. 7",
+   "source_context": "Removing self-guidance does not immediately drop the success rate; however, because the sparse head-and-hand commands leave lower-body joints unspecified, the policy can satisfy the tracking objective while the lower body drifts into unnatural configurations. As shown in Fig. 7, this leads to abnormal lower-body motions (foot eversion, knee valgus) and poor real-robot transfer.",
+   "evidence_type": "system-result",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 VI-E '1) Effect of Self-Guidance' 段：'does not immediately drop the success rate'、'foot eversion, knee valgus'、'poor real-robot transfer'均为原话；该卡为定性机制卡（真机无数值表），故 quantitative 为 false，未虚构数值。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2506.14770",
+  "2602.16705",
+  "2503.14734",
+  "2511.07820"
+ ],
+ "notes": "家族定位：'VLA 延迟与异步执行'族中'低率规划器-高率控制器接口失配'分支：VLA/基础模型继承机械臂式稀疏末端接口输出低率任务空间轨迹，本篇给出可执行的异步跟踪层。与其他异步方案对照：RTC 用重绘平滑块间轨迹、VLASH/Jetson-PI 预测未来状态/表征对齐、本篇用时间索引+滑窗规划帧奖励隐式对齐（不显式估计帧变换）——三条路线在'错位来源'假设上不同（几何帧失配 vs 时间相位失配 vs 环境演化）。对本综述的独特价值：(1) 把'局部末端误差'与'异步帧漂移'两类指标解离（解耦基线局部最好但异步最差）；(2) 稀疏参考欠约束→关节限位超限的安全痛点证据。注意：本体为 29-DoF G1 人形，末端为头/手三点（cm/°），真机无量化误差表。"
+}

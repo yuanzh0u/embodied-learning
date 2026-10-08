@@ -1,0 +1,375 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.08057",
+  "title": "EgoAERO: Learning Dexterous Manipulation from a Single Egocentric Video without Object Assets",
+  "published": "2026-06-06",
+  "url": "https://arxiv.org/abs/2606.08057",
+  "authors": [
+   "Yichen Niu",
+   "Haoran Lv",
+   "Xinrui Zhang",
+   "Xueyao Wan",
+   "Shiyu Gao",
+   "Ying Ai",
+   "Hui Xu",
+   "Yongqi Hu",
+   "Hengyi Zhang",
+   "Yang Xie",
+   "Zhaxizhuoma",
+   "Yue Zhao",
+   "Zhenshan Bing",
+   "Yan Ding",
+   "Jianxing Liu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "单条 ego RGB-D 视频重建手-物轨迹并迁移到灵巧手；明确刻画手部姿态估计误差来源（单目深度偏差、遮挡）、误差传播路径（重建->重定向->两阶段残差策略）、有界接触修正缓解手段与定量消融，直接命中综述问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "定位问题与贡献"
+   },
+   {
+    "locator": "2 EgoAERO Method",
+    "role": "method-or-design",
+    "purpose": "重建管线、手部姿态估计、ego motion 补偿、接触优化与两阶段残差策略"
+   },
+   {
+    "locator": "3 Egocentric Demonstration Data Collection and Quality Assessment",
+    "role": "data-or-setting",
+    "purpose": "在线质量评估机制与 EgoDex-R 数据集"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "消融（Only Hand Pose / w/o contact opt）与 HOI4D CAD 对照"
+   },
+   {
+    "locator": "5 Conclusion / 6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限"
+   },
+   {
+    "locator": "Appendix C/E/G/H",
+    "role": "appendix-or-supplement",
+    "purpose": "修正幅度上限、质量评分公式、成功阈值定义"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "能否在没有任何物体资产（CAD/扫描 mesh）的条件下，把单条 ego-centric RGB-D 人类操作视频重建为接触一致的手-物轨迹，并迁移为可执行的灵巧手机器人策略？",
+ "contributions": [
+  "EgoAERO：首个无物体资产、从单条 ego RGB-D 视频学习灵巧操作的框架",
+  "无资产 ego 手-物重建管线（鲁棒物体跟踪、几何重建、ego motion 补偿、自适应接触优化）",
+  "在线 ego 数据质量评估机制与 4.3M RGB-D 帧的 EgoDex-R 数据集"
+ ],
+ "method": {
+  "summary": "MLLM 语义初始化 -> SAM3 分割 -> 无资产物体 6-DoF 跟踪与 coarse-to-fine mesh 重建 -> HaWoR MANO 手部初始化 + RGB-D 深度校正手部全局平移 -> RGB-D SLAM ego motion 补偿（手部 mask 降权） -> 自适应接触优化（有界修正） -> 两阶段残差策略学习（手部轨迹跟踪 + 物体-接触残差）。",
+  "assumptions": [
+   "输入为 RGB-D（需深度与相机内参）",
+   "单臂单手操作场景",
+   "策略学习依赖 Isaac Gym 仿真训练",
+   "质量评估基于有界可恢复性假设：可用序列应能通过小幅局部修正恢复稳定接触"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoDex-R (自建, 4.3M RGB-D 帧, 5600 序列, 1000+ 物体实例, 200+ 任务类)",
+   "HOI4D (100 序列抽样对照)"
+  ],
+  "tasks": [
+   "日常桌面灵巧操作（抓取-移动-放置为主）"
+  ],
+  "embodiments": [
+   "Unitree G1 + Inspire Hand（真机）",
+   "Isaac Gym 仿真灵巧手"
+  ],
+  "sample_or_scale": "EgoDex-R 随机 100 序列 + HOI4D 随机 100 序列做仿真评估；真机做定性验证"
+ },
+ "evaluation": {
+  "design": "同一 Isaac Gym 环境、同一灵巧手模型、相同奖励/架构/训练预算下比较消融与数据源头；成功 rollout 上平均误差，成功率覆盖全部 rollout",
+  "baselines": [
+   "Only Hand Pose（无物体状态/接触监督）",
+   "w/o Adaptive Contact Optimization",
+   "HOI4D Raw Data (with Object CAD)"
+  ],
+  "metrics": [
+   "物体旋转误差 E_r (deg)",
+   "物体平移误差 E_t (cm)",
+   "平均关节位置误差 E_j (cm)",
+   "平均指尖位置误差 E_ft (cm)",
+   "成功率 SR (阈值: 30deg/3cm/8cm/6cm)"
+  ],
+  "ablations": [
+   "Only Hand Pose",
+   "w/o Adaptive Contact Optimization"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仅用手部姿态（无物体状态与接触信息）成功率仅 9.8%；加入无资产物体重建后 36.2%；再加自适应接触优化后 49.5%",
+   "scope": "EgoDex-R 100 序列仿真",
+   "locator": "4.2 Simulation Experiment Results, Table 2"
+  },
+  {
+   "finding": "无资产重建在 HOI4D 上接近甚至在部分指标上优于 CAD 标注数据（SR 44.7% vs 43.3%）",
+   "scope": "HOI4D 100 序列仿真",
+   "locator": "4.2 Simulation Experiment Results, Table 2"
+  },
+  {
+   "finding": "单目手部姿态估计存在全局深度偏差，需用 RGB-D 深度对手部全局平移做鲁棒校正",
+   "scope": "方法设计",
+   "locator": "2.1.3 Egocentric Hand Pose Estimation"
+  },
+  {
+   "finding": "ego 遮挡与手部姿态估计误差会导致指尖悬空、缺失接触、局部穿透，需有界几何级接触修正",
+   "scope": "方法设计",
+   "locator": "2.1.5 Adaptive Contact Optimization"
+  },
+  {
+   "finding": "严重遮挡、反光物体、快速运动或不准确的手部/分割估计会使性能退化",
+   "scope": "作者自述局限",
+   "locator": "6 Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "主要面向单手操作；在严重遮挡、反光物体、快速运动或手部/分割估计不准确时性能退化",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "策略学习仍为任务特定且需仿真训练；跨任务泛化与训练成本留作未来方向",
+    "locator": "6 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "误差数值仅在仿真成功 rollout 上平均，真实世界只给定性验证；手部估计误差到真机末端轨迹的定量传播未测量",
+    "basis": "4.3 Real-World Experiment 无定量指标"
+   },
+   {
+    "boundary": "依赖 RGB-D 深度校正手部全局平移；纯 RGB（无深度）ego 视频下该校正路径不可用",
+    "basis": "2.1.3 使用 RGB-D depth map 校正全局平移"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：RGB-D ego 视频、单臂单手桌面操作、Isaac Gym 仿真训练的两阶段残差策略；迁移到纯 RGB 无深度输入、双手/双臂、长时间跨任务策略或直接真机训练时，手部误差校正与接触优化路径需重新验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "消融直接隔离物体状态/接触信息对手部轨迹可用性的贡献",
+   "HOI4D CAD 对照提供无资产重建质量的上界参照",
+   "成功阈值、修正幅度上限、质量评分公式均在附录显式给出"
+  ],
+  "design_risks": [
+   "误差指标只在成功 rollout 上平均，低估失败案例的轨迹误差",
+   "未单独报告手部重建精度本身（如手腕/指尖相对 GT 误差），手部检测精度是隐式变量",
+   "真机实验无量化成功率或误差"
+  ],
+  "baseline_fairness": "同一仿真环境、同一灵巧手、相同奖励与训练预算；HOI4D 对照用同管线不同数据源，较公平。",
+  "metric_validity": "E_t/E_j/E_ft 以 cm 计、E_r 以度计，配合显式成功阈值；但成功率阈值较宽（τ_j=8cm, τ_ft=6cm），属于重放级而非精密操作级标准。",
+  "reproducibility": "附录给出修正幅度（34mm/15mm/8mm 上限）、平滑窗长、阈值与评分函数，但未提及代码/数据发布状态。",
+  "external_validity": "仅限单手、RGB-D、桌面操作；对反光/透明物体与快速运动的退化由作者承认；真机外推证据弱。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.08057-C01",
+   "claim": "在 ego 视频重定向的灵巧操作中，仅使用重建的人手运动（无物体状态与接触监督）成功率仅 9.8%，加入物体 6-DoF 状态后升至 36.2%，完整管线达 49.5%，说明手部轨迹必须辅以物体状态与接触信息才能支撑可执行的末端轨迹。",
+   "stance": "conditional",
+   "relation": "支持综述命题：手部轨迹本身不足以决定末端轨迹可用性；误差传播经由物体状态与接触约束共同作用。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2（EgoDex-R 100 序列）三消融成功率对比。",
+   "locator": "3 Egocentric Demonstration Data Collection and Quality Assessment (Table 2); 4.2 Simulation Experiment Results",
+   "source_context": "EgoDex-R Only Hand Pose 28.6 4.72 3.35 2.48 9.8\nEgoDex-R w/o Adaptive Contact Optimization 15.4 1.36 2.93 2.18 36.2\nEgoDex-R EgoAERO 9.7 0.82 2.48 1.65 49.5",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate SR(%)",
+    "value_or_direction": "9.8 -> 36.2 -> 49.5（逐级上升）",
+    "comparator": "Only Hand Pose vs w/o Adaptive Contact Optimization vs full EgoAERO",
+    "task_or_sample": "EgoDex-R 随机 100 序列，Isaac Gym 多 seed rollout",
+    "locator": "3 Egocentric Demonstration Data Collection and Quality Assessment (Table 2)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三行数值逐字取自 Table 2；4.2 正文明确将 9.8% 归因为缺少物体状态与接触信息；claim 限定在 EgoDex-R 仿真设定，未外推真机。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C02",
+   "claim": "自适应接触优化（对手部全局平移与指尖局部几何的有界修正）将物体平移误差从 1.36cm 降到 0.82cm、指尖误差从 2.18cm 降到 1.65cm、成功率从 36.2% 提升到 49.5%，表明手部姿态估计误差引起的指尖悬空/穿透可被几何级后处理部分吸收。",
+   "stance": "support",
+   "relation": "支持综述命题中的缓解手段：有界接触修正可部分阻断手部检测误差向末端轨迹的传播。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "w/o Adaptive Contact Optimization 与完整 EgoAERO 两行消融差值即为接触优化的贡献。",
+   "locator": "3 Egocentric Demonstration Data Collection and Quality Assessment (Table 2)",
+   "source_context": "EgoDex-R Only Hand Pose 28.6 4.72 3.35 2.48 9.8\nEgoDex-R w/o Adaptive Contact Optimization 15.4 1.36 2.93 2.18 36.2\nEgoDex-R EgoAERO 9.7 0.82 2.48 1.65 49.5",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "E_t / E_ft / SR",
+    "value_or_direction": "E_t 1.36 -> 0.82 cm, E_ft 2.18 -> 1.65 cm, SR 36.2 -> 49.5 %",
+    "comparator": "w/o Adaptive Contact Optimization vs full EgoAERO",
+    "task_or_sample": "EgoDex-R 随机 100 序列仿真 rollout",
+    "locator": "3 Egocentric Demonstration Data Collection and Quality Assessment (Table 2)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值直接取自 Table 2 相邻两行消融；'部分吸收'的措辞对应论文未报告修正后残余误差上界，claim 未声称完全消除。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C03",
+   "claim": "单目手部姿态估计存在全局深度偏差，EgoAERO 用 RGB-D 深度图对手部全局平移做基于鲁棒残差的校正（只校正全局平移、不动关节），这是对手部检测误差在源头端的补偿。",
+   "stance": "support",
+   "relation": "回答综述问题中的误差来源与缓解：单目深度偏差是手部轨迹平移误差来源，RGB-D 深度校正可在重定向前削减该误差。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2.1.3 节陈述深度偏差机制与校正设计。",
+   "locator": "2.1 Asset-free Egocentric Hand-Object Reconstruction",
+   "source_context": "Since monocular hand pose estimation may suffer from global depth bias, EgoAERO further uses\nthe RGB-D depth map to correct the global translation of the whole hand. Specifically, the system\nprojects MANO vertices onto the RGB-D image, queries RGB-aligned depth values in local neigh-\nborhoods, and estimates a translation correction ∆p\nC\nt \nfrom the robust residuals between the visible\n3D hand surface observations and the predicted vertices. This correction is applied only to the global\nhand translation. After this step, the hand mesh is more stably aligned with the RGB-D geometry",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文明确 'monocular hand pose estimation may suffer from global depth bias' 并描述深度校正流程；claim 仅为方法层陈述，未赋予未测量的定量效果。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C04",
+   "claim": "在 ego 视角下头部运动会混入手腕轨迹（静止物体出现虚假漂移、手腕轨迹含有与操作无关的相机运动），EgoAERO 以 RGB-D SLAM 将所有帧变换到固定桌面坐标系并对手部像素降权，以分离相机运动与手部运动。",
+   "stance": "support",
+   "relation": "回答综述问题中的误差来源：ego 相机的自身运动会污染手腕（末端对应）轨迹，SLAM 坐标系归一是必要缓解步骤。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2.1.4 节陈述 ego motion 混淆机制与 SLAM 补偿。",
+   "locator": "2.1 Asset-free Egocentric Hand-Object Reconstruction",
+   "source_context": "Since the egocentric camera is mounted on the head, head motion is mixed into the hand-object tra-\njectories expressed in the camera frame: static objects may exhibit spurious drift, and the hand wrist\ntrajectory may contain camera motion unrelated to manipulation",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文 2.1.4 逐句陈述头动混入手腕轨迹与 SLAM 补偿机制，claim 与该机制一一对应；claim 限定为方法设计层面的误差来源识别，未声称补偿后残余误差的定量水平，范围与原文一致。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C05",
+   "claim": "即便经过前述校正，ego 遮挡与手部姿态估计误差仍会导致指尖悬空、接触缺失或局部穿透；EgoAERO 将其形式化为保守的几何级接触修正（不动物体姿态与 MANO 关节，仅有界调整全局平移与局部指尖几何）。",
+   "stance": "conditional",
+   "relation": "说明误差传播的末端表现（接触失真）及其有界后处理路径；同时暗示校正链路不能根除手部估计误差。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2.1.5 节陈述接触失真问题与修正公式化。",
+   "locator": "2.1 Asset-free Egocentric Hand-Object Reconstruction",
+   "source_context": "Due to egocentric occlusions and hand\npose estimation errors, fingertip float-\ning, missing contacts, or local penetra-\ntions may still occur during grasping.\nEgoAERO formulates this problem as a\nconservative geometry-level contact cor-\nrection: it keeps the object pose, ob-\nject mesh, and MANO articulation un-\nchanged, and only applies bounded cor-\nrections to the global hand translation\nand vertices in local contact regions",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "上下两段在原文中连续（Figure 3 插入其间，文本流仍相邻）；normalized 后为同一连续片段，claim 与原文表述一致。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C06",
+   "claim": "EgoAERO 将 ego 数据可接受阈值操作化为有界可恢复性：只有能靠小幅、局部、可解释的修正（不修改物体轨迹、不重解手部关节）恢复稳定接触的序列才判为可用，并输出 accept / repairable accept / recapture 三档采集决策。",
+   "stance": "support",
+   "relation": "回答综述问题中的可接受阈值：数据级质量门以修正预算而非绝对误差定义可用性。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "第 3 节在线质量评估机制。",
+   "locator": "3 Egocentric Demonstration Data Collection and Quality Assessment",
+   "source_context": "The online assessment is based on bounded\nrecoverability: a sequence is considered use-\nful if stable hand-object contact can be recov-\nered through small, local, and interpretable\ncorrections, without modifying the object trajectory or re-solving hand articulation. EgoAERO\nevaluates tracking stability, contact consistency, residual penetration, and temporal jitter from the\nreconstructed hand state, object pose, and object geometry. It outputs three collection decisions:\naccept, repairable accept, or recapture",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "第 3 节原文逐句给出 bounded recoverability 定义与三档决策，claim 是对该机制的同义转述；claim 限定为论文自身的数据门定义，未声称其在其他管线中有效，范围未超出原文。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C07",
+   "claim": "该管线判定重定向 rollout 成功的默认阈值为物体旋转误差 <30°、物体平移误差 <3cm、手部关节误差 <8cm、指尖误差 <6cm，给出了仿真重放场景下末端轨迹可用性的一组显式容差。",
+   "stance": "support",
+   "relation": "回答综述问题中的可接受阈值：为重定向后轨迹误差提供显式数值门槛（仿真重放级）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix H 给出默认成功阈值。",
+   "locator": "References (Appendix H Definitions of Evaluation Metrics)",
+   "source_context": "By default, we set τ\nr \n= 30\n◦\n, τ\nt \n= 3 cm, τ\nj \n= 8 cm, and τ\nf t \n= 6 cm",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "success rate thresholds (E_r, E_t, E_j, E_ft)",
+    "value_or_direction": "30 degrees, 3 cm, 8 cm, 6 cm",
+    "comparator": "EgoAERO default threshold setting",
+    "task_or_sample": "Isaac Gym 仿真 rollout 成功判定",
+    "locator": "References (Appendix H Definitions of Evaluation Metrics)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "阈值数值逐字取自 Appendix H；claim 明确限定为该论文仿真重放场景的默认设定，未主张普适。"
+   }
+  },
+  {
+   "card_id": "2606.08057-C08",
+   "claim": "作者承认该管线在严重遮挡、反光物体、快速运动或手部/分割估计不准确时性能退化，即手部检测精度仍是系统性能的前置条件而非已被后处理完全解决的问题。",
+   "stance": "limit",
+   "relation": "限制综述命题：接触优化与深度校正等缓解手段不能覆盖严重手部/分割估计失败的情形。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Limitations 一节明确列出退化条件。",
+   "locator": "6 Limitations",
+   "source_context": "Its current pipeline mainly targets single-hand manipulation,\nand performance can degrade under severe occlusion, reflective objects, fast motion, or inaccurate\nhand/segmentation estimates",
+   "evidence_type": "author-limitation",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Limitations 节原文逐字列出 severe occlusion / reflective objects / fast motion / inaccurate hand/segmentation estimates 导致退化；claim 仅复述作者陈述，范围一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "[21] HaWoR (Zhang et al., CVPR 2025)",
+   "role": "手部姿态初始化来源；其相机系 MANO 输出精度直接决定 EgoAERO 手部轨迹起点"
+  },
+  {
+   "ref": "[5] EgoDex (Hoque et al., 2025)",
+   "role": "大规模 ego 灵巧视频基线数据来源"
+  }
+ ],
+ "notes": "手部检测精度在本篇中主要以隐式变量出现：通过消融（接触优化 on/off）和局限陈述体现，未报告手部重建相对 GT 的直接误差。"
+}

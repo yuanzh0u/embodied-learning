@@ -1,0 +1,555 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.19586",
+  "title": "One Demo is Worth a Thousand Trajectories: Action-View Augmentation for Visuomotor Policies",
+  "published": "2026-06",
+  "url": "https://arxiv.org/abs/2606.19586",
+  "authors": [
+   "Chuer Pan",
+   "Litian Liang",
+   "Dominik Bauer",
+   "Eric Cousineau",
+   "Benjamin Burchfiel",
+   "Siyuan Feng",
+   "Shuran Song"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "论文是 UMI 鱼眼腕装演示生态中的数据增广方法：明确以超广角鱼眼相机为 eye-in-hand 采集接口（视觉覆盖最大化），并为此开发 Fisheye-3DGS（KB8 鱼眼 ray sampler）；其对鱼眼的应用方式（增广渲染）、效果（仿真/真机成功率提升）与局限（单相机视角覆盖、3DGS 分布外伪影、增广幅度受渲染质量限制）直接回答综述问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：视觉运动策略对初始构型/未见障碍的 OOD 脆弱性与人工采集成本；识别鱼眼相机的设计动机（视觉覆盖最大化）。"
+   },
+   {
+    "locator": "page 2-3, 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "梳理图像增广/状态增广/视觉-动作增广谱系，确认先前工作限于静态第三人称针孔相机、本方法以鱼眼 ray sampler 处理 eye-in-hand 鱼眼。"
+   },
+   {
+    "locator": "page 3-6, 3 The 1001 Demos Framework (3.1-3.4)",
+    "role": "method-or-design",
+    "purpose": "精读 Fisheye-3DGS（KB8 ray sampler）、轨迹优化动作生成（funnel/collision/render/smooth 损失）、鱼眼新视角渲染与策略训练接口。"
+   },
+   {
+    "locator": "page 6-8, 4 Experiments (4.1-4.3)",
+    "role": "results-or-analysis",
+    "purpose": "提取仿真（RoboMimic square，155° 鱼眼转换）与真机（杯具服务）的定量结果、基线对比与增广范围消融。"
+   },
+   {
+    "locator": "page 8, 5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认论文总结的能力边界声明（eye-in-hand 鱼眼、轨迹级、避障增广）。"
+   },
+   {
+    "locator": "page 9, 6 Limitations & Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者声明限制：单相机视角覆盖/静态场景、3DGS 多视角不一致伪影、未考虑下游机器人运动学。"
+   },
+   {
+    "locator": "page 13, Appendix A.1-A.2",
+    "role": "appendix-or-supplement",
+    "purpose": "核对增广范围消融图 A1 与挑战性障碍实验 Table A1 的数字。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "论文自身问题：如何在不增加人工采集成本的前提下，从有限的真机 eye-in-hand（鱼眼）人类演示自动生成视觉上逼真且物理上可行的观测-动作对，以提升视觉运动策略对未见初始构型与未见障碍物的空间鲁棒性？",
+ "contributions": [
+  "提出轨迹级动作-视角增广框架 1001 DEMOS：从一次场景扫描 + 单条真机演示生成数千条空间一致、物理可行的增广演示（自由空间初始构型增广 + 障碍规避增广）。",
+  "碰撞感知动作生成（TSDF 碰撞损失 + 障碍凸包约束 + RRT* 初始化）与接触感知增广（只在首个接触事件前增广，保留原演示接触动力学）。",
+  "Fisheye-3DGS：把 KB8 鱼眼 ray sampler 集成进 3DGS tile 光栅化（保持 256-ray-per-tile CUDA 结构），实现超广角鱼眼图像的快速可编辑新视角渲染。",
+  "仿真（RoboMimic square，+56%）与真机（杯具服务，+55% 自由空间；障碍场景 100% vs 10%/5%）验证增广对 OOD 初始状态与未见障碍的收益。"
+ ],
+ "method": {
+  "summary": "1001 DEMOS 是离线数据增广框架：用改装 UMI（iPhone 鱼眼相机）做手持采集，ARKit VIO 提供度量 6D 末端位姿；COLMAP 从鱼眼扫描序列重建场景点云（用于运动规划与接触事件检测），Fisheye-3DGS（KB8 鱼眼 ray sampler + tile 重分配）表示场景用于新视角渲染。轨迹优化在场景 TSDF 中生成平滑无碰撞轨迹（delta funnel 损失收敛到原演示预接触位姿、Lrender 损失把生成位姿约束在原视角分布附近、碰撞与平滑损失；障碍增广用 Objaverse 障碍的凸包更新 TSDF 并用 RRT* 初始化）；再用 Fisheye-3DGS 沿生成轨迹渲染对应鱼眼观察（SAM2 分割 + 叠加夹爪），与轨迹优化位姿配对成增广 episodes；原演示与增广数据并集训练扩散策略（CLIP ViT-B/16 编码器、相对动作表示）。",
+  "assumptions": [
+   "场景在接触前/后阶段静态：管线不处理动态场景，接触后阶段原样保留原演示。",
+   "鱼眼内参已知（KB8 相机模型）；ARKit VIO 提供度量尺度 6D 位姿。",
+   "增广视角须贴近原演示/扫描视角分布（Lrender 损失 + 实验采用 50° 旋转锥），否则 3DGS 渲染退化。",
+   "生成轨迹只需在部署机器人的任务空间内可行（采样范围与障碍放置有界），不保证构型空间可行。",
+   "评估用的障碍物为 Objaverse 合成资产（各 256 轨道视角训练鱼眼 3DGS）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "RoboMimic square 专家演示 200 条（仿真基数据；腕相机针孔图像转换为 GoPro 155° FoV 鱼眼格式）",
+   "真机杯具服务基础数据：89 条单演示者 UMI 演示",
+   "增广数据：人工筛选 50 条 episodes 生成 7,245 条 free-space episodes + 50 个 Objaverse 障碍生成 5,000 条 obstacle episodes"
+  ],
+  "tasks": [
+   "仿真：RoboMimic square 方螺母插杆（Franka Emika Panda）",
+   "真机：杯具服务（把手左向放置到粉色服务盘，成功判据为把手 ±10° 左向且直立）",
+   "挑战性障碍变体（更大更复杂障碍、更难放置）"
+  ],
+  "embodiments": [
+   "改装 UMI + iPhone 鱼眼相机手持采集；扩散策略部署（真机机器人型号未报告）"
+  ],
+  "sample_or_scale": "仿真：{30,50,100,150,200} 演示子集 × 各方法、1000 个测试初始构型；真机：每策略 20 评估 episodes（OOD 相机视角与 OOD 障碍两轴）+ 挑战性障碍 10 trials。"
+ },
+ "evaluation": {
+  "design": "仿真对照实验（No Aug / GT-rendering oracle / Aug Action Only / SPARTN / Ours，Fig. 5b 随演示量变化的成功率曲线）+ 真机三策略对照（No Aug / FreeSpace Aug / Obstacle Aug），沿 OOD 相机视角与 OOD 障碍两轴评估；另做增广旋转范围 {20°-60°} 消融与挑战性障碍泛化测试。",
+  "baselines": [
+   "No Aug（仅原始人类演示）",
+   "GT-rendering oracle（MuJoCo 真值渲染上界，仅仿真）",
+   "Aug Action Only（Florence et al. 2019，仅扰动动作）",
+   "SPARTN（Zhou et al. 2023，单步 NeRF 视觉-动作增广）"
+  ],
+  "metrics": [
+   "任务成功率（二元；杯具服务判据：杯直立于服务盘且把手在桌面左向 ±10° 内）"
+  ],
+  "ablations": [
+   "增广旋转范围 {20°,30°,40°,50°,60°}（50° 饱和）",
+   "增广粒度：仅动作 vs 单步视觉-动作 vs 轨迹级视觉-动作"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "系统以超广角鱼眼相机为 eye-in-hand 采集接口以最大化视觉覆盖，代价是必须为 3DGS 引入 KB8 鱼眼 ray sampler。",
+   "scope": "设计声明",
+   "locator": "page 2, Section 1"
+  },
+  {
+   "finding": "Fisheye-3DGS 保留 3DGS tile/CUDA 结构的同时精确建模鱼眼畸变，实现快速可编辑鱼眼新视角渲染。",
+   "scope": "方法设计",
+   "locator": "page 4, Section 3.1"
+  },
+  {
+   "finding": "仿真（155° 鱼眼格式）：free-space 增广较无增广平均 +56% 成功率，距 GT 渲染 oracle 仅 8%（低数据）/11%（高数据）。",
+   "scope": "仿真定量结果",
+   "locator": "page 8, Section 4.1"
+  },
+  {
+   "finding": "真机：free-space 增广 +55%；障碍场景 Obstacle Aug 100% vs FreeSpace Aug 10% vs No Aug 5%；挑战性障碍 10/10 vs 0/10 vs 0/10。",
+   "scope": "真机定量结果",
+   "locator": "page 8 Section 4.1; page 13 Appendix A.2"
+  },
+  {
+   "finding": "eye-in-hand 观察下 action-only 增广失效（微小位姿变化→剧烈视觉变化）；轨迹级增广超出单步 SPARTN 平均 15%（峰值 18%）。",
+   "scope": "基线对比",
+   "locator": "page 8, Section 4.2"
+  },
+  {
+   "finding": "增广旋转范围在 50° 饱和：更大范围在有限视角覆盖下损害鱼眼 3DGS 渲染质量。",
+   "scope": "消融",
+   "locator": "page 8, Section 4.3; page 13 Fig. A1"
+  },
+  {
+   "finding": "作者限制：单 eye-in-hand 相机视角覆盖不足→仅静态场景；3DGS 多视角不一致→分布外视角浮点伪影；生成轨迹未考虑下游机器人运动学。",
+   "scope": "作者声明限制",
+   "locator": "page 9, Section 6"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "单 eye-in-hand 移动相机的视角覆盖不足以做动态场景重建或生成远离原视角的新视角，管线被限制在接触前/后的静态场景；未来考虑多相机 rig、ToF 传感器或需要更少训练视角的动态重建方法。",
+    "locator": "page 9, Section 6"
+   },
+   {
+    "limitation": "新视角生成继承 3DGS 的多视角不一致性，对训练视角分布外的生成视角产生浮点伪影；可用 2DGS 等内在视角一致的表示缓解。",
+    "locator": "page 9, Section 6"
+   },
+   {
+    "limitation": "与 UMI 类似，采集时下游部署机器人运动学限制未知，生成轨迹未考虑这些限制；目前靠限制初始位姿采样范围与障碍放置保证任务空间可行，未来应在轨迹优化中纳入运动学约束（任务空间+构型空间）。",
+    "locator": "page 9, Section 6"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "增广数据的渲染质量筛选偏差：真机实验从 89 条演示中“人工筛选渲染效果最好的 50 条 episodes”做增广，未报告全量增广的可用比例与效果——实际部署中渲染失败的演示需要额外筛选成本。",
+    "basis": "page 7 “We manually select 50 episodes that produce the best novel-view rendering results”"
+   },
+   {
+    "boundary": "鱼眼观察的增广幅度上限由原视角覆盖决定：50° 旋转锥与 Lrender 约束意味着增广只能覆盖原演示视角的邻域，无法合成跨视角分布的演示；更宽的鱼眼 FoV 不等于可用的更大增广范围。",
+    "basis": "page 8 §4.3 消融 + page 5 §3.2 Lrender 损失设计 + page 9 第一条限制"
+   },
+   {
+    "boundary": "真机统计功效有限：单一任务（杯具服务）、每条件 20 episodes，10% vs 5% 之类的小差异未报告方差/置信区间；结论外推到其他任务族（铰接/变形物体、非桌面场景）无数据支撑。",
+    "basis": "page 6-8 实验设置与 Fig. 6；全文无方差报告"
+   },
+   {
+    "boundary": "障碍增广基于 Objaverse 合成资产（每个障碍 256 轨道视角训练鱼眼 3DGS），与真实障碍物的外观/几何分布差异未评估；真实障碍的遮挡与接触动力学与合成渲染可能不一致。",
+    "basis": "page 7 “select 50 objects from Objaverse, render 256 orbit views for each”"
+   },
+   {
+    "boundary": "仿真评估用针孔→155° 鱼眼的图像域转换近似（GoPro 镜头参数），并非鱼眼光学全链路仿真；仿真结论对真实鱼眼传感（渐晕、边缘分辨率损失）的保真度未验证。",
+    "basis": "page 6 Simulation Evaluation 的图像转换描述"
+   },
+   {
+    "boundary": "缺少“同等人工成本的更多真实演示”对照：动机是省去重复采集，但没有 cost-matched 真实数据基线来回答“增广 vs 多采集”的相对效率。",
+    "basis": "page 1-2 动机陈述 + page 6-8 实验设计（无该对照）"
+   }
+  ]
+ },
+ "transfer_boundary": "适用范围：静态桌面场景的 UMI 类 eye-in-hand 鱼眼演示→扩散策略增广；增广视角限于原演示/扫描视角分布邻域（实验采用 50° 旋转锥 + 邻近平移）；障碍为可 3D 建模并可用轨道视角训练鱼眼 3DGS 的刚体；任务为 pick-and-place 与非抓取推动类（杯具服务、方螺母插杆）。不适用/未验证：动态场景与接触中阶段、远离原视角的新视角、构型空间可行的轨迹生成、第三人称针孔观察（该设定已有其他工作）、真实障碍物分布、非 UMI 采集硬件、鱼眼光学全链路仿真。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "设置 GT-rendering oracle 上界，能定量校准合成渲染相对完美渲染的质量损失（8%/11%）。",
+   "基线选择有代表性：Aug Action Only（仅动作）与 SPARTN（单步视觉-动作）分别隔离了“动作端”与“粒度”两个因素。",
+   "增广旋转范围消融直接量化了多样性-渲染质量权衡，并把 50° 作为全实验设定。",
+   "真机评估沿 OOD 相机视角与 OOD 障碍两轴设计，并有挑战性障碍（更大更复杂）的泛化测试。"
+  ],
+  "design_risks": [
+   "真机仅单一任务（杯具服务）单一场景，每条件 20 episodes；小样本差异（如 10% vs 5%）无方差报告。",
+   "增广源经过人工筛选（渲染质量最好的 50 条 episodes），存在增广可用性的选择偏差，未报告筛选通过率。",
+   "障碍物为 Objaverse 合成资产，其与真实障碍的分布差异未评估。",
+   "部署机器人型号与训练计算细节未报告，影响复现评估。"
+  ],
+  "baseline_fairness": "Aug Action Only 与 SPARTN 是合理的近似基线且按原论文方法复现（action-only 明确说明复现方式）；GT-oracle 提供上界而非公平基线。缺少“同等采集成本的真实数据”对照，无法直接回答增广相对多采集的效率——这是动机层面的关键缺口。",
+  "metric_validity": "二元成功率配合明确的完成判据（把手 ±10°、直立放置）适合任务定义；1000 测试构型（仿真）样本充足，真机 20 episodes 偏少。无部分得分制，无法区分接近成功的失败模式。",
+  "reproducibility": "有项目网站（chuerpan.com/1001-demos.github.io）；核心组件（COLMAP、3DGS、UMI、Diffusion Policy、KB8 模型）均开源或标准；轨迹优化各损失有公式；但损失权重、渲染质量筛选标准、真机部署细节未完整给出。",
+  "external_validity": "结论限于：静态桌面场景、UMI 鱼眼 eye-in-hand 生态、扩散策略、刚体障碍增广。动态场景、其他任务族、真实障碍分布、非鱼眼/第三人称相机、以及增广-采集成本权衡均未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.19586-C01",
+   "claim": "1001 DEMOS 用超广角鱼眼相机做 eye-in-hand 数据采集，以在相同采集视角数下最大化演示的视觉覆盖；作者同时指出：虽然这大幅扩展了观察视场，但该非标准相机配置要求把 3D Gaussian Splatting 公式扩展为在渲染步骤引入鱼眼 ray sampler。",
+   "stance": "support",
+   "relation": "支持命题：超广角鱼眼相机在具身操作数据采集中的应用方式——扩大视场以最大化演示视觉覆盖——及其在 3D 重建/新视角合成管线中的工程代价。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "这是论文三条关键设计中的第三条：鱼眼超广角的选择服务于“让每条演示的视觉覆盖最大化”，但非标准成像模型迫使作者改造 3DGS 渲染管线（Fisheye-3DGS）。",
+   "locator": "page 2, Section 1, key designs (third bullet)",
+   "source_context": "To maximize visual coverage during data collection, our system uses an ultra-wide fish-eye cam- era. However, while this drastically increases the field-of-view of the observations, this non- standard camera configuration requires us to extend the 3D Gaussian Splatting formulation by introducing a fisheye ray sampler in the rendering step.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 第三条 key design bullet 逐字给出 ultra-wide fish-eye camera 的选择动机（maximize visual coverage）与非标准相机配置要求扩展 3DGS 的代价表述；claim 与原文一一对应，未附加性能断言（原文断词 cam- era、non- standard 已按折叠形式保留）。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C02",
+   "claim": "Fisheye-3DGS 把 3DGS 的针孔 ray sampler 替换为基于 KB8 相机模型的鱼眼 ray sampler，并将 tile 分配从针孔 ray 重分配到鱼眼 ray、按原 256-ray-per-tile 布局分区，从而在精确建模鱼眼畸变的同时保留 CUDA block-thread 结构以实现快速光栅化。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼成像可被高效集成进 3DGS 新视角渲染管线（保留速度与 tile 结构），使腕装鱼眼观察的轨迹级动作-视角增广在计算上可行。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "KB8（Kannala-Brandt 通用相机模型）为每个鱼眼像素计算射线方向，再经针孔内参映射到 splat 位置；该设计是“鱼眼 + 3DGS 可编辑渲染”的核心使能组件。",
+   "locator": "page 4, Section 3.1, Fisheye 3D Gaussians (Fig. 3)",
+   "source_context": "we replace the original ray sampler with a KB8-based [36] fisheye ray sampler. As shown in Fig.3, for each fisheye pixel (u, v), compute its ray di- rection rd = KB8( u, v) [36], then project rd through the camera intrinsics K to obtain the pinhole coordinates (up, vp) = K rd, thus associating each fisheye ray with its 3D-Gaussian splat location on the 2D image plane. We redistribute tile assignments from pinhole to fisheye rays, partition fisheye rays into the original 256-ray-per- tile layout to preserve the CUDA block–thread structure for fast rasterization while accurately modeling fisheye distortion.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 Fisheye 3D Gaussians 段逐字给出 KB8-based fisheye ray sampler、redistribute tile assignments、256-ray-per- tile layout、preserve the CUDA block–thread structure 与 accurately modeling fisheye distortion；claim 逐点对应（原文断词 di- rection、256-ray-per- tile 与 en-dash block–thread 已按折叠形式保留）。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C03",
+   "claim": "在 RoboMimic square 任务（Franka Panda 方螺母插杆）的仿真评估中——为匹配 eye-in-hand 数据格式，腕相机针孔图像被转换为 GoPro 鱼眼镜头 155° FoV 的鱼眼图像——在同等原始专家演示量下，free-space 动作-视角增广相比无增广训练平均提升 56% 任务成功率，并紧贴真值渲染 oracle 上界（低数据域差距 8%、高数据域差距 11%）。",
+   "stance": "support",
+   "relation": "支持命题：围绕鱼眼腕视角观察的动作-视角增广能显著提升视觉运动策略对初始构型扰动的空间鲁棒性，且接近完美渲染的上界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "仿真对照包含 No Aug、GT-rendering oracle（仅仿真可得）、Aug Action Only 与 SPARTN；策略在各演示子集 {30,50,100,150,200} 上训练并在 1000 个测试初始构型上评估。",
+   "locator": "page 8, Section 4.1",
+   "source_context": "Figure 5(b) shows that, with the same amount of original expert demonstrations, our action-view augmentation closely tracks the perfect GT-rendering upper bound, with a performance gap of 8% in the low-data regime and 11% in the high-data regime. Compared to policies trained without aug- mentation, our free space augmentation provides an average of 56% task success rate improvement.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average task success rate improvement",
+    "value_or_direction": "+56% over no augmentation; within 8% (low-data regime) and 11% (high-data regime) of the GT-rendering oracle",
+    "comparator": "policies trained without augmentation; GT-rendering oracle upper bound",
+    "task_or_sample": "RoboMimic square peg-in-hole in simulation; wrist-camera images converted to 155° fisheye FoV; 200 expert demonstrations; tested on 1000 initial robot configurations",
+    "locator": "page 8, Section 4.1, Fig. 5(b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 §4.1 逐字给出 closely tracks the perfect GT-rendering upper bound、performance gap of 8%/11% 与 average of 56% task success rate improvement；155° GoPro 鱼眼转换、200 条专家演示与 1000 测试构型见 page 6 Simulation Evaluation 段（已逐字核对），claim 的每个数字都有原文对应。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C04",
+   "claim": "在真机杯具服务任务上，以同等数量的人类演示为基础，free-space 增广相比无增广训练提供 55% 的性能提升。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼腕装演示的动作-视角增广收益可迁移到真实机器人任务（不止仿真）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "真机基础数据为 89 条单演示者 UMI 采集 episodes；从人工筛选的 50 条 episodes 生成 7245 条 free-space 增广 episodes（page 7）。",
+   "locator": "page 8, Section 4.1",
+   "source_context": "In the real-world experiment shown in Fig 6, we find that, with the same amount of human demon- strations, our free space augmentation provides a performance boost of 55% over policies trained without augmentation.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "performance boost",
+    "value_or_direction": "+55%",
+    "comparator": "policies trained without augmentation (No Aug)",
+    "task_or_sample": "real-world cup serving task; 89 UMI-collected demonstration episodes as base data; FreeSpace Aug policy vs No Aug policy",
+    "locator": "page 8, Section 4.1, Fig. 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 §4.1 逐字给出 with the same amount of human demonstrations 与 performance boost of 55% over policies trained without augmentation；89 条演示见 page 6 Real-world Evaluation 段、增广 episode 数见 page 7（均已核对原文）。claim 未超出该句范围。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C05",
+   "claim": "在真机障碍物场景评估（每策略 20 个评估 episodes）中，加入障碍规避增广数据的策略（Obstacle Aug）以 100% 成功率完成任务，显著超过 FreeSpace Aug（10%）与 No Aug（5%）——避障行为在原始人类演示中不存在，由增广数据习得。",
+   "stance": "support",
+   "relation": "支持命题：对鱼眼腕视角观察合成带障碍场景的动作-视角增广，可让策略习得演示中不存在的避障行为。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原始演示全部在无障碍场景采集；障碍规避增广把 Objaverse 障碍物集成进原场景的 Fisheye-3DGS 并生成绕障轨迹（page 7）。",
+   "locator": "page 8, Section 4.1",
+   "source_context": "We find that our full Obstalce Aug is able to complete the task with a 100% success rate, significantly outperforming FreeSpace Aug with 10% and No Aug with 5% success rates, respectively.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "task success rate",
+    "value_or_direction": "Obstacle Aug 100%; FreeSpace Aug 10%; No Aug 5%",
+    "comparator": "Obstacle Aug vs FreeSpace Aug vs No Aug",
+    "task_or_sample": "real-world cup serving with unseen obstacles; success rates averaged over 20 evaluation episodes per policy",
+    "locator": "page 8, Section 4.1, Fig. 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 §4.1 逐字给出 100% success rate、FreeSpace Aug with 10%、No Aug with 5%（原文 Obstalce 为拼写笔误，quote 保留原样）以及 behaviors not shown in the original human demonstrations；每策略 20 episodes 见 page 7（已核对）。claim 与原文一一对应。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C06",
+   "claim": "在更具挑战性的障碍设置（更难的障碍放置、更大且几何形状更多样的障碍物；10 组不同障碍集各 10 trials）中，Obstacle Aug 策略完成 10/10 trials，而 No Aug 与 FreeSpace Aug 均未完成任何 trial。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼 3DGS 障碍增广带来的避障能力可推广到更难的障碍几何与放置条件。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "附录 A.2 的挑战性障碍实验与正文共用同一三个策略；Table A1 报告 No Aug 0%、FreeSpace Aug 0%、Obstacle Aug 100%。",
+   "locator": "page 13, Appendix A.2, Table A1",
+   "source_context": "we conducted 10 trials on 10 different obstacle sets as shown in Fig. A2, on the same three policies No Aug, FreeSpace Aug, Obstacle Aug, as tested in real world experiments for Free Space and Obstacle as reported in manuscript, and found that ours Obstalce Aug was able to complete 10/10 trials, while No Aug and FreeSpace Aug both fail complete any trials.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "trials completed",
+    "value_or_direction": "Obstacle Aug 10/10; No Aug 0/10; FreeSpace Aug 0/10",
+    "comparator": "Obstacle Aug vs No Aug vs FreeSpace Aug",
+    "task_or_sample": "challenging-obstacles variant of the real-world cup serving task; 10 trials on 10 different obstacle sets",
+    "locator": "page 13, Appendix A.2, Table A1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 13 附录 A.2 逐字给出 10 trials on 10 different obstacle sets、ours Obstalce Aug was able to complete 10/10 trials、No Aug and FreeSpace Aug both fail complete any trials，Table A1 同页给出 0%/0%/100%；“更难放置、更大更多样形状”的实验设定在同段开头逐字出现，claim 与原文一一对应。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C07",
+   "claim": "增广旋转范围消融（50 条 RoboMimic square 鱼眼 eye-in-hand 演示、每条生成 20 个增广 episodes、旋转界 {20°,30°,40°,50°,60°}）：更大的旋转界在视角覆盖有限时会损害渲染质量，成功率在 50° 处饱和，作者据此在所有其他实验采用 50°。",
+   "stance": "conditional",
+   "relation": "条件性命题：鱼眼腕视角增广的有效增广幅度受原演示视角覆盖的限制——增广多样性与鱼眼 3DGS 渲染质量之间存在明确权衡。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "该权衡由 3DGS 的视角分布外渲染退化决定：作者在轨迹优化中用 Lrender 损失把生成位姿约束在原演示/扫描视角分布附近（page 5），消融确认 50° 是质量-多样性平衡点。",
+   "locator": "page 8, Section 4.3 (Fig. A1 on page 13)",
+   "source_context": "While larger rotation bounds increase diversity, they can harm rendering quality under limited viewpoint coverage. To quantify this trade-off, we trained visuomotor policies on 50 RoboMimic “square” export demonstrations (fisheye, eye-in-hand), augmenting each with rotation bounds of {20◦, 30◦, 40◦, 50◦, 60◦}, generating 20 augmented episodessamples per demo. We then evaluated on a held-outout test set shown in Fig 5. As shown in Fig A1, success rates plateaued at 50◦, which we therefore adopt for all other experiments.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "policy success rate",
+    "value_or_direction": "plateaus at the 50° rotation bound",
+    "comparator": "rotation bounds {20°, 30°, 40°, 50°, 60°}",
+    "task_or_sample": "RoboMimic square; 50 fisheye eye-in-hand demonstrations; 20 augmented episodes per demonstration",
+    "locator": "page 8, Section 4.3, Fig. A1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 §4.3 逐字给出 larger rotation bounds … can harm rendering quality under limited viewpoint coverage、{20◦, 30◦, 40◦, 50◦, 60◦}、success rates plateaued at 50◦ 与 adopt for all other experiments；50 条演示与每条 20 episodes 亦在该段（已核对）。summary 中 Lrender 约束见 page 5 §3.2（已核对原文）。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C08",
+   "claim": "作者声明：仅有单个 eye-in-hand 移动相机时，演示阶段的视角覆盖不足以做动态场景重建、也不足以生成远离原视角的新视角，因此当前把 1001 DEMOS 管线限制在接触前或接触后的静态场景；提出的补救方向包括多相机 rig、ToF 传感器或需要更少训练视角的动态重建方法。",
+   "stance": "limit",
+   "relation": "限定命题：单鱼眼腕装相机的视角覆盖是硬约束——基于其 3D 重建的增广方法无法处理动态场景，也无法生成远离演示视角分布的新视角。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "这同时解释了为什么增广只在接触事件之前进行（接触后阶段原样保留原演示）以及为什么旋转范围有 50° 上限（C07）。",
+   "locator": "page 9, Section 6, Limitations & Future Work",
+   "source_context": "With only a single eye-in-hand moving camera, the view coverage of the demonstration stage is inadequate for dynamic scene reconstruction or for generating novel views far from the original viewpoints. As a result, we currently restrict the 1001 D EMOS pipeline to static scenes before or after contact.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 限制第一段逐字给出 view coverage … inadequate for dynamic scene reconstruction or for generating novel views far from the original viewpoints 与 restrict … to static scenes before or after contact；“多相机 rig/ToF/少视角动态重建”的 future work 表述紧随其后同段（已核对原文，claim 中一并引用）。claim 未超出原文范围。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C09",
+   "claim": "新视角生成模块继承 3DGS 的多视角不一致性：对训练视角分布之外的生成视角会产生浮点伪影；作者建议采用 2DGS 等内在视角一致的表示来缓解。",
+   "stance": "limit",
+   "relation": "限定命题：鱼眼 3DGS 增广的渲染保真度边界——分布外视角的伪影可能污染增广数据并影响下游策略训练。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "这是 C07 中“更大旋转界损害渲染质量”的机理根源：渲染退化以浮点伪影形式出现，作者以 2DGS 为候选修复方向。",
+   "locator": "page 9, Section 6, Limitations & Future Work",
+   "source_context": "Our novel-view generation module inherits 3DGS’s multi-view inconsistent nature, yielding float- ing artifacts for generated viewpoints outside of the training viewpoint distribution. This could be alleviated by adopting inherently view-consistent representations like 2DGS [45].",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 限制第二段逐字给出 inherits 3DGS’s multi-view inconsistent nature、yielding floating artifacts for generated viewpoints outside of the training viewpoint distribution 与 2DGS [45] 缓解建议（原文断词 float- ing 已按折叠形式保留）；claim 与原文一一对应。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C10",
+   "claim": "action-only 增广（Aug Action Only）在第三人称视角下对小范围机器人状态扰动有效，但在 eye-in-hand 观察下失效——微小的末端执行器位姿变化会产生剧烈的视觉变化；定量上该基线相比 No Aug 平均提升 29%（峰值 56%），而 1001 DEMOS 在高数据域最多超出 Aug Action Only 35%。",
+   "stance": "support",
+   "relation": "支持命题：eye-in-hand（腕装相机/鱼眼）观察对动作-视角一致性有内在强约束——观察随动作剧烈变化，使仅扰动动作的增广失效，必须同步合成匹配的新视角观察。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "该对比揭示了观察模式（第三人称 vs eye-in-hand）决定增广方式的适用性：视觉-动作耦合越强，越需要视觉端的联合增广。",
+   "locator": "page 8, Section 4.2",
+   "source_context": "While effective for small, local robot state variations under third-person views, it breaks down with eye-in-hand observations, where minor end-effector pose changes produce drastic visual shifts. We replicate this baseline by applying free-space aug- mentation in the end-effector and gripper actions, but using the original visual observations. As Fig. 5 shows, Aug Action Only boosts the average success rate by 29% over No Aug – peaking at 56%. In turn, Ours outperforms Aug Action Only by up to 35%, especially in high-data regimes.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate",
+    "value_or_direction": "Aug Action Only +29% over No Aug (peaking at 56%); 1001 DEMOS outperforms Aug Action Only by up to 35%",
+    "comparator": "Aug Action Only, No Aug, 1001 DEMOS",
+    "task_or_sample": "RoboMimic square, fisheye eye-in-hand, Diffusion Policy trained on {30, 50, 100, 150, 200} demonstration subsets",
+    "locator": "page 8, Section 4.2, Fig. 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 §4.2 逐字给出 breaks down with eye-in-hand observations, where minor end-effector pose changes produce drastic visual shifts、boosts the average success rate by 29% over No Aug – peaking at 56% 与 outperforms Aug Action Only by up to 35%, especially in high-data regimes（原文断词 aug- mentation、demon- strations 已按折叠形式保留）；claim 的机理表述与两个数字均在同一连续段落。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C11",
+   "claim": "与单步增广基线 SPARTN（NeRF 重建视觉场景、单步扰动视觉-动作）相比：SPARTN 相比 No Aug 提升 41%，但其单步增广无法产生平滑的轨迹级避障行为、更容易使策略进入无恢复行为的未见构型；1001 DEMOS 做轨迹级动作-视角增广，平均成功率再超出 SPARTN 15%（峰值提升 18%）。",
+   "stance": "support",
+   "relation": "支持命题：鱼眼腕视角下轨迹级（而非单步）的动作-视角联合增广是更有效的增广粒度，可产生平滑避障行为。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "该对比把“增广粒度”从单步提升到整条轨迹，作者归因于轨迹级增广能提供 OOD 状态下的恢复行为。",
+   "locator": "page 8, Section 4.2",
+   "source_context": "Single-step action-view augmentation using SPARTN improves policies’ performance for OOD camera views, as shown in Fig. 5 with a performance gain of 41% over No Aug. However, SPARTN’s single-step augmentation cannot produce smooth, trajectory-level collision-avoidance behaviors, more easily causing policies to enter unseen configurations for which no recovery behav- iors exist in the training data. By comparison, 1001 D EMOS performs trajectory-level action-view augmentation. We observe that Ours thereby is able to outperform SPARTN, boosting the average success rate by 15% – peaking at an improvement of 18%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average success rate gain over SPARTN",
+    "value_or_direction": "+15% average, up to +18% peak (SPARTN itself +41% over No Aug)",
+    "comparator": "SPARTN (single-step, NeRF-based action-view augmentation)",
+    "task_or_sample": "RoboMimic square, fisheye eye-in-hand, OOD camera-view evaluation",
+    "locator": "page 8, Section 4.2, Fig. 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 8 §4.2 逐字给出 SPARTN … performance gain of 41% over No Aug、cannot produce smooth, trajectory-level collision-avoidance behaviors、outperform SPARTN, boosting the average success rate by 15% – peaking at an improvement of 18%（原文弯引号 policies’、断词 behav- iors 已按折叠形式保留）；claim 的三个数字与机理表述均在同一连续段落。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C12",
+   "claim": "与 UMI 类似，数据采集时下游部署机器人的运动学限制未知，生成的演示轨迹未考虑这些限制；作者通过限制初始位姿采样范围与障碍物放置，保证生成轨迹落在部署机器人的任务空间内，并把在轨迹优化中纳入下游机器人运动学约束（任务空间与构型空间）列为扩展方向。",
+   "stance": "gap",
+   "relation": "缺口命题：鱼眼演示增广生成的动作轨迹在具身可行性上未闭环——尚未针对具体部署机器人生成运动学可行的轨迹。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者认为该扩展可实现 embodiment-aware 策略学习框架，把语义与物理有效但硬件不可行的动作迁移到不同机器人具身。",
+   "locator": "page 9, Section 6, Limitations & Future Work",
+   "source_context": "Similar to UMI [7], since the kinematic limits of the downstream deployment robots are unknown at the time of data collection, the generated demonstration trajectories do not account for kinematic limits of the downstream deployment robots. We carefully bound both, the sampling range for ini- tial poses and the placement of obstacles, to ensure that the generated trajectories lie within the task space of the deployment robot.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 9 限制第三段逐字给出 kinematic limits … unknown at the time of data collection、do not account for kinematic limits 与 carefully bound both … to ensure that the generated trajectories lie within the task space（原文断词 ini- tial 已按折叠形式保留）；构型空间约束的扩展方向在同段后续（已核对原文），claim 与原文一一对应。"
+   }
+  },
+  {
+   "card_id": "2606.19586-C13",
+   "claim": "为与 eye-in-hand 数据格式一致，仿真评估把 RoboMimic 腕相机的针孔图像观察用 GoPro 鱼眼镜头（155° FoV）的内参与畸变参数转换为鱼眼图像。",
+   "stance": "support",
+   "relation": "支持命题：腕装鱼眼正在成为 UMI 类 eye-in-hand 接口的默认观察格式——即使在针孔仿真基准上，评估也被转换到鱼眼域进行。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "该转换保证仿真/真机数据格式一致，也说明鱼眼格式是该框架的一等公民而非可选项；同时 50° 增广锥、155° 鱼眼转换共同定义了评估的视角扰动范围。",
+   "locator": "page 6, Section 4, Simulation Evaluation",
+   "source_context": "To follow the same data format as in §3.1, we convert the pinhole image observations from the wrist camera into Fisheye images using intrinsic & distortion parameters of a GoPro Fisheye lens with a 155 ◦ FoV .",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 6 Simulation Evaluation 段逐字给出 convert the pinhole image observations from the wrist camera into Fisheye images using intrinsic & distortion parameters of a GoPro Fisheye lens with a 155 ◦ FoV（度符号与 FoV 后句点前的空格按 PDF 提取原样保留）；claim 仅复述该设定，无附加断言。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Universal Manipulation Interface: In-the-wild Robot Teaching Without In-the-wild Robots",
+   "arxiv_id": "2402.10329",
+   "reason": "被评论文的采集设备与数据格式基础（modified UMI + iPhone 鱼眼相机、演示 episode 定义、策略接口协议）。"
+  },
+  {
+   "title": "3D Gaussian Splatting for Real-Time Radiance Field Rendering",
+   "arxiv_id": "2308.14740",
+   "reason": "被评论文改造的渲染基座：Fisheye-3DGS 通过替换其针孔 ray sampler 为 KB8 鱼眼 sampler 实现鱼眼新视角渲染。"
+  },
+  {
+   "title": "A Generic Camera Model and Calibration Method for Conventional, Wide-Angle, and Fish-Eye Lenses (Kannala & Brandt, TPAMI 2006)",
+   "arxiv_id": "",
+   "reason": "KB8 鱼眼相机模型（参考文献 [36]），Fisheye-3DGS ray sampler 的数学基础。"
+  },
+  {
+   "title": "NeRF in the Palm of Your Hand: Corrective Augmentation for Robotics via Novel-View Synthesis (SPARTN)",
+   "arxiv_id": "",
+   "reason": "单步视觉-动作增广基线（参考文献 [28]），与 1001 DEMOS 的轨迹级增广形成粒度对比（C11）。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "A1",
+   "caption": "Real World Evaluation Results for Challenging Obstalces. Task success rate reported over 10 trials.",
+   "section": "A.2 Real World Evaluation on Challenging Obstacles",
+   "rows": [
+    [
+     "Method",
+     "Task Success Rate"
+    ],
+    [
+     "No Aug",
+     "0%"
+    ],
+    [
+     "FreeSpace Aug (Ours)",
+     "0%"
+    ],
+    [
+     "Obstacle Aug (Ours)",
+     "100%"
+    ]
+   ],
+   "usage": "作者用该表展示挑战性障碍（更大更复杂形状、更难放置）下障碍增广策略 10/10 完成、其余两策略 0/10 的对比。"
+  }
+ ],
+ "notes": "CoRL 2025（PMLR，Seoul）论文，作者来自 Stanford/Columbia/TRI，是 UMI 鱼眼生态的延续工作（第一作者 Chuer Pan 亦为 UMI 作者之一）。与鱼眼综述的接口点：(1) 超广角鱼眼作为 eye-in-hand 采集接口的动机（视觉覆盖最大化）与代价（需 KB8 ray sampler 改造 3DGS）；(2) Fisheye-3DGS 使鱼眼图像可进入快速可编辑新视角渲染管线；(3) eye-in-hand 鱼眼观察对动作-视角一致性的强约束（action-only 增广失效）；(4) 增广幅度受原视角覆盖限制（50° 饱和）与 3DGS 分布外伪影是鱼眼+3DGS 组合的明确局限；(5) 仿真评估也被转换到 155° 鱼眼域。原文含若干拼写笔误（Obstalce、episodessamples、held-outout），引用时按原文保留。所有 source_context 均逐字取自 pdf-text 提取页。"
+}

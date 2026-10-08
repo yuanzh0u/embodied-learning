@@ -1,0 +1,389 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2501.02973",
+  "title": "HaWoR: World-Space Hand Motion Reconstruction from Egocentric Videos",
+  "published": "2025-01-06",
+  "url": "https://arxiv.org/abs/2501.02973",
+  "authors": [
+   "Jinglei Zhang",
+   "Jiankang Deng",
+   "Chao Ma",
+   "Rolandos Alexandros Potamias"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接面向 ego-centric 视频的世界系手部运动重建：量化相机系 PA-MPJPE（~5mm）与世界系 W-MPJPE（朴素管线 119-156mm、HaWoR 33mm）之间的量级差，给出遮挡分级退化、出视野帧补全残差、相机轨迹 ATE、以及检测误差向下游传播的机制，是综述问题中误差传播路径与缓解手段的核心证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "确认世界系手部运动重建的问题定位"
+   },
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "识别 ego 场景下手-相机同时运动、出视野、尺度歧义三类挑战"
+   },
+   {
+    "locator": "2. Related Work",
+    "role": "relevant-core",
+    "purpose": "定位相机系手姿估计与世界系人体重建基线脉络"
+   },
+   {
+    "locator": "3. Method",
+    "role": "method-or-design",
+    "purpose": "理解相机系运动估计+自适应 SLAM+运动补全的三模块解耦设计"
+   },
+   {
+    "locator": "3.1. Hand Motion Estimation",
+    "role": "method-or-design",
+    "purpose": "确认 IAM/PAM 时序先验针对遮挡与截断的设计动机"
+   },
+   {
+    "locator": "3.2. Camera Trajectory Estimation",
+    "role": "method-or-design",
+    "purpose": "理解手部掩膜 DBA 与 Metric3D 尺度估计对相机轨迹精度的作用"
+   },
+   {
+    "locator": "3.3. Hand Motion Infiller",
+    "role": "method-or-design",
+    "purpose": "理解出视野帧的补全机制与训练数据"
+   },
+   {
+    "locator": "4. Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取数据集、指标定义（W-MPJPE/WA-MPJPE/RTE/Accel/ATE）"
+   },
+   {
+    "locator": "4.1. Camera-frame 3D Hand Motion",
+    "role": "results-or-analysis",
+    "purpose": "提取 DexYCB 遮挡分级精度表（Table 1）"
+   },
+   {
+    "locator": "4.2. World-frame 3D Hand Motion",
+    "role": "results-or-analysis",
+    "purpose": "提取世界系手部轨迹与相机轨迹定量结果（Tables 2-3）"
+   },
+   {
+    "locator": "4.3. Ablation",
+    "role": "results-or-analysis",
+    "purpose": "提取 IAM/PAM 与 infiller 消融（Table 4）"
+   },
+   {
+    "locator": "5. Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者总结与实时性局限"
+   },
+   {
+    "locator": "6. Generalization on In-the-Wild Videos",
+    "role": "appendix-or-supplement",
+    "purpose": "确认 EPIC-KITCHENS 泛化仅为定性"
+   },
+   {
+    "locator": "8. Implementation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对训练数据构成（HOT3D/ARCTIC/DexYCB/HO3D 共 1M 帧）与评测细节"
+   },
+   {
+    "locator": "8.3. Evaluation Details",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 W-MPJPE/WA-MPJPE/RTE 指标定义与 HOT3D 110/27 视频划分"
+   },
+   {
+    "locator": "9. Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：检测误差传播与双手独立建模"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "purpose": "参考文献列表不含新证据，仅按需回溯引用"
+   },
+   {
+    "locator": "7. Comparison on In-the-Wild Videos",
+    "role": "appendix-or-supplement",
+    "purpose": "仅定性对比图，无可定位定量证据"
+   }
+  ]
+ },
+ "research_question": "如何从单目 ego-centric 视频重建世界坐标系下的高保真 3D 手部运动轨迹（MANO 位姿+全局手腕位移），并在手部出视野/严重遮挡时保持稳健？",
+ "contributions": [
+  "提出（作者声称首个）世界系 3D 手部运动估计方法 HaWoR：相机系手部运动重建 + 世界系相机轨迹估计的解耦框架",
+  "自适应 egocentric SLAM：通过手部区域掩膜排除动态手对 bundle adjustment 的干扰，并用 Metric3D + 动态采样恢复世界尺度",
+  "运动补全网络（motion infiller）：重建出视野/遮挡帧的手部运动",
+  "在 HOT3D 世界系基准上 W-MPJPE 33.20mm，相比朴素 手姿+SLAM 管线（119-156mm）降低约 72-79%"
+ ],
+ "method": {
+  "summary": "三模块管线：(1) 相机系手部运动估计网络 M：冻结 WiLoR ViT backbone 提特征，IAM（图像时序注意力）处理截断/遮挡，PAM（姿态时序注意力）学习运动先验，回归 MANO 序列；(2) 相机轨迹：对手部区域双重掩膜的 DROID-SLAM + Metric3D 深度经 AdaSM 动态采样对齐出世界尺度；(3) 运动补全网络 F：在 canonical 空间用 transformer encoder 填补出视野帧 MANO 参数（平移/形状线性、旋转 SLERP 初始化），再变换回世界系。",
+  "assumptions": [
+   "依赖外部手部检测/跟踪（WiLoR + BoT-SORT）提供边界框序列",
+   "世界尺度来自单目 metric 深度网络（Metric3D），在中间深度范围内可靠",
+   "出视野手部可由运动先验与可见上下文补全",
+   "每只手独立建模，无手-手互穿约束"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "HOT3D (egocentric, Aria, 573K 训练帧, 110/27 视频划分)",
+   "ARCTIC (165K)",
+   "DexYCB (169K)",
+   "HO3D (66K)",
+   "EPIC-KITCHENS (仅定性泛化)"
+  ],
+  "tasks": [
+   "相机系 3D 手部运动重建（含遮挡分级）",
+   "世界系手部轨迹重建",
+   "世界系相机轨迹估计",
+   "出视野帧运动补全"
+  ],
+  "embodiments": [
+   "人手（MANO 模型）；无机器人本体实验"
+  ],
+  "sample_or_scale": "训练共约 1M 视频帧；评测在 DexYCB 测试集与 HOT3D 27 个验证视频"
+ },
+ "evaluation": {
+  "design": "DexYCB 上按遮挡比例（All/50-75%/75-100%）比较相机系 PA-MPJPE/AUC；HOT3D 上比较世界系 W-MPJPE/WA-MPJPE/RTE/Accel 与相机轨迹 ATE/ATE-S；消融覆盖 IAM/PAM/预训练 ViT 与 infiller 对比 Last Pose/LERP",
+  "baselines": [
+   "HaMeR-SLAM",
+   "HandDGP-SLAM",
+   "WiLoR-SLAM",
+   "HMP-SLAM (优化)",
+   "DROID-SLAM + ZoeDepth/DepthAnythingV2/Metric3DV2",
+   "Spurr et al.",
+   "MeshGraphormer",
+   "HandOccNet",
+   "S2HAND(V)",
+   "VIBE",
+   "TCMR",
+   "Deformer"
+  ],
+  "metrics": [
+   "PA-MPJPE",
+   "AUC",
+   "W-MPJPE",
+   "WA-MPJPE",
+   "RTE(%)",
+   "Accel(m/s^2)",
+   "FID",
+   "ATE",
+   "ATE-S"
+  ],
+  "ablations": [
+   "w/o Pretrained ViT",
+   "w/o IAM & PAM",
+   "w/o PAM",
+   "infiller vs Last Pose vs LERP",
+   "w/o AdaSM",
+   "不同 metric 深度网络"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "相机系手姿误差（PA-MPJPE 约 5-18mm）经朴素 SLAM 组合映射到世界系后 W-MPJPE 达 119.41-156.03mm；HaWoR 将世界系误差降至 33.20mm（WA-MPJPE 11.27mm，RTE 0.78%）",
+   "scope": "HOT3D ego-centric 世界系基准",
+   "locator": "4.2, Table 3"
+  },
+  {
+   "finding": "遮挡分级下相机系精度退化：WiLoR 从 5.01mm(All) 升至 5.68mm(75-100% 遮挡)，HaWoR 从 4.76 升至 5.07mm，时序运动先验显著缓解遮挡退化",
+   "scope": "DexYCB 相机系遮挡分级评测",
+   "locator": "4.1, Table 1"
+  },
+  {
+   "finding": "出视野帧补全：learned infiller W-MPJPE 66.25mm，优于 LERP 75.01 与 Last Pose 116.79，但仍约为全管线可见帧世界误差（33.20mm）的两倍",
+   "scope": "HOT3D 不可见序列消融",
+   "locator": "4.3, Table 4(b)"
+  },
+  {
+   "finding": "自适应 egocentric SLAM 的 ATE-S 14.61mm，优于 DROID+Metric3DV2 的 21.07mm；手部区域掩膜对 ego 场景相机轨迹估计关键",
+   "scope": "HOT3D 相机轨迹评测",
+   "locator": "4.2, Table 2"
+  },
+  {
+   "finding": "作者自述：管线依赖外部检测/跟踪输出，错误检测（尤其左右手身份混淆）会传播至世界系重建；双手独立建模导致交互时互穿",
+   "scope": "补充材料 Limitations",
+   "locator": "9. Limitations"
+  },
+  {
+   "finding": "重建仍远非实时（单次前向 40ms/帧，但相比优化法 HMP-SLAM 的 160ms/帧已降低 75%）",
+   "scope": "作者结论",
+   "locator": "5. Conclusion and Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "依赖现成手部跟踪输出，错误检测（如左右手身份跟踪失败）会传播为 HaWoR 的重建错误",
+    "locator": "9. Limitations"
+   },
+   {
+    "limitation": "双手独立建模、无互穿约束，双手交互时产生自穿透",
+    "locator": "9. Limitations"
+   },
+   {
+    "limitation": "运行时性能仍远非实时",
+    "locator": "5. Conclusion and Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "世界系精度仅在 HOT3D（Aria 眼镜、日常桌面活动）单数据集定量验证；EPIC-KITCHENS 泛化仅为定性展示",
+    "basis": "4.2 评测仅用 HOT3D；6-7 节明确为 qualitative results"
+   },
+   {
+    "boundary": "W-MPJPE 33mm 的世界系绝对误差对手指级精细操作可能仍不足；论文未评估该误差对下游机器人重定向任务的影响",
+    "basis": "4.2 Table 3 数值与全文无机器人下游实验的事实"
+   }
+  ]
+ },
+ "transfer_boundary": "定量结论适用于 HOT3D/Aria 类 ego 视频（日常双手活动、动态相机）；迁移到机器人数据采集需考虑：世界系 33mm 级手腕误差相对操作容差的占比、出视野帧比例、以及外部检测器在目标域的可靠性。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "世界系与相机系指标齐备（W-MPJPE/WA-MPJPE/RTE/Accel/ATE），直接度量轨迹级误差",
+   "遮挡分级评测与出视野帧补全消融直击 ego 场景核心失效模式",
+   "朴素组合基线（SOTA 手姿+DROID-SLAM）公平复现了常见做法，凸显问题严重性"
+  ],
+  "design_risks": [
+   "世界系评测仅 HOT3D 一个数据集，且训练集与评测集同源（HOT3D 划分），域内评测可能高估泛化",
+   "infiller 评测依赖 HOT3D 提供的出视野帧标注，真实 in-the-wild 场景该标注不可得",
+   "基线组合的工程调优程度不易验证"
+  ],
+  "baseline_fairness": "手姿基线（HaMeR/WiLoR/HandDGP）均为当时 SOTA 且与相同 SLAM 组合，比较公平；优化基线 HMP-SLAM 按 SLAHMR 复现，存在复现误差风险。",
+  "metric_validity": "W-MPJPE/RTE/Accel 直接对应世界系轨迹精度与平滑性，对机器人重定向效度高；RTE 以位移归一化（%），跨序列可比。",
+  "reproducibility": "代码与模型公开；训练细节（优化器、迭代数、损失权重、硬件）完整；评测协议（100 帧切片、首帧/全轨迹对齐）明确定义。",
+  "external_validity": "方法针对 ego 视频设计，第三人称或其他头戴设备的适用性未验证；结论外推到机器人策略学习需额外的下游任务证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2501.02973-C01",
+   "claim": "在 HOT3D ego-centric 世界系评测中，HaWoR 全模型达到 W-MPJPE 33.20mm、WA-MPJPE 11.27mm、RTE 0.78%、Accel 5.41 m/s²；消融显示去除预训练 WiLoR ViT 骨干特征后 W-MPJPE 恶化至 86.80mm（PA-MPJPE 7.59），去除时序图像与姿态先验（IAM&PAM）后恶化至 44.60mm。",
+   "stance": "conditional",
+   "relation": "量化‘上游手部特征/检测质量→世界系手腕轨迹误差’的传导：骨干特征退化使世界系轨迹误差放大约 2.6 倍（33.20→86.80mm），时序运动先验是关键缓解组件；说明世界系轨迹精度对上游估计质量的敏感性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4(a) 逐行报告全模型与三个消融配置的世界系指标；33.20mm 与正文 Table 3 的 Proposed 行一致（见 findings），消融行直接显示组件移除对世界系误差的影响。",
+   "locator": "4.3. Ablation / Table 4(a)",
+   "source_context": "Method PA-MPJPE W-MPJPE WA-MPJPE RTE Accel\nw/o Pretrained ViT 7.59 86.80 19.46 1.26 9.09\nw/o IAM & PAM 5.07 44.60 13.85 0.93 8.42\nw/o PAM 4.80 36.32 12.40 0.88 6.03\nProposed 4.79 33.20 11.27 0.78 5.41\n(a) Hand motion components. Here is the ablation results without IAM\n(Image Attention Module), PAM (Pose Attention Module) or pretrained\nViT.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "W-MPJPE / WA-MPJPE (mm), RTE(%), Accel(m/s^2)",
+    "value_or_direction": "全模型 33.20/11.27/0.78/5.41；w/o Pretrained ViT 恶化至 86.80/19.46/1.26/9.09；w/o IAM&PAM 44.60/13.85/0.93/8.42",
+    "comparator": "同一 HaWoR 模型的组件消融配置（w/o Pretrained ViT, w/o IAM&PAM, w/o PAM）",
+    "task_or_sample": "HOT3D ego-centric 视频世界系手部运动重建",
+    "locator": "4.3, Table 4(a)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 4(a) 四行数值逐字核对一致；2.6 倍为 86.80/33.20 的算术描述；claim 限定 HOT3D 评测且消融行支撑组件级因果表述。"
+   }
+  },
+  {
+   "card_id": "2501.02973-C02",
+   "claim": "遮挡率升高显著退化相机系手部姿态精度：DexYCB 上 WiLoR 的 PA-MPJPE 从全部帧 5.01mm 升至 75-100% 遮挡帧 5.68mm（AUC 90.0→88.7），HaWoR 凭借时序图像/姿态先验从 4.76mm 仅升至 5.07mm（AUC 90.5→89.9）；作者同时指出 ego 视频有限视场导致的手部边界截断会显著恶化姿态估计框架性能。",
+   "stance": "support",
+   "relation": "量化遮挡/截断这一 ego 场景高发误差来源对检测精度的影响，并给出缓解方向（时序运动先验）：遮挡使单帧方法误差上升约 13%，时序先验将其压至约 6%。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 按遮挡比例分三档报告 PA-MPJPE/AUC；3.1 节明确将边界截断列为恶化姿态估计的挑战。",
+   "locator": "4.1. Camera-frame 3D Hand Motion / Methods (Table 1)",
+   "source_context": "WiLoR [32]\n5.01 90.0 5.42 89.2 5.68 88.7\ntemporal\n\nS\n2\nHAND(V) [39] 7.27 85.5 7.71 84.6 7.87 84.3\nVIBE [21] 6.43 87.1 6.84 86.4 7.06 85.8\nTCMR [10] 6.28 87.5 6.58 86.8 6.95 86.1\nDeformer [14]\n5.22 89.6 5.70 88.6 6.34 87.3\nProposed 4.76 90.5 5.03 89.9 5.07 89.9\nTable 1. Quantitative camera-frame comparison of state-of-the-\nart hand pose estimation methods on the DexYCB test dataset.\nWe compare PA-MPJPE and AUC results, especially the split un-\nder large occlusion proportion (50%-75% and 75%-100%), which\nhighlights our robustness in challenging visibility conditions.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "PA-MPJPE (mm) / AUC 按遮挡分档",
+    "value_or_direction": "WiLoR 5.01→5.42→5.68mm（All→50-75%→75-100% 遮挡）；HaWoR 4.76→5.03→5.07mm",
+    "comparator": "WiLoR、Deformer 等 12 个基线同表比较",
+    "task_or_sample": "DexYCB 测试集相机系 3D 手部运动重建，按帧遮挡比例分档",
+    "locator": "4.1, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 行值与 3.1 节边界截断陈述逐字核对一致；百分比变化为表值算术描述；claim 限定 DexYCB 遮挡分档协议。"
+   }
+  },
+  {
+   "card_id": "2501.02973-C03",
+   "claim": "手部出视野帧是 ego 视频世界系轨迹的主要误差来源：HOT3D 不可见序列上，朴素 Last Pose 补全 W-MPJPE 116.79mm、LERP 插值 75.01mm，HaWoR 学习型 infiller 降至 66.25mm，但仍约为可见帧全管线世界误差（33.20mm）的两倍。",
+   "stance": "conditional",
+   "relation": "限定 ego 数据用于轨迹提取的可信区间：出视野帧即使经学习补全仍携带约 66mm 级世界误差，此类帧应按低置信度处理或剔除；运动补全是部分缓解而非消除。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 4(b) 在 HOT3D 不可见序列上比较三种补全策略的 FID/PA-MPJPE/W-MPJPE/WA-MPJPE/RTE；33.20mm 来自同论文 Table 3 的 Proposed 行。",
+   "locator": "4.3. Ablation, Table 4(b)",
+   "source_context": "Method FID PA-MPJPE W-MPJPE WA-MPJPE RTE\nLast Pose 1.52 7.83 116.79 78.78 13.04\nLERP 1.42 6.33 75.01 49.16 9.39\nProposed 0.57 6.22 66.25 37.22 7.41\n(b) Motion Infiller. We experiment on the invisible sequences of\nHOT3D [4] validation dataset.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "W-MPJPE (mm) 于不可见序列",
+    "value_or_direction": "66.25mm（learned infiller）",
+    "comparator": "Last Pose 116.79mm；LERP 75.01mm；同论文可见帧全管线 33.20mm",
+    "task_or_sample": "HOT3D 验证集不可见（出视野）序列的运动补全",
+    "locator": "4.3, Table 4(b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 4(b) 行值逐字核对一致；与 33.20mm 的对比跨表但同属 HOT3D 评测且已在 claim 中明示来源差异；未外推到其他数据集。"
+   }
+  },
+  {
+   "card_id": "2501.02973-C04",
+   "claim": "HaWoR 作者自述管线依赖外部手部检测/跟踪输出，错误检测——尤其左右手身份跟踪失败——会传播为世界系重建错误；且双手独立建模在交互时产生自穿透。",
+   "stance": "limit",
+   "relation": "作者明确确认的误差传播路径：上游检测/跟踪误差（含身份混淆）直接传导至世界系手部轨迹；双手接触场景（操作数据高发）存在额外建模误差。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "补充材料 Limitations 节明确陈述检测误差传播与双手独立建模两类失效机制，并以 Figure 9 佐证。",
+   "locator": "9. Limitations",
+   "source_context": "One limitation of our approach is its reliance on hand-\ntracking outputs from an off-the-shelf method [32], which\ncan propagate erroneous detections to HaWoR, particularly\nin cases of tracking identity failures. As illustrated in Fig. 9,\nsuch issues can lead to reconstruction errors, for example,\nwhen left/right hand tracking is incorrect.\nIt is also important to note that HaWoR models each\nhand independently, without any inter-penetration con-\nstrains. This can cause self-penetrations when the two\nhands interac, as shown in Fig. 9.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "局限语句逐字核对一致；claim 为作者自述机制的转述，未附加频率或幅度量化。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Potamias et al., WiLoR [32]",
+   "reason": "上游检测/特征 backbone 与 Table 3 中 WiLoR-SLAM 基线，支撑误差传播链分析"
+  },
+  {
+   "citation": "Banerjee et al., HOT3D [4]",
+   "reason": "唯一的世界系定量评测与 infiller 训练数据来源"
+  },
+  {
+   "citation": "Teed & Deng, DROID-SLAM [38]",
+   "reason": "相机轨迹估计基座"
+  }
+ ],
+ "notes": "scoping 模式完成六遍阅读；Table 2 相机轨迹 ATE-S 14.61mm 已记入 findings，未单独成卡以控制事件预算。"
+}

@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.31572",
+    "title": "nuReasoning: A Reasoning-Centric Dataset and Benchmark for Long-Tail Autonomous Driving",
+    "published": "2026-05-29",
+    "url": "https://arxiv.org/abs/2605.31572",
+    "versioned_id": "2605.31572v1",
+    "authors": [
+      "Zhiyu Huang",
+      "Johnson Liu",
+      "Rui Song",
+      "Zewei Zhou",
+      "Ruining Yang",
+      "Yun Zhang",
+      "Tianhui Cai",
+      "Hanyin Zhang",
+      "Mingxuan Gao",
+      "Valeria Xu",
+      "Jiali Chen",
+      "Yishan Shen",
+      "Yiluan Guo",
+      "Tony",
+      "Qi",
+      "Jiaqi Ma"
+    ]
+  },
+  "review": {
+    "question": "训练期推理标签是否能改善长尾规划表征？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "训练期推理标签是否能改善长尾规划表征？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3.1 Data Structure; 3.2 Data Selection and Processing; 3.3 Reasoning Annotation; 3.4 Dataset Statistics; 4.1 Reasoning Evaluation; 4.2 Planning Evaluation; B.4 Human Verification",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "5.1 Implementation Details; 5.2 Results on Reasoning Benchmark; 5.3 Results on Planning Benchmark",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "6 Conclusions",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "训练期推理标签是否能改善长尾规划表征？",
+  "contributions": [
+    "Motional 日志经 VLM 挖掘和人工审核；空间/决策/反事实标签监督 Qwen3-VL-2B，flow-matching DiT 输出轨迹。"
+  ],
+  "method": {
+    "summary": "Motional 日志经 VLM 挖掘和人工审核；空间/决策/反事实标签监督 Qwen3-VL-2B，flow-matching DiT 输出轨迹。",
+    "assumptions": [
+      "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "nuReasoning"
+    ],
+    "tasks": [
+      "训练期推理标签是否能改善长尾规划表征？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "驾驶问答与安全门控 NPS 开放环规划；推理监督类别消融。",
+    "baselines": [
+      "同 nuVLA 的有无推理监督对照较强；跨模型数据和适配预算不平等。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "驾驶问答与安全门控 NPS 开放环规划；推理监督类别消融。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "nuReasoning 的 nuVLA 在推理时关闭显式文字推理，训练期加入推理监督仍改善其开放环规划。",
+      "scope": "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。",
+      "locator": "5.3 Results on Planning Benchmark"
+    },
+    {
+      "finding": "nuReasoning 先自动产生推理标注，再经人工检查和纠错；其验证仍以开放环为限。",
+      "scope": "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。",
+      "locator": "3.3 Reasoning Annotation; 6 Conclusions"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "有限城市与驾驶条件、开放环评测。",
+        "locator": "6 Conclusions"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。",
+        "basis": "驾驶问答与安全门控 NPS 开放环规划；推理监督类别消融。"
+      }
+    ]
+  },
+  "transfer_boundary": "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "驾驶问答与安全门控 NPS 开放环规划；推理监督类别消融。"
+    ],
+    "design_risks": [
+      "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。"
+    ],
+    "baseline_fairness": "同 nuVLA 的有无推理监督对照较强；跨模型数据和适配预算不平等。",
+    "metric_validity": "验证类型与指标限定为：驾驶问答与安全门控 NPS 开放环规划；推理监督类别消融。",
+    "reproducibility": "给出基准结构、划分与人工复核过程；未复现实验。",
+    "external_validity": "地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.31572-C01",
+      "claim": "nuReasoning 的 nuVLA 在推理时关闭显式文字推理，训练期加入推理监督仍改善其开放环规划。",
+      "stance": "support",
+      "relation": "训练期推理标签是否能改善长尾规划表征？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "消融明确区分训练监督与推理输出，为语言参与阶段提供直接证据。",
+      "locator": "5.3 Results on Planning Benchmark",
+      "source_context": "Explicit reasoning outputs are disabled at test time",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "消融明确区分训练监督与推理输出，为语言参与阶段提供直接证据。 适用边界：地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。"
+      }
+    },
+    {
+      "card_id": "2605.31572-C02",
+      "claim": "nuReasoning 先自动产生推理标注，再经人工检查和纠错；其验证仍以开放环为限。",
+      "stance": "conditional",
+      "relation": "训练期推理标签是否能改善长尾规划表征？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "数据质量流程和驾驶验证层级是不同维度，不能用人工审核推导实车安全。",
+      "locator": "3.3 Reasoning Annotation; 6 Conclusions",
+      "source_context": "benchmark focuses on open-loop evaluation",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "数据质量流程和驾驶验证层级是不同维度，不能用人工审核推导实车安全。 适用边界：地域和场景有限，NPS 不是交互闭环；Alpamayo1.5 为零样本，其他模型训练过，不能据分数判普遍优劣。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "nuReasoning / nuVLA",
+    "core": false,
+    "stack": {}
+  }
+}

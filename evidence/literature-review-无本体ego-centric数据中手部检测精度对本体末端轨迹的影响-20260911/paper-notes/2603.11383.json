@@ -1,0 +1,420 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.11383",
+  "title": "Vision-Based Hand Shadowing for Robotic Manipulation via Inverse Kinematics",
+  "published": "2026-03-11",
+  "url": "https://arxiv.org/abs/2603.11383",
+  "authors": [
+   "Hendrik Chiche",
+   "Antoine Jamme",
+   "Trevor Rigoberto Martinez",
+   "Gabriel Gomes"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本批次唯一直接把 ego 手部检测接到真实机器人下游任务的论文：单目 ego RGB-D（眼镜挂载）→ MediaPipe 21 点 → 深度反投影 → IK → SO-ARM101 抓取。量化检测可用性→任务成功率的端到端传导（结构化 86.7% vs 野外 9.3%）、检测环节是瓶颈（检测转换率 95%+，检测丢失才是失效源）、IK 解算误差阈值（36.4mm≈臂展 12%，对 50mm 方块可接受）、EMA 平滑的 jitter 缓解（-21% 位置抖动、-57~68% jerk）与检测器升级缓解（WiLoR +7.8% 检出率）。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble / Abstract",
+    "role": "problem",
+    "purpose": "确认管线组成与核心数字（86.7%、36.4mm、9.3%、+8% 检出率）"
+   },
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "识别零训练/CPU-only 定位与贡献列表"
+   },
+   {
+    "locator": "II. RELATED WORK (A)",
+    "role": "relevant-core",
+    "purpose": "核对 MediaPipe 两阶段架构与 WiLoR 定位"
+   },
+   {
+    "locator": "III. PIPELINE OVERVIEW",
+    "role": "method-or-design",
+    "purpose": "理解整体数据流"
+   },
+   {
+    "locator": "IV-B/C/D/E. Hand Pose Estimation 等",
+    "role": "method-or-design",
+    "purpose": "核对 21 点检测+EMA(α=0.8)+深度反投影（0.1-5m 有效域、50% 有效深度拒绝规则）+相机到机器人变换+目标位姿构造"
+   },
+   {
+    "locator": "IV-F/G. Inverse Kinematics / Gripper Control",
+    "role": "method-or-design",
+    "purpose": "核对阻尼最小二乘 IK 与拇指-食指夹爪映射及多级回退"
+   },
+   {
+    "locator": "V. EXPERIMENTAL SETUP",
+    "role": "data-or-setting",
+    "purpose": "核对硬件（SO-ARM101、RealSense 眼镜）、5-tile 基准与协议"
+   },
+   {
+    "locator": "VI-A/B. Latency / Pick-and-Place Success",
+    "role": "results-or-analysis",
+    "purpose": "提取 213ms/5FPS 离线吞吐与 86.7%±4.2% 成功率及失效归因"
+   },
+   {
+    "locator": "VI-D. In-the-Wild Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取野外 9.3%（7/75）与遮挡失效机制"
+   },
+   {
+    "locator": "VI-E. IK Solver Accuracy",
+    "role": "results-or-analysis",
+    "purpose": "提取 36.4mm 位置误差与 163.4° 姿态误差（5-DOF 约束）"
+   },
+   {
+    "locator": "VI-F/G/H. Smoothness / EMA Ablation / Trajectory",
+    "role": "results-or-analysis",
+    "purpose": "提取 jerk -57~68%、α 消融、5.75→4.52mm 抖动"
+   },
+   {
+    "locator": "VI-J. Hand Detection Reliability",
+    "role": "results-or-analysis",
+    "purpose": "提取 503 帧检测统计（77.3%/5.6%/17.1%）"
+   },
+   {
+    "locator": "VI-L. Occlusion Mitigation via WiLoR",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table VII 检测器对比与'检测是瓶颈'结论"
+   },
+   {
+    "locator": "VI-M. Failure Modes",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结构化/非结构化失效模式清单（含反光包装深度噪声）"
+   },
+   {
+    "locator": "VII. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认结论边界"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "II. RELATED WORK (B-F)",
+    "role": "relevant-core",
+    "purpose": "遥操作/模仿学习/低成本硬件脉络与精度证据间接相关，略读"
+   },
+   {
+    "locator": "IV-A/H/I. Camera Model / Simulation / Deployment",
+    "role": "method-or-design",
+    "purpose": "标定细节与部署流程，与检测精度证据关系间接"
+   },
+   {
+    "locator": "V-C. VLA Policy Training",
+    "role": "data-or-setting",
+    "purpose": "VLA 对照组训练细节非本综述核心"
+   },
+   {
+    "locator": "VI-C/K. Approach Comparison / Sim-to-Real",
+    "role": "results-or-analysis",
+    "purpose": "VLA 对比表与 sim-to-real 追踪误差非检测精度证据"
+   },
+   {
+    "locator": "REFERENCES",
+    "role": "relevant-core",
+    "purpose": "参考文献列表不含新证据"
+   }
+  ]
+ },
+ "research_question": "能否用单目 ego RGB-D（3D 打印眼镜挂载）+ MediaPipe 手部检测 + 深度反投影 + 阻尼最小二乘 IK，在零训练、CPU-only 条件下把第一人称手部视频转成低成本机械臂（SO-ARM101）可回放的关节轨迹，其精度与可用性边界在哪里？",
+ "contributions": [
+  "端到端 CPU-only 离线管线：ego RGB-D → MediaPipe 21 点（EMA α=0.8 平滑）→ 深度反投影 → 机器人系变换 → 拇指/食指 MCP 中点+手部几何构造目标位姿 → PyBullet 阻尼最小二乘 IK → SO-ARM101 关节指令",
+  "PyBullet 仿真预览后实体回放的 sim-to-real 工作流",
+  "与四个 VLA 策略（ACT/SmolVLA/π0.5/GR00T N1.5）在结构化抓取基准上的定量对比（150 episode、3 次独立运行）",
+  "定量误差分析：IK 位置误差 36.4mm、EMA 平滑 jerk 降低 57-68%、EMA 参数消融",
+  "野外评测（杂货店/药店）：成功率降至 9.3%，主因手部被周围物体遮挡；WiLoR 替代检测器 +7.8% 检出率"
+ ],
+ "method": {
+  "summary": "MediaPipe Hands（BlazePalm 检测+landmark 回归两阶段）输出 21 个 2D 关键点并做 EMA(α=0.8) 时序平滑；深度图在 0.1-5m 有效域内反投影为相机系 3D（单个夹爪定义点深度失效时用邻近点补齐，21 点中有效深度 <50% 则整帧拒绝）；经固定外参变换到机器人基座系；以拇指/食指 MCP 中点为目标位置、手部几何构造目标姿态四元数；阻尼最小二乘 IK（PyBullet）解 5+1 关节；夹爪由拇指-食指几何映射张合度（多级回退、60° 二值阈值防抖）；轨迹先仿真预览再实体回放。",
+  "assumptions": [
+   "相机相对机器人基座的外参固定且已知（50° 俯角+固定平移）",
+   "离线处理（30FPS 录制、约 5FPS 处理），非实时控制",
+   "RGB-D 深度可用（反光包装会产生伪深度）",
+   "目标位姿完全由拇指/食指两点几何构造，5-DOF 臂无法独立满足 6-DOF 目标"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自录 ego RGB-D pick-and-place 视频（.bag，30FPS）",
+   "结构化 5-tile 基准 150 episode",
+   "野外杂货店/药店 75 次抓取尝试"
+  ],
+  "tasks": [
+   "结构化 pick-and-place（5-tile×10 抓取×3 运行）",
+   "野外货架抓取",
+   "与 VLA 策略对比"
+  ],
+  "embodiments": [
+   "SO-ARM101（5 臂关节+1 夹爪，约 300mm 臂展）",
+   "眼镜挂载 RealSense RGB-D"
+  ],
+  "sample_or_scale": "IK 精度评测 N=125 帧；平滑性 830 帧/10 段/4 演示；检测可靠性 503 帧；检测器对比 347 帧；轨迹分析 839 帧"
+ },
+ "evaluation": {
+  "design": "结构化基准三次独立运行（150 episode）报成功率均值±标准差；IK 精度用 FK(q*) 对目标位姿回放误差；野外 75 次尝试；检测可靠性按帧统计；VLA 对照组各训 50 episode",
+  "baselines": [
+   "ACT",
+   "SmolVLA",
+   "π0.5",
+   "GR00T N1.5（均为 leader-follower 数据训练）",
+   "WiLoR（检测器替换消融）"
+  ],
+  "metrics": [
+   "抓取成功率 (%)",
+   "IK 位置/姿态误差 (mm/°)",
+   "RMS jerk (rad/s^3)",
+   "Cartesian 抖动 (mm/°)",
+   "检测率/有效 IK 目标率/无检测率 (%)",
+   "管线时延 (ms)"
+  ],
+  "ablations": [
+   "EMA α_IK ∈ {0.3..1.0}（固定 α_lm=0.8）",
+   "检测器替换（MediaPipe vs WiLoR, Table VII）",
+   "夹爪模式（二值 60° 阈值防抖）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "结构化基准 86.7%±4.2%（150 episode），失效全部来自特定手型下拇指/食指 landmark 检测失败（手指与相机光轴对齐时掌背自遮挡）；tile#1 10/10，tile#5 降至 6.7/10",
+   "scope": "结构化实验室",
+   "locator": "VI-B, Fig 8"
+  },
+  {
+   "finding": "野外（杂货店/药店）75 次尝试仅 7 次成功（9.3%）：周围物体遮挡手部→MediaPipe 丢失拇指/食指→夹爪角与 IK 目标均无法计算；结构化环境也有 17.1% 帧无检测",
+   "scope": "野外非结构化",
+   "locator": "VI-D"
+  },
+  {
+   "finding": "检测可用性是瓶颈而非下游计算：检测到手的帧中 95%+ 能算出有效 IK 目标（WiLoR 95.7%/MediaPipe 95.4%）；MediaPipe 无检测率 37.2% vs WiLoR 32.3%（347 帧），WiLoR 检出率 67.7% vs 62.8%（+7.8%）",
+   "scope": "结构化实验室 347 帧",
+   "locator": "VI-L, Table VII"
+  },
+  {
+   "finding": "503 帧统计：右手检出 77.3%、误判左手 5.6%、无检测 17.1%；EMA 换手纠正把误判降到 2.8%，但无检测帧无法启发式恢复",
+   "scope": "结构化实验室",
+   "locator": "VI-J"
+  },
+  {
+   "finding": "IK 解算精度：位置误差均值 36.4mm（std 2.5、max 43.3），约为臂展 12%，作者判定对 50×50mm 方块抓取可接受；姿态误差 163.4° 反映 5-DOF 臂对 6-DOF 目标的结构性折中",
+   "scope": "N=125 帧",
+   "locator": "VI-E"
+  },
+  {
+   "finding": "EMA 平滑（α_IK=0.5）把各关节 RMS jerk 降低 57-68%（腕 roll/夹爪原始 jerk 最高，IK 对链端 landmark 扰动敏感）；末端帧间位置抖动 5.75mm→4.52mm（-21%），姿态抖动 3.89°→2.42°（-38%）",
+   "scope": "830/839 帧",
+   "locator": "VI-F/H, Table V"
+  },
+  {
+   "finding": "α_IK 消融权衡：0.3 时 jerk 7.0/抖动 3.9mm 但轨迹滞后；1.0（不平滑）jerk 33.7/抖动 5.7mm；0.5 为平衡点（jerk 12.9/抖动 4.5mm/2.3°）",
+   "scope": "830 帧",
+   "locator": "VI-G, Fig 12"
+  },
+  {
+   "finding": "管线 213ms/帧（检测 23ms + 可视化 110ms + IK 80ms），约 5FPS 离线；WiLoR 比 MediaPipe 大约两个数量级且需 GPU",
+   "scope": "运行效率",
+   "locator": "VI-A / VI-L"
+  },
+  {
+   "finding": "反光包装（锡箔/保鲜膜）产生不可靠深度读数，导致错误的 3D 反投影——深度传感的传感级失效模式",
+   "scope": "野外",
+   "locator": "VI-M"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "手部被周围物体遮挡是野外主失效模式（成功率 86.7%→9.3%）；缓解方向：时序 Kalman 滤波、多相机、学习型深度补全",
+    "locator": "VI-D / VII-A"
+   },
+   {
+    "limitation": "5-DOF 臂无法满足 6-DOF 目标姿态，解算被迫优先位置",
+    "locator": "VI-E"
+   },
+   {
+    "limitation": "离线 5FPS，非实时；WiLoR 需 GPU 且为非商用许可",
+    "locator": "VI-A / VI-L"
+   },
+   {
+    "limitation": "WiLoR 在结构化环境提升有限（自遮挡为主），非结构化重遮挡环境的差距预期更大但未实测",
+    "locator": "VI-L"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "36.4mm 是 IK 解相对'由手部 landmark 构造的目标位姿'的回放误差，不含手部检测本身的 3D 误差——端到端'手部真值→末端轨迹'总误差未被测量",
+    "basis": "VI-E 协议（FK(q*) vs p_target）"
+   },
+   {
+    "boundary": "目标位姿由拇指/食指两点几何构造，不等同手腕 6D 位姿；夹爪角用 60° 二值阈值，精细姿态信息被丢弃",
+    "basis": "IV-E/G"
+   },
+   {
+    "boundary": "外参固定（相机-机器人刚体假设），移动头部采集需 SLAM 扩展（作者 future work）",
+    "basis": "VI-A 末段"
+   },
+   {
+    "boundary": "结构化基准为单臂单任务单物体（50mm 方块），86.7% 不可外推到其他任务",
+    "basis": "V-B"
+   }
+  ]
+ },
+ "transfer_boundary": "这是 ego 手部检测→机器人末端的端到端可用性证据：在受控结构化场景，检测驱动的解析重定向可达 86.7% 成功率，但约 1/6 帧无检测、IK 回放误差 36.4mm（约臂展 12%）；一旦进入遮挡严重的真实场景，检测崩塌使成功率降到 9.3%——检测可用性（而非姿态精度或 IK 解算）是该类管线的首要瓶颈；EMA 平滑与更强检测器（WiLoR +7.8% 检出）是已验证但有限的缓解。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "端到端真实机器人评测（150 episode×3 运行），成功率与误差分解到管线各环节（检测/IK/平滑/饱和）",
+   "检测可靠性按帧统计并与任务失效归因挂钩（检出→有效目标转换率 95%+ 证伪 IK 瓶颈假设）",
+   "结构化+野外双场景揭示分布外退化幅度",
+   "EMA 参数消融给出平滑-响应权衡曲线"
+  ],
+  "design_risks": [
+   "IK 误差是相对自建目标的回放误差，无外部手部 3D 真值，无法分离检测误差与解算误差",
+   "野外样本量小（75 次）且无正式统计检验",
+   "WiLoR 对比仅 347 帧单段录制，检测率统计基线弱",
+   "VLA 对照组训练 episode 少（50），对比结论强度有限"
+  ],
+  "baseline_fairness": "VLA 对照组在相同 tile 集评测但训练数据/步数不同（作者如实报告并解释）；WiLoR 与 MediaPipe 在相同 347 帧上对比公平。",
+  "metric_validity": "成功率为任务级硬指标，效度高；IK 回放误差测的是解算保真度而非绝对轨迹误差；检测率/无检测率为帧级可用性指标，与轨迹可用性直接相关。",
+  "reproducibility": "代码/数据/模型公开（GitHub+HuggingFace+视频）；管线全 CPU 复现门槛低；外参标定需手工测量。",
+  "external_validity": "单臂（SO-ARM101）、单任务、单 ego 相机位（50° 俯角）；双手、双臂、移动相机、其他机器人未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.11383-C01",
+   "claim": "同一 ego 手部检测驱动 IK 重定向管线，在结构化实验室环境取得 86.7%±4.2% 抓取成功率（150 episode），而在非结构化野外环境（杂货店/药店）75 次尝试仅成功 7 次（9.3%）：首要失效模式是周围物体从 ego 相机视角遮挡手部，导致 MediaPipe 丢失拇指/食指 landmark，夹爪角与 IK 目标位置都无法计算；即便结构化环境也有 17.1% 的帧无手部检测。",
+   "stance": "support",
+   "relation": "直接回答综述问题的'可用性'一端：手部检测的可用性（检测缺失率）而非姿态精度是 ego→机器人轨迹管线的端到端瓶颈；遮挡驱动的检测崩塌把任务成功率拉低近 10 倍，是无本体 ego 数据用于下游操作时的头号风险。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-B 给出 86.7%±4.2%；VI-D 给出 7/75=9.3%、遮挡失效机制与 17.1% 无检测率的引用。",
+   "locator": "VI-B. Pick-and-Place Success Rates / VI-D. In-the-Wild Evaluation",
+   "source_context": "Over 75 grasp attempts across both locations, only 7 suc-\nceeded, yielding a success rate of 9.3%.\nThe primary failure mode is hand occlusion by surrounding\nobjects: in a cluttered shelf environment, the operator’s hand\nis frequently occluded by adjacent products, shelf edges, and\nprice tags from the egocentric camera’s perspective. This\ncauses MediaPipe to lose track of the thumb and index finger\nlandmarks, preventing both the gripper angle computation\nand the IK target position calculation. Our hand detection\nreliability analysis (Section VI-J) shows that even in the\nstructured lab environment, 17.1% of frames yield no hand\ndetection; in unstructured scenes with heavy clutter, this rate\nis expected to be substantially higher.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "grasp success rate (%) / no hand detection rate (%)",
+    "value_or_direction": "in-the-wild only 7 of 75 grasp attempts succeeded (9.3%); even in the structured lab environment 17.1% of frames yield no hand detection",
+    "comparator": "same pipeline in structured lab environment (Section VI-B reports 86.7%±4.2%) vs unstructured scenes",
+    "task_or_sample": "SO-ARM101 pick-and-place，ego RGB-D 驱动 IK 重定向",
+    "locator": "VI-B / VI-D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "9.3%/7/75/17.1% 与失效机制逐字核对；86.7%±4.2% 出自 VI-B（'achieving 86.7% ± 4.2% success with zero training'），与摘要一致；claim 将两数字归因于同一管线的环境差异，未声称统计检验。"
+   }
+  },
+  {
+   "card_id": "2603.11383-C02",
+   "claim": "结构化实验室 ego 录制中，MediaPipe 手部检测的可用性远非完备：503 帧里右手检出率仅 77.3%，5.6% 被误判为左手，17.1% 完全无检测；EMA 换手纠正能把误判降到 2.8%，但无检测帧无法用启发式恢复（手不可见即信息为零）。",
+   "stance": "support",
+   "relation": "量化检测可用性地板：即便光照/背景受控、操作者刻意配合，约 1/6 帧手部检测完全缺失且不可恢复——对轨迹提取意味着长段轨迹洞（trajectory hole），需补全或丢弃。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-J 逐帧统计：77.3% 检出/5.6% 误判/17.1% 无检测；换手纠正 5.6%→2.8%，无检测率不变。",
+   "locator": "VI-J. Hand Detection Reliability",
+   "source_context": "Over 503 frames of a representative pick-and-place record-\ning, MediaPipe detected the right hand in 77.3% of frames,\nwith 5.6% erroneously classified as left-hand detections and\n17.1% yielding no detection. After applying an EMA-based\nhand-swap correction heuristic, erroneous left-hand classifica-\ntions were reduced from 5.6% to 2.8%, while the no-detection\nrate remained at 17.1% (since no heuristic can recover frames\nwhere no hand is visible).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "检测率/误判率/无检测率 (%)",
+    "value_or_direction": "检出 77.3%、误判左手 5.6%（纠正后 2.8%）、无检测 17.1%（不可恢复）",
+    "comparator": "EMA 换手纠正前后",
+    "task_or_sample": "结构化实验室 503 帧 ego pick-and-place 录制",
+    "locator": "VI-J"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "四个百分比与启发式不可恢复的表述逐字核对；claim 限定该段 503 帧结构化录制，未外推为通用检测率。"
+   }
+  },
+  {
+   "card_id": "2603.11383-C03",
+   "claim": "把检测器从 MediaPipe 换成 WiLoR 只能部分缓解遮挡失效：347 帧结构化 ego 录制上，检出率 62.8%→67.7%（+7.8%），无检测率 37.2%→32.3%，有效 IK 目标率 59.9%→64.8%（+8.2%），仅 3.5% 的帧被 WiLoR 挽回；两个检测器在'检出→有效 IK 目标'的转换率上都超过 95%（95.4%/95.7%），作者据此确认瓶颈是手部检测本身而非 IK 目标计算。",
+   "stance": "conditional",
+   "relation": "给出检测器升级这一缓解手段的量化边界：SOTA 检测器仅挽回约 5 个百分点的无检测帧；同时明确误差归因——下游解算环节几乎不损失帧，整条链路的可用性由检测环节单点决定。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table VII 给出两检测器的检出/有效目标/无检测三行与 +7.8%/+8.2%/3.5%；VI-L 正文给出 95%+ 转换率与瓶颈归因。",
+   "locator": "VI-L. Occlusion Mitigation via WiLoR",
+   "source_context": "Metric MediaPipe WiLoR\nHand detected 218 (62.8%) 235 (67.7%)\nValid IK target 208 (59.9%) 225 (64.8%)\nNo detection 129 (37.2%) 112 (32.3%)\nRecovery (WiLoR found, MP missed) 12 frames (3.5%)\nDetection improvement +7.8%\nValid target improvement +8.2%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "检出率/有效 IK 目标率/无检测率 (%)",
+    "value_or_direction": "MediaPipe→WiLoR：检出 62.8%→67.7%、有效目标 59.9%→64.8%、无检测 37.2%→32.3%、挽回 3.5%；转换率 95.4%/95.7%",
+    "comparator": "MediaPipe BlazePalm vs WiLoR（DarkNet+ViT）",
+    "task_or_sample": "347 帧结构化 ego pick-and-place 录制（左手）",
+    "locator": "VI-L, Table VII"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table VII 五行数值逐字核对；95.7%/95.4% 转换率与'confirming that the IK target computation itself is not the bottleneck—hand detection is'出自 VI-L 正文；claim 限定结构化环境单段录制，作者明示野外差距预期更大但未实测。"
+   }
+  },
+  {
+   "card_id": "2603.11383-C04",
+   "claim": "该管线的 IK 解算环节引入的末端位置误差为均值 36.4mm（std 2.5mm、max 43.3mm，N=125 帧），约为 SO-ARM101 臂展（约 300mm）的 12%，作者判定对 50×50mm 方块的抓取任务可接受；姿态误差高达 163.4°，但源于 5-DOF 机械臂无法满足 6-DOF 目标的结构性折中（解算优先保位置），而非追踪噪声。",
+   "stance": "conditional",
+   "relation": "提供可接受阈值的具体案例：位置误差容忍度取决于任务（抓握开口/物体尺寸），36.4mm 对 50mm 方块可接受；同时提示姿态维度的误差可能被运动学自由度不足主导，评估重定向精度需分位置/姿态两个维度并核对机器人 DOF。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-E 给出 36.4mm（std 2.5/max 43.3，分轴 X18.4/Y18.2/Z22.7）与 163.4° 及 5-DOF 约束解释；作者给出 12% 臂展与可接受性判断。",
+   "locator": "VI-E. IK Solver Accuracy",
+   "source_context": "The mean position error ∥FK(q\n∗\n) − p\ntarget\n∥ is 36.4 mm\n(std 2.5 mm, max 43.3 mm), distributed approximately equally\nacross axes (X: 18.4 mm, Y: 18.2 mm, Z: 22.7 mm). The\nmean orientation error is 163.4\n◦ \n(std 5.6\n◦\n), reflecting the\nfundamental constraint of a 5-DOF kinematic chain attempting\nto reach a 6-DOF target: because only 5 arm joints contribute\nto end-effector positioning, the solver cannot independently\nsatisfy both position and orientation and must compromise,\nprioritising position accuracy. The position error of 36.4 mm\ncorresponds to approximately 12% of the arm’s ∼300 mm\nreach, which is acceptable for the grasp apertures used in our\npick-and-place task (50×50 mm cube).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "IK 回放位置/姿态误差 (mm/°)",
+    "value_or_direction": "位置 36.4±2.5mm（max 43.3）；姿态 163.4°±5.6°；位置误差≈臂展 12%，对 50×50mm 方块抓取可接受（作者判断）",
+    "comparator": "FK(q*) 对管线自建目标位姿（N=125 帧）",
+    "task_or_sample": "SO-ARM101（5 臂+1 夹爪）离线 IK 重定向回放",
+    "locator": "VI-E"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "全部数值与 5-DOF 解释逐字核对；claim 明确该误差是相对管线自建目标的回放误差（不含手部检测误差），可接受性判断标注为作者观点；未把 36.4mm 外推为其他任务的阈值。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "MediaPipe Hands [2]",
+   "reason": "两阶段检测器，无检测帧的主要失效源"
+  },
+  {
+   "citation": "WiLoR [1] (Potamias et al.)",
+   "reason": "检测器替换消融，+7.8% 检出率"
+  },
+  {
+   "citation": "ACT / SmolVLA / π0.5 / GR00T N1.5 [4-6]",
+   "reason": "VLA 对照组"
+  }
+ ],
+ "notes": "scoping 模式完成六遍阅读；本批次唯一下游机器人验证论文。EMA 平滑消融（α_IK=0.5：jerk 12.9 rad/s^3、位置抖动 4.5mm；无平滑 5.7mm/33.7）与反光包装深度噪声已记入 findings 备写作期使用。"
+}

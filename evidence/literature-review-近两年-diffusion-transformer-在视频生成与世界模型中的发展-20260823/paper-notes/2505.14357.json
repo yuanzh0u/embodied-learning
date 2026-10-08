@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2505.14357",
+    "title": "Vid2World: Crafting Video Diffusion Models to Interactive World Models",
+    "published": "2025-05-20",
+    "url": "https://arxiv.org/abs/2505.14357",
+    "authors": ["Siqiao Huang", "Jialong Wu", "Qixing Zhou", "Shangchen Miao", "Mingsheng Long"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向的能力演进、向世界模型转型的机制、评测与方法边界。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "明确提出把大规模视频扩散模型因果化并做 action guidance 变成交互式世界模型，覆盖机器人/游戏/开放世界导航，是视频扩散与世界模型转型的核心方法证据。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确立从 passive 视频扩散到 interactive/action-conditioned 世界模型的两大挑战（因果化、action conditioning）。"},
+      {"locator": "4.1 Video Diffusion Causalization", "role": "method-or-design", "purpose": "读 temporal attention 加 causal mask 的架构因果化方法。"},
+      {"locator": "5.1 Vid2World for Robot Manipulation", "role": "results-or-analysis", "purpose": "RT-1 机器人操作实验设置与评估指标；以及 5.2/5.3/5.4 游戏/导航/消融结果。"},
+      {"locator": "6 Conclusion", "role": "conclusion-or-limitations", "purpose": "作者结论与计算/规模限制。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何把在大规模无动作互联网视频上预训练的视频扩散模型的物理先验与生成能力迁为 causal、action-conditioned 的交互式世界模型（视频扩散因果化 + 因果动作引导）？",
+  "contributions": [
+    "提出 Vid2World：把 pre-trained video diffusion model 转成 autoregressive、action-conditioned 的交互式世界模型的通用途径。",
+    "视频扩散因果化（video diffusion causalization）：对 temporal attention 加 causal mask 做架构/目标因果改造，保持参数可迁移（autoregressive rollout）。",
+    "因果动作引导（causal action guidance）：逐帧 action injection + guidance，改善 action 可控性、counterfactual/交互推理。",
+    "在 RT-1 机器人操作、CS:GO 游戏模拟、RECON 开放世界导航三个域验证，并做 Real2Sim policy evaluation 下游评估。"
+  ],
+  "method": {
+    "summary": "Vid2World 两阶段改造醒目 já trained video diffusion：(1) 架构因果化——对 temporal attention 加 causal mask 使其不读未来帧，再做 causal weight transfer（探讨 Shift/Masked/Extrapolative 三种权重迁移，Extrapolative 与 Masked 更优），并改为每帧独立采样噪声、随机丢弃动作的因果训练目标；(2) 因果动作引导——逐帧把当前动作 embedding 加进 latent 的时间位置，配 guidance scale 平衡多样性/保真度，实现在线、逐帧交互式生成与 counterfactual 推理。自回归 rollout 时去噪最新帧、把历史帧置 clean。",
+    "assumptions": [
+      "视频扩散模型的时间层可用 causal mask 无损改造（query-key 点积自适应长短）。",
+      "大规模数据下非因果视频扩散所学物理/视觉先验可经权重迁移转移到因果世界模型。",
+      "逐帧 action embedding 足以提供 fine-grained 交互动作条件，而无需全局 action-only 条件。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["RT-1 真实机器人操作", "Counter-Strike: Global Offensive (CS:GO，Pearce&Zhu，5.5M 帧/95h，0.5M 帧 holdout)", "RECON 开放世界导航（3D (x,y,yaw) 动作空间）"],
+    "tasks": ["autoregressive action-conditioned video prediction / 世界模型 rollout", "3D 游戏 next-frame 预测（4 conditioning frames → 16）", "开放世界导航单步/自回归预测", "Real2Sim policy evaluation（RT-1 'close drawer'）"],
+    "embodiments": ["机器人操作臂（RT-1）", "3D 游戏角色（CS:GO）", "导航智能体（RECON 3D (x,y,yaw)）"],
+    "sample_or_scale": "基础模型为相对轻量的视频扩散模型；post-train 100k 步（RT-1 4×A100/7 天）；消融 30k 步；CS:GO 训练 100k 步"
+  },
+  "evaluation": {
+    "design": "与 from-scratch/世界模型基线（DIAMOND、NWM/NWM+Ego4D）用相同测试集对比，覆盖 RT-1、CS:GO、RECON；做 action guidance 有无与权重迁移机制（Shift/Masked/Extrapolative）消融；Real2Sim 用人验人类评价验证器测策略成功率判比。",
+    "baselines": ["DIAMOND (Fast/HQ)", "Navigation World Model (NWM)", "NWM (+Ego4D) co-trained with action-free videos"],
+    "metrics": ["FVD", "FID", "SSIM", "PSNR", "LPIPS", "DreamSim", "Real2Sim 策略成功率判比"],
+    "ablations": ["有无 causal action guidance（dropout action 与否）", "Shift vs Masked vs Extrapolative weight transfer", "guidance scale 影响"]
+  },
+  "findings": [
+    {"finding": "Vid2World 通过 causalization + causal action guidance 把视频扩散变成自回归、动作条件世界模型，并在机器人/游戏/导航域取得具有竞争力的世界建模性能。", "scope": "RT-1、CS:GO、RECON 三个 action-conditioned 视频预测域", "locator": "5.1 Vid2World for Robot Manipulation"},
+    {"finding": "消融表明确 action guidance 对两种可选权重迁移都带来更好性能；Masked 与 Extrapolative 都比 Shift 权重迁移更优。", "scope": "Vid2World 组件消融（30k 步）", "locator": "5.4 Ablation Study"},
+    {"finding": "相对 teacher-forcing 的世界模型，Vid2World 因大参数与迭代扩散推理速度不快；受计算限制未做 RL 训练，下游仅展示了 Real2Sim policy evaluation 判别。", "scope": "下游适用性与推理开销（Appendix A.7）", "locator": "6 Conclusion"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "受算力限制只能用相对轻量的视频扩散作为基础模型，未能测试更大规模（NVIDIA et al. 2025 等）。", "locator": "6 Conclusion"},
+      {"limitation": "训练过程仍相对耗时。", "locator": "6 Conclusion"},
+      {"limitation": "Vid2World 受限于顺序自回归生成（NWM 可做远帧单步预测）；且迭代扩散推理相对 teacher-forcing 方法不快。", "locator": "5.3 Vid2World for Open-World Navigation"}
+    ],
+    "reader_inferred": [
+      {"boundary": "三域实验规模与分辨率有限，主实验定量表未在正文文本渲染，难以复核具体数值级，评价偏向定性+从属表。", "basis": "正文实验描述引用 Table 1/2 但数字在表格中未以文本形式落入 extracted text。"},
+      {"boundary": "'世界模型' 价值主要通过生成/预测指标与 Real2Sim 判别代理衡量，未闭环验证 RL 或 planning 决策增益。", "basis": "作者明言因算力未做 RL 训练。"}
+    ]
+  },
+  "transfer_boundary": "Vid2World 的证据限于 RT-1、CS:GO、RECON 三个视线 16 帧级 action-conditioned 视频预测域，基础模型为除轻视频扩散、迭代扩散推理慢、未做闭环 RL；不能直接外推到长视界开放世界、离线 RL/planning 收益或大规模 DiT 视频生成主干。",
+  "critical_appraisal": {
+    "design_strengths": ["明确提出 two-challenge 的机制性方法（因果化 + 因果动作引导），跨三感官性评估（机器人/游戏/导航）", "权重迁移消融（Shift/Masked/Extrapolative）与 guidance 消融有区分度", "用 DIAMOND/NWM 强基线同一测试集"],
+    "design_risks": ["基础模型与计算规模小；定量数值未充分落入文本（表格化）导致独立核验受限", "Real2Sim 用 human verifier 判别，非自动可复现"],
+    "baseline_fairness": "合理，用 DIAMOND、NWM 等状态前沿基线并同一 holdout/$1 测试集；但部分指标由作者自行重算。",
+    "metric_validity": "标准视频/世界建模指标（FVD/FID/SSIM/PSNR/LPIPS/DreamSim）可反映视觉保真，但对物理一致性/因果正确性的直接测量有限。",
+    "reproducibility": "提供 code/models URL；训练/推理设置与伪代码在附录给出，但数值表未完整进入文本。",
+    "external_validity": "三域覆盖较好，但单一轻量基础模型限制了对大规模 DiT 视频生成的泛化断言。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2505.14357_C01",
+      "claim": "Vid2World 通过 video diffusion causalization 与 causal action guidance 两个机制，把被动视频扩散模型转成支持自回归、动作条件生成的交互式世界模型。",
+      "stance": "support",
+      "relation": "支持综述命题：视频扩散向交互式世界模型的转型存在系统化机制路径（因果化+动作引导）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "6 Conclusion 作者总结其方法贡献即为两机制的自回归动作条件生成，客观描述方法定位。",
+      "locator": "6 Conclusion",
+      "source_context": "We propose Vid2World, introducing two key mechanisms—video diffusion causalization and causal action guidance—to support autoregressive, action-conditioned generation.",
+      "evidence_type": "architecture",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "6 Conclusion 全文含该 verbatim 句（'We propose Vid2World, introducing two key mechanisms—video diffusion causalization and causal action guidance ...'），精确对应方法定位，属作者对方法设计的直接陈述。"
+      }
+    },
+    {
+      "card_id": "2505.14357_C02",
+      "claim": "消融显示对 Extrapolative 与 Masked 权重迁移，强制 action guidance 都带来更好性能（相对训练/推理中从不丢弃动作的对应版本）。",
+      "stance": "support",
+      "relation": "支持综述命题：action conditioning/guidance 是视频扩散转世界模型达到交互可控的关键激活组件。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.4 Ablation Study 报告：在 Extrapolative 与 Masked weight transfer 下，走 action guidance 的版本性能优于其从未丢弃动作的 counterpart。",
+      "locator": "5.4 Ablation Study",
+      "source_context": "we observe that for both Extrapolative Weight Transfer and Masked Weight Transfer, enforcing action guidance yields better performance compared to their counterpart, which have never dropped out action in training and inference.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.4 Ablation Study 全文含上述 verbatim 句；断言严格限定动作 guidance 对这两种权重迁移的有益性，不扩大到所有设置。"
+      }
+    },
+    {
+      "card_id": "2505.14357_C03",
+      "claim": "Masked 与 Extrapolative 权重迁移都优于 Shift 权重迁移，且 Extrapolative 略优于 Masked，二者共同支撑 Vid2World 的性能。",
+      "stance": "support",
+      "relation": "支撑综述命题中 '权重迁移机制' 对视频扩散→世界模型转移的作用。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.4 Ablation Study 依表说明两种迁移优于 Shift，Extrapolative 略优于 Masked。",
+      "locator": "5.4 Ablation Study",
+      "source_context": "both Masked and Extrapolative Weight Transfer yield better performance than Shift Weight Transfer, and utilizing Extrapolative Weight Transfer yields slightly better outcomes compared to Masked Weight Transfer.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "5.4 Ablation Study 全文含该 verbatim 句，作为权重迁移机制的相对排序证据成立，未给出绝对数值故按定性记录。"
+      }
+    },
+    {
+      "card_id": "2505.14357_C04",
+      "claim": "受算力限制，Vid2World 只能以相对轻量的视频扩散模型作为基础模型，未能验证更大规模基础模型的收益。",
+      "stance": "limit",
+      "relation": "对该方法作为 '视频扩散→世界模型' 可扩展路径的置信度给出规模上界。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "6 Conclusion 作者自述算力约束导致仅用轻量基础模型，并希望更大规模带来更好性能。",
+      "locator": "6 Conclusion",
+      "source_context": "due to computational resource constraints, we are limited to employing a relatively lightweight video diffusion model as the base model.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "6 Conclusion 全文含上述 verbatim 句，是作者对规模上界的直接自述。"
+      }
+    },
+    {
+      "card_id": "2505.14357_C05",
+      "claim": "因基础模型参数较大与扩散的迭代解码，Vid2World 相对 teacher-forcing 世界模型推理不快，成其下游部署（含对具身/强化学习）的制约。",
+      "stance": "limit",
+      "relation": "限制'M 由视频扩散转世界模型可直接服务交互/强化学习'的命题：交互延迟与推理速度是瓶颈。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "Appendix A.7 作者承认是转移物理先验的第一步，但因大参数与迭代扩散推理不如 teacher-forcing 快，且因算力未做 RL 训练。",
+      "locator": "A.7 Extended Discussion on Utilizing Vid2World for Downstream Tasks",
+      "source_context": "due to the large parameter size of the pretrained model and the iterative process in diffusion, the model does not enjoy fast inference speed",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "A.7 全文含该 verbatim 句，与 'we did not explore training agents via reinforcement learning' 相印证；作为交互/RL 应用的速度限制证据，server 推理开销另见 Appendix E。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "主实验定量表不落入 extracted text（FVD/SSIM 等数值在表格/图而非段落），故多数证据按定性记录；对数值感兴趣需回到原始 PDF/网页表格。"
+}

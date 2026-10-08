@@ -1,0 +1,333 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.19745",
+  "title": "EgoRecovery: Acquiring Failure Recovery Ability Through Human Recovery Demonstration",
+  "published": "2026-07-22",
+  "url": "https://arxiv.org/abs/2607.19745",
+  "authors": [
+   "Zuhao Ge",
+   "Yu-Chen Zhou",
+   "Weitao Zhou",
+   "Minglei Li",
+   "Xinyu Li",
+   "Chao Wu",
+   "Han-Wen Zhao",
+   "Haotian Wang",
+   "Zuxuan Wu",
+   "Xiaosong Jia",
+   "Yu-Gang Jiang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接给出 HaWoR 视觉手部重建轨迹的清洗阈值（30mm/20°跳变插值）、逐集可靠性过滤（遮挡/丢帧）、重建轨迹不作机器人动作监督的传播阻断设计，以及错误片段掩码价值的消融量化（去掩码 85→55），覆盖误差来源、可接受阈值与缓解手段三个维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "恢复数据采集成本与 ego-centric 人类恢复数据的动机"
+   },
+   {
+    "locator": "3 Method",
+    "role": "method-or-design",
+    "purpose": "矫正意图 DCT 目标、掩码与门控机制如何容忍/隔离手部轨迹噪声"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "主结果、数据效率、消融（去意图损失/去掩码/去调制）"
+   },
+   {
+    "locator": "E Data Collection and Annotation",
+    "role": "method-or-design",
+    "purpose": "RGB-D 录制配置、逐集过滤（手部追踪可靠性/遮挡/丢帧）、恢复边界标注"
+   },
+   {
+    "locator": "F Motion Reconstruction and Data Preprocessing",
+    "role": "method-or-design",
+    "purpose": "HaWoR 重建、夹爪代理、30mm/20°跳变过滤与平滑"
+   },
+   {
+    "locator": "G Corrective Intent Target",
+    "role": "method-or-design",
+    "purpose": "相位重采样、K=4 DCT、0.01m 近静止掩码"
+   },
+   {
+    "locator": "J Additional Ablations and Mechanism Analysis",
+    "role": "results-or-analysis",
+    "purpose": "KS 跨本体对齐诊断、瓶颈与门控边界对齐"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者声明局限"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "背景定位，无独立证据"
+   },
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，不影响证据判定"
+   },
+   {
+    "locator": "J.1 Data Collection and Rollout Visualization",
+    "role": "appendix-or-supplement",
+    "purpose": "纯图例展示，无新增定量证据"
+   },
+   {
+    "locator": "H Training Details",
+    "role": "appendix-or-supplement",
+    "purpose": "训练超参，与综述问题弱相关"
+   }
+  ]
+ },
+ "research_question": "如何利用 ego-centric 人类失败恢复示教（采集吞吐高一个量级）为机器人恢复策略提供可迁移的监督，同时避免人-机器人本体差异导致的错误动作监督？",
+ "contributions": [
+  "提出 ego-centric 人类恢复数据作为可扩展恢复监督源，单位操作者小时有效恢复片段为遥操作的 10.5 倍",
+  "EgoRecovery 共训框架：低频 DCT 幅值矫正意图目标 + 恢复门控 FiLM 调制，人类运动不作为机器人动作标签",
+  "四任务真机闭环评测：Recovery SR 从直接混合 71.2 提升至 85.0，并给出掩码/意图损失/门控的消融与 KS/Wasserstein 机制诊断"
+ ],
+ "method": {
+  "summary": "人类端用头显 RGB-D + 双腕 RGB-D 录制，HaWoR 从第一视角视频重建双手 MANO，提取腕部 6-DoF 位姿与拇指-食指指尖距离映射的夹爪代理构成 14D 人体状态；重建轨迹经跳变插值（>30mm 位置或 >20° 角度）与平滑清洗。训练时将未来窗口末端位移归一化后投影到 K=4 低频 DCT 幅值作为跨本体矫正意图目标（相位重采样 L=16 点/窗，峰峰位移 <0.01m 的近静止段被掩码剔除）；HPT 式共享骨干 + 本体专属解码器，意图仅在恢复门控为真时经 FiLM 调制机器人解码器；部署只用机器人观测。",
+  "assumptions": [
+   "恢复行为的可迁移信息集中在矫正时机与幅值包络，方向与接触由机器人数据学习",
+   "低频 DCT 幅值包络对小的时序/接触差异不敏感，可容忍手部重建噪声",
+   "HaWoR 重建经阈值过滤与平滑后足以支撑意图目标构建，无需毫米级精度"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自建：四任务 Robot success/recovery 各 50、Human success/recovery 各 300（主设置），人类数据扩至 800 做缩放研究"
+  ],
+  "tasks": [
+   "cup brush insertion",
+   "table sweep",
+   "round disk placement",
+   "cube stacking"
+  ],
+  "embodiments": [
+   "Franka Panda 与 ALOHA AgileX 双臂平台",
+   "人类端：头显 Orbbec RGB-D + 双腕 RGB-D，25Hz"
+  ],
+  "sample_or_scale": "每任务每方法 20 次正常起始 + 20 次恢复起始闭环 rollout，四任务聚合成 80 次，Wilson 95% CI"
+ },
+ "evaluation": {
+  "design": "真机闭环，与直接人类恢复混合（同数据同骨干）、机器人-only 恢复、人类成功混合对照；消融去意图损失/去矫正段掩码/去意图调制/测试时意图置零/常开调制；机制诊断用 KS 距离与切片 Wasserstein 距离",
+  "baselines": [
+   "Robot success only",
+   "Robot recovery (50/80)",
+   "Human success mix",
+   "Direct human recovery mix"
+  ],
+  "metrics": [
+   "Initial SR (%)",
+   "Recovery SR (%)",
+   "Wilson 95% CI",
+   "DCT 系数 KS 距离",
+   "采集吞吐（条/操作者小时）"
+  ],
+  "ablations": [
+   "without intent loss",
+   "without corrective segment mask",
+   "without intent modulation",
+   "c_t zero at test time",
+   "always-on modulation"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "EgoRecovery 平均 Recovery SR 85.0（Initial SR 80.0），直接人类恢复混合 71.2，机器人-only 恢复 52.5，仅名义数据 0.0",
+   "scope": "四任务各 20 恢复起始，聚 80 次",
+   "locator": "4.2 Main Results, Figure 4, Table 6"
+  },
+  {
+   "finding": "去意图损失 Recovery SR 降至 65.0，去矫正段掩码进一步降至 55.0；常开调制使 Initial SR 从 80.0 降至 70.0",
+   "scope": "Table 2 消融",
+   "locator": "4.4 Ablation Study, Table 2"
+  },
+  {
+   "finding": "人类恢复片段采集吞吐平均 516.5 条/小时 vs 机器人恢复 49.0 条/小时（10.5×）",
+   "scope": "四任务协议审计，含搭建/重置/同步/废弃尝试",
+   "locator": "Table 1"
+  },
+  {
+   "finding": "手部重建清洗阈值为腕部位置跳变 >30mm 或欧拉角跳变 >20° 时插值替换，随后中值+Savitzky-Golay 平滑；清洗后仍不可靠的段被拒绝或掩码",
+   "scope": "Appendix F",
+   "locator": "F Motion Reconstruction and Data Preprocessing"
+  },
+  {
+   "finding": "人类集额外按『可靠双手追踪、无严重遮挡或传感丢帧』过滤；废弃集仍计入操作者小时",
+   "scope": "Appendix E",
+   "locator": "E Data Collection and Annotation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "结论限于同一任务级恢复族内的相关非正常状态；人类恢复不能替代机器人恢复在接触处理、重抓、全新恢复技能上的grounding",
+    "locator": "5 Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "HaWoR 重建的绝对精度未与真值对比；30mm/20° 阈值是经验性清洗门而非精度验收口径，阈值以下的系统性偏差（如 HaWoR 已知的全局漂移）未被评估",
+    "basis": "Appendix F 仅描述清洗流程，无重建误差数值"
+   },
+   {
+    "boundary": "xyz 位移 DCT 幅值对旋转为主的恢复（cup brush 需大角度调整）保留本体特异微动，KS_R=0.21 vs KS_S=0.17，意图目标对旋转分量的信息丢弃未量化其对末端轨迹的影响",
+    "basis": "Appendix J Figure 8 诊断"
+   },
+   {
+    "boundary": "废片率（因追踪不可靠/遮挡被丢弃的比例）未报告，吞吐数字含废弃尝试但精度-产率权衡不可见",
+    "basis": "Appendix E 过滤标准无对应统计"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：桌面双臂/单臂恢复任务、以『矫正时机+幅值』为可迁移信号的共训设定、HaWoR 类视觉手部重建可用的拍摄条件；重建手部轨迹精度本身未被量化，旋转主导恢复的意图对齐较弱；意图-only 迁移路线不外推至需要人类级手指级接触细节的任务。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "消融链完整且含测试时干预（c_t 置零、常开调制），因果解释力强",
+   "主结果全部给出计数级 Wilson CI，机制诊断（KS/Wasserstein/门控边界对齐）三重交叉验证",
+   "吞吐审计把搭建、重置、废弃尝试计入分母，口径诚实"
+  ],
+  "design_risks": [
+   "HaWoR 重建质量无真值基准，过滤阈值（30mm/20°）的选取无敏感性分析",
+   "恢复边界 t_rec 由运动能量曲线+人工确认产生，标注噪声对门控监督的影响未分析",
+   "单一作者团队的任务族设计，恢复模式多样性有限"
+  ],
+  "baseline_fairness": "直接混合基线与主方法同数据同骨干同训练设置，公平；机器人-only 参照用于控制恢复数据量而非对比采集算法，作者已声明。",
+  "metric_validity": "闭环成功率为任务级指标；Wilson CI 完整；意图目标质量仅靠 KS/下游消融间接反映，无轨迹级误差指标。",
+  "reproducibility": "代码开源；采集协议、阈值、DCT 参数、损失权重全部给出；HaWoR 为外部已发表模型。",
+  "external_validity": "四任务覆盖后撤-重对准、清扫、对准-放置、堆叠稳定四类恢复模式；均为桌面短程任务，移动/长时程未覆盖。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.19745-C01",
+   "claim": "EgoRecovery 用 HaWoR 从第一视角视频重建双手 MANO 并提取腕部 6-DoF 位姿与指尖距离夹爪代理组成 14D 人体状态流，但该重建轨迹仅用于人类解码器辅助训练与矫正意图目标构建，明确不作为机器人坐标系的动作监督。",
+   "stance": "support",
+   "relation": "给出误差传播阻断的架构级答案：视觉手部重建轨迹不进入机器人动作标签，其误差只影响压缩后的意图包络，从机制上切断手部检测误差到末端动作标签的直接传播路径。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix F 描述 HaWoR→MANO→腕部 6-DoF + 夹爪代理的 14D 流，并明确声明不用于机器人动作监督；3.2 说明意图目标仅描述矫正幅值包络。",
+   "locator": "Appendix F Motion Reconstruction and Data Preprocessing; References (extraction 将附录 A-H 并入 References surface)",
+   "source_context": "This reconstructed pose stream is used as the human embodiment trajectory for the auxiliary human decoder and for corrective intent target construction. It is not used as robot frame action supervision.",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "声明逐字出自 Appendix F；claim 未对重建精度做超出原文的量化断言。"
+   }
+  },
+  {
+   "card_id": "2607.19745-C02",
+   "claim": "EgoRecovery 对 HaWoR 重建轨迹设定显式质量门：腕部位置帧间跳变超过 30mm 或欧拉角跳变超过 20° 的帧由邻近有效帧插值替换，再经中值滤波与 Savitzky-Golay 平滑；清洗后仍不可靠的段被拒绝或掩码剔除；人类示教集还按可靠双手追踪、无严重遮挡与传感丢帧逐集过滤。",
+   "stance": "support",
+   "relation": "直接回答误差来源与可接受阈值：遮挡、传感丢帧与重建跳变是视觉手部追踪的主要失效模式，30mm/20° 是本文实际使用的帧级跳变容忍阈值，可靠性过滤在集与段两个层级执行。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Appendix F 给出 30mm/20° 跳变插值与平滑流程及不可靠段剔除；Appendix E 给出集级过滤标准（可靠双手追踪、无严重遮挡或丢帧）。",
+   "locator": "Appendix F Motion Reconstruction and Data Preprocessing; Appendix E Data Collection and Annotation; References (extraction 将附录 A-H 并入 References surface)",
+   "source_context": "Frames with wrist position jumps above 30 mm or Euler-angle jumps above 20 ◦ are replaced by interpolation from neighboring valid frames.",
+   "evidence_type": "method",
+   "quantitative": {
+    "metric": "wrist position jump threshold (mm); Euler-angle jump threshold (deg)（腕部位置跳变阈值/角度跳变阈值）",
+    "value_or_direction": "30 mm; 20 deg（超过即插值替换）",
+    "comparator": "无对照，为数据清洗门限",
+    "task_or_sample": "四任务人类恢复/成功示教预处理",
+    "locator": "F Motion Reconstruction and Data Preprocessing"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "阈值数值与 Appendix F 原文一致；集级过滤标准与 Appendix E『filtered for reliable bilateral hand tracking and the absence of severe occlusion or sensor dropout』一致；claim 未将阈值声称为通用验收标准。"
+   }
+  },
+  {
+   "card_id": "2607.19745-C03",
+   "claim": "EgoRecovery 将未来窗口的归一化末端位移投影到 K=4 低频 DCT 基上并取空间范数，得到只对矫正幅值包络敏感的 4D 意图目标；该设计刻意使目标对小的时序或接触差异不敏感，并辅以峰峰位移低于 0.01m 的近静止段掩码，从而在表示层容忍手部重建噪声。",
+   "stance": "support",
+   "relation": "回答缓解手段：不追求手部轨迹逐点精度，而是用低频幅值包络作为跨本体监督目标，把轨迹噪声吸收进压缩表示；这是一种表示级（而非硬件级）的精度缓解策略。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 与 Eq.1 描述 DCT 幅值包络及其『对小差异不敏感』的设计动机；Appendix G 给出 K=4、L=16 相位点与 0.01m 近静止掩码。",
+   "locator": "3.2 Corrective Intent for Human to Robot Recovery Learning; G Corrective Intent Target",
+   "source_context": "To make the envelope compact and less sensitive to small timing or contact differences, we project the normalized future motion onto a low-frequency discrete cosine transform (DCT) basis",
+   "evidence_type": "method",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "设计动机与 3.2 原文一致；0.01m 掩码阈值见 Appendix G；claim 显式限定这是表示层容忍而非提升重建精度。"
+   }
+  },
+  {
+   "card_id": "2607.19745-C04",
+   "claim": "在四任务闭环消融中，去除矫正段掩码（不再区分恢复段与名义/无效段）使平均 Recovery SR 从 85.0 降至 55.0，降幅大于去除意图损失本身（65.0）；恢复边界 t_rec 由运动能量曲线自动生成候选再经人工对照同步视频确认，同一遍标注记录质量标志与是否废弃。",
+   "stance": "support",
+   "relation": "回答『恢复示教中错误/无效片段的标注价值』：段级有效性标注（掩码）是人类恢复数据可用的前提，其缺失比丢失意图监督本身伤害更大，说明含噪轨迹段必须经过标注过滤才能进入训练。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 消融给出 85.0→55.0（去掩码）与 85.0→65.0（去意图损失）；Appendix E 描述 t_rec 半自动标注流程与质量标志。",
+   "locator": "4.4 Ablation Study, Table 2; E Data Collection and Annotation",
+   "source_context": "Removing the intent loss reduces average Recovery SR to 65.0, and removing the corrective segment mask degrades it further to 55.0.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average Recovery SR (%)（平均恢复成功率）",
+    "value_or_direction": "full 85.0 → without intent loss 65.0 → without corrective segment mask 55.0",
+    "comparator": "full EgoRecovery 与两个去组件变体（同数据同骨干）",
+    "task_or_sample": "four tabletop tasks, 80 recovery rollouts per variant",
+    "locator": "4.4 Ablation Study, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值与 Table 2 一致（85.0/65.0/55.0）；标注流程描述与 Appendix E 一致；claim 把掩码价值限定在恢复数据场景，未泛化为所有模仿学习。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Zhang et al., HaWoR: World-space hand motion reconstruction from egocentric videos, CVPR 2025",
+   "role": "手部轨迹重建后端，本文为其输出加清洗与使用边界"
+  },
+  {
+   "citation": "Kareer et al., EgoMimic, ICRA 2025",
+   "role": "HPT 式异质共训骨干来源"
+  },
+  {
+   "citation": "Wang et al., HPT, NeurIPS 2024",
+   "role": "异质骨干+本体专属解码器架构"
+  }
+ ],
+ "notes": "HaWoR 重建精度无真值基准是本卡链的主要缺口：30mm/20° 为清洗门限而非精度验收。引用 C02 阈值时须注明是本文内部协议。C04 的消融同时改变掩码定义与监督区域，解释时勿单独归因于轨迹质量过滤。"
+}

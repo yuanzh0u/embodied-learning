@@ -1,0 +1,326 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.04196",
+  "title": "SiMDex: Mining Similar Egocentric Videos for Cross-Embodiment Dexterous Manipulation",
+  "published": "2026-08-04",
+  "url": "https://arxiv.org/abs/2608.04196",
+  "authors": [
+   "Nie Lin",
+   "Takehiko Ohkawa",
+   "Sijin Chen",
+   "Ruoshi Wen",
+   "Zhuohang Li",
+   "Liqun Huang",
+   "Zhengming Zhu",
+   "Yiming Bao",
+   "Yunfei Li",
+   "Minjie Cai",
+   "Xiao Ma",
+   "Wei Xu",
+   "Yoichi Sato"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接从 EgoDex 的追踪腕部/指尖变换构建形态无关监督；含手部可见性/速度过滤与时序平滑等追踪质控；Stage III 光流再排序明确『独立于重定向精度』做验证——触及检测精度与重定向误差的缓解。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "问题与主结果"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "数据筛选动机"
+   },
+   {
+    "locator": "2 Related Works",
+    "role": "relevant-core",
+    "purpose": "定位与 EgoScale/EgoDex 的关系"
+   },
+   {
+    "locator": "3.1 Unified Morphology-Agnostic Representation",
+    "role": "method-or-design",
+    "purpose": "腕部局部指尖表示、人类数据来源与追踪质控"
+   },
+   {
+    "locator": "3.2 Similarity-Based Data Mining",
+    "role": "method-or-design",
+    "purpose": "三级检索与光流再排序"
+   },
+   {
+    "locator": "3.3 VLA Training",
+    "role": "method-or-design",
+    "purpose": "88 维共享+本体专属监督与掩码"
+   },
+   {
+    "locator": "4.1 Evaluation Tasks",
+    "role": "data-or-setting",
+    "purpose": "三任务与评分"
+   },
+   {
+    "locator": "4.2 Implementation Details",
+    "role": "data-or-setting",
+    "purpose": "数据规模与对照设置"
+   },
+   {
+    "locator": "4.3 Main Results",
+    "role": "results-or-analysis",
+    "purpose": "主结果"
+   },
+   {
+    "locator": "4.4 Data Scaling Ablation",
+    "role": "results-or-analysis",
+    "purpose": "机器人数据预算扫描与 Drill 反转"
+   },
+   {
+    "locator": "4.5 Visualization",
+    "role": "results-or-analysis",
+    "purpose": "各级检索质量"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论"
+   },
+   {
+    "locator": "6 Limitations and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "纯运动学相似性与池覆盖度局限"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "purpose": "not-applicable: 仅用于定位引用"
+   }
+  ]
+ },
+ "research_question": "在数千万规模的 ego 人类样本池中，如何按任务相关性检索出能提升 VLA 后训灵巧操作性能的人类数据子集？",
+ "contributions": [
+  "把人类数据选择重构为推荐问题（召回-排序-再排序），对同一预训练语料做任务感知再挖掘",
+  "形态无关动作空间（腕部局部指尖+腕部 delta，42 维共享+46 维机器人专属掩码监督）上的可扩展挖掘管线",
+  "三个真实灵巧任务上以 <5% 池样本将总体成功率从 47.7% 提至 61.1%，低机器人数据区间收益最大"
+ ],
+ "method": {
+  "summary": "人类样本取自 EgoDex 的追踪腕部/指尖变换，经身体中心化去 ego 运动、按手部可见性与速度过滤、时序平滑后，与机器人 FK 得到的腕部/指尖一起重定向到腕部局部坐标；三级检索（初始指尖姿态+语言的召回、腕部/手指轨迹波形的排序、光流再排序）为每条机器人示教挖相似人类样本；人机样本在 88 维动作空间上以掩码分监督训练 π0 式 flow VLA。",
+  "assumptions": [
+   "EgoDex 的腕部/指尖追踪经可见性/速度过滤与平滑后足以支撑动作级相似性度量",
+   "腕部局部指尖坐标可抽象掉人手与机器人手的形态差异",
+   "光流提供独立于重定向精度的跨本体验证信号"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoDex 人类池：32,034,551 帧级样本（约 300 小时、164,959 episodes）",
+   "机器人遥操作示教约 1.35M 帧级样本（约 12.4 小时）"
+  ],
+  "tasks": [
+   "Drill",
+   "Flick Wheel",
+   "Pick & Place"
+  ],
+  "embodiments": [
+   "双臂遥操作机器人（GR-Dexter 平台，ByteDexter 类灵巧手）"
+  ],
+  "sample_or_scale": "挖掘约 1.49M 样本（<5% 池）；1:1 人机混合训练 40K 步；每任务 10 次试次（2 轮×5）"
+ },
+ "evaluation": {
+  "design": "与等量随机采样人类数据的同架构基线 GR-Dexter 对照；机器人数据预算 0.25×-2× 扫描；分级检索可视化",
+  "baselines": [
+   "GR-Dexter（等量随机采样人类数据）"
+  ],
+  "metrics": [
+   "子任务完成分（0-1）",
+   "Success Rate = Total/max ×100%"
+  ],
+  "ablations": [
+   "机器人数据规模 0.25×/0.5×/1×/2×",
+   "三级检索的阶段贡献（定性可视化）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "挖掘子集将总体成功率从 47.7% 提升至 61.1%（+13.4），仅用 <5% 池样本",
+   "scope": "三个真实灵巧任务",
+   "locator": "4.3 Main Results, Table 1"
+  },
+  {
+   "finding": "机器人数据越少收益越大：0.5× 时 +17.2，且 0.5×-2× 区间维持约 57-58% 稳定下限；约 6h 机器人数据+挖掘可匹配 25h 基线",
+   "scope": "数据规模消融",
+   "locator": "4.4 Data Scaling Ablation, Figure 3"
+  },
+  {
+   "finding": "Drill 任务符号反转：池内缺乏高质量相似示教时，挖掘样本在机器人数据充足后引入方差而非信号",
+   "scope": "Drill 任务",
+   "locator": "4.4 Data Scaling Ablation"
+  },
+  {
+   "finding": "纯运动学相似性不含接触力/物体状态/语义，会产生『手几乎不动的 drilling』错配，需光流再排序以非平凡算力纠正",
+   "scope": "方法局限",
+   "locator": "6 Limitations and Future Work"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "机器人数据仅单场景（工业装配）三任务约 12.4 小时，泛用性待验证",
+    "locator": "6 Limitations and Future Work"
+   },
+   {
+    "limitation": "收益根本取决于人类池覆盖度：池内缺乏相似高质量示教时检索无信号可利用，甚至注入方差",
+    "locator": "6 Limitations and Future Work"
+   },
+   {
+    "limitation": "相似性在纯运动学空间（腕部 6D+指尖位置）计算，不含接触力/物体状态/交互语义，会错配，需光流再排序纠正且算力代价非平凡",
+    "locator": "6 Limitations and Future Work"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "人类轨迹质量依赖 EgoDex 追踪管线与可见性/速度过滤，论文未报告过滤比例或追踪误差幅度，也未消融过滤阈值",
+    "basis": "3.1 仅描述过滤与平滑手段，无任何定量质控指标"
+   },
+   {
+    "boundary": "光流再排序被定位为『独立于重定向精度的验证』，暗示作者认为重定向后的运动学相似性本身不足以可靠排序，但其纠错收益只有定性可视化",
+    "basis": "3.2 Stage III 与 4.5 仅有定性证据"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：EgoDex 追踪轨迹+腕部局部指尖形态无关空间+π0 式 flow VLA 的三任务桌面灵巧操作；挖掘收益依赖人类池对目标技能的覆盖；不覆盖追踪精度退化、接触/力信息需求高的场景。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "与等量随机采样的同架构基线对照，隔离了『如何选择人类数据』的因果效应",
+   "机器人数据预算扫描揭示低数据区间稳定下限",
+   "明确把光流再排序设计为独立于重定向精度的验证信号"
+  ],
+  "design_risks": [
+   "仅 10 次试次且 Drill 总标准差 ±0.71，主结果符号对任务敏感",
+   "手部追踪质控（可见性/速度阈值）无定量报告与消融",
+   "光流再排序的阶段贡献仅定性可视化"
+  ],
+  "baseline_fairness": "基线共享模型、超参与人类数据量，唯一变量是选择方式，公平性高。",
+  "metric_validity": "子任务完成分+成功率组合合理；试次数小是主要统计风险。",
+  "reproducibility": "池规模、样本切窗、1:1 混合、40K 步均明确；但检索阈值与过滤参数未在正文给出。",
+  "external_validity": "对综述问题的价值在于：追踪质量门控（可见性/速度过滤+平滑）与『重定向精度不足时用光流做形态无关验证』两条缓解路径；不提供精度-性能定量曲线。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.04196-C01",
+   "claim": "SiMDex 的人类轨迹来自 EgoDex 的追踪腕部与指尖变换；进入重定向前先变换到身体中心系去除 ego 运动、按手部可见性与速度过滤、并施加时序平滑——即在数据生产端对追踪质量做了显式门控，但未报告过滤阈值或追踪误差幅度。",
+   "stance": "conditional",
+   "relation": "回答误差来源与缓解：作者把追踪质控（可见性/速度过滤+平滑）作为重定向前置步骤，说明原始追踪信号不可直接用于跨本体监督；但阈值未公开，可接受精度标准仍不透明。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.1 Sources 段逐句描述人类样本的追踪来源与三项预处理。",
+   "locator": "3.1 Unified Morphology-Agnostic Representation",
+   "source_context": "Human demonstrations are drawn from EgoDex [19], an egocentric video dataset with tracked wrist and fingertip transforms; we transform trajectories into a body-centered frame to remove ego-motion, filter by hand visibility and velocity, and apply temporal smoothing before the same retargeting.",
+   "evidence_type": "system-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 3.1；claim 中『未报告阈值/误差幅度』为阅读者核对了 3.1、4.2 与附录缺席后的事实陈述，不夸大。"
+   }
+  },
+  {
+   "card_id": "2608.04196-C02",
+   "claim": "SiMDex 的 Stage III 再排序用稠密光流聚合为 clip 级描述子对候选重打分，提供一个『独立于重定向精度』的跨本体验证信号；作者同时承认纯运动学相似性（腕部 6D 位姿+指尖位置）不含接触力、物体状态与交互语义，会产生如『手几乎不动的 drilling 片段』之类的错配，需光流纠正且算力代价非平凡。",
+   "stance": "limit",
+   "relation": "限定了运动学重定向轨迹作为相似性/监督信号的可靠性：检测-重定向链条的误差与语义盲区需要像素级运动信号兜底，说明重定向后轨迹并非无条件可信。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 Stage III 原文给出『independent of retargeting accuracy』的设计动机；第 6 节局限给出运动学错配实例与光流纠正代价。",
+   "locator": "3.2 Similarity-Based Data Mining",
+   "source_context": "into a clip-level descriptor and re-score by descriptor similarity, yielding a verification signal independent of retargeting accuracy.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 3.2 Stage III；错配实例与『non-trivial computational cost』出自第 6 节局限原文，两部分合并时已核对各自出处。"
+   }
+  },
+  {
+   "card_id": "2608.04196-C03",
+   "claim": "在三个真实灵巧任务上，用三级管线挖掘的任务相关人类样本（约 1.49M，不足池的 5%）训练 VLA，将总体成功率从等量随机采样的 47.7% 提升至 61.1%（+13.4）；在机器人数据 0.5×-2× 区间维持约 57-58% 的稳定下限，0.5× 时相对基线 +17.2。",
+   "stance": "support",
+   "relation": "支持『轨迹可用性取决于数据选择』：同一追踪精度的人类池，经动作级相似性挖掘后对机器人末端任务成功率的边际贡献显著高于随机采样，即相关性（而非单纯精度）是噪声人类数据可用性的另一决定因素。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3 主结果与 4.4 规模消融原文给出全部数字。",
+   "locator": "4.3 Main Results",
+   "source_context": "Mining task-relevant human data lifts the overall success rate from 47.7% to 61.1% (+13.4), using only ∼1.49M retrieved samples—under 5% of the human pool—which shows that targeted retrieval outperforms random sampling of the same size.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "overall success rate",
+    "value_or_direction": "47.7% → 61.1% (+13.4)；低数据区间下限约 57-58%，0.5× 时 +17.2",
+    "comparator": "GR-Dexter：同架构同超参、等量随机采样人类数据",
+    "task_or_sample": "Drill / Flick Wheel / Pick & Place 三个真实灵巧任务，每任务 10 试次",
+    "locator": "4.3 Main Results, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "47.7→61.1 与 <5% 池规模逐字见 4.3；57-58% 下限与 +17.2@0.5× 见 4.4 原文；claim 未超出三任务与该对照设置。"
+   }
+  },
+  {
+   "card_id": "2608.04196-C04",
+   "claim": "挖掘收益的边界：当人类池中缺乏与目标技能相似的高质量示教时（Drill 案例），检索在机器人数据稀缺时仍有帮助（0.25× 时 +8.9、0.5× 时 +13.4），但一旦机器人示教充足（1×、2×），少量被挖掘到的 drilling 样本引入的是方差而非信号，SiMDex 反而落后基线。",
+   "stance": "limit",
+   "relation": "限定『人类 ego 数据必然提升末端任务』的命题：池覆盖度（目标技能相关且追踪质量足够好的样本是否存在）决定挖掘样本是信号还是方差，低覆盖时随机器人数据增加收益翻负。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.4 per-task 分析与第 6 节局限共同支持该反转及其归因。",
+   "locator": "6 Limitations and Future Work",
+   "source_context": "to the target skill, retrieval has little relevant signal to exploit and may even inject variance once robot data is sufficient.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配第 6 节；+8.9/+13.4 与 1×/2× 反转见 4.4 Figure 3 及 'Drill reverses sign' 段；claim 的数值与该处一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": "2505.11709",
+   "title": "EgoDex: Learning Dexterous Manipulation from Large-Scale Egocentric Video",
+   "reason": "人类池唯一来源，其追踪质量决定 SiMDex 输入轨迹质量"
+  },
+  {
+   "arxiv_id": "2602.16710",
+   "title": "EgoScale: Scaling Dexterous Manipulation with Diverse Egocentric Human Data",
+   "reason": "文中对比的规模律工作 [51]，review 内互证"
+  }
+ ],
+ "notes": "批次 B07-3。核心贡献在数据选择而非精度；与综述问题的接口是追踪质控前置（C01）、光流验证独立于重定向精度（C02）、相关性 vs 精度（C03）与池覆盖度边界（C04）。"
+}

@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2607.01586",
+    "title": "VLAFlow: A Unified Training Framework for Vision-Language-Action Models via Co-training and Future Latent Alignment",
+    "published": "2026-07-02",
+    "url": "https://arxiv.org/abs/2607.01586",
+    "versioned_id": "2607.01586v2",
+    "authors": [
+      "Guoyang Xia",
+      "Fengfa Li",
+      "Hongjin Ji",
+      "Lei Ren",
+      "Fangxiang Feng",
+      "Kun Zhan",
+      {
+        "name": "Yan Xie",
+        "author_key": "yan-xie-liauto",
+        "role": "paper-author",
+        "institutions": []
+      }
+    ]
+  },
+  "review": {
+    "question": "语言监督与未来 latent 约束怎样影响异构动作预训练迁移？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "empirical",
+    "relevance": {
+      "decision": "include",
+      "reason": "语言监督与未来 latent 约束怎样影响异构动作预训练迁移？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3.1 Controlled Protocol; 3.2 Architecture; 3.3–3.7 Objectives and Training",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "4.1–4.2 Setup and Transfer; 4.5 Language; 4.8 Meta-action",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "5 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "语言监督与未来 latent 约束怎样影响异构动作预训练迁移？",
+  "contributions": [
+    "固定 Qwen3-VL-4B 与 pi0 风格 flow-matching 动作专家、OXEMix 和 14 维动作空间，比较 action-only、语言共训练、V-JEPA2 未来 latent 对齐及组合。语言只在预训练监督，未来 latent token 不读取动作 token。"
+  ],
+  "method": {
+    "summary": "固定 Qwen3-VL-4B 与 pi0 风格 flow-matching 动作专家、OXEMix 和 14 维动作空间，比较 action-only、语言共训练、V-JEPA2 未来 latent 对齐及组合。语言只在预训练监督，未来 latent token 不读取动作 token。",
+    "assumptions": [
+      "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "OXEMix",
+      "LIBERO",
+      "LIBERO-Plus",
+      "SimplerEnv"
+    ],
+    "tasks": [
+      "语言监督与未来 latent 约束怎样影响异构动作预训练迁移？"
+    ],
+    "embodiments": [
+      "robotic manipulation (adjacent theory; no driving experiment)"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "统一预算的四范式比较、标签打乱、数据规模与适配消融；机器人仿真迁移。",
+    "baselines": [
+      "固定架构/预算减少混淆；乱序标签可能制造矛盾，不能完全隔离语义因果机制；组合并非每项最好。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "统一预算的四范式比较、标签打乱、数据规模与适配消融；机器人仿真迁移。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "VLAFlow 通过受控训练范式比较研究语言与未来表征对动作迁移的作用，正文验证对象为机器人任务。",
+      "scope": "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。",
+      "locator": "1 Introduction; 4.2"
+    },
+    {
+      "finding": "VLAFlow 的语言目标主要作用于预训练，不能据此断言驾驶推理时必须生成语言。",
+      "scope": "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。",
+      "locator": "1 Introduction; 3.4"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "需要进一步真实机器人和更大规模训练验证。",
+        "locator": "5 Conclusion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。",
+        "basis": "统一预算的四范式比较、标签打乱、数据规模与适配消融；机器人仿真迁移。"
+      }
+    ]
+  },
+  "transfer_boundary": "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "统一预算的四范式比较、标签打乱、数据规模与适配消融；机器人仿真迁移。"
+    ],
+    "design_risks": [
+      "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。"
+    ],
+    "baseline_fairness": "固定架构/预算减少混淆；乱序标签可能制造矛盾，不能完全隔离语义因果机制；组合并非每项最好。",
+    "metric_validity": "验证类型与指标限定为：统一预算的四范式比较、标签打乱、数据规模与适配消融；机器人仿真迁移。",
+    "reproducibility": "官方源码入口已检查；未运行或声称权重完整开放。",
+    "external_validity": "没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2607.01586-C01",
+      "claim": "VLAFlow 通过受控训练范式比较研究语言与未来表征对动作迁移的作用，正文验证对象为机器人任务。",
+      "stance": "conditional",
+      "relation": "语言监督与未来 latent 约束怎样影响异构动作预训练迁移？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "动作单目标在部分迁移设置出现退化；不泛化为所有动作预训练无效。",
+      "locator": "1 Introduction; 4.2",
+      "source_context": "may suffer negative transfer",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "动作单目标在部分迁移设置出现退化；不泛化为所有动作预训练无效。 适用边界：没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。"
+      }
+    },
+    {
+      "card_id": "2607.01586-C02",
+      "claim": "VLAFlow 的语言目标主要作用于预训练，不能据此断言驾驶推理时必须生成语言。",
+      "stance": "support",
+      "relation": "语言监督与未来 latent 约束怎样影响异构动作预训练迁移？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "训练与推理分工直接支持这一区分；智驾迁移仍是待验证假设。",
+      "locator": "1 Introduction; 3.4",
+      "source_context": "during downstream fine-tuning, we retain only the action-modeling objective",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "训练与推理分工直接支持这一区分；智驾迁移仍是待验证假设。 适用边界：没有智驾实验；meta-action space 是经验解释，不是已证明统一动作定理；未来预测不是动作条件反事实世界模拟器。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "VLAFlow",
+    "core": false,
+    "stack": {}
+  }
+}

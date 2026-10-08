@@ -1,0 +1,272 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.07045",
+  "title": "C2Dex: Contact-Consistent Reconstruction and Retargeting for Dexterous Manipulation from Monocular Video",
+  "published": "2026-08-10",
+  "url": "https://arxiv.org/abs/2608.07045",
+  "authors": [
+   "Jie Ren",
+   "Zhehao Jiang",
+   "Yinhong Yang",
+   "Haorui Jia",
+   "Han Jiang",
+   "Ben Li",
+   "Yao Yao",
+   "Cheng Lin",
+   "Qiu Shen",
+   "Zhenshan Bing",
+   "Xiao-Xiao Long",
+   "Xun Cao"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "单目（无本体）视频→灵巧手轨迹的完整管线，显式建模'逐帧检测噪声→接触抖动/伪切换/穿透→重定向失败'的传播链：逐帧接触观测对位姿噪声/遮挡/深度歧义敏感，规范空间跨帧聚合是核心抗噪缓解；消融显示去掉跨帧接触一致性成功率从 57.78% 跌到 17.78%；并给出明确任务成功阈值（ATE-P≤0.10 m、ATE-R≤1.00/0.50 rad）与 GT 输入下的重定向接触精度（11.87 mm/18.13°/3.99 mm）。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "确认两类误差来源：单目 HOI 重建对遮挡/位姿漂移/深度歧义敏感、形态差距使接触与局部几何难保持，且误差沿 video-to-robot 管线累积"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "提取关键传播论断：既有重定向目标假设输入轨迹精确，残余重建误差以穿透/接触丢失形式传播到机器人；视频方法继承上游感知栈误差"
+   },
+   {
+    "locator": "III. METHOD (A-B)",
+    "role": "method-or-design",
+    "purpose": "提取跨帧接触稳定化（法向一致性过滤+DBSCAN 聚类+medoid）、接触一致性 HOI 优化（式 2-5）、稳定接触迁移（式 6-7）、Laplacian 交互保持（式 8-11）与残差 RL 精修"
+   },
+   {
+    "locator": "IV. EXPERIMENTS (A-F)",
+    "role": "results-or-analysis",
+    "purpose": "提取成功阈值定义（ATE-P≤0.10 m、ATE-R≤1.00/0.50 rad）、端到端成功率（Tab I）、HOI 重建 SD/MPJPE（Tab II）、GT 输入重定向精度（Tab III）、消融（Tab IV）与真机回放"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者声明局限：严重遮挡下交互线索不可靠、稳定接触表示依赖准确物体位姿（位姿漂移直接腐蚀规范空间聚合）、不支持手内操作"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表不逐条精读"
+   }
+  ]
+ },
+ "research_question": "如何把单目人类操作视频转换为动力学可执行的灵巧手-物体轨迹，同时抵御单目重建的逐帧噪声并跨本体保持任务相关接触与局部交互几何？",
+ "contributions": [
+  "稳定物体侧接触表示：在规范物体空间聚合含噪逐帧观测（法向一致性过滤 w_n>γ_n、时序分段、DBSCAN 主导簇 medoid），作为重建与重定向共享接口",
+  "接触一致 HOI 重建：稳定接触作为轨迹级约束优化 MANO 关节与全局变换（接触一致性+SDF 穿透+正则，式 5），减少接触抖动、伪切换与穿透",
+  "接触交互保持重定向：稳定接触显式迁移（式 7）+ Laplacian 交互优化保局部几何（式 10）+ 碰撞/平滑/关节限约束 + 残差 RL（ManipTrans 框架）精修",
+  "DexYCB/TACO 端到端成功率 57.78%/26.67%，显著超最强基线 17.78%/10.00%；真机 24 条演示、8 个任务开环回放"
+ ],
+ "method": {
+  "summary": "上游：Dyn-HaMR 估计逐帧 MANO 关节与全局变换，SAM 3D 重建规范物体 mesh，ProxyPose 估计逐帧 6D 物体位姿。接触稳定化：图像空间手-物轮廓重叠定候选接触，射线投射取物体侧接触点，法向一致性过滤，按关节变化阈值 ε_θ 与相对位姿稳定切分段，段内规范空间 DBSCAN 聚类取 medoid 得稳定接触。HOI 优化以稳定接触一致性+SDF 穿透+正则细化人侧轨迹。重定向：关键点重定向初始化后，联合优化稳定接触迁移损失与 Laplacian 交互损失（匹配局部交互坐标而非绝对关键点位置），加碰撞/平滑约束，最后残差 PPO 在 Isaac Gym 精修为可执行轨迹。",
+  "assumptions": [
+   "输入为单目人类操作视频（无机器人本体参与采集）",
+   "上游可估计 MANO 手姿、规范物体 mesh 与逐帧 6D 物体位姿",
+   "局部稳定接触期内手顶点与物体表面同一区域关联（跨帧聚合的有效性前提）",
+   "稳定接触表示假设准确的物体位姿估计（作者声明：位姿漂移直接腐蚀规范空间聚合）",
+   "部署时无需在线策略或视觉反馈（离线生成轨迹开环执行）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "DexYCB（45 条操作序列）",
+   "TACO（30 条演示序列）",
+   "自录 24 条单目演示视频（8 个接触丰富任务，真机回放）"
+  ],
+  "tasks": [
+   "端到端轨迹生成（物理仿真执行后物体轨迹评估）",
+   "HOI 重建质量",
+   "重定向精度（GT 输入隔离重建误差）",
+   "真机开环回放（Hang Cap、Sweep Litter、Wipe Board、Drop Litter 等）"
+  ],
+  "embodiments": [
+   "Inspire 灵巧手（仿真重定向目标）",
+   "Unitree G1 人形 + Inspire 手（真机回放，腕轨迹由手臂 IK 执行）"
+  ],
+  "sample_or_scale": "45+30 条基准序列端到端评估；24 条真机回放；消融 3 变体 × 2 数据集"
+ },
+ "evaluation": {
+  "design": "端到端：同输入视频走各自完整管线，物理仿真执行后按物体轨迹 ATE 判成功（ATE-P≤0.10 m 且 ATE-R≤1.00 rad 宽松 / ≤0.50 rad 严格；不完整或非法轨迹计为失败）；HOI 重建与 HOLD/DiffHOI/BIGS 比 SD/P-MPJPE/MPJPE/CD/F@5；重定向精度用 GT 人-物轨迹隔离重建误差，比 DexPilot/AnyTeleop/GeoRT 的 E_prec/E_align/D_max_pen；消融 w/o CC、w/o Lap、w/o CPL",
+  "baselines": [
+   "Do As I Do（端到端）",
+   "DexImit（端到端）",
+   "HOLD / DiffHOI / BIGS（HOI 重建）",
+   "DexPilot / AnyTeleop / GeoRT（重定向）"
+  ],
+  "metrics": [
+   "轨迹成功率（ATE-P≤0.10 m，ATE-R≤1.00/0.50 rad 双阈值）",
+   "仿真位移 SD（cm，1000 步物体质心位移）",
+   "MPJPE / P-MPJPE（mm）",
+   "接触精度误差 E_prec（mm）、接触法向对齐误差 E_align（deg）、最大穿透深度 D_max_pen（mm）",
+   "Chamfer 距离与 F@5"
+  ],
+  "ablations": [
+   "w/o CC（逐帧接触观测替代跨帧接触一致性）：DexYCB 57.78→17.78%，TACO 26.67→10.00%（宽松）",
+   "w/o Lap（去 Laplacian 交互损失）：DexYCB 57.78→26.67%，TACO 26.67→13.33%",
+   "w/o CPL（去稳定接触损失）：宽松口径影响小，严格旋转口径一致退化（DexYCB 55.56→44.44%）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "误差传播链的显式表述：单目 HOI 重建对遮挡/位姿漂移/深度歧义敏感，产生时序不一致接触、手-物穿透与物理不合理轨迹；既有重定向目标假设输入轨迹精确，残余重建误差以穿透或接触丢失形式传播到机器人；两类失效共同根源是缺少时序稳定的'接触发生在物体何处'的描述",
+   "scope": "问题建模（§I、§II-B）",
+   "locator": "I. INTRODUCTION; B. Dexterous-Hand Retargeting"
+  },
+  {
+   "finding": "端到端成功率（宽松/严格）：C2Dex DexYCB 57.78%/55.56%、TACO 26.67%/23.33%；最强基线 Do As I Do 17.78%/6.67%（DexYCB）、10.00%/0.00%（TACO）；DexImit 11.11%/11.11% 与 0.00%/0.00%",
+   "scope": "45+30 条序列，同评估口径",
+   "locator": "B. End-to-End Trajectory Generation Results, Table I"
+  },
+  {
+   "finding": "HOI 重建（DexYCB）：SD 1.57 cm（最优基线 HOLD 4.55 cm）、P-MPJPE 9.27 mm 最优；MPJPE 28.55 mm 反高于 HOLD 22.13 mm——作者解释为接触一致优化优先接触正确性而非逐帧手姿保真，允许全局手位偏差",
+   "scope": "DexYCB 重建评估",
+   "locator": "C. HOI Reconstruction Results, Table II"
+  },
+  {
+   "finding": "GT 输入下重定向精度（隔离重建误差）：DexYCB 上 E_prec 从最优基线 16.51 mm 降到 11.87 mm、E_align 34.92°→18.13°、D_max_pen 22.92 mm→3.99 mm；TACO 类似（11.72 mm/18.88°/5.41 mm）",
+   "scope": "GT 人-物轨迹 → Inspire 手",
+   "locator": "D. Retargeting Results, Table III"
+  },
+  {
+   "finding": "Laplacian 交互优化通过匹配局部交互坐标而非绝对关键点位置来保持演示的手-物几何，从机制上容纳人-灵巧手形态差异",
+   "scope": "方法设计（式 8-10）",
+   "locator": "B. Contact-Interaction-Preserving Retargeting"
+  },
+  {
+   "finding": "作者声明三局限：严重遮挡/极端视角/复杂几何下交互线索提取不可靠；稳定接触表示假设准确物体位姿，位姿漂移直接腐蚀规范空间接触聚合；不支持手指步态等频繁接触切换的手内操作",
+   "scope": "方法边界",
+   "locator": "V. CONCLUSION"
+  },
+  {
+   "finding": "真机为定性开环回放（24 演示 8 任务，物体按初始位姿人工摆放），未报告定量的真机成功率或轨迹误差",
+   "scope": "物理可行性验证",
+   "locator": "F. Real-World Trajectory Replay"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "严重遮挡、极端视角或几何复杂物体下手-物交互线索提取不总是可靠",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "稳定接触表示假设准确的物体位姿估计；位姿漂移直接腐蚀规范空间的接触聚合",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "尚不支持手内操作（如手指步态），其频繁接触切换超出当前表示",
+    "locator": "V. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "跨帧聚合的有效性依赖'局部稳定接触期'假设与分段阈值 ε_θ；接触快速切换或长时滑动段内，medoid 聚合可能把真实接触变化平滑掉——该边界未被实验探查",
+    "basis": "III-A-b 的分段判据（关节变化 <ε_θ 且相对位姿近似不变）与 medoid 定义；全文无分段失败的案例或敏感性分析"
+   },
+   {
+    "boundary": "端到端评估在基准数据集视频（DexYCB/TACO 为多机位实验室采集）上进行，非手持 ego-centric 视频；ego 视角的遮挡与运动模糊更重，成功率数字不能直接外推",
+    "basis": "IV-A 仅用 DexYCB/TACO 与作者自录视频；无 ego-centric 基准评估"
+   },
+   {
+    "boundary": "成功阈值（ATE-P≤0.10 m）相对宽松，且以物体轨迹为判据；手部末端轨迹本身的误差（mm 级）仅在 GT 输入的重定向实验中报告，端到端设置下'手部检测误差→末端轨迹误差'的定量传导未直接测量",
+    "basis": "IV-A 阈值定义与 IV-B/IV-D 的指标口径差异（物体 ATE vs 接触 E_prec）"
+   }
+  ]
+ },
+ "transfer_boundary": "本文是'无本体视频→机器人轨迹'管线的代表性实例，直接证据链：逐帧检测噪声（位姿/遮挡/深度）→接触时序不稳定→若目标函数假设输入精确，残差以穿透/接触丢失传入机器人→任务失败；缓解发生在表示层（规范空间跨帧聚合把逐帧噪声聚成稳定接触，消融证明其为最大单项贡献）。注意边界：输入视频是第三视角基准与作者自录视频而非 ego-centric；缓解依赖准确物体位姿（物体位姿漂移会腐蚀聚合）；真机仅定性开环回放。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "把'检测噪声'具体化为可操作的接触时序稳定性问题，并给出廉价有效的统计缓解（分段+聚类+medoid）",
+   "消融直接把跨帧接触一致性与端到端成功率挂钩（57.78%→17.78%），是'抗噪机制价值'的稀缺量化证据",
+   "重定向精度用 GT 输入隔离评估（E_prec/E_align/D_pen），与端到端评估解耦，实验设计干净",
+   "成功阈值与失败计数规则（不完整/非法计失败）明确写出"
+  ],
+  "design_risks": [
+   "端到端成功率口径宽松（0.10 m/1.00 rad）",
+   "分段阈值 ε_θ、法向阈值 γ_n、DBSCAN 参数未报告取值或敏感性",
+   "真机仅定性、物体人工摆位、开环回放",
+   "TACO 上绝对成功率仍低（26.67%），管线在复杂双手工具操作上远未饱和"
+  ],
+  "baseline_fairness": "端到端与重建评估声明同输入视频、同评估口径；重定向用同 GT 输入与同本体隔离变量，公平性设计较好；但基线多为不同目标形态（通用视频模仿 vs 本文接触保持），作者未讨论基线是否可调参",
+  "metric_validity": "物体 ATE 成功率是任务级有效代理；E_prec/E_align/D_pen 直接度量接触迁移质量、与'轨迹可用性'强相关；SD 度量物理稳定性合理；但无手部末端轨迹位置误差指标",
+  "reproducibility": "管线组件（Dyn-HaMR/SAM 3D/ProxyPose/Isaac Gym/PPO）、损失权重（λ_c=8.0、λ_sdf=0.01、λ_reg=10.0、λ_Lap=500.0、λ_contact=2e4、λ_pene=1e5、λ_smooth=1.0）与迭代/学习率公开；ε_θ、γ_n、DBSCAN 参数缺失",
+  "external_validity": "基准视频为实验室多机位来源；对 ego-centric 手持拍摄、强光/运动模糊场景的外推未验证；真机单一本体（G1+Inspire）"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.07045-C01",
+   "claim": "单目管线的逐帧手部检测噪声首先表现为接触观测不稳定：从单帧独立提取的接触对位姿噪声、遮挡与单目深度歧义敏感；C2Dex 的关键观察是在局部稳定接触期内同一手顶点应保持关联物体表面的同一局部区域，因此把逐帧接触观测聚合到规范物体空间（去除物体刚体运动后可比），经法向一致性过滤、按时序稳定性分段、段内 DBSCAN 聚类并取主导簇 medoid 得到稳定接触，再以接触一致性损失把稳定接触作为轨迹级约束回灌 HOI 优化，减少接触抖动、伪接触切换与穿透。",
+   "stance": "conditional",
+   "relation": "误差来源（逐帧观测对位姿噪声/遮挡/深度歧义敏感）与表示级缓解（规范空间跨帧聚合+聚类 medoid 把逐帧噪声平均成稳定接触）；配合文中 II-B 的论断（无此类机制时，假设输入精确的重定向目标会把残余重建误差以穿透/接触丢失形式传播到机器人），构成完整的'噪声→传播→阻断'链。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-A-b 明确：逐帧独立提取的接触对位姿噪声/遮挡/单目深度歧义敏感；核心观察是局部稳定接触期内手顶点关联同一物体局部区域；故在规范物体空间聚合逐帧观测。同节给出法向一致性过滤（w_n>γ_n）、ε_θ 分段、DBSCAN 主导簇 medoid（式 1）与接触一致性损失（式 2）；III-A-c 与图 1 陈述其减少接触抖动/伪切换/穿透的作用。",
+   "locator": "A. Contact-Consistent HOI Reconstruction",
+   "source_context": "b) Cross-Frame Contact Stabilization.: Contacts ex-\ntracted independently from individual frames are sensitive to\npose noise, occlusion, and monocular depth ambiguity. Our\nkey observation is that, within a locally stable contact phase,\na hand vertex should remain associated with the same local\nregion of the object surface. We therefore aggregate frame-\nwise contact observations in the canonical object space.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 III-A 的 b) Cross-Frame Contact Stabilization 段首（跨行断词 ex-/tracted、frame-/wise 按原文保留）；claim 后续机制细节（法向过滤 w_n>γ_n、ε_θ 分段、DBSCAN medoid 式 1、接触一致性损失式 2）逐项核对同节正文；'减少抖动/伪切换/穿透'对应 §I 与图 1 的模块作用陈述；未编造阈值数值（γ_n、ε_θ 原文未给）。"
+   }
+  },
+  {
+   "card_id": "2608.07045-C02",
+   "claim": "跨帧接触一致性是端到端性能的最大单项贡献：消融中以逐帧接触观测替代跨帧接触一致性（w/o CC）时，轨迹成功率在 DexYCB 上从 57.78% 跌至 17.78%、在 TACO 上从 26.67% 跌至 10.00%（宽松口径），跌回最强基线水平；去掉 Laplacian 交互保持同样造成大幅下跌（DexYCB 降至 26.67%、TACO 降至 13.33%），而去稳定接触损失在宽松口径影响较小、严格旋转口径一致退化。成功判据为物体轨迹 ATE-Position≤0.10 m 且 ATE-Rotation≤1.00 rad（宽松）/0.50 rad（严格），不完整或非法轨迹计为失败。",
+   "stance": "support",
+   "relation": "量化'抗检测噪声机制'的任务级价值：跨帧聚合（对逐帧位姿/遮挡噪声的统计抑制）被移除后，上游逐帧噪声直接进入管线，端到端成功率下跌约 40 个百分点（DexYCB），是该综述问题中'缓解手段有效性'的稀缺受控消融证据；同时给出该管线明示的任务成功阈值（0.10 m/1.00/0.50 rad）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-E 消融段（提取文本中落入表格表头混杂块）报告：w/o CC 使成功率从 57.78%→17.78%（DexYCB）、26.67%→10.00%（TACO 宽松）；w/o Lap 跌至 26.67%/13.33%；w/o CPL 宽松口径 55.56%/23.33%、严格口径 44.44%/13.33%。阈值定义核对于 IV-A（ATE-P≤0.10 m，ATE-R≤1.00/0.50 rad，非法轨迹计失败）。",
+   "locator": "Method (mangled table-header block holding the Table IV ablation results paragraph)",
+   "source_context": "Table IV shows that cross-frame contact consistency is\nessential to end-to-end performance: removing it drops the\nsuccess rate from 57.78% to 17.78% on DexYCB and\nfrom 26.67% to 10.00% (relaxed) on TACO.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "end-to-end success rate under ablation (relaxed criterion)",
+    "value_or_direction": "removing cross-frame contact consistency drops success rate from 57.78% to 17.78% on DexYCB and from 26.67% to 10.00% on TACO",
+    "comparator": "w/o CC ablation variant replacing cross-frame contact consistency with frame-wise contact observations",
+    "task_or_sample": "45 DexYCB + 30 TACO monocular demonstration sequences, physics-simulation execution, success = object ATE-P within 0.10 m and ATE-R within 1.00 rad",
+    "locator": "E. Ablation Studies, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 IV-E 消融结果段（该段在提取文本中因表 II 表头被误识别为 '## Method' 而落入同名混杂块，定位器已注明）；57.78/17.78/26.67/10.00 与 w/o Lap 26.67/13.33、w/o CPL 55.56/44.44/23.33/13.33 逐一核对于 Table IV；阈值定义（0.10 m、1.00/0.50 rad、非法计失败）核对于 IV-A 与 Table I 表注；claim 未超出消融设置外推。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "ID 段预算（B03 六篇共 15 个事件 ID，本文用 0044-0045）下仅投影 2 张核心卡。提取文本因 IEEE 双栏排版表格浮动，Table IV 消融结果段落入被误识别的 '## Method' 表头块（唯一一个该名标题，可解析），Table I 表注落入 'C. HOI Reconstruction Results' 块；两张卡的引文均已验证 exact match。HOI 重建 SD 1.57 cm vs 4.55 cm、GT 输入重定向 E_prec 11.87 mm/D_pen 3.99 mm、MPJPE 与 P-MPJPE 的取舍、物体位姿漂移腐蚀聚合的局限声明等保留在 findings/limitations，如追加 ID 可补投影。"
+}

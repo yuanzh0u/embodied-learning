@@ -1,0 +1,405 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2505.08216",
+  "title": "Rethink Repeatable Measures of Robot Performance With Statistical Query",
+  "published": "2025-12-18",
+  "url": "https://arxiv.org/abs/2505.08216",
+  "authors": [
+   "Bowen Weng",
+   "Linda Capito",
+   "Guillermo A. Castillo",
+   "Dylan Khor"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "评测痛点与方法论的直接证据：用UR10e vs Unitree G1真机对照证明ISO 9283类定位重复性测试在智能/随机机器人上不可重复（UR10e 0.017mm方差可忽略 vs G1跨试验显著不一致），并提出SQ+α量化评测方法（可证明可重复+精度/效率保证），含G1定位重复性（98%可重复率）与G1指令跟踪（仿真0.47 vs 真机0.39的sim-to-real差异量化）的真机结果——直接支撑综述'精度评测/标定'族的痛点与方案两侧。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "ISO 9283/ANSI-RIA背景、UR10e与G1非重复性实例、传统'低方差=可重复'假设的批评与算法级可重复性定位"
+   },
+   {
+    "locator": "A. Literature Review",
+    "role": "problem",
+    "purpose": "跨领域（ML/科学/生物/心理）可复现性研究与SQ可复现性研究缺口（仅Capito等[20]且限已知分布IS）"
+   },
+   {
+    "locator": "B. Main contributions",
+    "role": "problem",
+    "purpose": "四项贡献：稳定性视角重定义可重复性、消除'同一算法'要求、经验Bernstein降低测试量、三域实证"
+   },
+   {
+    "locator": "II. PRELIMINARIES AND PROBLEM FORMULATION",
+    "role": "method-or-design",
+    "purpose": "测试系统随机动力学建模、SQ形式化（MC/IS/AIS式3-4）、γ精度（Def.1）与β可重复（Def.2）定义"
+   },
+   {
+    "locator": "III. MAIN METHOD",
+    "role": "method-or-design",
+    "purpose": "几乎均匀α划分（Def.3）、α量化算法（Def.4）、精度保持（Thm.1）、可重复α显式解（Thm.2）、Lyapunov精度路线、经验Bernstein终止条件（Thm.3）、算法2执行协议"
+   },
+   {
+    "locator": "IV. EXPERIMENTS & APPLICATIONS",
+    "role": "results-or-analysis",
+    "purpose": "三场景实验总览与总体观察（可重复性一致成立、精度仅在真值可得场景可核、效率依赖方差缩减）"
+   },
+   {
+    "locator": "A. Manipulation positioning tests",
+    "role": "data-or-setting",
+    "purpose": "G1定位重复性测试协议（ISO 9283改编、单参考点、200次×700样本 vs 本方法200次×598-601样本）与结果（98%可重复率）"
+   },
+   {
+    "locator": "B. Intelligent driving collision avoidance tests",
+    "role": "results-or-analysis",
+    "purpose": "α量化NADE的100对成对试验（5对不可重复、精度界5.14e-9内）与测试量对比（600×/80×/100万×）——效率机制佐证（非机器人本体场景）"
+   },
+   {
+    "locator": "C. Humanoid robot locomotive tracking performance tests",
+    "role": "results-or-analysis",
+    "purpose": "G1指令跟踪评测：软L∞损失设计、MC/IS/AIS四变体40次仿真试验（同一估计0.47）、真机两次试验（0.39）、sim-to-real差异量化"
+   },
+   {
+    "locator": "V. CONCLUSION AND FUTURE WORK",
+    "role": "conclusion-or-limitations",
+    "purpose": "贡献总结与最坏情况界的保守性局限（理论保证与实测重复率仅边际差距）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "APPENDIX A",
+    "reason": "符号与命名表，无需精读"
+   },
+   {
+    "locator": "APPENDIX B / APPENDIX C",
+    "reason": "Thm.2与Lyapunov收敛的证明细节，综述只需定理陈述与实验证据"
+   },
+   {
+    "locator": "REFERENCES",
+    "reason": "仅核对核心引用的arXiv可溯源性（NADE[18]/Capito[20]/Impagliazzo[35]/Maurer-Pontil[60]/ISO 9283[8]均非arXiv文献）"
+   }
+  ]
+ },
+ "research_question": "在测试算法层面（而非伦理/硬件/流程层面）如何使机器人性能测量可重复：让不同利益相关方在不同时间、地点对同一被测机器人执行同类标准化测试时获得（几乎）相同的性能估计，并同时保证精度（对未知真值的偏差有界）与效率（有限测试成本内终止）？",
+ "contributions": [
+  "把机器人性能测试的'可重复性'重构为测试算法的属性：只要两次执行遵循同一高层测试规范（实现细节、随机种子、采样分布、计算环境可不同），输出即应一致；并以UR10e vs Unitree G1真机对照证明ISO 9283类'低方差=可重复'假设在智能/随机系统上失效",
+  "α量化方法：对任意SQ型测试例程（Monte Carlo/重要性采样/自适应重要性采样）的输出空间做几乎均匀α划分并返回区间中点；证明量化后精度仅膨胀α/2（Thm.1），且给出达到β可重复的α显式解（Thm.2），并揭示可重复置信度受精度置信度内在约束（(1-c)²≥(1-β)）",
+  "方差敏感终止条件（Thm.3）：基于经验Bernstein不等式利用在线方差估计触发终止，样本需求显著低于Hoeffding型界，且不要求样本独立同分布或平稳——兼容自适应采样、性能漂移与非平稳系统",
+  "三域实证覆盖三类标准化成熟度场景：成熟标准（ISO 9283定位重复性，G1 vs UR10e）、进行中标准化（NADE自动驾驶风险评估，100对试验）、尚无标准（G1运动指令跟踪，含sim-to-real差异量化）"
+ ],
+ "method": {
+  "summary": "四部分。(1)测试系统建模：被测机器人+测量装置抽象为随机动力系统s(t+1)=f(s(t),u(t);ω(t))，性能估计=对有界函数ψ期望的统计查询（SQ），统一覆盖Monte Carlo（p=q）、重要性采样（固定q，式3）与自适应重要性采样（q_i在线更新，式4）。(2)两个定义：γ精度=输出以≥1-c概率落在真值γ内（Def.1）；β可重复=任意两次执行输出完全相同的概率≥1-β（Def.2，'同一算法'放宽为遵循同一高层测试规范即可）。(3)α量化核心机制：把输出区间M=[m̲,m̄]划分为几乎均匀的α分区（Def.3，仅首尾子区间可短于α，构造方式不限），算法不返回原始估计而返回落入子区间的中点（Def.4）；Thm.1保证量化后为γ+α/2精度，Thm.2给出β可重复所需α的显式解（前提(1-c)²≥(1-β)）；划分与超参(c,β,γ)跨试验固定，充当'随机种子'式配置。(4)效率：终止条件用经验Bernstein不等式的方差敏感界（式15），经验方差远小于最坏界时显著紧于Hoeffding；另有Lyapunov稳定性路线证明估计几乎必然收敛（几乎无分布假设，支持非同分布/自适应采样）。算法2规定initiator确定α划分与超参、replicator复用同一配置独立执行。",
+  "assumptions": [
+   "性能函数ψ有界且输出区间M=[m̲,m̄]已知或可保守设定（如定位测试取m=6mm）",
+   "重要性权重有界w(x)≤w̄（作者指出实践中可用截断重要性采样强制而不损精度）",
+   "α划分与超参(c,β,γ)在重复试验间保持固定（构成类'随机种子'配置）",
+   "可重复置信度受精度置信度约束：(1-c)²≥(1-β)",
+   "测试可在有限预算内执行（终止条件可达；真机受动捕标定、机器人预热、重置、电量≥20%等实际约束）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无公开数据集；NADE场景复用Feng等[18]的开源代码与预训练ADS（含NDE ground truth近似）",
+   "G1 RL运动策略复用[76]的开源实现（Isaac Gym训练、MuJoCo测试）",
+   "重要性采样的Beta提议分布参数由300次仿真Monte Carlo测试拟合"
+  ],
+  "tasks": [
+   "ISO 9283改编的定位重复性测试：单参考点、两步循环（目标点右向左趋近+驻留≥3s、回参考点+驻留≥3s），UR10e 30样本/试验、G1 250样本/试验（Fig.1）及200次×700样本（Fig.2）",
+   "NADE自动驾驶碰撞风险评估：重要性采样加速，原始终止为RHW=0.03@95%置信",
+   "G1速度/偏航指令跟踪评测：命令空间v_x,v_y∈±0.3m/s、偏航率∈±0.3rad/s，恒定指令≥5s@50Hz取末3s（150步），软L∞指数损失（式19，有界[0,1]，强调大误差）"
+  ],
+  "embodiments": [
+   "对照系统：Universal Robots UR10e+Robotiq e-gripper（商用控制栈）",
+   "Unitree G1：定位测试用整机阻抗站立控制+上身IK（含腰部yaw）；跟踪评测用RL运动策略（无里程计输入，跟踪行为未被直接强化）",
+   "测量装置：数显千分表（0.001mm分辨率、12.7mm量程）；OptiTrack 4×Prime×22动捕（标称0.15mm精度、~125Hz、头/躯干5标记刚体对齐骨盆参考点）"
+  ],
+  "sample_or_scale": "定位测试：Fig.1为3次独立试验（UR10e 30样本、G1 250样本）；Fig.2为ISO改编200次×700样本 vs 本方法1次initiator+200次replicator×598-601样本；NADE：100对initiator-replicator成对试验；跟踪评测：仿真4采样变体×10次（每变体至多650测试）+真机2次（240与222测试、相隔7天）"
+ },
+ "evaluation": {
+  "design": "三场景对比实验：(i)G1定位重复性：ISO 9283改编流程（200次×700样本）与α量化算法2（200次）的位移/偏差分布直方图对比；(ii)NADE：原始NADE（Fig.1b成对发散）与α量化NADE的100对成对试验对比，及Thm.3界与Hoeffding界的测试量对比（100次）；(iii)G1指令跟踪：MC/IS/AIS(batch=10)/AIS(batch=30)四变体×10次仿真的收敛与测试量对比，加真机IS与AIS两次试验（相隔7天、动捕重新标定）",
+  "baselines": [
+   "ISO 9283改编流程（同为Monte Carlo采样、700样本/试验）",
+   "原始NADE（RHW=0.03@95%置信终止，原作者开源代码）",
+   "Hoeffding不等式界导出的样本需求（式18）",
+   "Monte Carlo采样（跟踪场景的采样机制对照）"
+  ],
+  "metrics": [
+   "可重复率（成对独立试验输出同一量化结果的百分比）",
+   "与ground truth的偏差（仅NADE场景有NDE近似真值）",
+   "每次试验测试样本数（测试效率/测试量）"
+  ],
+  "ablations": [
+   "采样机制消融：MC vs 固定Beta提议IS vs AIS(batch 10/30)",
+   "理论界消融：经验Bernstein（Thm.3）vs Hoeffding vs 原始RHW终止",
+   "算法实例差异：initiator vs replicator、不同实现/随机种子/采样分布的'非同一算法'执行"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "ISO 9283改编的定位重复性流程在两类系统上表现截然不同：UR10e三次独立试验平均位移0.017mm且方差可忽略（小数点后五位一致），Unitree G1三次试验的平均位移与方差均显著不一致；200次×700样本的扩展试验进一步确认标准流程在G1上无法产生跨试验一致的结局",
+   "scope": "UR10e（30样本/试验）与G1（250样本/试验）各3次独立试验 + G1 200次×700样本",
+   "locator": "I. INTRODUCTION / Fig. 1a; IV.A / Fig. 2"
+  },
+  {
+   "finding": "α量化算法在G1定位重复性测试上取得98%可重复率（200次独立replicator执行中仅4次例外），每次试验598-601样本（比700样本的ISO改编少约100），并附带理论保证：期望位移落在距（未知）真值0.195mm内（≥95%置信）、任意成对试验同输出（≥90%概率）",
+   "scope": "Unitree G1，1次initiator+200次replicator",
+   "locator": "IV.A. Manipulation positioning tests / Fig. 2"
+  },
+  {
+   "finding": "该定位场景中方法并不内在降低样本量：位移误差对初始位置近乎均匀分布，任何重要性分布选择都无法显著加速收敛——方法的样本效率收益依赖可方差缩减的问题结构（对照NADE场景的600×/80×收益）",
+   "scope": "G1定位重复性测试的采样分布分析",
+   "locator": "IV.A. Manipulation positioning tests"
+  },
+  {
+   "finding": "NADE集成（自动驾驶仿真）：100对成对试验中仅5对不可重复（符合β=0.1的≥90%保证），风险估计全部落在5.14×10⁻⁹理论精度界内；最耗样本试验的样本量比原始NADE最差试验少约600×、比平均少约80×、比NDE真值近似少约100万×；同等测试进度下Thm.3界比Hoeffding界小逾100万倍",
+   "scope": "NADE重要性采样风险评估，100对成对试验+100次界对比",
+   "locator": "IV.B / Fig. 3, Fig. 4"
+  },
+  {
+   "finding": "G1指令跟踪评测：四种采样变体（MC/IS/AIS d=10/d=30）共40次仿真试验全部收敛到同一最终估计≈0.47；最省样本的AIS(d=30)仅需442测试而MC最多需650测试；真机相隔7天的IS试验（240测试）与AIS试验（222测试）均返回相同估计0.39——非同一算法实例间亦可重复",
+   "scope": "G1 RL运动策略，MuJoCo仿真40次+真机2次",
+   "locator": "IV.C / Fig. 6"
+  },
+  {
+   "finding": "同一RL运动策略的指令跟踪性能在仿真（≈0.47）与真机（0.39）间存在明显差异（有界跟踪损失，真机更低）；框架以0.078误差界@95%置信、90%可重复的形式化保证检测并量化该sim-to-real差异",
+   "scope": "G1跟踪评测，仿真4变体 vs 真机2次试验",
+   "locator": "IV.C. Humanoid robot locomotive tracking performance tests"
+  },
+  {
+   "finding": "理论洞察（Remark 2）：可重复性的置信度天然受精度置信度上界约束（(1-c)²≥(1-β)）——更不稳定的算法本质上更欠准、因而更不可重复，精度与可重复性存在内在权衡而非正交属性",
+   "scope": "理论结果（Thm.2前提条件）",
+   "locator": "III.A. Testing repeatability / Remark 2"
+  },
+  {
+   "finding": "作者判断：IV.A是（据其所知）首个针对全身操作下人形机器人操作定位重复性的实证研究，结果可能揭示值得机器人社区关注的显著局限；IV-C亦可视为对现有运动跟踪实现的批评——但这些非本文目标（Remark 3/4）",
+   "scope": "作者定位性陈述",
+   "locator": "Remark 3 / Remark 4"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "locator": "V. CONCLUSION AND FUTURE WORK",
+    "limitation": "Thm.1/2的界在最坏情况假设下导出，虽避免强分布假设但导致保守估计；实验中理论可重复保证与实测可重复概率间往往只有边际差距，界有通过分布感知/数据自适应技术细化的空间"
+   },
+   {
+    "locator": "IV.C. Humanoid robot locomotive tracking performance tests",
+    "limitation": "标准化测试中目标分布p的刻意选择在缺乏领域数据（如人类行为实证数据）时难以确定，识别更有代表性且实际有意义的分布是重要未来方向"
+   },
+   {
+    "locator": "IV.B. Intelligent driving collision avoidance tests",
+    "limitation": "把NADE式评测提升为正式监管级标准化规程（如EURO NCAP式安全验证管线）涉及算法之外的测试装置与流程增强，超出本文范围"
+   },
+   {
+    "locator": "Remark 3 / Remark 4",
+    "limitation": "被测机器人的控制实现细节非测试方法核心、可替换；实验顺带暴露的现有机器人系统局限（人形整机操作定位重复性、运动跟踪精度）非本文预期目标"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "basis": "Definition 4 + Thm.1的α/2误差膨胀；本文定位场景α由c=0.05、β=0.1、γ=0.1导出（对应0.195mm总界）",
+    "boundary": "α量化以分辨率换可重复性：输出被强制对齐到划分中点，小于α的成绩差异会被抹平；对需要分辨亚α粒度差异的横向比较（如两台精度差<0.1mm的机器人排名）可能失效"
+   },
+   {
+    "basis": "IV.A参数选择讨论与III.C对m、w̄的说明",
+    "boundary": "精度保证依赖m̄与w̄的保守设定（如定位测试m=6mm远超实测最大位移）：真值未知时设定过松使界失效、过紧则过保守，且无法实证核对设定合理性"
+   },
+   {
+    "basis": "IV.A协议描述（'simplified the protocol by focusing solely on a single reference position'）与IV.C试验数量",
+    "boundary": "真机跟踪评测仅2次试验，无法实证检验90%可重复保证的频率解释；定位测试协议为作者改编（单参考点、样本数250-700远超ISO 9283推荐的20-50），非认证标准流程，'标准不可重复'结论对标准本身的外推有限"
+   },
+   {
+    "basis": "Remark 1/3的问题定位与IV.A-C真值可得性差异",
+    "boundary": "该方法提升的是'测量'的可重复性与效率，不提升被测机器人自身的轨迹精度——对综述问题属于评测侧方案而非控制侧方案；且ground truth仅在NADE仿真场景可得，定位/跟踪场景的精度保证只能间接佐证"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于任何以期望估计（统计查询）形式进行的机器人性能评测——定位/轨迹重复性、风险评估、指令跟踪——且需预知有界输出区间与有界重要性权重、跨试验固定α划分；不适用于非SQ型评测或需分辨亚α粒度差异的排名场景，对被测机器人自身的轨迹精度无直接提升作用。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "理论（三个定理）+三域实证的双层验证，且实测可重复率与β理论界逐一对照（98% vs ≥90%、95/100对 vs ≥90%）",
+   "定位测试以200次独立重复统计可重复率（而非惯例的3次），NADE以100对成对试验，统计力度充分",
+   "对照公平性有保证：ISO改编对照与本方法同用Monte Carlo、样本量相近（700 vs 598-601）；NADE对比复用原作者开源代码",
+   "真机跟踪评测包含相隔7天、动捕重标定、不同采样算法等真实扰动，直接检验'非同一算法实例'下的可重复性"
+  ],
+  "design_risks": [
+   "'ISO 9283改编'协议由作者自行改动（单参考点、样本数250-700超标准推荐20-50），非认证流程，非重复性结论部分可能来自改编本身",
+   "NADE场景纯仿真且与机器人本体无关，600×/80×/100万×效率数字依赖NADE的方差缩减结构，向机器人本体测试的迁移未验证",
+   "真机跟踪评测仅2次试验、单一G1个体，UR10e对照仅3次试验，个体间/机型间差异未探索",
+   "定位/跟踪场景真值不可得，γ精度保证无法直接实证核对（仅NADE场景可对照NDE近似）"
+  ],
+  "baseline_fairness": "ISO改编对照与本方法同为Monte Carlo采样且样本量相近，对比公平；NADE与Hoeffding/RHW对比基于原作者开源实现与标准不等式，可信；但'ISO改编'的协议改动由作者定义，存在有利于己方结论的改编风险。",
+  "metric_validity": "可重复率（成对同量化输出）定义清晰且可确定性计算；风险估计偏差有NDE ground truth对照；但'输出相同'由α划分定义，α粒度（由c/β/γ导出）本身影响结论的解释力度。",
+  "reproducibility": "算法2与全部超参（γ,c,β,m,w̄及各场景取值）完整给出，被测系统复用开源实现[19][76]；但本方法自身无代码发布声明，千分表/动捕等自建装置细节有限，独立复现中等难度。",
+  "external_validity": "三个领域展示框架普适性，但每域仅1-2个被测系统；对'末端轨迹精度'的直接证据限于G1定位重复性与指令跟踪评测，且属评测方法而非精度提升方案；向其他机器人品类或其他性能指标外推未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2505.08216-C01",
+   "claim": "按ISO 9283改编流程做定位重复性测试，UR10e三次独立试验平均位移0.017mm且方差可忽略（小数点后五位一致），而Unitree G1人形机器人三次试验的平均位移与方差均显著不一致——现行标准流程对智能/随机机器人产生不可重复的测量结果。",
+   "stance": "gap",
+   "relation": "支撑'现行精度评测标准（ISO 9283类）在整机控制的人形/随机机器人上无法产生可重复的精度测量'的评测痛点命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "原文引言以UR10e与G1的真机对照实例说明传统'低方差=可重复'假设失效：UR10e结果高度一致（0.017mm、方差可忽略），G1的平均位移与方差跨试验显著变化；测试设备（0.001mm分辨率千分表）与流程在两机器人间保持一致，仅机器人不同。",
+   "locator": "I. INTRODUCTION / Fig. 1a",
+   "source_context": "Upon executing the complete testing procedure\nthrough three independent trials, the UR10e demonstrates\nremarkably consistent results, achieving an average positioning\ndisplacement of 0.017 mm with negligible variance (consistent\nup to the fifth decimal place) across all trials. In contrast,\nthe humanoid robot G1 exhibits substantially varying aver-\nage displacements and notable differences in variance among\nthe three trials",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "三次独立试验的平均定位位移及跨试验一致性",
+    "value_or_direction": "UR10e 0.017mm、方差可忽略（小数点后五位一致）；G1平均位移与方差跨试验显著变化",
+    "comparator": "UR10e（商用栈机械臂，30样本/试验） vs Unitree G1（自研阻抗全身控制，250样本/试验=ISO建议上限的5倍）",
+    "task_or_sample": "ISO 9283改编定位重复性测试，同一测试设备，各3次独立试验",
+    "locator": "Fig. 1a"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对原文引言UR10e/G1对照段（0.017mm、fifth decimal place、G1的varying averages与variance）与Fig.1a说明（30 vs 250样本、0.001mm千分表、阻抗全身控制）；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2505.08216-C02",
+   "claim": "作者主张：对任意统计查询（SQ）型测试例程——无论基于Monte Carlo采样、重要性采样还是自适应重要性采样——施加轻量、参数化、自适应的修改（α量化+方差敏感终止），即可使其可证明地可重复，并同时给出精度与效率的保证界。",
+   "stance": "support",
+   "relation": "支撑'评测侧方案族：以输出空间α量化+经验Bernstein终止把随机化性能评测变为可证明可重复的评测'的核心机制命题",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要明确陈述所提修改适用于任何SQ例程（三种采样机制通吃）并使可重复性可证明、精度与效率均有保证界；正文Thm.1-3分别落实精度保持、β可重复与方差敏感终止，且理论对固定与自适应q均成立。",
+   "locator": "preamble / III. MAIN METHOD",
+   "source_context": "We propose a\nlightweight, parameterized, and adaptive modification applicable\nto any SQ routine—whether based on Monte Carlo sampling,\nimportance sampling, or adaptive importance sampling—that\nmakes it provably repeatable, with guaranteed bounds on both\naccuracy and efficiency.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "摘要原句与III节Thm.1（γ+α/2精度）、Thm.2（β可重复的α显式解）、Thm.3（经验Bernstein终止）的内容一致；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2505.08216-C03",
+   "claim": "在Unitree G1人形机器人定位重复性测试上，α量化算法经1次initiator基准与200次独立replicator执行取得98%可重复率（仅4次例外）；理论保证期望位移落在距（未知）真值0.195mm内（≥95%置信）且任意成对试验返回相同结果（≥90%概率）。",
+   "stance": "support",
+   "relation": "支撑'α量化评测方法能把ISO 9283类测试在随机系统上从不可重复变为高可重复（且带误差界）'的方案效果命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.A节报告200次独立重复执行中98%返回同一量化结果（4次例外，符合β=0.1的≥90%保证）；同节明确设定γ=0.1、c=0.05、β=0.1、m=6mm后'expected displacement lies within 0.195 mm...with at least 95% probability'且'any pair of repeated trials yields the same outcome with at least 90% probability'。",
+   "locator": "IV.A. Manipulation positioning tests / Fig. 2",
+   "source_context": "The distribution of expected displacement values across these\n200 replicated trials is shown in red in Fig. 2(a). The algorithm\nachieved a 98% repeatability rate, with only 4 exceptions out\nof 200 trials.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "200次独立重复试验的可重复率（成对同量化输出比例）",
+    "value_or_direction": "98%（196/200，仅4次例外）；保证γ+α/2=0.195mm@≥95%置信、成对同输出≥90%概率",
+    "comparator": "ISO 9283改编流程（700样本/试验）：200次独立试验平均位移分布分散、跨试验不一致（Fig.2a绿色）",
+    "task_or_sample": "Unitree G1（阻抗站立+上身IK），每次试验598-601样本，1次initiator+200次replicator",
+    "locator": "IV.A. Manipulation positioning tests / Fig. 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对IV.A正文'98% repeatability rate, with only 4 exceptions out of 200 trials'与'According to Theorem 3, this setup ensures...0.195 mm...95%...90%'两句（后者已另段逐字核验）、Fig.2说明与ISO改编对照描述；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2505.08216-C04",
+   "claim": "在G1定位重复性场景中，该方法并不内在降低样本量：200次试验的样本数稳定在598-601（仅比700样本的ISO 9283改编少约100），作者明示样本效率收益并非方法固有属性——位移误差对初始位置近乎均匀分布，任何重要性分布选择都无法显著加速收敛。",
+   "stance": "conditional",
+   "relation": "限定'统计查询评测方法自带样本效率收益'的适用条件：仅当问题存在可方差缩减结构（重要性采样可行）时效率才显著提升（对照NADE场景600×/80×收益）",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.A节在报告98%可重复率后明确声明'the proposed method does not inherently make the testing process more efficient in terms of sample reduction'，并归因于位移误差在初始位置空间近乎均匀分布、q选择无法加速收敛；效率收益依赖方差可缩减的问题结构（如NADE的稀疏风险事件）。",
+   "locator": "IV.A. Manipulation positioning tests",
+   "source_context": "the number of samples collected across the 200 trials was not\nfixed, but consistently fell within the limited range of 598\nto 601—nearly 100 fewer samples per trial than adopted by\nthe ISO 9283 adaptation. It is important to note, however,\nthat the proposed method does not inherently make the testing\nprocess more efficient in terms of sample reduction.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "每次试验样本数",
+    "value_or_direction": "598-601（比ISO 9283改编的700少约100；作者明示不内在降样本）",
+    "comparator": "ISO 9283改编流程700样本/试验",
+    "task_or_sample": "G1定位重复性测试，200次独立试验",
+    "locator": "IV.A. Manipulation positioning tests"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对IV.A正文'limited range of 598 to 601—nearly 100 fewer samples per trial than adopted by the ISO 9283 adaptation'与'does not inherently make the testing process more efficient in terms of sample reduction'原句及后续均匀分布归因段；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2505.08216-C05",
+   "claim": "在G1运动指令跟踪评测中，四种采样变体（Monte Carlo/重要性采样/两种batch大小的自适应重要性采样）共40次仿真试验全部收敛到同一最终跟踪性能估计≈0.47；最省样本的AIS变体（batch=30）仅需442次测试，而Monte Carlo最多需650次。",
+   "stance": "support",
+   "relation": "支撑'该评测框架可跨不同采样机制（非同一算法实例）产生可重复的轨迹/指令跟踪性能估计，且方差缩减结构能兑现样本效率'的方案命题",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.C节报告四种α量化算法变体各执行10次（共40次），尽管采样行为不同全部收敛到同一估计≈0.47；样本需求差异显著：Monte Carlo最多650测试，AIS(d=30)仅442测试即达同一估计——可重复性与采样机制解耦，效率来自方差缩减。",
+   "locator": "IV.C. Humanoid robot locomotive tracking performance tests / Fig. 6a",
+   "source_context": "Despite differences\nin sampling behavior, all 40 trials converged to the same\nfinal tracking performance estimate of approximately 0.47.\nHowever, as shown in Fig. 6a, the number of required samples\nvaried significantly: Monte Carlo sampling used up to 650\ntests, while the most efficient AIS variant (d = 30) achieved\nthe same estimate with only 442 tests.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "收敛到同一跟踪性能估计所需的测试样本数",
+    "value_or_direction": "40次试验同一估计≈0.47；AIS(batch=30) 442测试 vs Monte Carlo最多650测试",
+    "comparator": "Monte Carlo采样（最多650测试）vs AIS(batch=30)（442测试）",
+    "task_or_sample": "G1 RL运动策略指令跟踪评测（命令空间±0.3m/s、±0.3rad/s），MuJoCo仿真（策略在Isaac Gym训练），4变体×10次",
+    "locator": "IV.C / Fig. 6a"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对IV.C正文'all 40 trials converged to the same final tracking performance estimate of approximately 0.47'与'Monte Carlo sampling used up to 650 tests, while the most efficient AIS variant (d = 30) achieved the same estimate with only 442 tests'原句及Fig.6a说明；source_context经脚本验证为md文件原始子串。"
+   }
+  },
+  {
+   "card_id": "2505.08216-C06",
+   "claim": "同一RL运动策略的指令跟踪性能估计在仿真（40次试验均≈0.47）与真机（相隔7天的两次试验均为0.39）间存在明显差异（有界跟踪损失，真机更低）；所提框架以形式化保证（误差界0.078、95%置信、90%可重复）检测并量化该sim-to-real差异。",
+   "stance": "support",
+   "relation": "支撑'标准化评测方法可暴露并量化轨迹/指令跟踪的仿真-实机差距'的评测能力命题，为综述sim-to-real痛点提供带保证的量化手段",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.C节报告真机两次试验（IS跨3天240测试、AIS单天222测试，相隔7天、动捕重新标定）均返回相同估计0.39，与仿真估计≈0.47形成清晰差异；正文明确两估计保证落在真值0.078内@95%置信、90%可重复，并称框架提供'principled and parameterized way to detect and quantify such discrepancies'。",
+   "locator": "IV.C. Humanoid robot locomotive tracking performance tests",
+   "source_context": "According to Theorem 3 and the specified parameters, both\nthe simulation and real-world estimates are guaranteed to lie\nwithin 0.078 of the ground-truth value with 95% confidence\nand are repeatable with 90% probability. Notably, the same\nlocomotion algorithm exhibits a clear discrepancy in tracking\nperformance between the simulator and the real world. The\nproposed testing framework offers a principled and parameter-\nized way to detect and quantify such discrepancies, complete\nwith formal guarantees.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "指令跟踪性能估计（软L∞指数损失，有界[0,1]）",
+    "value_or_direction": "仿真≈0.47（40次试验）vs 真机0.39（2次试验）；保证界0.078@95%置信、90%可重复",
+    "comparator": "MuJoCo仿真 vs 真机（OptiTrack动捕），同一RL运动策略",
+    "task_or_sample": "真机：IS试验（240测试、跨3天）与AIS试验（222测试、1天），相隔7天",
+    "locator": "IV.C. Humanoid robot locomotive tracking performance tests"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对IV.C正文：真机'both trials yielded the same final tracking performance estimate of 0.39'原句（已逐字复核）、仿真估计≈0.47（见C05卡）、'within 0.078 of the ground-truth value with 95% confidence...90% probability'与sim-real差异陈述；source_context经脚本验证为md文件原始子串。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2504.15414",
+  "2304.03757"
+ ],
+ "notes": "arXiv v3时间戳2025-10-21（首版2025-05，catalog登记published 2025-12-18）。核心方法学引用（NADE[18] Nature、Capito[20]、Impagliazzo[35] STOC、Maurer-Pontil[60]经验Bernstein、ISO 9283[8]标准）均非arXiv文献，core_citations仅列两篇arXiv可溯源相关工作（[79]同组sim-to-real迁移、[50]复现性-稳定性学习理论）。定位测试数值以正文与Fig.1/2说明为准。"
+}

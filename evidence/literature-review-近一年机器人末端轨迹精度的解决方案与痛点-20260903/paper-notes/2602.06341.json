@@ -1,0 +1,430 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.06341",
+  "title": "HiWET: Hierarchical World-Frame End-Effector Tracking for Long-Horizon Humanoid Loco-Manipulation",
+  "published": "2026-02",
+  "url": "https://arxiv.org/abs/2602.06341",
+  "authors": [
+   "Zhanxiang Cao",
+   "Liyun Yan",
+   "Yang Zhang",
+   "Sirui Chen",
+   "Jianming Ma",
+   "Tianyue Zhan",
+   "Shengcheng Fu",
+   "Yufei Jia",
+   "Cewu Lu",
+   "Yue Gao"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文是'世界系末端跟踪+分层RL+运动学先验残差学习'方案族在人形loco-manipulation上的代表性工作：直接命中综述问题中'本体中心坐标系累积漂移'痛点，机制链完整（Semi-MDP双时间尺度分层、上身KMP参考+残差、下身绝对关节目标、特权状态估计、指令重要性采样、空间课程），量化效果充分（仿真EE误差12.4±2.4mm、真机圆/方轨迹RMSE 12/15mm、四组件消融矩阵贯穿仿真与真机），并自述LiDAR定位精度上界等四项边界，完整回答方案族/核心机制/量化效果/适用条件/未解痛点五个维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位痛点：全身动作模仿优化关节空间误差而非任务空间精度且需密集参考轨迹；本体中心坐标系下基座累积漂移与高频振荡退化世界系末端精度；上下身动力学耦合（手臂扰动步态、行走冲击传至末端）；任务轨迹超出静态可达空间需主动搬运基座。"
+   },
+   {
+    "locator": "II. RELATED WORKS",
+    "role": "problem",
+    "purpose": "方案族定位：模仿法无任务空间保证；命令驱动法（AMO/HOMIE/HOVER）与分层法（R2S2/WholeBodyVLA/FALCON）多在body-centric系操作；FALCON/RAMBO改进跟踪但仍以本体为中心——确立'世界系一致性'作为空白点。"
+   },
+   {
+    "locator": "III. PROBLEM FORMULATION",
+    "role": "method-or-design",
+    "purpose": "分层Semi-MDP建模：M=⟨S,A_H,A_L,P,R,γ⟩，高层世界系指令策略每K步更新子目标，低层全身跟踪策略每控制步执行；两时间尺度分离长时程操作目标与瞬时稳定约束。"
+   },
+   {
+    "locator": "IV. WHOLE-BODY TRACKING POLICY",
+    "role": "relevant-core",
+    "purpose": "低层策略核心：混合动作空间（上身KMP参考q̂+残差Δq式(5)，下身绝对关节目标）；指令u_t含基座速度/身高/基座系EE位姿/腰正则权重α；History Encoder（CNN、H=5）与State Estimator（估计基座线速度与EE位姿）；非对称actor-critic（critic含特权信息+高度图），PPO。"
+   },
+   {
+    "locator": "IV-C. Command Importance Sampling for Policy Learning",
+    "role": "method-or-design",
+    "purpose": "训练指令采样：均匀笛卡尔采样含大量运动学不可行/病态目标；用IK重构误差剪枝+可操作度加权构造先验数据集，实际指令从β·uniform+(1-β)·prior混合分布抽取以兼顾覆盖与可行。"
+   },
+   {
+    "locator": "IV-D. Kinematic Manifold Prior Learning",
+    "role": "relevant-core",
+    "purpose": "KMP训练：PyRoki约束优化IK生成约1000万样本（末端指令+α→上身关节构型），五倍过采样按IK误差与可操作度过滤；α∈[0.1,10]覆盖刚躯干够取到全身前扑构型谱系；ResNet对称编码器-解码器架构；预训练后冻结。"
+   },
+   {
+    "locator": "V. WORLD-FRAME COMMAND POLICY",
+    "role": "relevant-core",
+    "purpose": "高层策略：观测本体状态+基座SE(3)世界系位姿+世界系EE目标与单/双臂活跃mask；输出结构化子目标（基座速度、身高、基座系EE位姿、α）；奖励含工作空间优化（基座-目标平面距离惩罚+朝向对齐）、世界系EE跟踪、稳定正则；空间课程按误差阈值逐步扩展指令范围R（式17）；Stage 1跟踪策略冻结。"
+   },
+   {
+    "locator": "VI-A/B. Experimental Setup and Low-Level Tracking Performance",
+    "role": "results-or-analysis",
+    "purpose": "平台（Unitree G1 29-DoF、Isaac Lab、零样本部署）与表I：HiWET EE位置误差12.4±2.4mm、基座线速度误差0.157m/s较HOMIE降约20%；消融w/o KMP 25.2±12.8mm（翻倍+5×方差）、w/o State Est. 23.0±7.2mm、w/o IS 16.1±5.3mm。"
+   },
+   {
+    "locator": "VI-C. World-Frame Navigation and Long-Horizon Tracking",
+    "role": "results-or-analysis",
+    "purpose": "五种几何轨迹（星/心/圆/螺线/矩形）±5m随机初始化、成功判据全程平均EE误差<20mm；HiWET星/心急转弯轨迹持续<5mm而消融变体退化；8方向5m基座重定位HiWET最终定位误差0.101m最低。"
+   },
+   {
+    "locator": "VI-D. Kinematic Manifold Prior Benchmarking",
+    "role": "results-or-analysis",
+    "purpose": "KMP对PyRoki基准：KMP-L（7.38M参数）单样本推理>5×加速、批4000毫秒级延迟；AMASS重定向测试集中位位置误差<15mm、姿态误差<5度（PyRoki近精确）；IS训练显著优于均匀采样。"
+   },
+   {
+    "locator": "VI-E. Real-world Hardware Experiments",
+    "role": "results-or-analysis",
+    "purpose": "零样本sim-to-real：低层策略机载50Hz，行走中单臂高举够取与动态画圆稳定；世界系定位用头部Livox Mid-360+IMU经Fast-LIO2、基座位姿10Hz正运动学更新；真机圆/方轨迹RMSE 12±5/15±7mm（10次重复，表II）。"
+   },
+   {
+    "locator": "VII. CONCLUSION AND LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论（12.4mm仿真+零样本迁移）与四项自述局限：LiDAR定位精度上界、轨迹尺度小、高层实验仅单臂且双臂依赖目标可行性、接触富操作未探索；未来工作融入视觉感知与力控。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献仅用于引用定位与相关工作交叉验证，不进入证据卡。"
+   }
+  ]
+ },
+ "research_question": "人形机器人loco-manipulation中，在腿部行走引起基座累积世界系漂移与高频振荡、上下身动力学紧耦合、且任务轨迹超出静态可达空间的条件下，如何通过分层强化学习实现长时程世界坐标系下的末端执行器精确与稳定跟踪？",
+ "contributions": [
+  "世界系-本体系分层控制方案：高层世界系指令策略生成结构化子目标（基座速度、身高、基座系手部目标、腰正则权重α），显式协调上身操作与下身行走，通过主动基座搬运与身高调整维持世界系一致性与可达性",
+  "运动学流形先验（KMP）：离线预训练冻结的神经IK近似（约1000万PyRoki样本、重要性采样过滤），以残差动作空间形式嵌入上身控制，降低探索维度并抑制运动学无效行为，推理较优化求解器加速5倍以上",
+  "特权状态估计+指令重要性采样训练配方：State Estimator从观测历史推断基座线速度与EE位姿以补偿部分可观测；混合指令分布（均匀+IK误差/可操作度过滤先验）改善训练效率与双臂一致性",
+  "物理人形平台验证：仿真12.4mm世界系EE跟踪误差，Unitree G1零样本sim-to-real（机载50Hz），真机圆/方轨迹RMSE 12/15mm，四组件消融矩阵贯穿仿真与真机"
+ ],
+ "method": {
+  "summary": "两阶段分层RL（Semi-MDP双时间尺度：高层每K步、低层每控制步）。Stage 1训练全身跟踪策略：上身动作为冻结KMP输出的运动学一致参考+策略残差修正（式5：q_des_t,up=q̂_t,up+Δq_t,up），下身为绝对关节目标以直接掌控行走与基座推进；History Encoder（CNN）编码长度5的(s,u)历史，State Estimator（CNN）从历史推断特权量（基座线速度、EE位姿），非对称actor-critic的critic含真实特权信息与高度图，均用PPO优化；奖励含KMP参考跟踪（式11，指令重采样后时变缩放避免约束早期瞬态）、膝感知非对称加权身高跟踪（式12，仅零速时激活）与关节速度/动作率/力矩变化正则；末端指令从均匀采样与重要性采样先验（IK重构误差剪枝+可操作度加权）的混合分布抽取。KMP为ResNet对称编码器-解码器，由PyRoki约束优化IK生成约1000万样本训练（腰正则权重α均匀采样[0.1,10]、其他上身关节固定0.2，低α鼓励腰部冗余扩工作空间、高α优先稳定CoM）。Stage 2冻结跟踪策略，训练世界系指令策略：观测本体状态+基座SE(3)位姿+世界系EE目标与单/双臂mask，输出结构化子目标；奖励含工作空间优化（惩罚基座与活跃目标的平面距离、奖励基座朝向与指令速度对准目标中心）、世界系EE位姿直接跟踪、动作率与高频抖动惩罚及非活跃臂回中性位姿；空间课程按跟踪误差阈值逐步扩展平面指令范围（式17）。部署：Isaac Lab仿真训练零样本迁移Unitree G1机载50Hz；世界系定位用头部Livox Mid-360 LiDAR+IMU经Fast-LIO2，基座位姿10Hz经正运动学更新。",
+  "assumptions": [
+   "世界系位姿可由LiDAR-Inertial里程计（Fast-LIO2）以10Hz频率获得且其精度构成跟踪精度上界（作者自述局限1）",
+   "低层策略可仅凭本体感知+估计的特权量（基座线速度、EE位姿）补偿部分可观测，无需外部感知",
+   "高层结构化子目标（基座速度/身高/基座系EE位姿/α）足以表达长时程任务目标，且世界系目标在可行性范围内（作者自述双臂全局跟踪依赖目标可行性）",
+   "训练指令分布（可达+高可操作度先验与均匀采样的混合）覆盖部署时的指令分布",
+   "上身残差修正保持在KMP流形邻域内（由KMP参考跟踪奖励约束），不破坏运动学有效性"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "KMP训练数据：PyRoki约束优化IK生成约1000万条（末端指令+腰正则权重α→上身关节构型）样本，五倍过采样后按IK重构误差与可操作度过滤",
+   "KMP精度评测：AMASS人体动捕数据重定向到G1的测试集（自然人类末端使用分布）",
+   "策略训练与评测：Isaac Lab仿真；评测指令均匀采样于线速度[-1,1]m/s、角速度[-3,3]rad/s、身高[0.3,0.78]m与最大可达笛卡尔体积"
+  ],
+  "tasks": [
+   "低层全身指令跟踪（基座速度/身高/EE位姿，均匀采样评测）",
+   "世界系长时程几何轨迹跟踪：星/心/圆/螺线/矩形五种轨迹在起点±5m范围随机初始化，需先导航至目标区域再精确跟踪，成功判据为全程平均EE误差<20mm",
+   "8方向5m距离基座重定位任务（评测导航与基座定位精度）",
+   "真机圆/方轨迹EE跟踪（末端LED长曝光记录，10次重复）与行走中单臂高举/动态画圆稳定性展示"
+  ],
+  "embodiments": [
+   "Unitree G1人形机器人：29自由度（腿12、双臂14、腰3）",
+   "真机世界系定位链路：头部Livox Mid-360 LiDAR+IMU经Fast-LIO2，基座位姿10Hz正运动学更新；策略机载50Hz零样本部署"
+  ],
+  "sample_or_scale": "仿真消融与轨迹评测覆盖5种几何轨迹×多随机初始化与8方向重定位；真机每任务10次重复；KMP基准含KMP-S（4层ResNet、1.39M参数）与KMP-L（5层、7.38M参数）对PyRoki（5次最大迭代配置）"
+ },
+ "evaluation": {
+  "design": "仿真中先评低层指令跟踪（表I：对比HOMIE与三个消融变体的基座线/角速度、身高、EE位置误差），再评世界系长时程轨迹跟踪（5种几何轨迹±5m随机初始化，成功判据全程平均EE误差<20mm；定性3D轨迹对比图4）与8方向基座重定位（最终xy定位误差）；KMP单独对PyRoki优化求解器基准（推理延迟+AMASS重定向测试集重构精度，图6）；真机零样本部署评圆/方轨迹RMSE（10次重复，表II）与行走中臂部运动稳定性（图7）。",
+  "baselines": [
+   "HOMIE（等距遥操作人形loco-manipulation框架；接收关节位置指令而非EE位姿，无法直接比较EE误差）",
+   "HiWET w/o KMP（去运动学流形先验）",
+   "HiWET w/o State Est.（去特权状态估计）",
+   "HiWET w/o IS（末端指令退化为均匀采样）",
+   "HiWET w/ Fixed α（固定α=1.0，去腰部冗余调制）",
+   "KMP基准：PyRoki优化求解器（5次最大迭代）与KMP-L w/o IS（均匀笛卡尔训练分布）"
+  ],
+  "metrics": [
+   "基座线速度误差（m/s）、角速度误差（rad/s）、身高误差（m）、EE位置误差（mm）（表I）",
+   "轨迹跟踪成功率（全程平均EE误差<20mm）与平均位置误差（mm）（图3）",
+   "基座重定位最终xy平面定位误差（m）（图5）",
+   "KMP推理延迟（总时长/单样本）与重构位置误差（mm）/姿态误差（度）（图6）",
+   "真机圆/方轨迹RMSE（m）（表II）"
+  ],
+  "ablations": [
+   "KMP消融：EE误差12.4→25.2mm（翻倍）且方差5×（表I、图3/4、真机表II 0.032/0.039m）",
+   "State Estimator消融：EE误差退化近10mm至23.0±7.2mm（真机圆RMSE 0.024m），表明准确EE反馈对补偿行走诱发振荡必要",
+   "指令重要性采样消融：12.4→16.1±5.3mm（表I）",
+   "固定α=1.0消融：真机圆/方RMSE 0.018/0.019m，大跨度够取任务退化（表II、图4/5）——腰部冗余调制对可达性-稳定性权衡的贡献",
+   "KMP训练分布消融：重要性采样显著优于均匀笛卡尔采样（图6c/d）",
+   "补充：w/o KMP的基座速度/身高误差反而略低（0.149m/s、0.015m）但EE误差大幅恶化，显示组件间存在任务间权衡"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "绝对性能：HiWET在仿真均匀采样指令评测中EE位置误差12.4±2.4mm（同时基座线速度误差0.157±0.003m/s、身高误差0.018±0.012m），在星/心等急转弯几何轨迹上持续保持<5mm误差；真机零样本圆/方轨迹RMSE分别为12±5mm与15±7mm。",
+   "scope": "Unitree G1 29-DoF，Isaac Lab仿真+零样本真机部署（50Hz机载）",
+   "locator": "Table I, Fig. 4, Table II"
+  },
+  {
+   "finding": "消融归因：去掉KMP后EE误差翻倍至25.2±12.8mm且方差增大5倍，是精度上最关键组件——无运动学引导直接学笛卡尔任务显著更难；去掉State Estimator退化近10mm至23.0±7.2mm（准确EE反馈对补偿行走诱发振荡必要）；去掉指令重要性采样退化至16.1±5.3mm。",
+   "scope": "表I仿真消融（均匀采样指令域）+表II真机消融，方向一致",
+   "locator": "Table I, VI-B, Table II"
+  },
+  {
+   "finding": "与基线对比：较HOMIE基座线速度RMSE降低约20%（0.157 vs 0.194 m/s）且身高一致性更好；但HOMIE接收关节位置指令，EE误差层面不可直接比较。",
+   "scope": "表I，同一仿真评测协议",
+   "locator": "Table I, VI-B"
+  },
+  {
+   "finding": "世界系机制有效性：8方向5m基座重定位中HiWET路径最直接稳定、最终基座定位误差0.101m为最低（消融变体0.106-0.133m），把基座当作工作空间优化的主动自由度而非独立移动平台；空间课程（误差低于阈值时扩展指令范围）解决远目标长时程信用分配难题。",
+   "scope": "仿真8方向×5m重定位（图5）+空间课程训练策略（V-B）",
+   "locator": "Fig. 5, V-B. Spatial Curriculum Strategy"
+  },
+  {
+   "finding": "KMP效率-精度权衡：KMP-L（7.38M参数）较PyRoki（5次迭代配置）单样本推理加速超过5倍、批4000时保持毫秒级延迟，可无缝嵌入RL训练回路；代价是重构精度略逊于近精确的迭代求解器（AMASS重定向测试集中位位置误差<15mm、姿态误差<5度），仍足以支撑12.4mm级全身跟踪。",
+   "scope": "KMP-S/KMP-L对PyRoki基准（图6），测试集为AMASS重定向自然分布",
+   "locator": "Fig. 6, VI-D"
+  },
+  {
+   "finding": "长时程任务定义与成功判据：五种几何轨迹（星/心/圆/螺线/矩形）在起点±5m范围随机初始化，要求导航与跟踪联合完成；成功判据为全程平均EE跟踪误差<20mm，同时考察高层导航-操作协调与低层扰动抑制。",
+   "scope": "仿真世界系长时程评测协议（VI-C）",
+   "locator": "VI-C. Trajectory Tracking Evaluation"
+  },
+  {
+   "finding": "真机部署条件：世界系跟踪依赖头部Livox Mid-360 LiDAR+IMU的Fast-LIO2定位，基座位姿10Hz经正运动学更新；低层策略机载50Hz零样本运行，行走中单臂高举够取与动态画圆（引起显著CoM偏移与肢体动力学耦合）均保持稳定。",
+   "scope": "Unitree G1真机部署（图1e/f长曝光、图7、表II）",
+   "locator": "VI-E. Real-world Hardware Experiments"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "世界系跟踪精度受LiDAR定位精度上界约束",
+    "locator": "VII. CONCLUSION AND LIMITATIONS"
+   },
+   {
+    "limitation": "评测的轨迹尺度相对较小",
+    "locator": "VII. CONCLUSION AND LIMITATIONS"
+   },
+   {
+    "limitation": "双臂全局跟踪依赖目标可行性，且高层实验仅涉及单臂跟踪",
+    "locator": "VII. CONCLUSION AND LIMITATIONS"
+   },
+   {
+    "limitation": "接触富操作（如抓取）未探索，未来工作将融入视觉感知与力控",
+    "locator": "VII. CONCLUSION AND LIMITATIONS"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "真机定量结果仅圆/方两类平滑轨迹×10次重复；仿真重点展示的急转弯任务（星/心）无真机定量数据，图1(e,f)长曝光仅为定性展示；真机误差与LiDAR定位误差的贡献未解耦分析",
+    "basis": "表II仅含圆/方两任务；图4的星/心对比仅在仿真；VI-E未报告定位误差单独测量"
+   },
+   {
+    "boundary": "高层世界系策略实验仅单臂；双臂mask接口已定义但无双臂长时程定量评测，双臂目标可行性依赖未量化",
+    "basis": "VII自述(3)；VI-C实验仅报告单EE轨迹（右手）"
+   },
+   {
+    "boundary": "成功判据（全程平均<20mm）与均值（12.4mm）之间留有裕度，意味着部分轨迹段误差可超20mm；未报告误差时间分布或最差段指标，图4颜色编码（蓝<2mm/红>20mm）仅为定性",
+    "basis": "VI-C成功判据定义与图4图例；正文未给逐段误差统计"
+   },
+   {
+    "boundary": "奖励具体权重、域随机化、高层步数K等关键超参数在附录，本提取版本止于参考文献，不可完全复核；且无代码/数据开源声明",
+    "basis": "IV-E与V-C均称'provided in the appendix'；提取全文无附录正文"
+   }
+  ]
+ },
+ "transfer_boundary": "在有外部世界系定位（头部LiDAR+IMU/Fast-LIO2、10Hz）的Unitree G1（29-DoF）人形平台上、Isaac Lab仿真训练零样本迁移条件下验证的世界系EE轨迹跟踪方法（仿真12.4mm、真机平滑圆/方轨迹12-15mm RMSE）；适用于无接触的末端轨迹跟踪与基座重定位协调，对无外部定位设施、接触富操作（抓取/插装）、双臂长时程任务及急转弯轨迹的真机精度无证据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "四组件消融矩阵（KMP/State Est./IS/Fixed α）贯穿仿真表I、轨迹图3/4、基座重定位图5与真机表II，组件归因链条在仿真与真机间方向一致",
+   "长时程任务协议设计合理：±5m随机初始化迫使导航-操作联合，20mm全程均值成功判据同时考察两层策略",
+   "KMP与PyRoki的基准对比同时报告效率（>5×加速）与精度（承认迭代求解器近精确），权衡表述诚实",
+   "真机验证披露完整部署链路（LiDAR+Fast-LIO2定位、10Hz位姿更新、50Hz机载），结果报告均值与标准差（10次重复）"
+  ],
+  "design_risks": [
+   "HOMIE基线接口不同（关节指令vs EE位姿），EE层面横向对比实际缺失，'较HOMIE降20%'仅限基座线速度RMSE",
+   "真机定量任务（圆/方）与仿真重点展示的急转弯任务（星/心）不重合，最难的急转弯场景真机精度未定量报告",
+   "图3的成功率/误差以图形呈现，正文未给出五种轨迹的逐项数值，精确数值需读图",
+   "附录（奖励权重、域随机化、额外轨迹）不在提取正文中，关键超参数不可复核；无代码开源声明",
+   "表I中w/o KMP的基座速度与身高误差反而优于完整HiWET，组件间存在权衡但正文未深入分析该现象"
+  ],
+  "baseline_fairness": "消融变体共享训练流程与评测协议，单变量归因较公平；HOMIE因命令接口不同（关节vs EE）不可直接比较EE误差，作者已如实声明，速度对比口径限于基座线速度RMSE；各组件间可能存在交互效应（如KMP与IS数据分布），单变量消融或低估联合贡献。",
+  "metric_validity": "EE位置误差（mm）直接对应综述关心的末端轨迹精度且评测域明确（均匀采样指令）；20mm全程均值成功判据与任务语义一致但放宽了均值与瞬态的关系（12.4mm均值下部分段可超20mm）；基座重定位误差（0.101m）度量导航而非末端精度，引用时应区分表述；KMP重构误差（中位<15mm）是开环先验质量指标，不等于闭环跟踪误差。",
+  "reproducibility": "平台（G1 29-DoF、Isaac Lab、50Hz、Livox Mid-360+Fast-LIO2）、网络组件（CNN History Encoder/State Estimator、ResNet KMP、PPO）、指令采样分布、课程规则与评测协议披露较全；但奖励权重、域随机化、高层步数K、β混合权重等在未见附录中，且无代码/数据开源，复现需补齐附录信息并自建平台。",
+  "external_validity": "结论限定于：具备LiDAR世界系定位的人形平台、无接触EE轨迹跟踪、单臂长时程任务、平滑轨迹真机验证；作者自述四项局限（定位上界/轨迹尺度/仅单臂/无接触操作）。对机械臂固定基座场景不适用（其痛点是基座漂移特有），对抓取等接触任务与无外部定位场景无证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.06341-C01",
+   "claim": "该文将人形loco-manipulation末端精度退化的根源定位于本体中心坐标系指令表述：既有方法在body-centric系中表述命令，无法内在校正腿式行走诱发的世界系累积漂移；HiWET据此把问题重构为世界系末端执行器跟踪，用分层RL解耦全局推理与动态执行。",
+   "stance": "support",
+   "relation": "支撑综述命题'本体中心坐标系下的基座累积漂移是人形末端轨迹精度的核心痛点'，并把'世界系跟踪重构+分层控制'确立为对应的解决方案族。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要原文指出既有方法通常在body-centric系中表述命令、无法内在校正腿式行走诱发的世界系累积漂移，并提出把问题重构为world-frame end-effector tracking、以分层RL解耦全局推理与动态执行；引言进一步指出任务轨迹超出静态可达空间时机器人须主动搬运基座，body-centric表述不显式处理该协调；II-B小结指出command-driven方法在body-centric系中无法保持世界系一致性。",
+   "locator": "preamble (Abstract); I. INTRODUCTION; II-B Related Works",
+   "source_context": "Existing approaches typically formulate commands in body-centric frames, fail to inherently correct cumulative world-frame drift induced by legged locomotion. We reformulate the problem as world-frame end-effector tracking and propose HiWET, a hierarchical reinforcement learning framework that decouples global reasoning from dynamic execution.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "在摘要中逐字核对：'body-centric frames'、'fail to inherently correct cumulative world-frame drift induced by legged locomotion'与'reformulate the problem as world-frame end-effector tracking'均为原文；主张限定为作者对痛点根源的表述与方案定位，未附加原文之外的因果强度。"
+   }
+  },
+  {
+   "card_id": "2602.06341-C02",
+   "claim": "HiWET在物理人形平台验证中实现仿真12.4mm世界系末端跟踪误差，并在多样肢体构型下实现鲁棒零样本sim-to-real迁移。",
+   "stance": "support",
+   "relation": "为综述问题提供'世界系分层RL方案族'的量化效果锚点：仿真均值级12mm精度+真机零样本迁移可行性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "贡献列表原文宣称在物理人形平台上的广泛验证达到12.4mm世界系跟踪误差（仿真）与跨多样肢体构型的鲁棒零样本sim-to-real；表I给出EE位置误差12.4±2.4mm（同时基座线速度误差0.157±0.003m/s、身高误差0.018±0.012m）；真机表II圆/方轨迹RMSE 0.012±0.005/0.015±0.007m与之量级一致。",
+   "locator": "I. INTRODUCTION, Table I",
+   "source_context": "We perform extensive validation on a physical humanoid platform, demonstrating 12.4 mm world-frame tracking error in simulation and robust zero-shot sim-to-real transfer across diverse limb configurations.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "end-effector position error (world-frame tracking)",
+    "value_or_direction": "12.4 ± 2.4 mm in simulation; real-world circle/square RMSE 12/15 mm",
+    "comparator": "ablations: w/o KMP 25.2 ± 12.8 mm, w/o State Est. 23.0 ± 7.2 mm, w/o IS 16.1 ± 5.3 mm; HOMIE not comparable on EE error",
+    "task_or_sample": "Unitree G1 29-DoF, Isaac Lab simulation + zero-shot onboard deployment at 50 Hz; uniformly sampled whole-body commands",
+    "locator": "Table I, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对贡献列表的12.4 mm世界系跟踪误差句；并与表I（12.4±2.4mm、0.157±0.003m/s、0.018±0.012m）、表II（0.012±0.005/0.015±0.007m）及VII结论重述的12.4mm交叉核对一致；主张限定于仿真均值级指标与真机圆/方轨迹，未外推到急转弯轨迹真机精度。"
+   }
+  },
+  {
+   "card_id": "2602.06341-C03",
+   "claim": "HiWET的核心精度机制是运动学流形先验（KMP）+残差动作空间：KMP把操作流形经残差学习嵌入动作空间，降低探索维度并缓解运动学无效行为；具体为上身关节命令=冻结KMP的运动学一致参考+策略残差修正，下身保持绝对关节目标。",
+   "stance": "support",
+   "relation": "支撑综述命题'运动学/物理先验+残差学习可显著压缩末端精度控制的学习难度'——与2607.12275的'保平坦性动力学先验+残差'构成同一机制模式在运动学层面的对应，是跨方案族的结构性机制证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要原文定义KMP经残差学习把操作流形嵌入动作空间、降低探索维度并缓解运动学无效行为；IV-A式(5)给出具体形式q_des_t,up = q̂_t,up + Δq_t,up并说明该残差表述使控制器能在保持流形有效性的同时做细微动态调整，下身保持绝对关节目标；IV-B说明KMP离线预训练并在策略优化中冻结、使策略学残差修正而非绝对关节目标；IV-D说明KMP训练数据由PyRoki约束优化IK生成、约1000万样本。",
+   "locator": "preamble (Abstract); IV-A. Hybrid Action Space; IV-B. Network Architecture Overview; IV-D. Kinematic Manifold Prior Learning",
+   "source_context": "We introduce a Kinematic Manifold Prior (KMP) that embeds the manipulation manifold into the action space via residual learning, reducing exploration dimensionality and mitigating kinematically invalid behaviors.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对摘要KMP定义句；式(5)的残差形式（q_des_t,up = q̂_t,up + Δq_t,up）与'This residual formulation enables the controller to make subtle dynamic adjustments ... within the valid manipulation manifold'在IV-A逐句核对无误；'The KMP is pretrained offline and frozen during policy optimization'出自IV-B；PyRoki约束优化IK与'Approximately ten million samples'出自IV-D；主张限定为机制描述，效果归因由C04消融证据单独支撑。"
+   }
+  },
+  {
+   "card_id": "2602.06341-C04",
+   "claim": "消融显示KMP与状态估计是EE跟踪精度的两大关键：去掉KMP参考后手部误差翻倍（12.4→25.2mm）且方差增大约5倍，证明无运动学引导直接学笛卡尔任务显著更难；去掉State Estimator后跟踪退化近10mm（23.0mm），证明准确的末端反馈对补偿行走诱发振荡必要。",
+   "stance": "support",
+   "relation": "为综述命题'运动学先验+特权状态估计是世界系末端精度方案的必要组件'提供消融级量化证据，并把'纯RL学笛卡尔任务难'列为该方案族的痛点证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-B消融原文：去KMP导致最显著退化——手部误差翻倍至25.2mm、方差5×，确认无运动学引导学笛卡尔任务显著更难；去State Estimator退化近10mm，准确EE反馈对补偿行走诱发振荡必要；表I完整数值为HiWET 12.4±2.4、w/o IS 16.1±5.3、w/o State Est. 23.0±7.2、w/o KMP 25.2±12.8mm，真机表II消融方向一致（w/o KMP圆/方RMSE 0.032/0.039m）。",
+   "locator": "VI-B. Ablation Studies and Precision Improvements, Table I",
+   "source_context": "HiWET w/o KMP: Removing the KMP reference causes the most significant drop—hand error doubles (25.2 mm) with 5× higher variance—confirming that learning Carte- sian tasks without kinematic guidance is significantly more challenging. • HiWET w/o State Est.: Without the state estimator, tracking degrades by nearly 10 mm, indicating that accu- rate end-effector feedback is essential for compensating locomotion-induced oscillations.",
+   "evidence_type": "ablation",
+   "quantitative": {
+    "metric": "EE position error under component ablation",
+    "value_or_direction": "12.4±2.4 (full) → 25.2±12.8 mm (w/o KMP, 2× error, 5× variance) → 23.0±7.2 mm (w/o State Est., ~10 mm worse); real-world w/o KMP circle/square RMSE 0.032/0.039 m",
+    "comparator": "full HiWET vs single-component ablations",
+    "task_or_sample": "uniformly sampled whole-body commands in simulation (Table I); real robot circle/square tasks, 10 repetitions (Table II)",
+    "locator": "Table I, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VI-B消融两条要点（含Carte- sian与accu- rate跨行连字符、em破折号与•项目符原样保留），25.2mm/5×/近10mm三个数字与表I、表II交叉核对一致；主张限定于单变量消融实验，未声称组件间无交互。"
+   }
+  },
+  {
+   "card_id": "2602.06341-C05",
+   "claim": "HiWET真机世界系跟踪依赖LiDAR定位链路（头部Livox Mid-360+IMU经Fast-LIO2、基座位姿10Hz正运动学更新）；在圆/方轨迹任务10次重复中达到最低跟踪误差：圆RMSE 12mm、方RMSE 15mm，消融变体（固定α、去状态估计、去KMP）误差依次增大。",
+   "stance": "support",
+   "relation": "为综述提供该方案族的真机量化效果与部署条件锚点：'世界系跟踪精度以外部LiDAR定位为前提，平滑轨迹达12-15mm RMSE'。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-E原文：世界系位姿由头部Livox Mid-360 LiDAR+IMU经Fast-LIO2估计、基座位姿10Hz经正运动学更新；圆/方任务10次重复对比消融变体，HiWET最低（圆12mm、方15mm）；表II完整数值：w/ Fixed α 0.018/0.019m、w/o State Est. 0.024/0.028m、w/o KMP 0.032/0.039m；低层策略机载50Hz零样本部署。",
+   "locator": "VI-E. Real-world Hardware Experiments, Table II",
+   "source_context": "To enable world-frame tracking, global pose is estimated using a head-mounted Livox Mid-360 LiDAR and IMU via Fast-LIO2 [ 39 ], with base position updated at 10 Hz through forward kinematics. In the circle and square trajectory tasks (Fig. 1(e,f)), we compare HiWET against ablated variants over 10 repetitions. As shown in Table II, HiWET achieves the lowest tracking errors (12 mm for circles, 15 mm for squares).",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-world end-effector tracking RMSE (circle and square trajectories)",
+    "value_or_direction": "HiWET 0.012±0.005 m (circle) / 0.015±0.007 m (square); w/ Fixed α 0.018/0.019; w/o State Est. 0.024/0.028; w/o KMP 0.032/0.039 m",
+    "comparator": "w/ Fixed α, w/o State Est., w/o KMP ablations on same hardware",
+    "task_or_sample": "Unitree G1 physical robot, circle and square world-frame trajectories, 10 repetitions each, LiDAR-Inertial localization at 10 Hz",
+    "locator": "Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VI-E世界系指令策略段的定位链路句（Livox Mid-360、Fast-LIO2、10Hz）与真机结果句（12mm/15mm、10次重复），并与表II四行数值交叉核对一致；主张限定于圆/方平滑轨迹真机结果，未外推到其他轨迹形状。"
+   }
+  },
+  {
+   "card_id": "2602.06341-C06",
+   "claim": "KMP以精度换速度实现实时运动学参考：较PyRoki优化求解器（5次最大迭代配置）在单样本推理上加速超过5倍（批4000时保持毫秒级延迟），使其可无缝嵌入RL训练回路提供高频运动学参考；其重构精度（AMASS重定向测试集中位位置误差<15mm、姿态误差<5度）虽逊于近精确的迭代求解器，仍足以作为双臂协调的高效运动学先验。",
+   "stance": "support",
+   "relation": "支撑综述命题'神经IK近似可在实时控制回路中替代优化求解器提供运动学先验'——为分层方案族的算力可行性提供量化依据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "VI-D推理效率原文：较5次最大迭代配置的PyRoki，KMP-L单样本推理加速超过5倍，并行执行下差距进一步拉大（批4000时毫秒级延迟）；重构精度原文：PyRoki因迭代本性最精确，KMP-L在AMASS重定向G1测试集上中位位置误差<15mm、姿态误差<5度，IS训练显著优于均匀采样；KMP-S为1.39M、KMP-L为7.38M参数。",
+   "locator": "VI-D. Kinematic Manifold Prior Benchmarking, Fig. 6",
+   "source_context": "Compared to the PyRoki solver configured with 5 maximum iterations, KMP-L exhibits over 5× speedup at a single-sample inference level.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "inference speedup and reconstruction accuracy of learned IK prior",
+    "value_or_direction": ">5× single-sample speedup vs PyRoki (5 iterations); millisecond-level latency at batch 4000; median position error <15 mm, orientation error <5 degrees on AMASS-retargeted test set",
+    "comparator": "PyRoki optimization-based solver (near-exact accuracy)",
+    "task_or_sample": "KMP-S (1.39M) / KMP-L (7.38M) vs PyRoki; AMASS motion capture retargeted to G1 as test distribution",
+    "locator": "Fig. 6"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VI-D推理效率段'>5× speedup at a single-sample inference level'与图6图例'orders of magnitude speedup'；批4000毫秒级延迟句、重构精度句（中位<15mm/<5度、PyRoki最精确、IS优于均匀）逐句核对无误；主张中'精度换速度'的权衡表述同时得到两处原文支撑；限定于AMASS重定向测试分布。"
+   }
+  },
+  {
+   "card_id": "2602.06341-C07",
+   "claim": "作者自述四项局限：(1)世界系跟踪精度受LiDAR定位精度上界约束；(2)评测轨迹尺度相对较小；(3)双臂全局跟踪依赖目标可行性且高层实验仅单臂；(4)接触富操作（如抓取）未探索，未来工作将融入视觉感知与力控。",
+   "stance": "limit",
+   "relation": "限制综述命题'世界系分层RL可通用地解决末端轨迹精度'——外部定位依赖、单臂平滑轨迹、无接触操作是该方法族当前的适用边界与未解痛点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "VII结论节原文列明四项局限并给出未来方向（视觉感知+力控的灵巧接触感知操作）；结合正文，定位链路为头部Livox Mid-360+IMU的Fast-LIO2（10Hz），真机定量仅圆/方平滑轨迹×10次重复，高层世界系实验仅右手单臂轨迹。",
+   "locator": "VII. CONCLUSION AND LIMITATIONS",
+   "source_context": "The current framework has limitations: (1) world-frame tracking precision is bounded by LiDAR-based localization accuracy; (2) evaluated trajectories are relatively small in scale; (3) bimanual global tracking depends on target feasibility, and high-level experiments involve only single-arm tracking; (4) contact-rich manipulation (e.g., grasping) remains unexplored.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对VII局限段四项编号陈述（含(e.g., grasping)与分号结构），与VI-E定位链路、表II任务范围、VI-C单臂实验描述交叉印证；主张为作者自述边界，未附加推断。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2502.13013",
+  "2505.06776",
+  "2406.08858",
+  "2505.03728",
+  "2506.08931",
+  "2401.02117"
+ ],
+ "notes": "本族定位：世界系分层控制方案族的人形loco-manipulation分支。综述映射：方案='世界系指令策略+全身跟踪策略分层RL（Semi-MDP双时间尺度）+KMP残差动作空间+特权状态估计'；量化效果=仿真EE 12.4±2.4mm、真机圆/方12/15mm RMSE、较HOMIE基座速度误差约-20%、8方向重定位0.101m；适用条件=头部LiDAR+IMU世界系定位（10Hz Fast-LIO2）、无接触轨迹跟踪、单臂长时程、Isaac Lab零样本迁移；痛点=本体中心坐标系累积漂移（本文动机）、无运动学先验时纯RL学笛卡尔任务误差翻倍、LiDAR定位精度上界、急转弯/双臂/接触操作真机未验证。与2607.12275形成跨本体呼应：均以'结构化先验（平坦性/运动学流形）+残差学习'压缩学习问题；与2503.04862互补：后者靠视觉闭环在固定基座下达亚毫米，本文靠世界系重构+分层控制在移动基座下达12mm级——两条路线的精度量级差异（0.8mm vs 12mm）本身是综述的重要对比点。"
+}

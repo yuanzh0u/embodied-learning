@@ -1,0 +1,572 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.15890",
+  "title": "Exo2EgoPose: Leveraging Exocentric Demonstrations for Vision-Language guided Egocentric 3D Hand Pose Forecasting",
+  "published": "2026-07-17",
+  "url": "https://arxiv.org/abs/2607.15890",
+  "authors": [
+   "Zhaofeng Shi",
+   "Heqian Qiu",
+   "Lanxiao Wang",
+   "Xiang Li",
+   "Hongliang Li"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "该文直接刻画 ego-centric 手部姿态估计的两类结构性误差源（视野截断、相机-手高动态相对运动），给出用成对 exocentric 演示做跨视角补偿的定量消融证据（移除 Exo 劣化 +9.59 MPJPE），并提供自动手部标注管线的置信度阈值实例（检测 0.5/过滤 0.6/95% 帧有效）与手部姿态桥接人-机的 CALVIN 迁移实验，覆盖综述问题的误差来源、可接受阈值、缓解手段与可用性四个维度。"
+  },
+  "sections_read": [
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "确认 VL-EHPF 任务定义、Exo 补偿思想与摘要级声明。"
+   },
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "提取 ego 视角两类误差源（limited field-of-view、highly dynamic motions）的逐字陈述与三点贡献。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位与 ego-exo 跨视角理解、手部/机器人姿态预测及 VRM/VLA 路线的差异。"
+   },
+   {
+    "locator": "3 Method",
+    "role": "method-or-design",
+    "purpose": "理解多模态 tokenization、DERM 双层 Exo 重建监督与 GLMM 全局-局部调制的机制，及异步 Ego-Exo 的线性对齐处理。"
+   },
+   {
+    "locator": "4 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "提取三基准主结果（Table 1）、消融（Table 2）、超参敏感性、特征调制可视化、复杂度（Table 3）与 CALVIN 人-机迁移（Table 4）。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "核对作者是否陈述局限（未找到明确 limitations 陈述）。"
+   },
+   {
+    "locator": "Appendix A/B/C (extraction 中位于 'References' 标题之后的附录区)",
+    "role": "appendix-or-supplement",
+    "purpose": "核对基线重实现细节（A.1-A.6）、AssemblyHands/Ego-Exo4D 预处理管线（B.1/B.2，含 >10 valid joints 过滤与 world-to-cam 变换）与更多定性结果（C）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References (文献条目列表)",
+    "role": "relevant-core",
+    "reason": "参考文献列表不承载与综述问题直接相关的证据，仅按需回查引文编号。"
+   }
+  ]
+ },
+ "research_question": "在 VL-EHPF（Vision-Language guided Egocentric 3D Hand Pose Forecasting）任务下，给定 ego 观察帧、语言指令与手部姿态状态序列，能否利用成对的 exocentric 演示视频补偿 ego 视角视野受限与高动态的固有缺陷，从而精确预测未来 T 步的 ego 3D 手部关键点（42 关节），并使该表征可迁移到机器人操控？",
+ "contributions": [
+  "提出 VL-EHPF 任务与 Exo2EgoPose 框架，首次用整体且稳定的 Exo 演示视频补偿 ego 视角的部分与动态线索做 3D 手部姿态预测。",
+  "设计 Dual-level Exocentric Reconstruction Module（DERM，视频级+分块帧级 Exo 表征重建监督）与 Global-to-Local Modulation Module（GLMM，cross-attention + AMU/AdaLN 的渐进式特征对齐与分布校准）。",
+  "构建 EgoMe-pose 基准（自动 3D 手部标注+阈值过滤管线），并在 AssemblyHands、Ego-Exo4D、EgoMe-pose 与 CALVIN（人-机迁移蒸馏）上验证。"
+ ],
+ "method": {
+  "summary": "多模态输入（语言指令经 CLIP 文本分支、ego 帧经冻结 MAE+DINOv2 双编码器、手部姿态状态经可训练 HandFormer）经 perceiver resampler 压缩为 token，与随机初始化的 pose/video-Exo/frame-Exo/ego 查询一起进入 12 层因果 Transformer。训练时 DERM 用成对 Exo 视频的冻结 MAE 特征作为监督，重建视频级（整段活动动态）与分块帧级（未来窗空间上下文）Exo 表征（另附 ego 未来帧 MAE 重建）；GLMM 先以视频级 Exo 表征经 AMU 生成 AdaLN 调制参数并插 cross-attention 捕捉长程动态（GMM），再以帧级 Exo 表征做带门控残差的 cross-attention 软对齐+局部 AMU 调制（LMM）。最终由 MLP 联合预测未来 10 步 42×3 手部关键点与关节有效性 mask（smoothL1+BCE）。异步 Ego-Exo 对（EgoMe）按相对时间位置线性对齐。",
+  "assumptions": [
+   "训练时可获得与 ego 视频成对（同步或可线性对齐的异步）的 Exo 演示视频，且 Exo 视角稳定、覆盖完整活动过程。",
+   "3D 手部姿态（42 关节）天然是人-机动作之间的统一显式表征，可桥接 embodiment gap。",
+   "自动手部标注（检测器+InterHand+RootNet）经置信度与有效帧比例过滤后质量足够支撑基准评测。",
+   "测试时不需要 Exo 输入（Exo 仅作训练监督与重建目标）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "AssemblyHands（基于 Assembly101，同步 Ego-Exo，3.0M 帧 3D 手部标注；本文整理 6120/355/355 集）",
+   "Ego-Exo4D EgoPose（68K 人工+4.3M 自动标注；整理 10869/1540/1540 集）",
+   "EgoMe-pose（新建，基于 EgoMe 异步观察-跟随配对视频，自动标注+过滤；6067/1344/2648 集）",
+   "CALVIN（ABC→D 机器人迁移评测）"
+  ],
+  "tasks": [
+   "VL-EHPF：观察窗与预测窗均为 10 步（15fps 于 AssemblyHands/EgoMe-pose，30fps 于 Ego-Exo4D），预测双手 42 个 3D 关键点+有效性",
+   "CALVIN ABC→D：训练于 A/B/C 场景、未见 D 场景上做长时程连续任务（1-5 连）"
+  ],
+  "embodiments": [
+   "CALVIN 仿真机械臂（仅迁移评测；学生策略为 GR-1 架构）"
+  ],
+  "sample_or_scale": "三基准合计约 2.3 万训练集；12 层 Transformer、hidden 384、batch 48、20 epoch；基线统一 backbones 重实现。"
+ },
+ "evaluation": {
+  "design": "三基准上以 root-aligned MPJPE/MPJVE（mm）评测未来 10 步 42 关节预测，基线用相同 backbones 重实现；消融在 AssemblyHands val 上拆解 GMM/LMM/VER/CFER；敏感性分析 λ_V/λ_F；t-SNE 可视化调制过程；CALVIN ABC→D 以教师蒸馏学生策略评 Avg.L 与 Avg.R。",
+  "baselines": [
+   "USST",
+   "GCBC",
+   "MCIL",
+   "HULC",
+   "GR-1",
+   "AR-VRM（另加 Exo 输入的类比推理扩展）",
+   "Random Forecasting"
+  ],
+  "metrics": [
+   "MPJPE（root-aligned 欧氏距离，mm）",
+   "MPJVE（关节位移欧氏距离，mm）",
+   "CALVIN Avg.L / Avg.R"
+  ],
+  "ablations": [
+   "GMM/LMM 换 vanilla Transformer：+1.07 MPJPE / +0.28 MPJVE",
+   "去 GMM：+1.66 MPJPE；去 LMM：+1.89 MPJPE；同时去 GMM+LMM：+4.74 MPJPE / +1.47 MPJVE",
+   "去 VER：+2.83 MPJPE；去 CFER：+3.11 MPJPE（均相对无 GLMM 变体）",
+   "完全去 Exo：相对无 GLMM 变体 +9.59 MPJPE / +1.11 MPJVE（39.70/8.87 vs 25.37/6.29 全模型）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Exo2EgoPose 在三个基准上均为最优：AssemblyHands 25.83 MPJPE/6.35 MPJVE、Ego-Exo4D 36.44/16.06、EgoMe-pose 49.44/61.03；较 GR-1 降低 14.20/7.85/9.66 MPJPE，较加入 Exo 的 AR-VRM 扩展仍低 7.56/8.02/6.62 MPJPE。",
+   "scope": "三基准 test set；基线为同 backbone 重实现。",
+   "locator": "4.2 Comparison with State-of-the-Art Methods, Table 1 (Table 1 float 在抽取文本中位于 4.1 后的 'Methods' 标题之下)"
+  },
+  {
+   "finding": "完全移除 Exo 演示使 AssemblyHands val MPJPE 从 30.11（无 GLMM 但保留双层 Exo 重建）升至 39.70（+9.59 MPJPE、+1.11 MPJVE）；视频级与帧级 Exo 重建各自再贡献约 2.8-3.1 MPJPE。",
+   "scope": "AssemblyHands val set 消融。",
+   "locator": "4.3 Ablation Study, Table 2"
+  },
+  {
+   "finding": "EgoMe-pose 自动标注管线：检测阈值 σ_d≥0.5 提取手部包围框，InterHand 估相对 3D 姿态、RootNet 估手根绝对深度并做相对-绝对仿射变换，仅保留手部置信度 σ_d≥0.6 且整集 >95% 帧有效标注的样本；AssemblyHands 预处理另按每手 >10 有效关节+有效根关节过滤。",
+   "scope": "4.1.1 与附录 B.1 的数据构建管线。",
+   "locator": "4.1 Experimental Settings"
+  },
+  {
+   "finding": "以预训练 Exo2EgoPose 为教师向 GR-1 学生策略做表征蒸馏，CALVIN ABC→D 达 Avg.L 3.38、Avg.R 67.5%，超第二名 AR-VRM 0.09 长度与 1.6% 成功率。",
+   "scope": "CALVIN 零样本长时程设定。",
+   "locator": "4.4 In-depth Analysis, 4.4.5, Table 4"
+  },
+  {
+   "finding": "MPJPE 为 root-aligned 度量（根对齐后逐关节欧氏距离），只评相对构型精度，手腕绝对平移与深度误差不计入。",
+   "scope": "4.1.2 Evaluation Metrics。",
+   "locator": "4.1 Experimental Settings"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "主指标 MPJPE 是 root-aligned：手腕绝对平移与深度轴误差被系统性排除，而深度轴恰是 ego 手部追踪噪声热点（见同批 2606.10614 的 >30Hz 深度噪声证据）；因此本文的 'accurate forecasting' 不能读作绝对末端轨迹精度证据。",
+    "basis": "4.1.2: 'MPJPE computes the Euclidean Distance (ED) between root-aligned predicted and ground-truth joints'。"
+   },
+   {
+    "boundary": "缓解手段依赖成对 Ego-Exo 视频训练；对无配对第三视角的纯 ego 网络视频（综述关注的 robot-free 语料主体），DERM/GLMM 不可用，异步配对也仅做线性时间对齐近似。",
+    "basis": "3.3: 'we incorporate an untrimmed exocentric (Exo) video paired with the current Ego observation video'；EgoMe 异步对按相对时间位置线性对齐。"
+   },
+   {
+    "boundary": "EgoMe-pose 的 3D 标签来自自动管线（检测器+InterHand+RootNet），阈值过滤后的残余标签误差未与人工标注对照量化；在该基准上的绝对 MPJPE 水平受标签噪声影响。",
+    "basis": "4.1.1 管线自述仅按置信度与有效帧比例过滤，无人工抽检或对照集。"
+   },
+   {
+    "boundary": "CALVIN 迁移是表征蒸馏（教师中间表征→学生策略），并非把手部轨迹直接重定向为末端执行器轨迹；手部预测误差→末端轨迹误差的传导路径未被度量。",
+    "basis": "4.4.5: 'we utilize a pretrained Exo2EgoPose model as a teacher network and finetune a student policy network by introducing a distillation loss on the intermediate representations'。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：训练期可获成对（同步或可线性对齐异步）Exo 演示视频的 ego 3D 手部姿态预测/预训练，及其表征向仿真机械臂策略（CALVIN 类长时程任务）的蒸馏迁移。不适用于：无配对 Exo 的纯 ego 网络视频；需要手腕绝对轨迹精度（root-aligned 指标不覆盖）的场景；需要显式轨迹重定向到真实机器人末端执行器的直接部署。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "对 ego 误差源的分解（视野截断+高动态）与针对性模块设计（双层 Exo 重建+全局-局部调制）有清晰因果对应，消融逐层拆解（GMM/LMM/VER/CFER/全去 Exo）支撑归因。",
+   "基线统一 backbones 重实现，且把最强的 AR-VRM 扩展为同样接入 Exo 输入后仍超越，对比较有说服力。",
+   "EgoMe-pose 自动标注管线的阈值（0.5/0.6/95%）与 AssemblyHands 过滤规则（>10 有效关节）公开透明，为数据质量门提供了可复现的工程实例。",
+   "附模型复杂度表（新增模块仅 ~0.6 GFLOPs、~4.4M 参数），效率声明可核查。"
+  ],
+  "design_risks": [
+   "全部基线为作者重实现而非官方报告数字，USST 因无语言输入被自述为任务设定不匹配，存在系统性低估基线的风险。",
+   "EgoMe-pose 自动标签未与人工标注对照，绝对误差水平可能受标签噪声污染。",
+   "CALVIN 仅验证表征蒸馏收益，学生策略为 GR-1 单一架构，未验证手部姿态表征对其他策略架构的普适性。",
+   "异步 Ego-Exo（EgoMe）用线性时间对齐近似，对齐误差未量化。"
+  ],
+  "baseline_fairness": "声明所有基线用相同 backbones [16,50,60,61,63] 重实现，输入模态对齐；但非官方复现数字，且 AR-VRM 的 Exo 扩展为作者自行设计，公平性中等偏可接受。",
+  "metric_validity": "MPJPE root-aligned 排除了手腕绝对平移/深度误差，对'预测是否精确到可直接用作末端轨迹'这一问题给出的是相对构型精度的下界证据；MPJVE 反映运动学平滑性。EgoMe-pose 的 MPJVE 绝对值（61-73mm）远高于 AssemblyHands（6-8mm），提示跨数据集的度量可比性有限。",
+  "reproducibility": "超参数（4.1.3：12 层 Transformer、hidden 384、batch 48、20 epoch、λ 系数）、数据划分与标注阈值完整披露；代码开源（GitHub 链接随摘要给出）。",
+  "external_validity": "依赖配对 Exo 视频是最大外部效度约束：AssemblyHands/Ego-Exo4D 为同步多视角采集，EgoMe 为异步跟随拍摄，均非典型 robot-free 网络视频；向无配对视角的 in-the-wild ego 语料迁移时该方法不可直接套用。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.15890-C01",
+   "claim": "作者将 ego-centric 手部姿态预测的两类结构性误差源明确归因于：(1) 视野受限——头戴设备只覆盖主体前方有限区域，导致手部/物体外观截断等上下文线索不足，显著影响手-物交互理解与手部关键点预测；(2) 高动态——自由移动的 ego 相机叠加快速手部动作，产生高度动态背景与复杂的手-背景相对运动，使当前与未来手部运动模式难以准确捕捉。",
+   "stance": "support",
+   "relation": "直接回答综述的误差来源问题：ego 视角手部检测/预测误差的上游结构原因是视野截断与相机-手相对运动耦合，而非单一检测器能力不足；这决定了重定向后末端轨迹误差的上游分布形态。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Introduction 逐字给出两类挑战（limited field-of-view / highly dynamic motions）及其对手部关键点预测与运动模式捕捉的影响机制，Figure 1 亦以此立论；属问题框定型主张，无单独实验隔离，故按作者主张收录。",
+   "locator": "1 Introduction",
+   "source_context": "on the one hand, Ego videos are recorded by head-mounted devices\nand only cover limited regions in front of the subject, resulting in in-\nsufficient contextual cues like truncated hand or object appearances,\nwhich remarkably affect the understanding of hand-object interac-\ntion and prediction of hand keypoints. On the other hand, freely\nmoving Ego cameras coupled with rapid hand maneuvers lead to\nhighly dynamic backgrounds and complex hand-background rela-\ntive motions. Such dynamics make it difficult to accurately capture\nboth current and upcoming hand motion patterns.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "1 Introduction 原文逐字支持两类误差源的归因与影响链条；claim 限定为作者对 ego 视角挑战的框定，未延伸为定量因果结论。"
+   }
+  },
+  {
+   "card_id": "2607.15890-C02",
+   "claim": "在 AssemblyHands val 上，完整 Exo2EgoPose 的 MPJPE/MPJVE 为 25.37/6.29mm；在移除 GLMM 但保留双层 Exo 重建监督的变体（30.11/7.76）基础上，完全移除 Exo 演示进一步劣化至 39.70/8.87mm——作者表述为 9.59 MPJPE 与 1.11 MPJVE 的严重劣化；视频级（VER）与分块帧级（CFER）Exo 重建各自再贡献约 2.83 与 3.11 MPJPE。",
+   "stance": "support",
+   "relation": "回答综述的缓解手段问题：引入稳定第三视角（Exo）演示作为训练期重建监督与特征调制引导，可定量大幅降低 ego 手部 3D 轨迹预测误差（全去 Exo 劣化约 10mm 量级）；反证纯 ego 单视角信息不足以恢复精确手部轨迹。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 八行消融给出全模型 25.37/6.29、无 GLMM 30.11/7.76、全去 Exo 39.70/8.87；正文逐字报告 +9.59/+1.11（相对第五行）与 +2.83/+3.11（VER/CFER）的劣化值。",
+   "locator": "4.3 Ablation Study",
+   "source_context": "Moreover, we completely\nremove Exo demonstrations in the last row, which causes severe\ndegradation of 9.59 in MPJPE and 1.11 in MPJVE. It further em-\nphasizes the effectiveness of Exo demonstrations, which facilitate\nmodeling complex spatial contexts and temporal dynamics.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "MPJPE / MPJVE (mm) on AssemblyHands val set",
+    "value_or_direction": "full model 25.37 / 6.29; w/o GMM&LMM (fifth row) 30.11 / 7.76; removing Exo demonstrations entirely 39.70 / 8.87, i.e. degradation of 9.59 MPJPE and 1.11 MPJVE vs the fifth row; disabling VER +2.83 MPJPE, discarding CFER +3.11 MPJPE",
+    "comparator": "ablation variants of Exo2EgoPose (vanilla Transformer 26.44; w/o GMM 27.03; w/o LMM 27.26)",
+    "task_or_sample": "VL-EHPF on AssemblyHands val set (15 fps, forecast 10 future steps of 42 hand joints)",
+    "locator": "4.3 Ablation Study, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 2 各行数值（25.37/6.29、30.11/7.76、39.70/8.87）与正文 +9.59/+1.11/+2.83/+3.11 的相对劣化陈述逐字核实；claim 明确 +9.59 是相对无 GLMM 变体（第五行），未混淆为相对全模型。"
+   }
+  },
+  {
+   "card_id": "2607.15890-C03",
+   "claim": "为从无人工 3D 标注的 ego 视频构建基准（EgoMe-pose），作者采用自动标注+双级阈值过滤管线：先用置信度阈值 σ_d≥0.5 的现成手部检测器提取手部包围框，再用 InterHand 估计相对 3D 手部姿态、RootNet 预测手根绝对深度并做相对-绝对坐标仿射变换，最后仅保留手部置信度 σ_d≥0.6 且整集超过 95% 帧有效标注的样本；最终整理出 6067/1344/2648 个训练/验证/测试集。",
+   "stance": "conditional",
+   "relation": "回答综述的可接受阈值问题：当训练/评测标签本身来自自动手部检测与姿态估计时，工程上以检测阈值（0.5）、过滤置信度（0.6）与帧级有效性比例（95%）作数据质量门；阈值以内的残余标签误差未再审计，构成隐性精度边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1.1 EgoMe-pose 构建管线逐字给出 (2) 检测阈值 σ_d≥0.5、(3) InterHand+RootNet 相对-绝对变换、(4) 过滤条件 σ_d≥0.6 且 >95% 帧有效，以及 6067/1344/2648 的划分规模。",
+   "locator": "4.1 Experimental Settings, 4.1.1 Benchmarks (EgoMe-pose 标注管线; float Table 1 使该段落在抽取文本中位于 'Methods' 标题之下)",
+   "source_context": "(2) Hand detection: Before 3D hand pose labeling, we first\nutilize an on-the-shelf hand detector with a threshold 𝜎\n𝑑\n≥ 0.5 to\nextract bounding boxes of hand(s) in the video frames.\n(3) Hand pose labeling: We employ InterHand [45] to estimate\nthe relative 3D hand poses. Then, we adopt RootNet [44] to predict\nthe absolute depth of the hand roots. Furthermore, we perform the\nrelative-to-absolute affine transformation of the coordinate system.\n(4) Annotation filtering: To ensure the accuracy of automatic\nlabeling, we filter the obtained pose annotations. In detail, we only\nretain cases where the hand confidence score 𝜎\n𝑑\n≥ 0.6 and more\nthan 95% of frames in the episode are validly annotated.",
+   "evidence_type": "method-design",
+   "quantitative": {
+    "metric": "hand detector confidence threshold σ_d, annotation filtering confidence σ_d, and per-episode valid-frame ratio",
+    "value_or_direction": "detection threshold ≥ 0.5; filtering retains hand confidence score ≥ 0.6 and more than 95% validly annotated frames; yields 6067/1344/2648 train/val/test episodes",
+    "comparator": "no comparator (automatic labeling pipeline design thresholds)",
+    "task_or_sample": "EgoMe-pose benchmark auto-labeling pipeline (InterHand + RootNet + relative-to-absolute affine transformation)",
+    "locator": "4.1 Experimental Settings, 4.1.1 Benchmarks"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "管线四步与阈值数值（0.5、0.6、95%）及划分规模（6067/1344/2648）逐字核实；claim 已注明残余标签误差未审计，与 conditional stance 一致。"
+   }
+  },
+  {
+   "card_id": "2607.15890-C04",
+   "claim": "作者将 ego 3D 手部姿态视为桥接人-机动作的自然显式统一表征，以预训练 Exo2EgoPose 为教师网络、向 GR-1 学生策略做中间表征蒸馏，并在 CALVIN 基准 ABC→D（训练于 A/B/C 场景、评测未见场景 D）零样本长时程设定下评测人-机迁移能力（Table 4，指标为 Avg.L 平均成功长度与 Avg.R 平均成功率）；摘要声明该迁移有效并在 CALVIN 上取得提升。全文核对的定量结果为 Avg.L 3.38、Avg.R 67.5%，超第二名 AR-VRM（3.29/65.9%）0.09 长度与 1.6% 成功率，但因抽取结构限制（见 verification）本卡仅作定性收录。",
+   "stance": "support",
+   "relation": "回答综述的可用性问题：精确的 ego 3D 手部姿态（预测）可作为人-机迁移中间表征使下游机器人策略受益——但迁移方式为表征蒸馏而非把手部轨迹直接重定向为末端执行器轨迹，证据强度限于表征层对末端执行的间接贡献。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Abstract 逐字声明 'effective human-to-robot transfer capability' 与 CALVIN 提升；Table 4 caption（位于 4.4 节表面）给出 ABC→D 设定与 Avg.L/Avg.R 定义；4.4.5 正文给出教师蒸馏机制。定量数值经全文核对（Exo2EgoPose 3.38/67.5% vs AR-VRM 3.29/65.9%），但 Table 4 数值区与 4.4.5 段落在抽取文本中位于第二个 'Methods' 标题之下，审计的章节表面匹配只取首个同名标题，该区域不可定位，故本卡 quantitative=false 作定性收录，数值保留在 findings 与 tables。",
+   "locator": "Abstract; 4.4 In-depth Analysis, Table 4 caption (Table 4 数值区在抽取文本中位于第二个 'Methods' 标题之下，因去重不可定位)",
+   "source_context": "Moreover,\nit demonstrates an effective human-to-robot transfer capability and\nyields improvements on the CALVIN dataset.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Abstract 的迁移有效性声明逐字核实；Table 4 caption 的 ABC→D 设定与 Avg.L/Avg.R 定义在 4.4 节表面核实；蒸馏机制（'teacher network... distillation loss on the intermediate representations'）与数值（3.38/67.5%、+0.09/+1.6%）在 4.4.5 与 Table 4 逐字核对属实，但该区域在抽取中落入第二个 'Methods' 标题下、定位器不可达，故本卡保持定性、不把数值写入 claim 的定量字段；claim 未把表征蒸馏夸大为轨迹重定向证据。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "reference": "Wu et al., GR-1 (arXiv 2023)",
+   "why_core": "Ego 查询与重建设计所遵循的先驱框架，同时也是主要基线与 CALVIN 学生策略架构。"
+  },
+  {
+   "reference": "AR-VRM (reference [80])",
+   "why_core": "最强的同路线基线（预训练 ego 手部关键点+检索类比迁移）；作者将其扩展为接入 Exo 输入后仍超越。"
+  },
+  {
+   "reference": "Grauman et al., Ego-Exo4D (CVPR 2024); Sener et al., Assembly101/AssemblyHands",
+   "why_core": "两个主力基准与成对 Ego-Exo 视频的来源；AssemblyHands 提供同步多视角 Exo。"
+  },
+  {
+   "reference": "Moon et al., InterHand; RootNet (reference [44][45])",
+   "why_core": "EgoMe-pose 自动 3D 手部标注管线的核心估计器。"
+  }
+ ],
+ "notes": "本篇为跨视角补偿路线的代表：ego 误差源（视野截断+高动态）→成对 Exo 重建/调制缓解（全去 Exo +9.59 MPJPE）→手部姿态表征蒸馏到 CALVIN。对本综述的三点提醒：(1) MPJPE 为 root-aligned，不覆盖手腕绝对轨迹误差；(2) 方法依赖配对 Exo 视频，与纯 robot-free 网络 ego 语料的可迁移性有限；(3) EgoMe-pose 自动标签阈值（0.5/0.6/95%）是数据质量门的具体实例。抽取中 Table 1 与 Table 4 的 float 使部分正文段落落在 'Methods' 标题下，locator 已标注。",
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Quantitative results on the test set of the AssemblyHands, Ego-Exo4D, and novel EgoMe-pose benchmarks.",
+   "section": "4.2 Comparison with State-of-the-Art Methods",
+   "rows": [
+    [
+     "Methods",
+     "AssemblyHands MPJPE",
+     "AssemblyHands MPJVE",
+     "Ego-Exo4D MPJPE",
+     "Ego-Exo4D MPJVE",
+     "EgoMe-pose MPJPE",
+     "EgoMe-pose MPJVE"
+    ],
+    [
+     "Random Forecasting",
+     "745.35",
+     "383.80",
+     "736.80",
+     "393.63",
+     "794.00",
+     "397.77"
+    ],
+    [
+     "USST",
+     "52.58",
+     "19.75",
+     "63.07",
+     "22.99",
+     "71.93",
+     "73.67"
+    ],
+    [
+     "GCBC",
+     "45.38",
+     "12.13",
+     "49.97",
+     "21.86",
+     "63.43",
+     "71.45"
+    ],
+    [
+     "MCIL",
+     "42.58",
+     "11.05",
+     "47.17",
+     "17.53",
+     "62.81",
+     "70.48"
+    ],
+    [
+     "HULC",
+     "41.88",
+     "9.75",
+     "46.73",
+     "17.34",
+     "60.81",
+     "69.83"
+    ],
+    [
+     "GR-1",
+     "40.03",
+     "8.69",
+     "44.29",
+     "16.44",
+     "59.10",
+     "69.03"
+    ],
+    [
+     "AR-VRM",
+     "33.39",
+     "7.86",
+     "44.46",
+     "16.33",
+     "56.06",
+     "67.66"
+    ],
+    [
+     "Exo2EgoPose",
+     "25.83",
+     "6.35",
+     "36.44",
+     "16.06",
+     "49.44",
+     "61.03"
+    ]
+   ],
+   "usage": "作者用该表展示三基准上的 SOTA 对比；本笔记用于 findings 与 C02 的背景。"
+  },
+  {
+   "table_id": "T2",
+   "caption": "Ablation results on the val set of the AssemblyHands dataset. VER/CFER denote video-level and chunked frame-level Exo reconstruction; T denotes replacing GMM and LMM with vanilla Transformer layers.",
+   "section": "4.3 Ablation Study",
+   "rows": [
+    [
+     "GMM",
+     "LMM",
+     "VER",
+     "CFER",
+     "MPJPE",
+     "MPJVE"
+    ],
+    [
+     "✓",
+     "✓",
+     "✓",
+     "✓",
+     "25.37",
+     "6.29"
+    ],
+    [
+     "T",
+     "T",
+     "✓",
+     "✓",
+     "26.44",
+     "6.57"
+    ],
+    [
+     "-",
+     "✓",
+     "✓",
+     "✓",
+     "27.03",
+     "6.56"
+    ],
+    [
+     "✓",
+     "-",
+     "✓",
+     "✓",
+     "27.26",
+     "6.48"
+    ],
+    [
+     "-",
+     "-",
+     "✓",
+     "✓",
+     "30.11",
+     "7.76"
+    ],
+    [
+     "-",
+     "-",
+     "-",
+     "✓",
+     "32.94",
+     "8.07"
+    ],
+    [
+     "-",
+     "-",
+     "✓",
+     "-",
+     "33.22",
+     "8.06"
+    ],
+    [
+     "-",
+     "-",
+     "-",
+     "-",
+     "39.70",
+     "8.87"
+    ]
+   ],
+   "usage": "作者用该表消融 GLMM 与 DERM 各组件；本笔记用于 C02（注：抽取文本中 checkmark 列归属依正文叙述校正）。"
+  },
+  {
+   "table_id": "T4",
+   "caption": "Analysis of human-to-robot transfer capability under the ABC→D setting on the CALVIN benchmark. Avg.L denotes the average length of successfully completed tasks in a sequence; Avg.R represents the average success rate.",
+   "section": "4.4 In-depth Analysis",
+   "rows": [
+    [
+     "Methods",
+     "1",
+     "2",
+     "3",
+     "4",
+     "5",
+     "Avg.L",
+     "Avg.R"
+    ],
+    [
+     "MCIL",
+     "0.304",
+     "0.013",
+     "0.002",
+     "0.000",
+     "0.000",
+     "0.31",
+     "6.4%"
+    ],
+    [
+     "RT-1",
+     "0.533",
+     "0.222",
+     "0.094",
+     "0.038",
+     "0.013",
+     "0.90",
+     "18.0%"
+    ],
+    [
+     "HULC",
+     "0.418",
+     "0.165",
+     "0.057",
+     "0.019",
+     "0.011",
+     "0.67",
+     "13.4%"
+    ],
+    [
+     "MT-R3M",
+     "0.529",
+     "0.234",
+     "0.105",
+     "0.043",
+     "0.018",
+     "0.93",
+     "18.6%"
+    ],
+    [
+     "GR-1",
+     "0.854",
+     "0.712",
+     "0.596",
+     "0.497",
+     "0.401",
+     "3.06",
+     "61.2%"
+    ],
+    [
+     "AR-VRM",
+     "0.901",
+     "0.759",
+     "0.642",
+     "0.531",
+     "0.461",
+     "3.29",
+     "65.9%"
+    ],
+    [
+     "Exo2EgoPose",
+     "0.859",
+     "0.762",
+     "0.669",
+     "0.589",
+     "0.498",
+     "3.38",
+     "67.5%"
+    ]
+   ],
+   "usage": "作者用该表展示人-机迁移能力；本笔记用于 C04。"
+  }
+ ]
+}

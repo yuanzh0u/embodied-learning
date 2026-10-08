@@ -1,0 +1,404 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.24396",
+  "title": "The SpiNNaker2 chip: a many-core platform for flexible and scalable brain-inspired computing",
+  "published": "2026-07-27T13:13:02Z",
+  "url": "https://arxiv.org/abs/2607.24396",
+  "authors": [
+   "Stefan Scholze",
+   "Johannes Partzsch",
+   "Sebastian Höppner",
+   "Florian Kelber",
+   "Andreas Dixius",
+   "Marco Stolba",
+   "Sirine Arfa",
+   "Marc Berthel",
+   "Georg Ellguth",
+   "Jim Garside",
+   "Hector A. Gonzalez",
+   "Stephan Hartmann",
+   "Thomas Kiel-Hocker",
+   "Dongwei Hu",
+   "Matthias Jobst",
+   "Khaleelulla Khan Nazeer",
+   "Tim Langer",
+   "Chen Liu",
+   "Gengting Liu",
+   "Matthias Lohrmann",
+   "Mantas Mikaitis",
+   "Felix Neumärker",
+   "Amirhossein Rostami",
+   "Stefan Schiefer",
+   "Tilo Schubert",
+   "Delong Shang",
+   "Bernhard Vogginger",
+   "Yexin Yan",
+   "Steve Furber",
+   "Christian Mayr"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "SpiNNaker2 是近一年神经形态硬件方向的代表性成果:给出单芯片分电压域实测的 SNN/DNN/事件算法三类负载数据,是评估'类脑架构能效主张'验证强度的关键硬件证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:神经形态硬件演示落后主流 AI,GPU 不适合细粒度稀疏事件计算,需要兼顾 DNN 与神经形态的通用平台。"
+   },
+   {
+    "locator": "2.1 Design Philosophy",
+    "role": "method-or-design",
+    "purpose": "理解设计原则:软件定义算法、分布式小 PE、事件通信、DVFS 工作负载自适应、常用算子硬件加速。"
+   },
+   {
+    "locator": "3.2.1 Processing Element (PE)",
+    "role": "method-or-design",
+    "purpose": "核查 PE 组成:ARM M4F、128 kB SRAM、exp/log 数值加速器、PRNG/TRNG、舍入加速器与逐核 DVFS。"
+   },
+   {
+    "locator": "4.1 Baseline Power Characterization",
+    "role": "results-or-analysis",
+    "purpose": "核查基线功耗:PE 关断 75.2 mW、0.5 V 睡眠 235.4 mW 等分档实测。"
+   },
+   {
+    "locator": "4.3 Machine Learning Accelerator (MLA)",
+    "role": "results-or-analysis",
+    "purpose": "核查 INT8 DNN 层实测吞吐与能效(2.281/4.563 TOPS,2.77/2.06 TOPS/W)及与 GAP9/EdgeTPU/NorthPole 等的同表对比。"
+   },
+   {
+    "locator": "4.4 Spiking Neural Networks (SNN)",
+    "role": "results-or-analysis",
+    "purpose": "核查 SNN 执行方式、每核突触事件容量(1024 神经元下 1200 万事件/s)及 SRAM 限制。"
+   },
+   {
+    "locator": "4.5 Deep Neural Networks (DNN)",
+    "role": "results-or-analysis",
+    "purpose": "核查 OctopuScheduler 全尺寸层 benchmark 与 A100/Jetson Orin Nano 的能耗对比。"
+   },
+   {
+    "locator": "4.6 Event-Based Algorithms",
+    "role": "results-or-analysis",
+    "purpose": "核查事件化算法实测:EGRU 语言模型 65 mJ vs A100 1.19 J、EventProp 片上训练 31% 能耗。"
+   },
+   {
+    "locator": "5 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集与 Loihi/Loihi2 的定位对比、DRAM 带宽限制、5M 核系统部署现状。"
+   },
+   {
+    "locator": "6.5.4 Comparison to SpiNNaker",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认作者自述:与 SpiNNaker 的容量对比因软件栈不同而无法公平量化。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "3.2.2-3.2.6 (Quad unit/NoC/Event Router/Interfaces/Boot)",
+    "reason": "微架构实现细节,主文结果已给出综述所需的容量与能效主张。"
+   },
+   {
+    "locator": "6.1-6.4, 6.5.1-6.5.3, 6.6-6.7 (Supplementary)",
+    "reason": "路由器内部结构、诊断计数器与补充表征细节;关键数字已从正文表格与 6.5.4 获取。"
+   }
+  ]
+ },
+ "research_question": "一个以软件可编程小核+事件通信+逐核 DVFS 为原则的数字神经形态 many-core 芯片,能否在单芯片上对 SNN、DNN 与事件化算法三类负载同时给出有实测支撑的性能与能效画像?",
+ "contributions": [
+  "SpiNNaker2 芯片(GF 22FDX):152 个 ARM M4F 处理元(较 SpiNNaker 的 18 个大幅扩展),每核集成 MLA 矩阵/卷积加速器、exp/log 数值加速器、RNG 与逐核 DVFS,支持构建至千万核系统",
+  "首份覆盖基线功耗、INT8 DNN、SNN、事件算法的单芯片分电压域实测画像(全部数字为芯片测量,测量代码开源)",
+  "DVFS 自适应功耗管理在 DVS 手势 SNN 实时仿真中的实证:自动性能档 0.741 J,比固定高性能档省能且精度不变",
+  "OctopuScheduler 片上 DNN 调度框架与事件化算法(EGRU、EventProp、E-prop)在该芯片上的首批落地实测"
+ ],
+ "method": {
+  "summary": "数字 many-core 路线:算法主要以软件运行在 152 个 ARM M4F 小核上,每核 128 kB SRAM 并配 MLA(矩阵/卷积)、exp/log、RNG、舍入等加速器;芯片间用扩展 SpiNNaker 六边形组播路由 fabric 传小载荷事件包,片内另设 NoC。逐核 DVFS 加上低漏电设计提供低于 250 mW 的基线功耗,使算法层的稀疏/事件节省能直接转化为能耗节省。结果部分在可分电压域测功率的测试板上对基线功耗、加速器、SNN、DNN 与事件算法逐项实测。",
+  "assumptions": [
+   "软件可编程小核的灵活性收益能覆盖其相对专用电路的面积/能效开销",
+   "事件稀疏通信的节省在低基线功耗平台上可转化为端到端能耗节省",
+   "单芯片实测可外推到多芯片系统的路由与扩展能力"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "DVS Gesture(5 层深 SNN,1000 时间步)",
+   "ResNet-18 与 OPT 模型中选取的 6 个 DNN 层"
+  ],
+  "tasks": [
+   "SNN 实时仿真与 DVS 手势识别",
+   "INT8 DNN 层推理(卷积/全连接/矩阵乘)",
+   "事件化算法:EGRU 语言建模、EventProp 片上 SNN 训练、E-prop 关键词检测"
+  ],
+  "embodiments": [
+   "SpiNNaker2 测试板单芯片(分电压域功率测量)"
+  ],
+  "sample_or_scale": "单芯片 152 核;系统层面描述 5M 核(35k 芯片)在 TU Dresden 的部署"
+ },
+ "evaluation": {
+  "design": "分电压域实测功耗+六类负载画像:基线功耗(PE 关断/睡眠/coremark)、MLA 加速器、SNN 容量与实时仿真、全尺寸 DNN 层(含 DRAM 传输与调度开销)、事件化算法;DNN 层与 A100/Jetson Orin Nano 对比,INT8 平台与 GAP9/EdgeTPU/NorthPole 等同表对比",
+  "baselines": [
+   "ARM CMSIS 库(片上 CPU 对照)",
+   "Greenwaves GAP9",
+   "Coral EdgeTPU",
+   "Intel Mobileye EyeQ5",
+   "Jetson Orin Nano",
+   "IBM NorthPole",
+   "Groq Tensor Streaming",
+   "ARM Ethos N77",
+   "Nvidia A100",
+   "RTX 4070(训练能耗对照)",
+   "SpiNNaker/Loihi/Loihi2(架构定性对比)"
+  ],
+  "metrics": [
+   "TOPS、TOPS/W(INT8)",
+   "mW 基线功耗、CoreMark/s",
+   "synaptic events/s(1 ms tick)",
+   "能耗 mJ/J per inference 或 per training step",
+   "准确率(%)"
+  ],
+  "ablations": [
+   "低/高/自动三档性能管理策略的能耗-时延对比(表 4)",
+   "MLA 分块执行 vs ARM 核执行、全片利用 vs 分块利用(图 8)"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "处理元数量从 SpiNNaker 的 18 个增至 152 个,每核含专用加速器;系统架构可扩展到千万核,TU Dresden 现有安装达 5M 核(35k 芯片、8 机架)",
+   "scope": "芯片与系统架构",
+   "locator": "1 Introduction; 5 Conclusion"
+  },
+  {
+   "finding": "INT8 DNN 负载实测:150 MHz/0.5 V 档 2.281 TOPS@0.825 W(2.77 TOPS/W),300 MHz/0.8 V 档 4.563 TOPS@2.219 W(2.06 TOPS/W),与 NorthPole(2.70)、Groq(2.73)、Jetson Orin Nano(2.68)同量级",
+   "scope": "表 3,算子驻留片上 SRAM 的层 benchmark",
+   "locator": "4.3 Machine Learning Accelerator (MLA)"
+  },
+  {
+   "finding": "DVS 手势 SNN 实时仿真:自动性能档能耗 0.741 J,低于高性能档 1.023 J 与低性能档 2.010 J,三档准确率均 92.04%",
+   "scope": "表 4,1000 时间步实时仿真",
+   "locator": "4 Results"
+  },
+  {
+   "finding": "事件化算法实测:EGRU 语言模型单批量推理能耗 65 mJ vs A100 1.19 J(18×),代价是执行时间 8×;EventProp 片上训练每步能耗仅为 RTX 4070 的 31%",
+   "scope": "单批量推理/训练步对比",
+   "locator": "4.6 Event-Based Algorithms"
+  },
+  {
+   "finding": "SNN 容量:稀疏连接、每核 1024 神经元时每核可维持 1200 万突触事件/s(1 ms tick);当前 SNN 软件将全部参数存于 PE SRAM,网络规模受限",
+   "scope": "lif_neuron 稀疏连接表征",
+   "locator": "4.4 Spiking Neural Networks (SNN)"
+  },
+  {
+   "finding": "作者自述与 SpiNNaker 的容量对比因软件栈不同而'无法公平比较',SpiNNaker2 约为 SpiNNaker 的数倍(原文倍数在提取中丢失)",
+   "scope": "补充材料对比研究",
+   "locator": "6.5.4 Comparison to SpiNNaker"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "SpiNNaker2 不是纯 DNN 推理加速器:层过大无法驻留片上内存时,有限 DRAM 带宽降低加速器利用率,单芯片上常规 DNN 负载的可扩展性受限",
+    "locator": "5 Conclusion"
+   },
+   {
+    "limitation": "当前 SNN 软件把全部神经元参数、状态与权重存于 PE SRAM,限制可实现网络规模;DRAM 支持到位前更长仿真因 spike 存储受限不可行",
+    "locator": "4.4 Spiking Neural Networks (SNN)"
+   },
+   {
+    "limitation": "处理需求过高时 PE 可能失步,不保证精确可复现性;与 SpiNNaker 的容量对比因软件栈差异无法公平量化",
+    "locator": "4.4 Spiking Neural Networks (SNN); 6.5.4 Comparison to SpiNNaker"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全部定量结果为单芯片实测;5M 核系统的软件栈'仍在开发中',多芯片系统级能效与路由结论未在本文验证,不能按单芯片数字线性外推",
+    "basis": "5 Conclusion 明言 software stack for large-scale deployment is currently under development"
+   },
+   {
+    "boundary": "DNN 对比为 6 个层的层级基准且假设算子驻留 SRAM,EGRU 为单批量推理;不代表端到端大模型(如 LLM 整模型)的系统级能效",
+    "basis": "4.3/4.5 层基准设定与 4.6 单批量前提"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于'软件可编程数字神经形态平台在单芯片、算子驻留片上 SRAM 的层/任务级负载'这一场景;不能把 2.77 TOPS/W 读作 SNN 路线的能效证明(那是数字 DNN 加速器指标),也不能把 18×/31% 等单批量事件算法收益外推到大批量、端到端或已部署的 5M 核系统。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "全部数字为分电压域芯片实测而非折算,且测量代码开源",
+   "覆盖 SNN/DNN/事件算法三类负载,罕见地给出完整能效画像",
+   "与主流平台(GAP9、EdgeTPU、NorthPole、Groq、Jetson)同表对比,自测值加注区分",
+   "DVFS 三档策略消融给出能耗-精度-时延权衡"
+  ],
+  "design_risks": [
+   "单芯片结果,系统级(多芯片)证据缺失",
+   "SNN 容量高度依赖软件实现,作者自认与前代无法公平对比",
+   "DNN 基准为 6 个层而非端到端模型,EGRU 对比为单批量"
+  ],
+  "baseline_fairness": "表 3 中他平台数字取自公开文献并加注,自测值标 *;与 GPU 对比注明含 DRAM 传输与调度开销,基本公平但工作负载规模不对等",
+  "metric_validity": "TOPS/TOPS-W、mJ/inference、synaptic events/s、基线功耗均为标准硬件指标;SNN 容量指标明确标注 1 ms tick 与连接密度条件",
+  "reproducibility": "测量代码在 GitLab 开源(tud-hpsn/s2-chip-paper),测试板支持分电压域功率测量;SNN/DNN 软件栈部分仍在开发,复现系统级结果有难度",
+  "external_validity": "验证集中在单芯片层级基准与小型 SNN 任务(DVS 手势、关键词检测、小型语言模型);未覆盖端到端 LLM 或具身智能负载"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.24396-C01",
+   "claim": "SpiNNaker2 将处理元(核)数量从 SpiNNaker 的 18 个增加到 152 个,每个核配备专用加速器(矩阵乘、卷积、指数/对数),构成软件可编程的数字神经形态 many-core 平台。",
+   "stance": "support",
+   "relation": "确立'类脑架构近一年在通用可编程平台方向的规模跃升'的硬件事实基线。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言明确 18→152 的核数跃升与每核加速器配置。",
+   "locator": "1 Introduction",
+   "source_context": "Compared to the SpiNNaker chip, the number of processing elements (cores) is significantly increased from 18 to 152. Each core now includes dedicated accelerators for often-used functions, such as matrix multiplications, convolutions, as well as exponentials and logarithms.",
+   "evidence_type": "system-design",
+   "quantitative": {
+    "metric": "processing elements (cores)",
+    "value_or_direction": "increased from 18 to 152",
+    "comparator": "SpiNNaker chip",
+    "task_or_sample": "chip architecture",
+    "locator": "1 Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对,18 与 152 及加速器清单均与原文一致;该主张限于芯片架构描述,不涉及性能结论。"
+   }
+  },
+  {
+   "card_id": "2607.24396-C02",
+   "claim": "INT8 DNN 负载芯片实测:高能效档(150 MHz/0.5 V)2.281 TOPS@0.825 W 即 2.77 TOPS/W,高性能档(300 MHz/0.8 V)4.563 TOPS@2.219 W 即 2.06 TOPS/W;与 NorthPole(2.70)、Groq(2.73)、Jetson Orin Nano(2.68)等平台同表对比处于同一量级。",
+   "stance": "support",
+   "relation": "为综述提供'数字神经形态芯片 DNN 能效已进入主流平台区间'的实测锚点,但数量级并无优势。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 3 完整给出自测(*)与他平台 INT8 推理的吞吐/功率/能效同表对比。",
+   "locator": "4.3 Machine Learning Accelerator (MLA)",
+   "source_context": "Table 3 : Comparison of SpiNNaker2 against different other INT8 inference platforms for DNN Platform Throughput [TOPS] Power [W] Efficiency [TOPS / W] SpiNNaker2 (150 MHz, 0.5 V) 2.281 * 0.825 * 2.77 SpiNNaker2 (300 MHz, 0.8 V) 4.563 * 2.219 * 2.06 Greenwaves GAP9 [ 47 ] 0.151 0.64 0.34 Coral EdgeTPU [ 47 ] 4 2 2.00 Intel Mobileye Eye Q5 [ 47 ] 12 5 2.40 Jetson Orin Nano [ 40 ] 67 25 2.68 IBM NorthPole [ 7 , 37 ] 200 74 2.70 Groq Tensor Streaming [ 47 ] 820 300 2.73 ARM Ethos N77 [ 47 ] 4.1 0.8 5.13 (* denote measured values, see Fig. 8 )",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Throughput [TOPS], Power [W], Efficiency [TOPS / W]",
+    "value_or_direction": "2.281 TOPS at 0.825 W (2.77 TOPS/W); 4.563 TOPS at 2.219 W (2.06 TOPS/W)",
+    "comparator": "Greenwaves GAP9, Coral EdgeTPU, Intel Mobileye Eye Q5, Jetson Orin Nano, IBM NorthPole, Groq Tensor Streaming, ARM Ethos N77",
+    "task_or_sample": "INT8 DNN inference, 6 layers from ResNet-18 and OPT",
+    "locator": "4.3 Machine Learning Accelerator (MLA)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 3 全文逐字复制核对,2.281/0.825/2.77/4.563/2.219/2.06 与各对比平台数字均与提取文本一致;范围限于算子驻留片上 SRAM 的 6 层 INT8 基准,自测值以 * 标注。"
+   }
+  },
+  {
+   "card_id": "2607.24396-C03",
+   "claim": "边界:作者自述 SpiNNaker2 的 DNN 推理能效'与业界现有水平相当'仅当算子完全驻留片上 SRAM 时成立;层过大时有限 DRAM 带宽会降低加速器利用率,单芯片常规 DNN 负载可扩展性受限。",
+   "stance": "conditional",
+   "relation": "限定'神经形态硬件能效超越主流 AI 硬件'的泛化解读:数字 many-core 的 DNN 能效主张附带内存驻留条件。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.3 节与结论分别给出 SRAM 驻留条件与 DRAM 带宽限制两处作者自述。",
+   "locator": "4.3 Machine Learning Accelerator (MLA)",
+   "source_context": "Although designed mainly for neuromorphic applications, SpiNNaker2’s energy efficiency for deep neural network inference is comparable to the state of practice achieved by other platforms (see Tab. 3 ), when operators are allocated entirely in the on-chip SRAM.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.3 原句明确'comparable to the state of practice'与'on-chip SRAM'条件;结论节另有 DRAM 带宽限制原句佐证,两处均为作者自述,故按条件性主张记录。"
+   }
+  },
+  {
+   "card_id": "2607.24396-C04",
+   "claim": "DVS 手势深 SNN 实时仿真中,DVFS 自动性能档(Auto PL,1 ms tick)能耗 0.741 J,低于固定高性能档的 1.023 J 与低性能档的 2.010 J,三档准确率均为 92.04%,证明逐核自适应功耗管理可在不掉精度的情况下省能。",
+   "stance": "support",
+   "relation": "支持'事件驱动工作负载自适应是类脑平台实际节能机制'的路线主张,是 DVFS 机制的首批芯片级实证。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 4 给出三档性能管理的能耗与准确率完整对比。",
+   "locator": "4 Results",
+   "source_context": "Table 4 : SNN DVS gesture prediction on SpiNNaker2. Mode Low PL High PL Auto PL Simulation tick [s] 0.003 0.001 0.001 Energy [J] 2.010 1.023 0.741 Accuracy (%) 92.04 92.04 92.04",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Energy [J], Accuracy (%)",
+    "value_or_direction": "Auto PL 0.741 J vs High PL 1.023 J and Low PL 2.010 J; accuracy 92.04 in all modes",
+    "comparator": "Low PL and High PL fixed performance levels",
+    "task_or_sample": "SNN DVS gesture prediction, 1000 time steps (1 s real-time)",
+    "locator": "4 Results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 4 文本逐字核对,0.741/1.023/2.010 J 与 92.04% 三处数字一致;节内正文说明 Auto PL 由每时间步接收脉冲数阈值触发,适用范围为该 5 层 DVS 手势网络的实时仿真。"
+   }
+  },
+  {
+   "card_id": "2607.24396-C05",
+   "claim": "事件化 GRU(EGRU)语言模型单批量推理在 SpiNNaker2 上能耗 65 mJ,而 Nvidia A100 GPU 实现为 1.19 J,能量降低 18 倍,但执行时间延长 8 倍;同节还报告 EventProp 片上训练每步能耗仅为 RTX 4070 的 31%。",
+   "stance": "support",
+   "relation": "支持'事件化算法在神经形态平台上的能效收益'主张,同时以延迟代价揭示该收益的权衡边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.6 节给出 EGRU 65 mJ vs 1.19 J 与 8× 时延代价,以及 EventProp 31% 训练能耗两个实测引用。",
+   "locator": "4.6 Event-Based Algorithms",
+   "source_context": "Energy per inference for a language model reduced by a factor of 18 compared to a GPU implementation (65 mJ on SpiNNaker2 vs. 1.19 J on Nvidia A100), with the drawback of an 8x longer execution time.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Energy per inference",
+    "value_or_direction": "65 mJ vs 1.19 J, reduced by a factor of 18, with 8x longer execution time",
+    "comparator": "Nvidia A100 GPU implementation",
+    "task_or_sample": "EGRU language model single-batch inference",
+    "locator": "4.6 Event-Based Algorithms"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.6 原句逐字核对,65 mJ、1.19 J、18、8x 均一致;31% EventProp 数字出自同节相邻原句(SpiNNaker2 required only 31% of the energy per training step compared to a RTX 4070 GPU)。对比限于单批量推理且包含 8× 延迟代价,不能读作吞吐场景优势。"
+   }
+  },
+  {
+   "card_id": "2607.24396-C06",
+   "claim": "边界:当前 SNN 软件栈将全部神经元参数、状态变量与突触权重存于每 PE 的 SRAM,限制了可实现的网络规模;更长时间的仿真也因 SRAM 脉冲存储不足而不可行(DRAM 支持到位前该限制存在)。",
+   "stance": "limit",
+   "relation": "限定'SpiNNaker2 已可承载大规模 SNN'的解读:软件栈成熟度是当前容量主张的主要瓶颈。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.4 节作者自述 SRAM-only 存储限制网络规模与仿真时长。",
+   "locator": "4.4 Spiking Neural Networks (SNN)",
+   "source_context": "In this work, all neuron parameters, state variables and synaptic weights are stored in the PE’s SRAM, which limits the size of the networks that can be implemented. This limitation will disappear once the DRAM is supported in the SNN software.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "4.4 原句逐字核对;同节'Longer simulations were not possible with the current software stack due limited spike storage in SRAM'进一步佐证。该限制属软件栈阶段状态,不否定芯片硬件能力本身。"
+   }
+  }
+ ],
+ "core_citations": [
+  "SpiNNaker (Furber et al.)",
+  "Loihi/Loihi2 (Intel)",
+  "IBM NorthPole",
+  "EGRU: event-based gated recurrent unit",
+  "EventProp: event-based backpropagation",
+  "E-prop learning rule",
+  "NIR (neuromorphic intermediate representation)"
+ ],
+ "notes": "TU Dresden(C. Mayr、S. Höppner 等)与曼彻斯特 Steve Furber(SpiNNaker 原设计者)合作,晶圆 GlobalFoundries 22FDX;TU Dresden 已建 5M 核/35k 芯片安装(8 机架),大规模软件栈仍在开发。LaTeXML 提取丢失部分行内数学数字(如摘要中神经元/突触事件计数、时钟频率),本卡数字均取自表格与正文实测值并逐字核对。对综述的意义:数字神经形态路线的能效主张已从'折算'进入'实测'阶段,但与主流 DNN 加速器同量级而非数量级领先,领先点在事件化算法与工作负载自适应。"
+}

@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2603.05449",
+    "title": "RealWonder: Real-Time Physical Action-Conditioned Video Generation",
+    "published": "2026-03-05",
+    "url": "https://arxiv.org/abs/2603.05449",
+    "authors": ["Wei Liu", "Ziyu Chen", "Zizhang Li", "Yue Wang", "Hong-Xing Yu", "Jiajun Wu"]
+  },
+  "review": {
+    "question": "近两年（2024-08 至 2026-08）Diffusion Transformer（DiT）在视频生成与世界模型方向的：能力如何演进、向世界模型转型的机制、物理/时序/实体一致性等限制、评测方法与基准、部署/加速、以及 action-conditioned 世界模型与具身交叉。每篇关注其为该综述提供的证据。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "system",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接命中综述的 action-conditioned 世界模型 + 部署/加速 + 物理一致性交叉点：把物理仿真作为中间桥将 3D 物理动作（力/机械臂/相机）翻译为 optical flow + RGB 预览以条件化一个 4 步蒸馏的流匹配视频生成器（Wan2.1-1.3B + LoRA），实现 13.2 FPS 实时；含物理保真评测与长视频/失真鲁棒证据。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "研究问题：视频生成模型缺乏对动作如何影响 3D 场景的结构理解，无法模拟 3D 物理动作后果；动作连续无界难 tokenize、缺 action-video 对"},
+      {"locator": "2 Related Work", "role": "problem", "purpose": "对比 2D/drag/轨迹可控生成、实时与流式生成、交互式世界模型、物理基视频生成（WonderPlay 慢优化）"},
+      {"locator": "3 RealWonder", "role": "method-or-design", "purpose": "系统总览：3 阶段 pipeline（3D 重建→物理仿真→4步流式视频生成），物理仿真作中间桥"},
+      {"locator": "3.1 Single-Image 3D Scene Reconstruction", "role": "method-or-design", "purpose": "单图 3D 重建：点云背景/物体 + VLM 六类材料与物理参数估计"},
+      {"locator": "3.2 Physics Simulation as Intermediate Bridge", "role": "method-or-design", "purpose": "物理仿真（Genesis）把动作转为 optical flow 与 coarse RGB 中间表征"},
+      {"locator": "3.3 Real-Time Conditional Video Generation", "role": "method-or-design", "purpose": "flow 条件教师 + DMD/Self-Forcing 蒸馏 4 步 causal student + KV cache/attention sink 长视界"},
+      {"locator": "3.4 Streaming Inference", "role": "method-or-design", "purpose": "流式推理：SDEdit 加入 RGB 预览双条件，13.2 FPS"},
+      {"locator": "4.1 Results", "role": "results-or-analysis", "purpose": "与 PhysGaussian/CogVideoX-I2V/Tora 定量+2AFC 用户研究；生成速度对比"},
+      {"locator": "4.2 Ablation Study", "role": "results-or-analysis", "purpose": "物理仿真器 / flow & RGB 条件消融，两者均必要"},
+      {"locator": "5 Conclusion", "role": "conclusion-or-limitations", "purpose": "结论与限制：depth 重建误差→次优仿真/视频，严格物理正确性仍待研究"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否以物理仿真为中间桥，将 3D 物理动作（力、机器人末端、相机）翻译成视频生成器可处理的 visual 表征，实现免动作 tokenization、免 action-video 对的实时（流式、少步数）action-conditioned 视频生成，并保持物理/时序一致性？",
+  "contributions": [
+    "RealWonder：首个从单图实时（13.2 FPS @480x832）accept 3D 物理动作的 action-conditioned 视频生成系统",
+    "新架构：以物理仿真作为中间表征，免动作 tokenization、且训练只需 2D flow-video 对而非 action-video 对",
+    "蒸馏方案：把 flow 条件并入起始 noise（flow-warped noise），经 DMD+Self-Forcing 蒸馏为 4 步 causal 流式生成器，显著降扩散开销并保持流控制"
+  ],
+  "method": {
+    "summary": "RealWonder 三组件：单图 3D 重建（SAM2 分割背景 + FLUX inpaint + MoGE-2 单目深度/内参 + SAM3D mesh + DUSt3R 对齐，产出背景/物体点云，VLM/GPT-4V 估计六类材料参数）；物理仿真中间桥（Genesis 求解器：刚体 shape matching、PBD 弹体/布料/烟、MPM 液体/颗粒，0.01s 步长，<2ms/步，把动作投影为 optical flow + coarse RGB）；流式视频生成器（Wan2.1-1.3B-InP 经 LoRA(rank 2048) 加 flow 条件，flow 用 noise warping 注入起始 latent，再经 Self-Forcing ODE 回归 + DMD 蒸馏为 4 步 causal student；KV cache 置于 RoPE 前 + attention sink 保证长视界；SDEdit 在第 3 步掺入 RGB 预览双条件）。训练约 128 A100 GPU-days，视频用 200K flow-video 对（180K OpenVid + 20K Wan2.1-14B 合成）。",
+    "assumptions": [
+      "2D flow-video 对应足以训练视频模型学会把物理动作后果渲染为视觉（无需 action-video 对）",
+      "flow-warped noise 在保持高斯分布的同时把运动模式编码进噪声结构",
+      "视频生成器对物理仿真输出的微小误差鲁棒，可补偿仿真缺失的 ambient/physics 细节"
+    ]
+  },
+  "study_context": {
+    "datasets": ["自建 30 图评测集（真实+合成，刚体/布料/弹性/液/气/颗粒/雪）", "训练：OpenVid(180K)+Wan2.1-14B-T2V 合成(20K)，RAFT 提取 flow"],
+    "tasks": ["3D 点力", "力场(wind)", "Franka 机械臂抓取/动作（IK→joint torque）", "相机位姿控制", "多样材料交互（刚体/弹性/布料/液/颗粒/雪）"],
+    "embodiments": ["Franka（Genesis 内置）", "刚体/弹性体/布料/液/颗粒（sim 实体）"],
+    "sample_or_scale": "1.3B（VideoXFun/Wan2.1-1.3B 蒸馏至 4-step causal）；训练 128 A100 GPU-days"
+  },
+  "evaluation": {
+    "design": "对比 PhysGaussian（物理基）、CogVideoX-I2V（文本+图条件）、Tora（drag 条件）；用自建 30 图数据集跑 VBench 的 imaging/aesthetics/consistency + GPT-4o physical-realism 指标；400 人 2AFC 用户研究（Action Following/Motion Fidelity/Visual Quality/Physical Plausibility）；并报告生成速度（FPS vs 延迟）。",
+    "baselines": ["PhysGaussian（MPM+3DGS）", "CogVideoX-I2V", "Tora（drag control）", "Teacher 视频模型（蒸馏对照）"],
+    "metrics": ["VBench Imaging/Aesthetics/Consistency", "GPT-4o internal physical realism (PhysReal)", "2AFC 用户偏好率", "FPS / Latency"],
+    "ablations": ["有无物理仿真器（仅文本动作 vs 仿真动作）", "flow 与 RGB 预览两种条件的各自消融（w/o RGB、w/o flow）"]
+  },
+  "findings": [
+    {"finding": "RealWonder 在所有指标上取得最佳或次佳（PhysReal 0.705 vs PhysGaussian 0.468/CogVideoX 0.624/Tora 0.578），并在 2AFC 用户研究中被显著更偏好（Action Following 88.4%/89.6%/83.9% 等）", "scope": "自建 30 图评测集，对比三种 baseline", "locator": "4.1 Results; Table 1; Table 2"},
+    {"finding": "实现实时流式：13.2 FPS @480x832 单 GPU，动作到结果延迟 0.73s（vs PhysGaussian 4.84s），4 步蒸馏生成器以因果帧序流式输出", "scope": "系统运行时对比", "locator": "4.1 Results; Table 3"},
+    {"finding": "物理仿真作中间桥免 action tokenization 与 action-video 对，仅用 2D flow-video 对训练；物理保守了 actions 的因果性与物理一致性，视频模型补足视觉真实（动态阴影/水花/塌砂/软衣）", "scope": "架构设计", "locator": "3 RealWonder; 3.2 Physics Simulation as Intermediate Bridge"},
+    {"finding": "baseline 视频模型（Tora/CogVideoX）难以遵循指定物理动作后果（如打不中柿、违反 object permanence、船该右移却前进），而 RealWonder 忠实模拟动作后果", "scope": "定性对比，persimmon/boat 示例", "locator": "4.1 Results"},
+    {"finding": "消融表明物理仿真器与两种条件（flow 与 RGB 预览）均必要：去掉物理仿真只剩文本→烟方向不变；w/o RGB→不跟随整体运动；w/o flow→退化为静态", "scope": "消融实验", "locator": "4.2 Ablation Study"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "3D 场景重建因深度估计误差而不准确，导致次优仿真与视频结果；未来用更大规模重建模型", "locator": "5 Conclusion"},
+      {"limitation": "目标为物理合理的输出，而非严格物理正确性（所有动力学严格服从物理定律）的强制执行，后者明显更难、留作未来", "locator": "Appendix 0.B Additional Analysis"}
+    ],
+    "reader_inferred": [
+      {"boundary": "RealWonder 的视频生成器是 Wan2.1 基的 4 步蒸馏 flow 条件模型，其质量受限于基模型视觉分布与蒸馏 4 步的保真；不是严格物理求解器，物理正确性由仿真器决定", "basis": "方法设计（flow+RGB 条件、4-step）"},
+      {"boundary": "物理保真评测依赖自建 30 图评测集 + GPT-4o 主观物理合理性与用户偏好，非真值式的物理参数/轨迹一致性度量", "basis": "评测设计（无标准基准，用感知/用户指标）"},
+      {"boundary": "单图重建 + VLM 材料估计引入的误差被视频生成器补偿，故'物理一致'结论可迁移到泛化视觉场景但不迁移到需要严格能量/动量守恒的工程任务", "basis": "作者自述视觉合理而非严格物理正确"}
+    ]
+  },
+  "transfer_boundary": "RealWonder 的证据可迁移到'action-conditioned 视频世界模型 + DiT 蒸馏加速 + 物理一致性'综述命题：说明用物理仿真把连续 3D 动作改写为视觉条件后，4 步蒸馏的 DiT 系视频生成器能以视频模型的方式实时生成物理合理的动作后果，而无需对 3D 动作 tokenize 或收集 action-video 对。但不迁移到需要严格物理正确性（力/动量守恒）的任务、不迁移到物理输出对感知指标以外的定量物理校验、也不迁移到单图重建与深度质量差导致仿真失效的场景。",
+  "critical_appraisal": {
+    "design_strengths": ["用物理仿真桥接 3D 动作与视频生成，绕过连续动作 tokenization 与 action-video 数据稀缺", "flow-warped noise 把控制注入起始噪声、不增额外 action 模块，利于蒸馏", "KV cache 置于 RoPE 前 + attention sink 处理长视界漂移；SDEdit 双条件保留结构", "系统性 baseline 与 400 人 2AFC 用户研究"],
+    "design_risks": ["评测集仅 30 图、指标为感知/用户/主观（VBench + GPT-4o physreal），缺乏对 3D 轨迹/物理参数的真值校<即严格物理正确性未量化>", "baseline 对比不公平点：PhysGaussian 在 A6000、RealWonder 在 H200 上", "视频生成器可补偿仿真误差，使'物理一致'多半反映视觉合理性而非解算器真实保真"],
+    "baseline_fairness": "baseline 类别各异（物理基/文本I2V/drag），对比意图明确；但硬件不一致（A6000 vs H200）与 4-step 蒸馏 vs 50 步风格方法削弱公平性",
+    "metric_validity": "VBench+GPT-4o physreal+2AFC 测量感知物理合理性而非动力学精确性；对'实时动作条件视频生成'新任务无标准基准，指标维度合理但不等价于物理保真",
+    "reproducibility": "公开代码与 checkpoint、明确训练协议（LoRA rank、阶段、128 A100 GPU-days），可复现",
+    "external_validity": "外部有效性受限于单图重建场景 + Wan 基视频模型 + 六类材料；严格物理任务与真实机器人闭环未验证"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2603.05449_C01",
+      "claim": "RealWonder 以物理仿真为中间表征，把连续的 3D 物理动作翻译为 optical flow 和 coarse RGB 预览来条件化视频生成器，从而绕过了'对连续无界动作 tokenize'与'收集 action-video 训练对'两大障碍（训练仅需 2D flow-video 对）。",
+      "stance": "support",
+      "relation": "支持'action-conditioned 世界模型如何注入 3D 动作'的机制命题：通过物理仿真把动作转为视觉条件，为免 tokenization/免 action-video 对提供一种路径",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在总览中明确：该架构规避两个根本障碍——用物理仿真器处理无界力/动作输入而免 tokenize，以及仅训练 flow-video 对应而免 action-video 对。",
+      "locator": "3 RealWonder",
+      "source_context": "This architecture elegantly sidesteps two fundamental obstacles: it avoids tokenizing continuous actions by leveraging physics simulators that naturally handle unbounded force and action inputs",
+      "evidence_type": "architecture",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 3 RealWonder 总览，直接支撑'物理仿真桥 + 免 tokenization + 免 action-video 对'的机制主张；training 仅需 flow-video 对在第 1 Introduction 亦声明"
+      }
+    },
+    {
+      "card_id": "2603.05449_C02",
+      "claim": "RealWonder 实现实时流式 action-conditioned 视频生成：13.2 FPS @480x832（单 GPU）、动作到结果延迟 0.73s，相较 PhysGaussian（4.84s 延迟/0.207 FPS）与不可流式的视频生成基线（<0.3 FPS）显著更快。",
+      "stance": "support",
+      "relation": "支持'DeT 视频生成/世界模型部署与加速'命题：少步（4-step）蒸馏 causal 生成器 + 物理仿真并行流可实现交互级实时",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.1 报告 RealWonder 达成实时流式生成，Table 3 显示其 FPS 13.2、延迟 0.73s，远优于基线。",
+      "locator": "4.1 Results",
+      "source_context": "RealWonder achieves real-time streaming generation",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "FPS 与端到端延迟",
+        "value_or_direction": "RealWonder 13.2 FPS/0.73s 延迟 vs PhysGaussian 0.207 FPS/4.84s、CogVideoX-I2V 0.225 FPS、Tora 0.107 FPS（@480x832，单 GPU）",
+        "comparator": "PhysGaussian/CogVideoX-I2V/Tora 运行时",
+        "task_or_sample": "action-conditioned 视频生成流式推理，单 H200 GPU",
+        "locator": "4.1 Results; Table 3"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "'real-time streaming generation'为 4.1 逐字结论；Table 3 的 FPS 13.2 与延迟 0.73s 在该节数据行可核验，与 Intro/Abstract 的声明一致"
+      }
+    },
+    {
+      "card_id": "2603.05449_C03",
+      "claim": "在自建 30 图评测集上，RealWonder 相对 PhysGaussian/CogVideoX-I2V/Tora 在所有指标上取得最佳或次佳，并在 2AFC 用户研究中被显著更偏好（尤其 Action Following 与 Physical Plausibility 维度），说明物理仿真桥条件下视频模型优于纯物理基或纯 2D 条件基线。",
+      "stance": "support",
+      "relation": "支持'视频生成器 + 物理仿真桥优于纯 3D 物理或纯 2D 动作控制'与'物理动作跟随能力'的命题",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.1 报告 RealWonder best/second-best 于全部指标且显著更受偏好；表列 PhysReal 0.705 最高，Action Following 偏好率 88.4%/89.6%/83.9%。",
+      "locator": "4.1 Results",
+      "source_context": "RealWonder achieves the best or second best numbers across all metrics, and it is significantly more favored compared to other baselines",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "GPT-4o 物理合理性与 2AFC 偏好率",
+        "value_or_direction": "PhysReal 0.705 (RealWonder) vs 0.468/0.624/0.578 (PhysGaussian/CogVideoX/Tora)；Action Following 偏好 88.4%/89.6%/83.9%",
+        "comparator": "PhysGaussian/CogVideoX-I2V/Tora 基线",
+        "task_or_sample": "自建 30 图物理动作评测集，400 人 2AFC 用户研究",
+        "locator": "4.1 Results; Table 1; Table 2"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该句为 4.1 逐字结论，Table 1/Table 2 的 PhysReal 与偏好率数值可核验，支撑其最佳/次佳且显著更受偏好的主张"
+      }
+    },
+    {
+      "card_id": "2603.05449_C04",
+      "claim": "RealWonder 通过 Distribution Matching Distillation + Self-Forcing 把 flow 条件的多步教师蒸馏为 4 步 causal student，把控制直接注入起始噪声，从而支持实时流式；并用 KV cache（置于 RoPE 前）+ attention sink 缓解长视界漂移。",
+      "stance": "support",
+      "relation": "支持'DiT 视频生成的蒸馏/加速与流式缓存'命题：少步实时生成在 action-conditioned 世界模型上的具体实现机制",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 3.3 描述蒸馏为 4 步 causal student（DMD 反向 KL）+ Self-Forcing 自回归 rollout，并用 KV cache 于 RoPE 前 + attention sink 修复长序列质量退化。",
+      "locator": "3.3 Real-Time Conditional Video Generation",
+      "source_context": "we distill it into a causal student that generates frames sequentially in just 4 denoising steps",
+      "evidence_type": "architecture",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 3.3；4 步 causal student、DMD/Self-Forcing、KV cache 于 RoPE 前 + attention sink 均在同一节随后文字中描述，命题与原文一致"
+      }
+    },
+    {
+      "card_id": "2603.05449_C05",
+      "claim": "RealWonder 的目标是生成'物理合理'而非'严格物理正确'的视频：3D 场景重建的深度误差会导致次优仿真与视频结果；作者明确严格物理正确性（所有动力学严格服从物理定律）仍为未来方向，视频模型还会补偿仿真器缺失/伪影的动态（如合成水波）。",
+      "stance": "gap",
+      "relation": "界定'物理/时序一致性'综述边界：该实时系统提供的是视觉层次的动作跟随与物理合理性，不提供严格动力学精确性或力/动量守恒的保证",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 5 Conclusion 与附录 Physical Plausibility 段显式声明该限制，界定其物理保真目标与严格正确性的落差。",
+      "locator": "5 Conclusion",
+      "source_context": "Reconstructing 3D scenes can be inaccurate due to errors in depth estimation, leading to suboptimal simulation and video results",
+      "evidence_type": "position",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 5 Conclusion；严格物理正确性与视频模型补偿仿真的论述在附录 0.B Physical Plausibility 段独立佐证该 gap"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "该文是 action-conditioned 实时视频世界模型 + DiT 蒸馏加速（EA-MODEL/部署-加速）与物理合理性评测（EA-EVAL）的直接证据。视频生成器基为 Wan2.1-1.3B（DiT 系）经 LoRA+蒸馏至 4 步，属'把现成视频 DiT 改造成可交互世界模型'的代表。物理保真评测为感知/用户维度，无真值式 3D 轨迹物理度量，是其证据边界。"
+}

@@ -1,0 +1,614 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.05325",
+  "title": "RoboPaint: From Human Demonstration to Any Robot and Any View",
+  "published": "2026-02",
+  "url": "https://arxiv.org/abs/2602.05325",
+  "authors": [
+   "Jiacheng Fan",
+   "Zhiyue Zhao",
+   "Yiqian Zhang",
+   "Chao Chen",
+   "Peide Wang",
+   "Hengdi Zhang",
+   "Zhengxue Cheng"
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "本文是\"数据侧自由视角合成\"路线（Real-Sim-Real：人类演示→Dex-Tactile 重定向→3DGS 场景重建→任意视角渲染 VLA 训练数据）的代表工作，与 AnyCamVLA（测试时 NVS 适配）、GS-VLA（测试时 3DGS 规范化）同属 NVS/3DGS 技术族但位于流水线的数据生成端。对鱼眼综述的价值：(1) 提供\"多相机阵列环视采集房\"（11 RGB + 3 RGB-D，常规透视机型）的硬件形态与规格参照；(2) 提供任意视角（含腕相机机位）渲染生成训练数据的效果量级（Pi0.5 配平对比 80% vs 遥操作 100%）及其通道/架构依赖边界；(3) 提供近距腕相机视角下 3DGS 渲染伪影（点云剔除）这一与宽视角/鱼眼腕相机数据合成直接相关的失效边界。注意：本文不使用鱼眼/全景/超广角光学（全文零命中），\"any view\"指视角位姿自由而非相机光学模型泛化，综述引用须按邻接/条件性证据口径使用。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract + I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：VLA 灵巧操作数据瓶颈；遥操作成本高、UMI 类手持接口缺灵巧性、被动人类视频有 embodiment gap；摘要级结果（重放 84%、VLA 80%）。"
+   },
+   {
+    "locator": "page 2-3, II Related Works",
+    "role": "relevant-core",
+    "purpose": "定位三条相关工作线（机器人数据采集、人-机视觉迁移 RoviAug/Shadow/EgoMimic/AR2-D2、人类视频学习）及本文\"3D 空间直接对齐+渲染\"的差异化定位。"
+   },
+   {
+    "locator": "page 3-4, III Method overview + 3.1 Human Data Acquisition",
+    "role": "method-or-design",
+    "purpose": "精读三阶段流水线总览与采集端：多相机阵列（11 RGB + 3 RGB-D RealSense D455，刚性安装、预标定桌面世界坐标，30Hz，微秒级硬件同步）、仪器化手套（磁编码器关节角 + Hall 触觉阵列）、结构光扫描物体资产库。"
+   },
+   {
+    "locator": "page 5-6, 3.2 Cross-Embodiment Modeling",
+    "role": "method-or-design",
+    "purpose": "精读 ArUco 腕带位姿估计、FoundationPose 物体位姿、Dex-Tactile 重定向（L_kin+L_tac 能量最小化、sigmoid 力加权、距离衰减触觉合成）与相机→机器人基座外参变换。"
+   },
+   {
+    "locator": "page 6, 3.3.1 Scene Reconstruction",
+    "role": "method-or-design",
+    "purpose": "精读 3DGS 重建与公制对齐协议（10cm ArUco 标定板、相似变换闭式解、USD 导入 Isaac Sim）。"
+   },
+   {
+    "locator": "page 7, 3.3.2 Robot Data Rendering",
+    "role": "method-or-design",
+    "purpose": "精读混合渲染方案（3DGS 背景 + mesh 动态物体 + path tracing）、IK 驱动、任意视角/任意本体渲染声明与动作/触觉数据格式（ObjTac）。"
+   },
+   {
+    "locator": "page 7-8, 4.1 Simulation Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取重投影跨模态验证结论（触觉点↔交互区域一致、数百帧主观检查）与 10 物体重定向接触误差 3.86mm。"
+   },
+   {
+    "locator": "page 9, 4.2 Real-World Evaluation + Table 1",
+    "role": "results-or-analysis",
+    "purpose": "提取真机重放 84%（10 物体×10 试验）与 VLA 配平对比全表（DP/Pi0.5±腕相机 × Tele/Paint），识别腕相机与架构两个折损放大器。"
+   },
+   {
+    "locator": "page 10, 4.3 Data Collection Efficiency + Table 2",
+    "role": "results-or-analysis",
+    "purpose": "提取采集效率对比（6 任务 × 100 条成功演示，2.57×–5.33×）。"
+   },
+   {
+    "locator": "page 10, V Conclusion and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "汇集作者总结与 toolkit 发布承诺；确认正文无系统化自述限制（限制散见图注）。"
+   },
+   {
+    "locator": "page 13-14, 6.1 Data Augmentation + 6.2 Model Deployment Results",
+    "role": "results-or-analysis",
+    "purpose": "提取背景/材质替换增广、部署平滑性定性对比与抖动归因（遥操作中间控制器）。"
+   },
+   {
+    "locator": "page 15-17, Figures 7-9 deployment visualizations",
+    "role": "appendix-or-supplement",
+    "purpose": "检查三任务部署可视化与图注：确认 Fig.8 腕相机伪影说明（3DGS 点云剔除）为作者自述限制；Fig.6 初始位姿未严格约束说明。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 10-12, References",
+    "role": "appendix-or-supplement",
+    "reason": "not-applicable: 参考文献列表无正文证据价值，关键引文已摘录进 core_citations。"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在不直接遥操作机器人的前提下，把人类灵巧操作演示（含关节与触觉信号）转化为任意机器人本体、任意相机视角的 VLA 可执行训练数据，并以多小的性能折损替代遥操作数据？",
+ "contributions": [
+  "高保真多模态采集系统：数据采集房多相机阵列（11 路 RGB@1200×1920 + 3 路 RGB-D@720×1280）+ 仪器化手套（磁编码器关节角 + Hall 触觉阵列），硬件触发微秒级同步，统一 HDF5 封装。",
+  "Dex-Tactile 联合重定向：运动学对齐（指尖关键点位置/朝向）+ 触觉接触一致性（力加权 sigmoid + 距离衰减触觉合成）双目标优化，把人手状态映射为 Paxini DexH13 可行状态。",
+  "Real-Sim-Real 渲染管线：已知尺寸 ArUco 标定板做 3DGS 公制对齐，Isaac Sim 5.1 混合渲染（3DGS 背景 + path-traced mesh 动态物体），从任意视角、任意本体\"画\"出机器人演示数据。",
+  "系统评测：重定向接触误差 3.86mm（10 物体仿真重放）、真机重放成功率 84%（UR5+DexH13）、VLA 下游 80%（Pi0.5 三任务配平对比 vs 遥操作 100%）、采集效率 2.57×–5.33×。"
+ ],
+ "method": {
+  "summary": "三阶段 Real-Sim-Real 管线。阶段一（采集）：专用数据采集房内操作员佩戴仪器化手套执行灵巧任务，多相机阵列（11 RGB + 3 RGB-D RealSense D455，刚性安装、预标定到桌面世界坐标，30Hz）同步记录 RGB/深度视频、关节角与触觉压力图，中央时间服务器经硬件触发做微秒级对齐，按演示序列打包为 HDF5。阶段二（跨本体建模）：ArUco 腕带估计腕部位姿、FoundationPose 估计物体 6D 位姿；Dex-Tactile 重定向以 L=L_kin+L_tac 能量最小化把人手状态映射到 Paxini DexH13（指尖关键点位置/朝向对齐 + 触觉点经解剖对应映射 NN_Dex 的接触一致性，接触力 sigmoid 加权），并按人-机指尖欧氏距离衰减合成灵巧手触觉信号；再经相机→机器人基座标定外参变换得到机器人轨迹与物体位姿。阶段三（渲染）：工作台场景以 3DGS 重建，用已知尺寸（10cm）ArUco 标定板经闭式相似变换做公制对齐，导出 USD 导入 Isaac Sim 5.1；机器人臂由 IK 按目标 TCP 位姿驱动，动态物体与机器人用 mesh + path-tracing 渲染并叠加到 3DGS 静态背景，从任意视角（含腕相机机位）生成视觉观测，与动作序列、触觉热图（ObjTac 格式）对齐打包为 VLA 训练数据；另支持背景替换与物体材质替换增广。",
+  "assumptions": [
+   "采集房相机刚性安装且相对桌面世界坐标稳定（跨视角对齐与重投影验证的前提）",
+   "人手与灵巧手之间存在预定义解剖对应映射 NN_Dex(·)（重定向与触觉合成的先决条件）",
+   "3DGS 重建质量足以支撑目标视角的渲染（作者承认近距腕相机视角除外）",
+   "重放评测时物体放回演示采集时的同一位置（一致初始条件假设）",
+   "遥操作数据与生成数据在演示数量、任务集合、训练超参上配平即可公平比较数据源质量"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "自建数据采集房多模态 HDF5 数据集（11 路 RGB + 3 路 RGB-D 视频、手套关节角、触觉压力图，硬件同步）",
+   "10 物体结构光 3D 扫描资产库（预注册进场景，用于位姿估计与仿真）",
+   "6 任务 × 100 条成功演示的双方法采集效率对比数据"
+  ],
+  "tasks": [
+   "采集端：抓取、提起、倒水、插接、工具使用等灵巧操作",
+   "重放评测：10 物体操作任务（喷雾瓶、相机、塑料杯、手电钻等）",
+   "VLA 评测：pick-and-place、push cuboid、pour bottle",
+   "效率评测：pick-and-place、open box、push cuboid、bagging fruits、table bussing、fold clothes"
+  ],
+  "embodiments": [
+   "UR5 + Paxini DexH13 灵巧手（真机重放与 VLA 部署本体）",
+   "Paxini ToRA One、Franka、Agilex ToRA、Unitree G1（渲染端跨本体图示）",
+   "人类操作员 + 仪器化手套（数据源本体）"
+  ],
+  "sample_or_scale": "仿真接触误差：10 物体；真机重放：10 物体 × 10 次独立试验；VLA 下游：3 任务 × 10 次随机初始位置 × {DP, Pi0.5 有/无腕相机} × {Tele, Paint}；效率：6 任务 × 100 条成功演示 × 2 方法"
+ },
+ "evaluation": {
+  "design": "四层评测链：(1) 仿真端重投影跨模态验证（3D 手套/物体/触觉点用相机内外参重投影回 RGB 帧检查一致性，数百帧主观检查）；(2) 仿真端重定向接触误差（10 物体 Isaac Sim 重放，触觉点欧氏距离）；(3) 真机重放成功率（UR5+DexH13，10 物体 × 10 试验，物理结果判据）；(4) VLA 下游配平对比（Tele vs Paint 数据 × DP/Pi0.5 有/无腕相机，3 任务 × 10 随机初始位置）+ 双方法采集时间对比。",
+  "baselines": [
+   "同架构、同超参、遥操作数据训练的策略（DP-Tele、Pi0.5-Tele 有/无腕相机）",
+   "无第三方基线（未与 AR2-D2/EgoMimic 等现有人-机数据迁移方法对比）"
+  ],
+  "metrics": [
+   "触觉接触点平均欧氏误差（mm，仿真重放）",
+   "真机重放任务成功率（物理结果判据：提起/倒出/推到位）",
+   "VLA 任务成功率（10 次试验/条件，判据：物体放入目标区/方块推到指定位置/瓶子倾倒近 90°）",
+   "单位有效数据采集时间（遥操作耗时/人类采集耗时，效率倍率）"
+  ],
+  "ablations": [
+   "腕相机通道有无（Pi0.5，Table 1 列间对比）",
+   "策略架构选择（DP vs Pi0.5，Table 1 列间对比）",
+   "数据源（Tele vs Paint，Table 1 Tele/Paint 对比）",
+   "无正式的视角/FOV/相机配置变化消融"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "任意视角渲染机制：静态背景 3DGS + 动态物体/机器人 mesh+path tracing 的混合渲染支持从任意视角与任意本体\"画\"机器人演示数据（含腕相机机位），视角多样性被转化为数据编辑问题。",
+   "scope": "渲染管线设计（Isaac Sim 5.1）",
+   "locator": "page 7, Section 3.3.2"
+  },
+  {
+   "finding": "生成数据的下游效果量级：配平对比（同数量演示/同任务/同超参）下 Pi0.5 三任务平均 80%（遥操作 100%），作者称仅 20 个百分点折损即可换遥操作的规模与成本。",
+   "scope": "VLA 下游，3 任务 × 10 试验",
+   "locator": "page 9, Table 1"
+  },
+  {
+   "finding": "折损的结构性放大器：(a) 去掉腕相机后 Paint 46.6% vs Tele 83.3%（差距从 20.0 扩大到 36.7 个百分点，pour 仅 30.0%）；(b) DP 架构 Paint 50.0% vs Tele 76.6%（降幅 26.6 个百分点，pour 仅 10.0%）。",
+   "scope": "通道与架构依赖（Table 1 列间对比）",
+   "locator": "page 9, Table 1"
+  },
+  {
+   "finding": "近距腕相机渲染伪影：腕相机距 3DGS 点云过近导致相关 3D 点被渲染器剔除，painted 腕视图存在 artifacts，作者列为待优化项——\"任意视角\"在近距机位上有显式例外。",
+   "scope": "渲染质量边界（补充材料图注）",
+   "locator": "page 16, Figure 8 caption"
+  },
+  {
+   "finding": "管线保真度：重定向触觉接触点平均误差 3.86mm（10 物体仿真重放）；真机重放平均成功率 84%（简单几何物体 90–100，复杂物体 >80）。",
+   "scope": "重定向精度与真机可执行性",
+   "locator": "page 8, Figure 4(b); page 9, Figure 4(c)"
+  },
+  {
+   "finding": "采集效率：人类演示比遥操作快 2.57×（pick-and-place）至 5.33×（table bussing/fold clothes），任务越复杂加速越大。",
+   "scope": "6 任务 × 100 条成功演示",
+   "locator": "page 10, Table 2"
+  },
+  {
+   "finding": "相机光学边界：全部相机为常规透视机型（RGB 阵列 + RealSense D455），全文（含补充材料）无鱼眼/全景/超广角或畸变投影内容；\"any view\"指视角位姿自由而非相机光学模型泛化。",
+   "scope": "全文范围（17 页含补充材料）",
+   "locator": "page 3, Section 3.1"
+  },
+  {
+   "finding": "视角自由性未受控检验：下游评测均为固定相机配置（主相机+腕相机）、每任务 10 次随机初始位置试验，无视角/相机配置变化实验；跨本体仅有渲染图示，无跨本体下游评测。",
+   "scope": "评测设计",
+   "locator": "page 9, Section 4.2"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "生成（painted）的腕相机图像存在伪影：腕相机距 3DGS 点云过近，相关 3D 点被渲染器剔除；作者表示将优化 3DGS 重建算法以提升重建质量。",
+    "locator": "page 16, Figure 8 caption"
+   },
+   {
+    "limitation": "部署动作曲线对比中，遥操作与人类采集数据的物理环境来源不同，初始手位姿未被严格约束为同一位置（轨迹对比条件不严格对齐）。",
+    "locator": "page 14, Figure 6 caption"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "未涉及鱼眼/全景/超广角相机或畸变投影建模：采集与渲染全链路均为常规透视相机模型（RGB 阵列 + RealSense D455），为鱼眼/超广角\"画\"训练数据需要显式畸变/投影模型支持，本文未提供；且近距腕相机视角已出现 3DGS 点云剔除伪影，宽视角近距机位预期更困难。",
+    "basis": "page 3 Section 3.1 相机清单与 page 16 Fig.8 伪影说明；全文（17 页含补充材料）词表检索 fisheye/panoramic/wide-angle/ultra/omnidirectional/360/distortion/FOV/field of view/surround/equirect 全部零命中。"
+   },
+   {
+    "boundary": "生成数据与遥操作数据存在一致性折损且依赖通道与架构：无腕相机时差距扩大到 36.7 个百分点（46.6% vs 83.3%），DP 架构降幅 26.6 个百分点且 pour 仅 10.0%——\"可替代遥操作\"的主张对近距视角通道与策略架构敏感。",
+    "basis": "page 9 Table 1 全表数值（46.6/83.3/50.0/76.6/10.0/30.0）的列间对比。"
+   },
+   {
+    "boundary": "小样本评测与主观验证：每条件仅 10 次试验（成功率分辨率 10%），未报告显著性；重投影验证为\"数百帧主观检查\"、轨迹平滑性为定性曲线对比，均无量化误差指标。",
+    "basis": "page 7-8 Section 4.1（subjective inspection across hundreds of frames）、page 9 Section 4.2（10 randomly sampled initial positions）、page 13-14 Fig.6。"
+   },
+   {
+    "boundary": "\"任意视角/任意本体\"的下游价值未被隔离验证：跨本体仅有渲染图示（UR5/ToRA/Franka/Unitree G1），无跨本体下游评测；视角多样性对策略泛化的贡献无受控实验。",
+    "basis": "page 1-2 Fig.1/2 跨本体仅为图示；page 9 Section 4.2 评测仅 3 任务、固定相机配置。"
+   },
+   {
+    "boundary": "硬件规格口径不一致：摘要称 29-DoF 关节 + 14 通道触觉，贡献清单称 29 通道本体感受 + 15 通道触觉（3465×3），正文为 20 维关节角（4 指×5 关节）+ M=32 触觉传感器——三处数字互不一致且未说明对应关系，影响规格引用可靠性。",
+    "basis": "page 1 Abstract、page 2 贡献清单第一条、page 4 式(2)(3) 及 M=32 定义三处对照。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：桌面级灵巧操作、可控静态场景（3DGS 重建可达且 ArUco 公制对齐可行）、常规透视相机机位（主相机与中距以上视角）。不适用于：动态/非静态背景、近距腕相机视角（3DGS 点云剔除伪影）、非透视（鱼眼/超广角）投影模型的渲染、大范围移动作业。效率结论依赖训练有素操作员、定制手套与固定采集房基础设施；VLA 效果结论限 Pi0.5/DP 两架构、三任务、每任务 10 次试验的规模。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "Tele vs Paint 在演示数量、任务集合、训练超参上严格配平，数据源对比内部公平性较好",
+   "评测链完整：仿真重投影→仿真接触误差→真机重放→真机 VLA 下游→采集成本，层层递进",
+   "成功率判据物理明确（放置到位/推到指定位置/倾倒近 90°），跨条件可比",
+   "效率对比覆盖 6 任务 × 100 条成功演示，任务复杂度梯度清晰"
+  ],
+  "design_risks": [
+   "每条件仅 10 次试验的小样本，无显著性检验；10% 分辨率下接近的数值差异不可辨",
+   "重投影验证与轨迹平滑性为主观检查/定性曲线，无量化误差指标",
+   "DP 遥操作基线本身 pour 仅 40.0%，基线质量不均但未讨论",
+   "硬件规格口径不一致（摘要/贡献/正文三处触觉与关节数字互异）",
+   "跨本体与任意视角主张缺乏受控下游评测支撑，仅有渲染图示"
+  ],
+  "baseline_fairness": "数据源内部对比配平充分（数量/任务/超参一致）；但无第三方基线（如 AR2-D2、EgoMimic 等人-机数据迁移方法），\"遥操作替代方案\"的相对位置只能与自采遥操作数据比较，外部参照有限。",
+  "metric_validity": "成功率判据物理明确、接触误差（mm）与效率倍率定义清晰；重投影质量与轨迹平滑性缺量化指标，存在主观判定空间。",
+  "reproducibility": "数据处理工具包开源（GitHub: px-DataCollection/px_omnisharing_dataprocess_kit）；但数据采集房、仪器化手套、Paxini DexH13 均为自研/商业硬件，完整复现门槛高；截至 v2 论文未随附公开数据集，仅承诺发布 toolkit。",
+  "external_validity": "桌面操作、单一部署环境、3 任务 × 10 试验；跨本体结论仅图示无下游证据；对鱼眼/超广角等非透视相机场景无任何直接证据，引用时必须限定为邻接证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.05325-C01",
+   "claim": "RoboPaint 用专用数据采集房的多相机阵列采集人类演示：每间房配备由高分辨率 RGB 相机与标定过的 RGB-D 传感器（Intel RealSense D455）组成的多相机阵列，相机刚性安装并预标定到桌面世界坐标，以支持精确 3D 重建与操作轨迹的跨视角对齐。",
+   "stance": "conditional",
+   "relation": "条件性命题（应用方式·邻接）：具身数据采集的\"环视\"形态在本工作中由常规透视相机（RGB+RGB-D）的刚性标定阵列实现——与单机鱼眼/超广角环视方案构成硬件路线对照（固定阵列+外参标定 vs 宽视角光学覆盖），本身不涉及宽视角光学。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "采集端硬件形态：固定多相机阵列 + 刚性安装 + 桌面世界坐标预标定，是\"数据房式\"环视采集的代表配置；全文相机均为常规透视机型。",
+   "locator": "page 3, Section 3.1 Human Data Acquisition",
+   "source_context": "we have constructed many dedicated Data-Acquisition-Rooms, each equipped with a multi-camera array comprising both high-resolution RGB cameras and calibrated RGB-D sensors (Intel RealSense D455). All cameras are rigidly mounted and pre-calibrated with respect to the table world coordinate, enabling accurate 3D reconstruction and cross-view alignment of manipulation trajectories.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 3 Section 3.1 的采集房相机描述（阵列构成、RealSense D455、刚性安装、世界坐标预标定、跨视角对齐用途均由作者原文直接陈述）；claim 未超出 context 蕴含范围。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C02",
+   "claim": "该采集系统同步记录 11 路 RGB 视觉信号（每路 1200×1920）、3 路 RGB-D 多模态信号（每路 720×1280）、15 通道触觉信号（总分辨率 3465×3）与 29 通道本体感知关节信号（29×1）。",
+   "stance": "conditional",
+   "relation": "条件性命题（应用方式·邻接）：多相机环视采集房的视觉通道规模与分辨率（11×RGB@1200×1920 + 3×RGB-D@720×1280）界定了此类基础设施的视觉覆盖规格，可作为\"以常规相机阵列换取视角覆盖\"与\"单台宽视角相机\"两条硬件路线对照的规格参照。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "采集系统通道规格：视觉（RGB/RGB-D）、触觉、本体感知三类信号的同步通道数与分辨率；注意摘要/贡献/正文三处触觉与关节数字口径不一（见 reader_inferred）。",
+   "locator": "page 2, Section 1, contributions bullet 1",
+   "source_context": "We developed a high-fidelity multimodal data acquisition system capable of synchronously recording 11 channels of RGB visual signals (each has the resolution of 1200 × 1920), 3 channels of RGB-D multi-modal signals (each has the resolution of 720 × 1280), 15 channels of tactile signals (in total resolution of 3465 × 3), and 29 channels of proprioceptive joint signals (in total of 29 × 1).",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 2 贡献清单第一条的通道规格原文；数字（11/1200×1920/3/720×1280/15/3465×3/29/29×1）与 context 完全一致，无外推。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C03",
+   "claim": "渲染采用混合方案：静态背景环境用 3D Gaussian Splatting（3DGS）渲染保证真实感，动态物体与机械臂用高质量 mesh 模型渲染（Isaac Sim 5.1，path-tracing 引擎着色）；每个时间步把动态渲染的机器人与物体叠加到静态 3DGS 背景上。作者称该方案\"不仅保证真实感，还支持从任意视角和任意本体进行灵活的图像编辑\"。",
+   "stance": "support",
+   "relation": "支持综述命题（应用方式·数据侧路线）：训练数据的相机视角可在渲染阶段后置地自由选择（含腕相机等任意机位）——与\"物理上为机器人加装鱼眼/超广角相机\"互补，把视角多样性从传感器选型问题转化为数据编辑问题；这是 3DGS/NVS 技术族在数据生成端的应用形态。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "\"Any View\"的机制载体：3DGS 背景 + mesh 动态前景的混合渲染 + 任意视角重渲染；跨本体（UR5/ToRA/Franka/Unitree G1 等）同理由替换 mesh 实现。",
+   "locator": "page 7, Section 3.3.2 Robot Data Rendering",
+   "source_context": "we employ a hybrid rendering scheme in Isaac Sim 5.1, where the static background environment is rendered using 3D Gaussian Splatting (3DGS) for photorealism, while dynamic objects and robotic manipulators are rendered using high-quality mesh models. The entire rendering environment’s coordinate system is aligned with the robot base frame. Specifically, at each time step t, the joint angles of the robot arms are computed using an inverse kinematics (IK) solver based on the target pose matrices p t RobotTCP of the dex-hand. The resulting joint angles drive the robot arms and their end-effectors, while object poses p t ObjectInRobot drive the motion of manipulated objects at the same time. To achieve high-quality rendering of dynamic components, we utilize the path-tracing rendering engine provided by Isaac Sim. This ensures realistic lighting and shadow effects, crucial for simulating complex interactions between the robot and its environment. At each time step, the visual scene is composed by overlaying the dynamically rendered robot and objects onto the static 3DGS background. This approach not only guarantees photorealism but also supports flexible image editing from arbitrary viewpoints and robot embodiments.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 7 Section 3.3.2 混合渲染描述（含 3DGS 背景、mesh 动态物体、path tracing、叠加合成与\"arbitrary viewpoints and robot embodiments\"原文），claim 各分句均被 context 直接蕴含。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C04",
+   "claim": "3DGS 重建经闭式相似变换与真实环境达到公制对齐后，导出为 USD 资产导入 Isaac Sim 作为动态渲染的静态背景；作者称此步骤\"保证几何与光度一致性，从而减小视觉观测中的域差距\"。",
+   "stance": "support",
+   "relation": "支持综述命题（机制前提）：任意视角数据生成的几何可信度依赖重建-仿真公制对齐（已知尺寸 ArUco 标定板 + 相似变换闭式解）——跨相机/跨视角数据保持几何一致性的前提条件，与 GS-VLA（测试时规范化）依赖同一几何对齐逻辑。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Real→Sim 几何桥梁：metric alignment 协议（承自 Re3SIM）保证渲染视角变化时场景几何不漂移，是\"任意视角\"成立的几何基础。",
+   "locator": "page 6, Section 3.3.1 Scene Reconstruction",
+   "source_context": "This closed-form solution ensures metric alignment between real and virtual environments. Once aligned, the 3DGS model is exported as a Universal Scene Description (USD) asset and imported into Isaac Sim, serving as the static background for dynamic rendering. This step guarantees geometric and photometric consistency, thereby reducing the domain gap in visual observations.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 6 Section 3.3.1 结尾段（闭式解保证公制对齐、USD 导入 Isaac Sim、保证几何与光度一致性并减小域差距均为作者原文），claim 无外推。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C05",
+   "claim": "重投影验证显示：重投影的触觉接触点持续与可见的指-物交互区域重合（如指尖按压杯柄或工具表面），且渲染力的幅值与观察到的形变或握持强度相关；作者称这种跨模态一致性证实了多模态数据管线的时间同步与几何精度。",
+   "stance": "support",
+   "relation": "支持综述命题（数据质量前提）：多相机采集+标定的跨视角几何精度经重投影跨模态检查得到作者侧验证（触觉点↔可见交互区域），为\"环视多相机→3D→任意视角渲染\"链路的几何可信度提供证据；注意该验证为数百帧主观检查、无量化误差指标。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "仿真端验证方式：把估计的 3D 手套/物体/触觉点用相机内外参重投影回 RGB 帧做一致性检查；结论为主观检查级别而非量化指标。",
+   "locator": "page 8, Section 4.1 Simulation Evaluation",
+   "source_context": "Crucially, the reprojected tactile contact points consistently coincide with visible regions of finger-object interaction (e.g., fingertips pressing against a mug handle or tool surface), and the magnitude of the rendered force correlates with observed deformation or grip intensity. This cross-modal consistency confirms the temporal synchronization and geometric accuracy of our multimodal data pipeline, establishing a reliable foundation for subsequent retargeting and simulation.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 8 Section 4.1 重投影验证结论段（触觉点重合、力幅值相关、跨模态一致性证实时间同步与几何精度均为作者原文）；\"主观检查\"限定写入 relation 与 summary 而非 claim，claim 严格限于 context 蕴含。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C06",
+   "claim": "Dex-Tactile 重定向精度：在 Isaac Sim 中重放 10 个不同形状物体的重定向操作，把原手套触觉接触点经解剖对应映射到灵巧手后，与灵巧手表面实际模拟接触位置的欧氏距离平均误差为 3.86 mm。",
+   "stance": "support",
+   "relation": "支持综述命题（管线保真度）：人→机重定向在仿真中达到毫米级（3.86 mm）接触一致性，是\"任意本体渲染数据\"可用于接触密集灵巧操作训练的保真度证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "重定向保真度量化：10 物体 Isaac Sim 重放、映射触觉点 vs 实际模拟接触位置的欧氏距离。",
+   "locator": "page 8, Section 4.1, Figure 4(b)",
+   "source_context": "We then calculate the Euclidean distance between these mapped points and the actual simulated contact locations on the dex-hand surface. The results over 10 diverse objects are reported in Fig.4 (b). The average error of tactile contact points is 3.86 mm.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average Euclidean error of mapped tactile contact points (mm)",
+    "value_or_direction": "3.86 mm average",
+    "comparator": "mapped glove tactile points vs. actual simulated contact locations on the dex-hand surface",
+    "task_or_sample": "10 diverse objects, Isaac Sim replay of retargeted manipulation",
+    "locator": "page 8, Figure 4(b)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 8 Section 4.1 接触误差评测段（映射方式、10 物体、Fig.4(b)、3.86 mm 均为原文）；定量字段全部取自该页可见数字。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C07",
+   "claim": "真机重放：按重定向轨迹与关节角驱动 UR5 + Paxini DexH13 执行 10 个物体的操作任务（每物体 10 次独立试验），平均成功率 84%；几何简单、接触模式稳定的物体（椰子水瓶、柔顺剂瓶）成功率 90–100，较复杂物体（塑料杯、相机）成功率仍高于 80。",
+   "stance": "support",
+   "relation": "支持综述命题（真机可执行性）：重定向轨迹不仅在仿真中几何有效，且在真机硬件上 84% 可执行——支撑\"渲染/重定向数据→真机技能\"链路下半段的可信度，间接支撑数据侧路线的端到端可行性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "真机重放量化结果：UR5+DexH13、10 物体 × 10 试验、平均 84%；复杂度分层（简单几何 90–100 vs 复杂 >80）。",
+   "locator": "page 9, Section 4.2 Real-World Evaluation, Figure 4(c)",
+   "source_context": "We conduct replay experiments on UR5 equipped with the Paxini DexH13 dex-hand. For each of the retargeted demonstration, UR5 end-effector is driven according to the retargeted trajectory and dex-hand is driven according to the retargeted joint angles. The object is placed at the same position when human demonstration data collected, ensuring consistent starting conditions. We perform 10 independent trials per object. A trial is considered successful if the robot completes the intended manipulation task, and achieves the desired physical outcome (e.g., lifting, pouring, or pushing). The success rates across all objects are summarized in Fig.4 (c). As shown, the robot successfully completes most tasks, achieving an average success rate of 84%. Notably, high success rates (90–100) are observed for objects with simple geometry and stable contact modes (e.g., coconut water bottle, fabric softener bottle), indicating that our retargeting method effectively preserves grasp stability and motion feasibility. For more complex objects such as the plastic cup and camera, the success rate remains above 80, demonstrating robustness under geometric variability.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "real-world replay success rate (%)",
+    "value_or_direction": "84% average; 90–100 for simple-geometry objects; above 80 for complex objects (plastic cup, camera)",
+    "comparator": "across 10 objects (absolute metric, no baseline arm)",
+    "task_or_sample": "10 objects × 10 independent trials, UR5 + Paxini DexH13 replay of retargeted trajectories",
+    "locator": "page 9, Figure 4(c)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 9 Section 4.2 重放评测段（UR5+DexH13、10 次独立试验/物体、84% 平均、90–100 简单几何、>80 复杂物体的分层均出自原文）；定量字段数字均在该页可见。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C08",
+   "claim": "VLA 下游配平对比（两数据源演示数量相等、任务相同、训练超参相同）：在三个代表性任务（pick-and-place、push cuboid、pour bottle）上，遥操作数据训练的 Pi0.5 达 100% 成功率，仅用生成（Real-Sim-Real）数据训练的 Pi0.5 达 80%；作者称\"仅存在 20% 的成功率下降\"，并据此主张该管线可作为遥操作的可扩展、低成本替代。",
+   "stance": "support",
+   "relation": "支持综述命题（效果量级·数据侧自由视角路线）：任意视角渲染生成的训练数据可把 Pi0.5 训练到 80%（遥操作 100%），以 20 个百分点折损换取遥操作不可及的规模与成本——数据侧路线下游可用性的效果参照值。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "数据源配平对比主结果：Tele 100% vs Paint 80%（Pi0.5，含腕相机）；\"可替代遥操作\"主张的直接依据。",
+   "locator": "page 9, Table 1 + Section 4.2",
+   "source_context": "To comprehensively evaluate the efficacy of our Real-Sim-Real data pipeline for robot skill learning, we conduct a comparative study by training Vision-Language-Action (VLA) policies using two distinct sources of demonstration data: (1) synthetic data generated through our proposed pipeline (referred to as Real- Sim-Real data), and (2) real-world teleoperation demonstrations collected via direct human control of the robot (referred to as Tele. data). To ensure a rigorously fair comparison and isolate the impact of the data source, both datasets are strictly balanced to contain an equal number of demonstrations across three representative manipulation tasks: pick place, pushing a cube, and pouring water from a bottle. These tasks were specifically selected to evaluate the policy’s robustness across varying degrees of contact dynamics and precision requirements. We choose Pi0.5 (Intelligence et al. (2025)) and DP (Chi et al. (2024a)) as the VLA architecture for evaluation. All policies are trained using the same hyperparameters across different types of data mentioned above. During deployment, each policy is evaluated on 10 randomly sampled initial object positions within the robot’s workspace. A trial is considered successful if the robot completes the task without human intervention and achieves the desired physical outcome, i.e., the target object is placed in the goal region, the cube is pushed to the designated location, and the bottle is tilted by nearly 90 degrees. The success rates are summarized in Tab.1. While policies trained on teleoperation data achieve 100% success rate over these tasks, those trained on our Real-Sim-Real data achieve 80% success rate. There only exhibits 20% drop in success rate. These findings suggest that our pipeline can serve as a scalable and cost-effective alternative to teleoperation for generating high-quality training data, particularly when teleoperation is impractical or costly.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average VLA task success rate (%) on three balanced tasks",
+    "value_or_direction": "Paint 80% vs Tele 100% (20 pp drop, author-stated)",
+    "comparator": "Pi0.5 (w/ wrist camera) trained on Real-Sim-Real painted data vs. teleoperation data",
+    "task_or_sample": "pick-and-place / push cuboid / pour bottle, 10 randomly sampled initial positions per task",
+    "locator": "page 9, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 9 Section 4.2 VLA 对比段（数据源定义、配平声明、任务清单、超参一致、10 次随机初始位置、100% vs 80%、20% 下降与替代主张均为原文）；定量字段与该页数字一一对应。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C09",
+   "claim": "腕相机通道是折损的关键放大器：去掉腕相机后，生成数据训练的 Pi0.5 三任务平均成功率降为 46.6%（pick-and-place 40.0%、push cuboid 70.0%、pour bottle 30.0%），同配置遥操作数据为 83.3%——与遥操作的差距从有腕相机时的 20.0 个百分点（80.0% vs 100.0%）扩大到 36.7 个百分点（83.3%−46.6%）。",
+   "stance": "limit",
+   "relation": "限定命题（受限面）：数据侧渲染路线对近距腕相机通道高度敏感——无腕相机时生成数据与遥操作数据的差距扩大近一倍；近距视角的观测覆盖（恰是 3DGS 近距伪影所在，见 C11）直接决定该路线下游可用性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "通道依赖量化：Pi0.5 无腕相机 Paint 46.6% vs Tele 83.3%；pour 任务 Paint 仅 30.0%。差距 36.7pp 为 83.3−46.6 的简单算术。",
+   "locator": "page 9, Table 1",
+   "source_context": "Table 1 Real-world experimental results on different models using different data. Task DP Pi05 (w/ wrist camera) Pi05 (w/o wrist camera) Tele Paint Tele Paint Tele Paint Pick and place 90.0% 40.0% 100.0% 70.0% 90.0% 40.0% Push cuboid 100.0% 100.0% 100.0% 100.0% 90.0% 70.0% Pour bottle 40.0% 10.0% 100.0% 70.0% 70.0% 30.0% Avg. 76.6% 50.0% 100.0% 80.0% 83.3% 46.6%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average VLA task success rate (%) without wrist camera",
+    "value_or_direction": "Paint 46.6% vs Tele 83.3% (gap 36.7 pp); with wrist camera Paint 80.0% vs Tele 100.0% (gap 20.0 pp)",
+    "comparator": "Pi05 w/o wrist camera: Real-Sim-Real data vs teleoperation data; vs. Pi05 w/ wrist camera",
+    "task_or_sample": "pick-and-place / push cuboid / pour bottle, 10 trials each",
+    "locator": "page 9, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "context 为 page 9 Table 1 全表逐字切片；46.6/83.3/40.0/70.0/30.0/80.0/100.0 均为表中可见数字，36.7 与 20.0 个百分点为表值的简单减法（83.3−46.6、100.0−80.0），claim 中已透明标注算式。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C10",
+   "claim": "折损幅度依赖策略架构：生成数据训练的 DP 策略三任务平均成功率 50.0%（pick-and-place 40.0%、push cuboid 100.0%、pour bottle 10.0%），同数据源遥操作为 76.6%，降幅 26.6 个百分点，大于 Pi0.5 的 20.0 个百分点降幅；且 DP 的遥操作基线本身 pour 任务仅 40.0%。",
+   "stance": "limit",
+   "relation": "限定命题（受限面）：生成数据的训练效果存在架构依赖——DP 的降幅（26.6 pp）大于 Pi0.5（20.0 pp），pour 任务上 DP 仅 10.0%；渲染数据并非对所有策略架构同等友好，且 DP 遥操作基线自身质量不均（pour 40.0%）未被讨论。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "架构依赖量化：DP Paint 50.0% vs Tele 76.6%；对比 Pi0.5 Paint 80.0% vs Tele 100.0%。降幅 26.6/20.0 pp 为表值减法（76.6−50.0、100.0−80.0）。",
+   "locator": "page 9, Table 1",
+   "source_context": "Table 1 Real-world experimental results on different models using different data. Task DP Pi05 (w/ wrist camera) Pi05 (w/o wrist camera) Tele Paint Tele Paint Tele Paint Pick and place 90.0% 40.0% 100.0% 70.0% 90.0% 40.0% Push cuboid 100.0% 100.0% 100.0% 100.0% 90.0% 70.0% Pour bottle 40.0% 10.0% 100.0% 70.0% 70.0% 30.0% Avg. 76.6% 50.0% 100.0% 80.0% 83.3% 46.6%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average VLA task success rate (%) by policy architecture",
+    "value_or_direction": "DP: Paint 50.0% vs Tele 76.6% (26.6 pp drop; pour Paint 10.0%); Pi0.5: Paint 80.0% vs Tele 100.0% (20.0 pp drop)",
+    "comparator": "DP vs Pi0.5, Real-Sim-Real painted data vs teleoperation data",
+    "task_or_sample": "pick-and-place / push cuboid / pour bottle, 10 trials each",
+    "locator": "page 9, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "context 为 page 9 Table 1 全表逐字切片；50.0/76.6/40.0/100.0/10.0/80.0 均为表中可见数字，降幅为表值简单减法并已标注；DP 即 Diffusion Policy（Chi et al. 2024a，见 page 9 正文引用）。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C11",
+   "claim": "作者承认生成（\"painted\"）的腕相机图像存在伪影：腕相机距 3DGS 点云过近，导致相关 3D 点被渲染器剔除；作者表示将优化 3DGS 重建算法以提升重建质量。",
+   "stance": "limit",
+   "relation": "限定命题（受限面·对鱼眼综述最直接）：3DGS 背景渲染在近距相机（腕相机）视角存在系统性伪影（点云被剔除）——若要为近距宽视角/鱼眼腕相机\"画\"训练数据，当前 3DGS 渲染路径在该工作距离上不可用，作者将其列为待优化项而非已解决问题。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者自述渲染边界：近距 3DGS 点云剔除 → painted 腕视图伪影；这是\"任意视角\"主张在近距机位上的显式例外。",
+   "locator": "page 16, Figure 8 caption",
+   "source_context": "Note that the \"painted\" wrist images exhibit some artifacts. This is because the wrist camera is too close to the 3DGS point cloud, causing the relevant 3D points to be culled by the renderer. We will optimize the 3DGS reconstruction algorithm to improve the quality of the 3DGS reconstruction.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 16 Figure 8 图注（伪影存在、成因=腕相机距 3DGS 点云过近致相关 3D 点被渲染器剔除、将优化 3DGS 重建算法均为作者原文自述限制）。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C12",
+   "claim": "本管线采集端的相机配置全部为常规透视机型：多相机阵列由高分辨率 RGB 相机与标定过的 Intel RealSense D455 RGB-D 传感器组成；经全文（含补充材料）检索，未出现鱼眼、全景、超广角相机配置或畸变投影建模的相关内容。",
+   "stance": "gap",
+   "relation": "缺口命题：数据侧\"任意视角\"生成路线（3DGS 渲染）目前只在常规透视相机模型内得到验证；为鱼眼/超广角相机（非透视投影+大畸变）\"画\"训练数据需要显式畸变/投影模型支持，本文未涉及——这是该路线面向宽视角传感器的直接缺口，综述引用本文必须按邻接证据口径处理。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "证据边界界定卡：设备配置为作者陈述（常规透视机型），缺席声明（无鱼眼/全景/超广角/畸变内容）经 17 页全文词表检索验证，界定本文对鱼眼综述的可用范围。",
+   "locator": "page 3, Section 3.1 Human Data Acquisition",
+   "source_context": "we have constructed many dedicated Data-Acquisition-Rooms, each equipped with a multi-camera array comprising both high-resolution RGB cameras and calibrated RGB-D sensors (Intel RealSense D455). All cameras are rigidly mounted and pre-calibrated with respect to the table world coordinate, enabling accurate 3D reconstruction and cross-view alignment of manipulation trajectories.",
+   "evidence_type": "design-choice",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "context 为 page 3 Section 3.1 相机设备描述逐字切片（作者陈述的机型清单）；\"全文无鱼眼/全景/超广角/畸变内容\"为全文检索验证的缺席事实（fisheye/panoramic/wide-angle/ultra/omnidirectional/360/distortion/FOV/field of view/surround/equirect 在 17 页提取文本中零命中），故 confidence=direct 而措辞限定于\"未出现相关内容\"。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C13",
+   "claim": "尽管\"任意视角渲染\"是标题级主张，下游评测并未隔离验证视角自由性的价值：三个评测任务部署时均使用固定相机配置，每策略在 10 个随机采样的初始物体位置上评测（各 10 次试验）；论文没有视角或相机配置变化的受控实验。",
+   "stance": "gap",
+   "relation": "缺口命题（评测缺口）：视角多样性（数据侧\"any view\"的核心卖点）对策略泛化的实际贡献未被实验隔离——综述引用\"任意视角数据生成可提升视角鲁棒性\"时不能以本文为直接证据，只能引用其渲染能力与下游可用性本身。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "读者推断：评测协议（3 任务 × 10 随机初始位置、固定主相机+腕相机）未包含视角/FOV 变化条件；\"固定相机配置\"与\"无视角变化实验\"为全文阅读确认的缺席事实，非作者原文陈述。",
+   "locator": "page 9, Section 4.2 Real-World Evaluation",
+   "source_context": "During deployment, each policy is evaluated on 10 randomly sampled initial object positions within the robot’s workspace. A trial is considered successful if the robot completes the task without human intervention and achieves the desired physical outcome, i.e., the target object is placed in the goal region, the cube is pushed to the designated location, and the bottle is tilted by nearly 90 degrees.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "context 为 page 9 Section 4.2 部署评测协议逐字切片（10 次随机初始位置、任务判据）；claim 中\"固定相机配置/无视角变化受控实验\"为基于全文阅读的读者推断（评测章节与补充材料均无视角变化条件），故 confidence=inference、claim_basis=reader-inference。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C14",
+   "claim": "采集效率：在 6 个不同难度任务上各收集 100 条成功演示序列的双方法对比中，人类演示采集一致快于遥操作——pick-and-place 任务遥操作耗时为人类采集的 2.57×，多阶段的 table bussing 与 fold clothes 任务上人类采集约只需遥操作五分之一的时间（最高 5.33× 加速），且任务越复杂差距越大。",
+   "stance": "support",
+   "relation": "支持综述命题（成本面）：环视采集房+人类演示的采集成本优势（2.57×–5.33×）是\"多相机阵列基础设施换数据规模\"路线的成本论证；对宽视角传感器综述，这是采集端基础设施投资回报的参照数据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "成本量化：6 任务 × 100 条成功演示；效率倍率随任务复杂度上升（2.57×→5.33×）；table bussing/fold clothes 需双手协调与精细力控时加速最大。",
+   "locator": "page 10, Table 2 + Section 4.3",
+   "source_context": "To quantify this, we collected 100 successful demonstration sequences across 6 tasks of varying difficulty using both methods. All trials were conducted by trained operators, where a demonstration is defined as successful if the task is completed without object drops or resets. As summarized in Table 2, human demonstration consistently outperforms teleoperation across all tasks. For the basic pick-and-place task, teleoperation requires 2.57× the time relative to human collection. This gap widens significantly as task complexity increases. Notably, in the multi-stage table bussing and folding clothes tasks, our method collects the same amount of valid data in approximately one-fifth the time required by teleoperation (up to 5.33× speedup), as these tasks demand precise bimanual coordination and delicate force control.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "time to collect equal amounts of valid demonstrations",
+    "value_or_direction": "2.57× to 5.33× speedup for human collection vs teleoperation (~1/5 time on table bussing / fold clothes)",
+    "comparator": "human demonstration collection vs robot teleoperation",
+    "task_or_sample": "100 successful demonstration sequences per method, 6 tasks of varying difficulty",
+    "locator": "page 10, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 10 Section 4.3 效率对比段（100 条序列 × 6 任务、2.57×、五分之一、5.33× 加速、复杂度趋势均为原文）；定量字段数字均在该页可见。"
+   }
+  },
+  {
+   "card_id": "2602.05325-C15",
+   "claim": "作者报告（部署行为定性对比，Fig.6）：Real-Sim-Real 数据训练的模型部署执行更平滑、更稳定，而遥操作数据训练的模型表现出明显抖动。",
+   "stance": "conditional",
+   "relation": "条件性命题（定性副证）：生成数据的动作平滑性优势为定性曲线对比（且 Fig.6 图注承认初始位姿未严格对齐），与相机/视角配置无直接关系，仅作为渲染数据质量的辅助证据，引用时按\"作者定性声明\"口径处理。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "定性观察：作者将抖动归因于遥操作需经中间控制器（操纵杆/动捕服）传递意图、跟踪误差与延迟累积（归因见 page 13-14 原文）；对比条件未严格对齐（见 author_stated）。",
+   "locator": "page 13, Section 6.2 Model Deployment Results",
+   "source_context": "As shown in Fig.6, models trained on our Real- Sim-Real data exhibit smoother and more stable execution during deployment, whereas those trained on teleoperation data display noticeable jitter.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字切片自 page 13 Section 6.2 部署行为对比段（更平滑稳定 vs 明显抖动为作者原文）；归因句跨页（page 13-14）故置于 summary 而非 claim，claim 严格限于 context 蕴含。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "3D Gaussian Splatting for Real-Time Radiance Field Rendering",
+   "arxiv_id": "",
+   "reason": "场景重建与静态背景渲染的核心技术（ACM TOG 2023, Kerbl et al.）；\"任意视角\"能力的来源。"
+  },
+  {
+   "title": "Re3SIM: Generating High-Fidelity Simulation Data via 3D-Photorealistic Real-to-Sim for Robotic Manipulation",
+   "arxiv_id": "2502.08645",
+   "reason": "3DGS 公制对齐协议（已知尺寸 ArUco 标定板 + 相似变换）的直接来源。"
+  },
+  {
+   "title": "π0.5: A Vision-Language-Action Model with Open-World Generalization",
+   "arxiv_id": "2504.16054",
+   "reason": "VLA 下游评测的主力架构（80% vs 100% 配平对比的载体）。"
+  },
+  {
+   "title": "Diffusion Policy: Visuomotor Policy Learning via Action Diffusion",
+   "arxiv_id": "2303.04137",
+   "reason": "对照 VLA 架构（DP），揭示生成数据训练效果的架构依赖。"
+  },
+  {
+   "title": "FoundationPose: Unified 6D Pose Estimation and Tracking of Novel Objects",
+   "arxiv_id": "2312.08344",
+   "reason": "物体 6D 位姿估计模块（变化光照与杂乱场景下的公制定位）。"
+  },
+  {
+   "title": "Universal Manipulation Interface: In-the-Wild Robot Teaching without In-the-Wild Robots",
+   "arxiv_id": "2402.10329",
+   "reason": "手持采集接口相关工作定位（UMI）：低成本但缺灵巧性，本文动机的对照面。"
+  },
+  {
+   "title": "AnyTeleop: A General Vision-Based Dexterous Robot Arm-Hand Teleoperation System",
+   "arxiv_id": "",
+   "reason": "Dex-Tactile 重定向方法的灵感来源（RSS 2023, Qin et al.）。"
+  },
+  {
+   "title": "EgoMimic: Scaling Imitation Learning via Egocentric Video",
+   "arxiv_id": "",
+   "reason": "人-机视觉迁移相关工作对照（ICRA 2025, Kareer et al.；本文引用其 Project Aria 数据采集）。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：RoboPaint 代表\"数据侧自由视角合成\"路线——把视角多样性从物理传感器选型问题（装鱼眼/超广角相机）转化为数据编辑问题（3DGS+仿真任意视角渲染），与 AnyCamVLA（测试时 NVS 适配）、GS-VLA（测试时 3DGS 规范化）构成同一 NVS/3DGS 技术族在流水线三端（数据生成/测试适配/测试规范化）的分布。对综述问题：(1) 应用方式=采集房多相机阵列（常规透视机型）+ 3DGS 任意视角渲染生成 VLA 训练数据（含腕相机机位）；(2) 效果=Pi0.5 配平对比 80% vs 遥操作 100%（-20pp），采集效率 2.57×–5.33×；(3) 局限=近距腕相机 3DGS 渲染伪影（点云剔除）、无腕相机时折损扩大到 36.7pp、架构依赖（DP -26.6pp）；(4) 缺口=全程无鱼眼/全景/超广角光学与畸变建模，\"any view\"≠光学模型泛化，为宽视角传感器\"画\"数据是该路线的显式空白。引用口径：邻接/条件性证据（数据侧路线与硬件形态参照），不是鱼眼应用的直接证据。"
+}

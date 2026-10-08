@@ -1,0 +1,173 @@
+{
+  "sources": [
+    {
+      "source": "web-calibration",
+      "confidence": "high",
+      "notes": "Web calibration on 2026-09-11 identified the hand-detection-to-trajectory pipeline family: EgoVLA (arXiv:2507.12440, wrist/hand actions from ego video -> IK retargeting), EgoDex (Apple, 829h AVP device-tracked 3D hand), VideoManip (arXiv:2602.09013, 4D hand-object trajectory -> DP3 policy 62.86%), AoE (arXiv:2602.23893, HaWoR hand reconstruction pipeline), Video2Sim2Real (arXiv:2606.08828, HaMeR keypoints -> Mink retargeting), LUCID (embodiment-agnostic intent: object flow + palm pose), 3PoinTr (arXiv:2603.08485, 3D point tracks as embodiment-agnostic representation), MobileEgo Anywhere (arXiv:2605.05945). Retargeting-error analyses: mingrui-yu key-objectives retargeting study, Vision-Based Hand Shadowing (arXiv:2603.11383, failures stem exclusively from landmark detection issues), HumDex (arXiv:2603.12260), PKDA (arXiv:2511.10987). Device-tracked contrast family: FastUMI / ActiveUMI (arXiv:2510.01607) / UMI-3D / DexUMI. Prior run LR-EGO-HAND (20260729) quantified ego hand-tracking accuracy itself (in-domain MKPE 9-11mm -> 16.28mm in the wild); this run targets the downstream propagation into end-effector trajectory and policy success."
+    }
+  ],
+  "knowledge_ids": ["EA-DATA", "EA-XEMBODIMENT", "EA-SENSOR", "EA-MODEL"],
+  "families": [],
+  "queries": [
+    {
+      "label": "dynamic-ego-hand-robot-core",
+      "tier": "dynamic-direct",
+      "query": "all:egocentric AND all:\"hand pose\" AND all:robot",
+      "why": "Core intersection: egocentric hand pose used for robot learning.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-ego-video-imitation-hand",
+      "tier": "dynamic-direct",
+      "query": "all:\"egocentric video\" AND all:\"imitation learning\" AND all:hand",
+      "why": "Direct: imitation from egocentric human video via hand signals (EgoVLA/EgoMimic family).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-hand-pose-retarget",
+      "tier": "dynamic-direct",
+      "query": "all:\"hand pose\" AND all:retargeting AND all:robot",
+      "why": "Direct: hand-pose-to-robot retargeting pipelines and their error behavior.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-human-video-wrist-trajectory",
+      "tier": "dynamic-direct",
+      "query": "all:\"human video\" AND all:\"wrist trajectory\" AND all:robot",
+      "why": "Direct: wrist/end-effector trajectory recovery from human video.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-egodex-egovla-titles",
+      "tier": "dynamic-direct",
+      "query": "ti:EgoDex OR ti:EgoVLA OR ti:EgoMimic",
+      "why": "Title anchors for the three flagship ego-video-to-robot systems.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-world-space-hand-recon",
+      "tier": "dynamic-method",
+      "query": "all:\"world-space\" AND all:\"hand\" AND all:reconstruction AND all:egocentric",
+      "why": "Method: world-space hand reconstruction (HaWoR family) as the ego-video action-labeling front end.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-hand-object-4d-policy",
+      "tier": "dynamic-method",
+      "query": "all:\"hand-object\" AND all:trajectory AND all:policy AND all:video",
+      "why": "Method: 4D hand-object trajectory reconstruction feeding manipulation policies (VideoManip).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-embodiment-agnostic-rep",
+      "tier": "dynamic-method",
+      "query": "all:\"embodiment-agnostic\" AND all:\"human video\"",
+      "why": "Method: embodiment-agnostic intermediate representations that bypass or buffer hand-pose error (LUCID, 3PoinTr).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-point-track-action",
+      "tier": "dynamic-method",
+      "query": "all:\"point tracks\" AND all:robot AND all:manipulation",
+      "why": "Method/alternative: point-track action representations that avoid explicit hand pose (ATM, Track2Act, 3PoinTr).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-pose-noise-robust-policy",
+      "tier": "dynamic-limit",
+      "query": "all:noisy AND all:demonstrations AND all:policy AND all:robot",
+      "why": "Limit: robustness of imitation policies to noisy action labels/trajectories.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-hand-tracking-noise",
+      "tier": "dynamic-limit",
+      "query": "all:\"hand tracking\" AND (all:noise OR all:error OR all:accuracy) AND all:robot",
+      "why": "Limit: hand tracking noise/error/accuracy in robot data pipelines.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-label-noise-imitation",
+      "tier": "dynamic-limit",
+      "query": "all:\"label noise\" AND all:\"imitation learning\" AND all:manipulation",
+      "why": "Limit: action-label noise in imitation learning for manipulation.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-hand-pose-benchmark-eval",
+      "tier": "dynamic-eval",
+      "query": "all:\"hand pose estimation\" AND all:benchmark AND all:egocentric",
+      "why": "Eval: egocentric hand pose benchmarks/metrics (MPJPE/MKPE) that quantify the upstream error budget.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-retarget-eval-dexterous",
+      "tier": "dynamic-eval",
+      "query": "all:retargeting AND all:evaluation AND all:\"dexterous manipulation\"",
+      "why": "Eval: retargeting objective ablations and error metrics for dexterous manipulation (mingrui-yu study, PKDA).",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-human-video-success-rate",
+      "tier": "dynamic-eval",
+      "query": "all:\"human videos\" AND all:\"success rate\" AND all:robot AND all:manipulation",
+      "why": "Eval: downstream policy success rates from human-video-derived trajectories.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-umi-tracking-deploy",
+      "tier": "dynamic-deploy",
+      "query": "all:UMI AND all:tracking AND all:manipulation",
+      "why": "Deploy: device-based tracking (UMI/FastUMI/DexUMI) as the accuracy contrast to visual hand detection.",
+      "source": "web-calibration",
+      "confidence": "high"
+    },
+    {
+      "label": "dynamic-teleop-hand-tracking-deploy",
+      "tier": "dynamic-deploy",
+      "query": "all:teleoperation AND all:\"hand tracking\" AND all:robot",
+      "why": "Deploy: teleoperation hand tracking accuracy/latency (Vision Pro class) as deployed baseline.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-wearable-data-collection",
+      "tier": "dynamic-adjacent",
+      "query": "all:wearable AND all:\"data collection\" AND all:manipulation AND all:hand",
+      "why": "Adjacent: wearable ego data collection where hand signal quality is the bottleneck.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-egoexo-robot-transfer",
+      "tier": "dynamic-adjacent",
+      "query": "all:EgoExo4D OR (all:ego-exo AND all:robot)",
+      "why": "Adjacent: Ego-Exo datasets/benchmarks feeding robot learning.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    },
+    {
+      "label": "dynamic-motion-retarget-humanoid-adjacent",
+      "tier": "dynamic-adjacent",
+      "query": "all:\"motion retargeting\" AND all:humanoid AND all:video",
+      "why": "Adjacent: human-video motion retargeting to humanoid whole bodies (GenMimic family) — wrist trajectory error tolerance.",
+      "source": "web-calibration",
+      "confidence": "medium"
+    }
+  ]
+}

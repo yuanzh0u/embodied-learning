@@ -9,10 +9,14 @@ import sys
 import tempfile
 import threading
 import unittest
+from contextlib import contextmanager
 from functools import partial
 from http import HTTPStatus
+from http.client import HTTPConnection
 from http.server import ThreadingHTTPServer
 from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Iterator
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -1651,6 +1655,36 @@ class RevisionEndpointTest(ChatServerHarness):
             self.assertEqual(status, HTTPStatus.CONFLICT)
         finally:
             server_module.release_chat_lock(self.topic_id)
+
+
+# ---- main-branch HTTP edge cases (refresh lock / knowledge-map / unknown POST) ----
+
+
+class HttpEdgeCaseTest(ChatServerHarness):
+    """Contract checks that ride on the same harness as the chat tests:
+    a held REFRESH_LOCK answers 409, an absent knowledge map answers 404,
+    and an unknown POST path answers 404."""
+
+    chat_enabled = False
+
+    def test_refresh_lock_returns_conflict(self):
+        self.assertTrue(server_module.REFRESH_LOCK.acquire(blocking=False))
+        try:
+            status, payload, _ = self.request("POST", "/api/refresh")
+            self.assertEqual(status, HTTPStatus.CONFLICT)
+            body = payload if isinstance(payload, dict) else json.loads(payload)
+            self.assertIn("error", body)
+        finally:
+            server_module.REFRESH_LOCK.release()
+
+    def test_knowledge_map_missing_is_404(self):
+        status, _, _ = self.request("GET", "/knowledge-map")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND)
+
+    def test_post_unknown_path_is_404(self):
+        status, _, _ = self.request("POST", "/api/other")
+        self.assertEqual(status, HTTPStatus.NOT_FOUND)
+
 
 if __name__ == "__main__":
     unittest.main()

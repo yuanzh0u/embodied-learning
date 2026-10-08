@@ -1,0 +1,427 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.00983",
+  "title": "Breaking the Latency Barrier: Synergistic Perception and Control for High-Frequency 3D Ultrasound Servoing",
+  "published": "2025-11-02",
+  "url": "https://arxiv.org/abs/2511.00983",
+  "authors": [
+   "Yizhao Qian",
+   "Yujie Zhu",
+   "Jiayuan Luo",
+   "Li Liu",
+   "Yixuan Yuan",
+   "Guochen Ning",
+   "Hongen Liao"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "'VLA 延迟与异步执行'族中'感知-控制协同突破推理延迟'分支的直接证据：论文用组件替换消融给出推理延迟→控制频率→末端跟踪能力上限的完整因果链（Diffusion 策略 128.2 ms/约 8 Hz→仅能跟踪 30.98 mm/s、误差 9.84 mm；单步流策略 16.2 ms/62 Hz→102.47 mm/s、1.52 mm），并给出明确的适用边界（Z 轴旋转 15° 内稳定）。注意域为机器人超声伺服（持探头末端轨迹精度，目标图像对齐任务），非通用操作 VLA，引用时需注明场景绑定。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "获取延迟屏障问题定义、现有范式缺陷与三项贡献（62 Hz 闭环、双流感知、50 条轨迹 Sim-to-Real）"
+   },
+   {
+    "locator": "A. Robotic Ultrasound Systems: The System-Level Bottleneck for Dynamic Tracking",
+    "role": "problem",
+    "purpose": "获取事件驱动 336 ms 配准延迟、模型驱动秒级收敛时间与'组件级速度不等于系统级敏捷'论断"
+   },
+   {
+    "locator": "B. Learning-based Control: The Quest for High-Frequency Policies and Robust Generalization",
+    "role": "problem",
+    "purpose": "获取 Diffusion 策略迭代推理延迟（10-23 Hz）与流匹配单步推理（约 50 Hz）的对比论证"
+   },
+   {
+    "locator": "C. The Perception Bottleneck for High-Frequency Servoing",
+    "role": "problem",
+    "purpose": "获取感知前端延迟累积与超声平面外（Z/Y 轴）运动病态问题论证"
+   },
+   {
+    "locator": "III. METHODOLOGY / A. Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "确认状态定义（k=8 误差历史）、H=8 步动作序列、receding horizon 执行前 h=4 步"
+   },
+   {
+    "locator": "III. METHODOLOGY / B. Framework Overview",
+    "role": "method-or-design",
+    "purpose": "理解感知-策略协同设计原则与 >60 Hz 闭环目标"
+   },
+   {
+    "locator": "III. METHODOLOGY / C. High-Frequency Temporal Perception Front-End",
+    "role": "method-or-design",
+    "purpose": "理解双流解耦架构（几何流代价体面内匹配 + 语义流平面外推断）与 A-UKF 9 维预测状态估计（含传感器偏差）"
+   },
+   {
+    "locator": "III. METHODOLOGY / D. Flow Matching for High-Speed Policy",
+    "role": "method-or-design",
+    "purpose": "理解单步流匹配策略如何绕开迭代去噪延迟瓶颈"
+   },
+   {
+    "locator": "III. METHODOLOGY / E. Sample-Efficient Sim-to-Real Transfer",
+    "role": "method-or-design",
+    "purpose": "获取三阶段训练流程：2 万仿真图像对→1000 仿真轨迹→50 条专家轨迹微调（冻结几何流、微调语义流）"
+   },
+   {
+    "locator": "IV. EXPERIMENTS / A. Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "确认平台：UR3e 机械臂、Mindray M8 超声机、CIRS 057A 仿真体、RTX 4080 工作站"
+   },
+   {
+    "locator": "IV. EXPERIMENTS / B. Baseline Performance Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取静态/大尺度重定位精度（约 1.52 mm）与高速动态跟踪（102.47 mm/s、6.12 mm 均值误差）结果"
+   },
+   {
+    "locator": "IV. EXPERIMENTS / C. Robustness on Complex 3D Trajectories",
+    "role": "results-or-analysis",
+    "purpose": "提取 11 条复杂 3D 轨迹的跟踪误差（<6.4 mm）与 NCC（>0.91）"
+   },
+   {
+    "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis",
+    "role": "results-or-analysis",
+    "purpose": "提取 Diffusion/DCL-Net 组件替换消融的延迟-频率-跟踪性能因果链（Table IV）"
+   },
+   {
+    "locator": "IV. EXPERIMENTS / E. Robustness to Out-of-Plane Rotational Disturbances",
+    "role": "results-or-analysis",
+    "purpose": "提取 Z 轴旋转扰动下的稳定性边界（15° 稳定/20° 失稳/25° 失败）及失效根因"
+   },
+   {
+    "locator": "IV. EXPERIMENTS / F. In-vivo Validation on Human Volunteers",
+    "role": "results-or-analysis",
+    "purpose": "提取人体前臂 >20 cm、27 s 在体扫描验证结果（终端 NCC 0.946）"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述局限（仅 3D 平移伺服，6-DoF 与更多人体研究留待未来）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "仅用于核对核心引用（Diffusion Policy、FlowPolicy），无综述所需证据"
+   }
+  ]
+ },
+ "research_question": "论文自问：如何通过感知与控制的协同设计（而非单组件提速）突破机器人超声动态跟踪的端到端延迟屏障，使闭环控制频率超过 60 Hz 超声帧率，从而在高频生理扰动下实现毫米级末端（探头）轨迹精度与大范围重捕获能力？",
+ "contributions": [
+  "提出以最小端到端延迟为原则的感知-控制协同 RUSS 框架：解耦双流感知网络 + 单步流策略，实现约 62 Hz（16.2 ms）闭环动态目标跟踪",
+  "解耦双流感知架构：几何流用代价体在低层特征上做面内（X/Z）稠密匹配，语义流在形变后的高层特征上推断平面外（Y）位移，配合 A-UKF（位置/速度/传感器偏差 9 维状态）输出平滑预测性状态，从 2D 图像高频估计 3D 平移状态并缓解平面外模糊这一病态问题",
+  "单步流匹配策略：一次前向生成 H=8 步期望速度指令序列（receding horizon 执行前 4 步），从结构上消除生成式策略迭代去噪的延迟瓶颈",
+  "样本高效 Sim-to-Real：CT 体积生成 2 万对仿真图像（视觉+超声物理参数域随机化）→1000 条仿真轨迹端到端预训练→仅 50 条真机专家轨迹微调（几何流冻结、微调语义流），快速收敛到物理仿真体"
+ ],
+ "method": {
+  "summary": "框架由三部分紧耦合组成：(1) 高频感知前端——解耦双流网络：几何流在低层特征图上以代价体 C(u,v,d)=⟨φg(Ig)u,v, φg(It)u+dx,v+dz⟩ 估计面内位移并据此形变特征图；语义流在形变后的高层语义特征上推断平面外位移 dy；通过特征缓存与目标图预计算保证吞吐；原始 3D 位移估计经自适应无迹卡尔曼滤波（A-UKF，状态 [p,v,b]∈R^9 含传感器偏差）平滑为预测性状态。(2) 单步流策略——以 k=8 步误差历史为状态，学习噪声分布到专家动作分布的 ODE 向量场，一次前向输出 H=8 步速度指令，receding horizon 执行前 h=4 步。(3) 三阶段 Sim-to-Real：2 万 CT 仿真图像对预训练视觉前端（亮度+超声物理参数域随机化）→1000 条仿真轨迹端到端预训练→50 条真机专家轨迹针对性微调（几何流大部分冻结，仅微调首尾层与语义流以防灾难性遗忘）。",
+  "assumptions": [
+   "任务目标可表达为与静态目标图像的 3D 平移误差最小化（目标图像固定且其特征可预计算）",
+   "超声平面外（Y 轴）运动可通过解剖形态学变化从 2D 序列推断（语义流监督信号可得）",
+   "目标运动以平移为主：Z 轴旋转限制在约 ±15° 内，X/Y 轴倾斜（会损害成像质量）被排除在范围外",
+   "60 Hz 图像流与 RTX 4080 级工作站算力可用（论文未讨论更低算力机载部署）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "CT 体积生成的 20,000 对仿真超声图像（视觉+超声物理域随机化）",
+   "1,000 条仿真跟踪轨迹（端到端预训练）",
+   "50 条物理仿真体上的专家轨迹（微调）",
+   "CIRS Model 057A 腹部活检仿真体（含肝/门静脉等临床相关结构，实验环境）"
+  ],
+  "tasks": [
+   "静态/准静态目标视图重定位（局部恢复 21.2 mm 位移；大尺度重定位 173.2 mm 位移）",
+   "高速动态目标跟踪（>100 mm/s）",
+   "11 条复杂 3D 轨迹跟踪（螺旋、椭圆螺旋、方波、8 条随机折线）",
+   "Z 轴旋转扰动鲁棒性测试（0°-25°）",
+   "在体：人志愿者前臂 >20 cm 自主扫描（27 s）"
+  ],
+  "embodiments": [
+   "UR3e 6-DoF 机械臂持 Mindray M8 超声机 C5-1s 凸阵探头做视觉伺服；无操作臂抓取任务",
+   "感知与控制在 RTX 4080 工作站（Ubuntu 20.04、ROS Noetic）上运行"
+  ],
+  "sample_or_scale": "仿真体实验：静态 2 项、高速动态 1 项、复杂轨迹 11 条、旋转扰动 6 档；在体 1 名志愿者单次 27 s 扫描；表格报告均值±标准差但未说明重复次数与随机种子"
+ },
+ "evaluation": {
+  "design": "五类协议：静态/大尺度重定位、高速动态跟踪、11 条复杂 3D 轨迹、Z 轴旋转扰动档位扫描（0-25°）、在体验证；另做两项组件替换消融（策略侧换 Diffusion Policy、感知侧换 DCL-Net）以暴露延迟与感知稳定性瓶颈",
+  "baselines": [
+   "Diffusion Policy（策略替换消融：Dual-stream + Diffusion）",
+   "DCL-Net（感知前端替换消融：DCL-Net + Flow，动态超声配准 SOTA）"
+  ],
+  "metrics": [
+   "终端定位误差（mm）与平均跟踪误差（mm）",
+   "图像相似度 NCC（平均/终端）",
+   "端到端延迟（ms）与控制频率（Hz）",
+   "最大可跟踪速度（mm/s）、速度误差（mm/s）"
+  ],
+  "ablations": [
+   "策略替换：Dual-stream + Diffusion（128.2 ms/8 Hz/30.98 mm/s/9.84 mm）vs Dual-stream + Flow（16.2 ms/62 Hz/102.47 mm/s/1.52 mm）",
+   "感知替换：DCL-Net + Flow（13.7 ms/73 Hz 但动态跟踪无法收敛，误差 6.508 mm）vs 本框架",
+   "旋转扰动档位扫描定义适用边界（15°/20°/25°）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "作者论证现有 RUSS 范式的延迟痛点：事件驱动 'Stop-Register-Resume' 策略 336 ms 配准延迟无法应对连续临床扰动；模型驱动伺服虽有 20 Hz 控制频率或亚毫米静态精度，但端到端收敛时间为秒级——组件级速度不转化为系统级敏捷，需要从架构层面为低延迟动态响应整体设计",
+   "scope": "相关工作综述论证（II 节 A 小节）",
+   "locator": "A. Robotic Ultrasound Systems: The System-Level Bottleneck for Dynamic Tracking"
+  },
+  {
+   "finding": "学习策略频率瓶颈定位：Diffusion Policy 依赖迭代去噪推理，控制频率被限制在 10-23 Hz，远低于超声 60 Hz 帧率，无法实时补偿生理运动；流匹配类策略单步推理可达约 50 Hz（近 7 倍提升），但快策略必须配快且稳的感知前端才有效",
+   "scope": "相关工作综述论证（II 节 B 小节）",
+   "locator": "B. Learning-based Control: The Quest for High-Frequency Policies and Robust Generalization"
+  },
+  {
+   "finding": "静态/大尺度重定位：局部恢复（21.2 mm 位移）与大尺度重定位（173.2 mm 位移）终端误差均约 1.52 mm（1.5148/1.5219 mm）、NCC>0.92，说明几何流处理大几何偏差、语义流保证目标处高保真对齐的解耦设计同时支撑大捕获范围与终端精度",
+   "scope": "CIRS 仿真体，Table I",
+   "locator": "IV. EXPERIMENTS / B. Baseline Performance Evaluation"
+  },
+  {
+   "finding": "高速动态跟踪：系统以 16.2 ms 端到端延迟实现约 62 Hz 闭环，跟踪 102.47 mm/s 运动目标时平均误差 6.124±0.386 mm、终端误差 1.629 mm、终端 NCC 0.9548；速度曲线紧贴高频指令且速度误差有界，证明高控制带宽",
+   "scope": "CIRS 仿真体高速跟踪实验，Table II 与 Fig. 6",
+   "locator": "IV. EXPERIMENTS / B. Baseline Performance Evaluation"
+  },
+  {
+   "finding": "11 条复杂 3D 轨迹（螺旋/椭圆螺旋/方波/随机折线）上平均跟踪误差 <6.4 mm（最大 6.357 mm）、平均 NCC>0.91（最小 0.9174），覆盖高曲率、突变加速度与随机扰动工况",
+   "scope": "CIRS 仿真体，Table III/Fig. 8",
+   "locator": "IV. EXPERIMENTS / C. Robustness on Complex 3D Trajectories"
+  },
+  {
+   "finding": "延迟-精度因果消融：把流策略换成 Diffusion Policy 后，延迟 16.2→128.2 ms、控制频率 62→8 Hz、最大可跟踪速度 102.47→30.98 mm/s、重定位误差 1.52→9.84 mm；把感知前端换成 DCL-Net（自身仅 14 ms、73 Hz）后动态跟踪完全无法收敛——组件快不等于系统稳，感知必须为策略提供稳定的状态估计，高性能是感知与控制紧耦合的涌现属性",
+   "scope": "高速动态跟踪任务组件替换消融，Table IV",
+   "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis"
+  },
+  {
+   "finding": "Z 轴旋转扰动边界：0-15° 稳定（15° 时误差 8.170±0.179 mm、NCC 0.937），20° 失稳（9.916 mm），25° 跟踪失败（NCC 0.696）；失效根因是感知网络的归纳偏置——把旋转引起的视觉剪切误读为平移运动，属可预期的感知模糊而非跟踪漂移",
+   "scope": "螺旋跟踪 + 旋转偏置实验，Table V",
+   "locator": "IV. EXPERIMENTS / E. Robustness to Out-of-Plane Rotational Disturbances"
+  },
+  {
+   "finding": "在体验证：1 名志愿者前臂上自主跟踪 >20 cm、完成 27 s 扫描，终端 NCC 0.946，在非刚性组织与生理运动下保持鲁棒，初步弥合仿真体到临床的差距",
+   "scope": "单志愿者在体实验",
+   "locator": "IV. EXPERIMENTS / F. In-vivo Validation on Human Volunteers"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "当前系统聚焦 3D 平移伺服，未来工作需扩展到完整 6-DoF 位姿控制，并在更多解剖区域开展更全面的人体研究以验证临床潜力",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "X/Y 轴倾斜（会降低超声成像质量）被明确排除在范围外；Z 轴旋转扰动下系统仅在 15° 内稳定，20° 失稳、25° 失败，失效根因是感知前端把视觉剪切解释为平移的归纳偏置",
+    "locator": "IV. EXPERIMENTS / E. Robustness to Out-of-Plane Rotational Disturbances"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "在体证据仅 1 名志愿者前臂单次 27 s 扫描，无多受试者/多解剖区域统计，临床有效性未建立",
+    "basis": "IV-F 仅报告单一终端 NCC 数值，无样本量与方差"
+   },
+   {
+    "boundary": "Diffusion Policy 消融变体的去噪步数、骨干与训练配置未报告，128.2 ms/8 Hz 未必代表其加速实现（如少步蒸馏）的最优水平，延迟对比结论对基线配置敏感",
+    "basis": "IV-D 仅给出推理时间与频率数字，无基线配置细节"
+   },
+   {
+    "boundary": "62 Hz 闭环依赖 RTX 4080 工作站与 60 Hz 超声帧率，未验证机载/低功耗平台；6.12 mm 均值/1.63 mm 终端误差等数值绑定 CIRS 腹部仿真体的成像条件与目标图像对齐任务",
+    "basis": "IV-A 实验设置与 III-A 问题形式化"
+   },
+   {
+    "boundary": "任务为'与静态目标图像对齐'的视觉伺服，不含接触力/柔顺控制与器械操作；向通用末端轨迹精度问题的外推需谨慎",
+    "basis": "III-A 问题形式化（最小化与静态目标图像的 3D 平移误差）"
+   }
+  ]
+ },
+ "transfer_boundary": "证据限定于超声视觉伺服场景（UR3e 持探头、目标图像对齐任务、RTX 4080 工作站、60 Hz 帧率）：'单步流策略+高频稳定感知协同突破推理延迟屏障'的机制可迁移到其他需要高带宽末端跟踪的场景，但 6.12 mm/102 mm/s 等数值与 15° 旋转稳定边界不可外推到通用操作、低算力机载平台或大旋转工况。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "用两个 SOTA 替换件（策略侧 Diffusion Policy、感知侧 DCL-Net）做系统级消融，分别隔离'策略推理延迟'与'感知状态稳定性'两类瓶颈，直接支撑协同设计论点",
+   "协议覆盖静态/动态/复杂轨迹/旋转扰动/在体五类场景，并给出明确失效边界（15°/20°/25°）与失效根因分析",
+   "末端位置误差（mm）与图像相似度（NCC）双指标，与任务目标（图像对齐+探头轨迹）直接对应"
+  ],
+  "design_risks": [
+   "表格给出±标准差但未说明重复次数与随机性来源，统计效力不明",
+   "Diffusion Policy 基线配置（去噪步数等）未报告，其 8 Hz 可能非最优代表，延迟对比对该配置敏感",
+   "在体实验 n=1 且仅前臂，全部实验单一仿真体（CIRS 057A）+单一志愿者",
+   "DCL-Net 本为配准设计而非伺服状态估计设计，其失败部分归因于任务错配而非纯'非协同设计'"
+  ],
+  "baseline_fairness": "消融以 SOTA 组件替换方式进行，设计意图明确；但 Diffusion Policy 的具体配置与是否做过多步加速优化未说明，128.2 ms/8 Hz 的对比结论对该配置敏感；DCL-Net 的角色解释（非协同设计导致不稳定）合理但需注意其原始任务与伺服状态估计的错配。",
+  "metric_validity": "终端/平均定位误差与 NCC 均直接度量任务目标，效度高；但'平均跟踪误差'的统计口径（全程均值 vs 稳态均值）未明确定义，速度误差仅在图中定性展示，无统一的轨迹误差范数定义。",
+  "reproducibility": "硬件平台、训练数据规模（20k/1000/50）与三阶段流程描述具体；但网络结构细节、损失权重、域随机化参数、A-UKF 超参与 Diffusion 基线配置在会议篇幅内不完整，未见代码发布声明，复现需自行补全。",
+  "external_validity": "单一超声场景+单一仿真体+单志愿者；核心机制（推理延迟→控制频率→可跟踪速度/精度上限的因果链）具有跨域解释力，但具体精度数值、60 Hz 门槛与 15° 旋转边界均为场景绑定；作者亦承认 6-DoF 与更多解剖区域验证缺失。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.00983-C01",
+   "claim": "论文论证（引用 Diffusion Policy 系工作）：Diffusion Policy 依赖迭代去噪推理造成根本性延迟瓶颈，控制频率被限制在 10-23 Hz，远低于超声探头 60 Hz 更新流，无法实时补偿生理运动——迭代式生成策略的推理延迟是高频末端跟踪的首要痛点。",
+   "stance": "limit",
+   "relation": "支撑综述中'推理延迟限制控制频率进而限制末端轨迹精度/动态跟踪能力'的核心痛点命题，为流匹配/单步推理方案族提供动机证据。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "相关工作在综述 Diffusion Policy 主导的模仿学习方法后明确指出其迭代去噪推理的延迟瓶颈与 10-23 Hz 频率上限，并强调任何低于 60 Hz 帧率的控制环无法响应每一帧新信息。",
+   "locator": "B. Learning-based Control: The Quest for High-Frequency Policies and Robust Generalization",
+   "source_context": "The state-of-the-art is dominated by Diffusion Policies [15], but their reliance on an iterative denoising process for inference imposes a fundamental latency bottle- neck. This limits their control frequency to 10-23 Hz [15], [16], a rate far below the 60 Hz update stream from the US probe, making real-time compensation of physiological motion impossible.",
+   "evidence_type": "analysis",
+   "quantitative": {
+    "metric": "控制频率（Diffusion Policy 类迭代生成策略）",
+    "value_or_direction": "10-23 Hz",
+    "comparator": "超声探头/图像采集 60 Hz 更新流",
+    "task_or_sample": "机器人超声动态跟踪（作者对 Diffusion Policy 系工作 [15][16] 的综述性量化）",
+    "locator": "B. Learning-based Control: The Quest for High-Frequency Policies and Robust Generalization"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "原文核验：卡片主张对应论文相关工作中对 Diffusion Policy 迭代去噪延迟与 10-23Hz 控制频率上限的转述；由于该数字依赖被引工作，置信度降为 citation-supported，与 claim_basis=cited-work 对齐。"
+   }
+  },
+  {
+   "card_id": "2511.00983-C02",
+   "claim": "在高速动态跟踪消融中，把本框架的单步流策略换成 Diffusion Policy 后，推理时间超 128 ms、控制频率降至约 8 Hz，最大可跟踪速度被压制到 31 mm/s，重定位误差增大到 9.84 mm——即推理延迟通过控制频率直接封顶末端可跟踪速度与精度。",
+   "stance": "support",
+   "relation": "支撑综述中'推理延迟→控制频率→末端跟踪速度/精度上限'的量化因果命题（同任务同感知下仅换策略的受控对比）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 消融在同一感知前端与同一动态跟踪任务上仅替换策略：Diffusion 变体 128.2 ms/8 Hz/30.98 mm/s/9.84 mm，本框架 16.2 ms/62 Hz/102.47 mm/s/1.52 mm（Table IV），正文明确将 31 mm/s 上限与 9.84 mm 误差归因于该延迟。",
+   "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis, Table IV",
+   "source_context": "First, the Diffusion Policy variant revealed a severe latency bottleneck. Its inference time of over 128 ms corresponds to a sluggish control frequency of only 8 Hz, fundamentally limiting its dynamic response. This latency not only capped its tracking speed at 31 mm/s but also resulting in a large repositioning error of 9.84 mm.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "端到端延迟 / 控制频率 / 最大可跟踪速度 / 重定位误差",
+    "value_or_direction": "Diffusion 变体：128.2 ms、约 8 Hz、30.98 mm/s、9.84 mm；本框架：16.2 ms、约 62 Hz、102.47 mm/s、1.52 mm",
+    "comparator": "Dual-stream + Diffusion vs Dual-stream + Flow（本框架），同一感知前端与任务",
+    "task_or_sample": "CIRS 动态仿真体高速跟踪任务（Table IV 消融）",
+    "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-D 正文（'over 128 ms'、'only 8 Hz'、'capped its tracking speed at 31 mm/s'、'9.84 mm'）与 Table IV 数值（128.2/8/30.98/9.84 vs 16.2/62/102.47/1.52）一致；主张限定在该消融设置内。"
+   }
+  },
+  {
+   "card_id": "2511.00983-C03",
+   "claim": "本框架以 16.2 ms 端到端延迟实现 62 Hz 闭环控制，据此支持 >100 mm/s 的动态跟踪与 <1.6 mm 的终端收敛精度；作者论证该高性能是感知与控制紧耦合协同的涌现属性，而非任何单组件的贡献。",
+   "stance": "support",
+   "relation": "支撑综述中'感知-控制协同的高频方案可同时获得高跟踪速度与毫米级终端精度'命题，并提供该方案族的量化效果锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 结尾的对比总结与 Table II：高速动态跟踪中最大跟踪速度 102.47 mm/s、平均误差 6.124±0.386 mm、终端误差 1.629 mm、终端 NCC 0.9548；正文将高带宽明确表述为动态跟踪与精确收敛的前提，并称协同集成为涌现属性。",
+   "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis, Table II/IV",
+   "source_context": "In stark contrast, our framework achieves a low 16.2 ms latency, enabling a 62 Hz control loop. This high bandwidth is the prerequisite for both its superior dynamic tracking (>100 mm/s) and its precise final convergence (<1.6 mm er- ror). These results demonstrate that high-performance robotic US is an emergent property that arises only from the tight, synergistic integration of perception and control.",
+   "evidence_type": "system-result",
+   "quantitative": {
+    "metric": "端到端延迟 / 闭环控制频率 / 动态跟踪速度 / 终端误差（含 Table II 平均跟踪误差）",
+    "value_or_direction": "16.2 ms、约 62 Hz、>100 mm/s（102.47 mm/s）、<1.6 mm（1.629 mm）；平均跟踪误差 6.124±0.386 mm",
+    "comparator": "相对 Diffusion 消融变体（8 Hz/31 mm/s/9.84 mm）与 60 Hz 超声帧率门槛",
+    "task_or_sample": "CIRS 动态仿真体高速跟踪（Table II）与组件消融（Table IV）",
+    "locator": "IV. EXPERIMENTS / B. Baseline Performance Evaluation, Table II; Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-D 对比段（16.2 ms/62 Hz/>100 mm/s/<1.6 mm）与 Table II（102.47/6.124±0.386/1.629/0.9548）、Table IV（Ours 行 16.2/62/102.47/1.52）数值一致；'涌现属性'表述为原话。"
+   }
+  },
+  {
+   "card_id": "2511.00983-C04",
+   "claim": "组件级速度不等于系统级敏捷：把感知前端换成计算上更快的 DCL-Net（自身仅 14 ms、系统 73 Hz），动态跟踪实验立即失稳无法收敛——因为其架构未与策略协同设计、无法提供策略所需的稳定状态估计；高频方案的适用条件是感知输出的稳定性而非单纯吞吐。",
+   "stance": "conditional",
+   "relation": "支撑综述中'高频方案的有效性取决于感知-控制协同/感知状态质量，而非单组件速度'的适用条件命题，同时是对'只堆组件速度'路线的限制证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-D 消融显示 DCL-Net + Flow 组合延迟 13.7 ms（73 Hz）反而高于本框架，但动态跟踪完全无法收敛（误差 6.508 mm）；作者把失败归因于感知架构未协同设计以提供稳定状态估计，II-A 亦给出'组件级速度不转化为系统级敏捷'的一般性论断。该节原文两段逐字：'Second, and more critically, the system with the DCL-Net front-end failed to converge in dynamic tracking experiment. While the DCL-Net module itself is computationally fast'（提取文本在此插入Fig.8图注与Table III后接）'(14 ms), its architecture is not co-designed to provide the stable state estimates required by the policy, leading to immediate instability.'；Table IV 行：'DCL-Net + Flow ≈ 13.7 73 Failed to Converge 6.508'。",
+   "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis, Table IV",
+   "source_context": "(14 ms), its architecture is not co-designed to provide the stable state estimates required by the policy, leading to immediate instability.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "端到端延迟 / 控制频率 / 动态跟踪收敛性 / 误差",
+    "value_or_direction": "DCL-Net + Flow：13.7 ms、73 Hz、无法收敛、误差 6.508 mm；本框架：16.2 ms、62 Hz、收敛、1.52 mm",
+    "comparator": "DCL-Net 感知前端 vs 解耦双流感知前端（同一流策略）",
+    "task_or_sample": "CIRS 动态仿真体高速跟踪任务（Table IV 消融）",
+    "locator": "IV. EXPERIMENTS / D. Ablation Studies and Comparative Analysis, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-D 正文两处：'the system with the DCL-Net front-end failed to converge in dynamic tracking experiment. While the DCL-Net module itself is computationally fast'与（提取文本中因插排Fig.8图注与Table III而隔开的续段）'(14 ms), its architecture is not co-designed to provide the stable state estimates required by the policy, leading to immediate instability.'——source_context取后者（因果核心句，含14 ms），前者与Table IV DCL-Net + Flow 行（≈13.7 ms/73 Hz/Failed to Converge/6.508）逐字记录于summary；结论限定在该消融组合内。"
+   }
+  },
+  {
+   "card_id": "2511.00983-C05",
+   "claim": "方案的适用边界：系统对未建模的 Z 轴旋转扰动仅在 15° 偏置内保持稳定（15° 时误差 8.170±0.179 mm、NCC 0.937），20° 出现控制失稳（9.916 mm），25° 跟踪失败（NCC 0.696）；失效根因是感知网络的归纳偏置——把旋转剪切误读为平移运动。",
+   "stance": "limit",
+   "relation": "支撑综述中'感知归纳偏置决定方案适用条件/未覆盖工况导致失效'的痛点命题：纯平移伺服方案在含旋转的真实扰动下存在明确失效边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-E 对螺旋跟踪施加 0-25° 旋转偏置扫描，Table V 给出各档误差/NCC/状态；作者将失效模式明确归因于感知前端训练时把视觉剪切解释为平移的归纳偏置，属可预期的感知模糊。",
+   "locator": "IV. EXPERIMENTS / E. Robustness to Out-of-Plane Rotational Disturbances, Table V",
+   "source_context": "The framework remains stable up to a 15° offset, maintaining high image similarity and minimal positional error. Beyond this threshold, performance degrades rapidly, with control instability at 20° and tracking failure at 25°. This failure mode stems directly from our perception front-end’s inductive bias: the network is trained to interpret visual shearing as translational motion.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "位置误差 / 平均 NCC / 稳定性状态（Z 轴旋转偏置下）",
+    "value_or_direction": "0°：4.212±0.088 mm、0.918、稳定；15°：8.170±0.179 mm、0.937、稳定；20°：9.916±0.183 mm、0.915、失稳；25°：失败（NCC 0.696）",
+    "comparator": "相对 0° 基线随旋转偏置增大退化；15° 为稳定阈值",
+    "task_or_sample": "CIRS 仿真体螺旋轨迹跟踪 + 0-25° Z 轴旋转偏置（Table V）",
+    "locator": "IV. EXPERIMENTS / E. Robustness to Out-of-Plane Rotational Disturbances, Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 IV-E 正文（'stable up to a 15° offset'、'instability at 20°'、'tracking failure at 25°'、'interpret visual shearing as translational motion'）与 Table V 各档数值（4.212/4.659/5.096/8.170/9.916/N/A 与 NCC 0.9181-0.6962）一致。"
+   }
+  },
+  {
+   "card_id": "2511.00983-C06",
+   "claim": "借助解耦感知架构的归纳偏置，Sim-to-Real 只需 50 条真机专家轨迹微调（几何流大部分冻结、集中于域敏感的语义流微调）即可弥合现实差距，避免灾难性遗忘——该高频方案的真机数据成本条件显著低于从零采集。",
+   "stance": "support",
+   "relation": "支撑综述中'方案的适用条件/数据成本'命题：感知-控制解耦结构（域不变几何流+域敏感语义流）是低样本真机迁移的关键使能设计。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-E 第三阶段明确：预训练模型仅用 50 条专家轨迹微调，冻结大部分域不变的几何流权重、集中微调域敏感的语义流，以针对性适配实现高效域迁移并防止灾难性遗忘；引言将其列为贡献（50 条轨迹快速收敛）。",
+   "locator": "III. METHODOLOGY / E. Sample-Efficient Sim-to-Real Transfer",
+   "source_context": "Finally, to bridge the ”reality gap,” the pre-trained model is fine-tuned on a minimal dataset of just 50 expert trajecto- ries. This stage leverages the inductive biases of our decou- pled architecture for maximum sample efficiency. We freeze most weights of the largely domain-invariant geometric stream and concentrate fine-tuning on the domain-sensitive semantic stream.",
+   "evidence_type": "author-judgment",
+   "quantitative": {
+    "metric": "Sim-to-Real真机微调所需expert trajectories数量",
+    "value_or_direction": "仅50条：pre-trained model fine-tuned on a minimal dataset of just 50 expert trajectories；前置20,000仿真图像对与1,000仿真轨迹预训练",
+    "comparator": "vs 大规模临床数据路径（large-scale clinical data依赖）；冻结geometric stream、微调semantic stream",
+    "task_or_sample": "CT 仿真预训练到 CIRS 物理仿真体的 Sim-to-Real 迁移",
+    "locator": "III. METHODOLOGY / E. Sample-Efficient Sim-to-Real Transfer"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 III-E Step 3 段落（'minimal dataset of just 50 expert trajectories'、'freeze most weights of the largely domain-invariant geometric stream'；注意原文跨行连字符为'decou- pled'与'trajecto- ries'，原卡误写'de- coupled'已按原文改正）与引言贡献三（'only 50 expert trajectories with rapid convergence'）一致；数据规模（20,000 image pairs/1,000 simulated tracking trajectories）出自同节 Step 1/2 原文。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2303.04137",
+  "2411.17832"
+ ],
+ "notes": "家族定位：'VLA 延迟与异步执行'族中'感知-控制协同提速'分支（骨干是流匹配策略+专用双流感知前端，而非 VLA 大模型）。对本综述的独特价值：提供最干净的'推理延迟→控制频率→末端跟踪速度/精度上限'受控消融（128.2 ms/8 Hz→31 mm/s/9.84 mm vs 16.2 ms/62 Hz→102 mm/s/1.52 mm），可直接作为延迟痛点的量化证据；另有'组件快≠系统稳'（DCL-Net 73 Hz 仍失稳）与'感知归纳偏置决定适用边界'（15° 旋转）两条边界证据。注意：域为超声伺服，末端指标为探头位姿误差（mm），与 Jetson-PI（机载异步+未来校正）、2606.25706（异步任务空间跟踪策略）互为补充。"
+}

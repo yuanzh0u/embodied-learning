@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2410.12822",
+    "title": "AVID: Adapting Video Diffusion Models to World Models",
+    "published": "2024-10-01",
+    "url": "https://arxiv.org/abs/2410.12822",
+    "authors": ["Marc Rigter", "Tarun Gupta", "Agrin Hilmkil", "Chao Ma"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向的能力演进、向世界模型转型的机制、评测与方法边界。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "该方法论文直接把预训练视频扩散模型适配为 action-conditioned 世界模型（无需参数访问），是 DiT/视频扩散向具身世界模型转移的证据。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "确立动作标注数据稀缺、以及无需参数访问地利用预训练视频扩散模型做世界模型的动机与问题。"},
+      {"locator": "3.3 Adapting Video Diffusion Models to World Models (AVID)", "role": "method-or-design", "purpose": "读 AVID 方法：learned mask 组合预训练噪声预测与 adapter 输出，优化去噪损失。"},
+      {"locator": "4.3 Results", "role": "results-or-analysis", "purpose": "RT1 与 Coinrun500k 定量/消融结果，与 ControlNet、从零训练等基线对比。"},
+      {"locator": "6 Discussion", "role": "conclusion-or-limitations", "purpose": "作者自述限制与结论。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "能否在不访问预训练视频扩散模型参数（仅访问噪声预测与 VAE 编解码输出）的前提下，把小样本 action-labelled 数据适配成 accurate 的 action-conditioned 世界模型？",
+  "contributions": [
+    "提出在不访问预训练模型参数情况下把视频扩散模型适配为 action-conditioned 世界模型的新设定与研究。",
+    "分析 Yang et al. 2024b 朴素 score 组合（Product of Experts）产生 biased samples 的根本原因。",
+    "提出 AVID：轻量 adapter + learned mask 组合预训练模型与 adapter 的去噪输出，以学习保真度与动作一致性。",
+    "在视频游戏（Coinrun）与真实机器人（RT1，预训练 DynamiCrafter 1.4B）上验证，公开代码。"
+  ],
+  "method": {
+    "summary": "AVID 假定只能对预训练图像到视频扩散模型做推理取得其去噪预测，不改其参数。训练一个 3D UNet adapter，输入为 noisy video、预训练模型输出、初始图像（逐通道拼接），条件为扩散步与动作序列（连续动作走线性层，离散走 embedding）。adapter 输出一个 sigmoid 界定的 mask 和自身噪声预测依据噪声水平在不同时间步拼接二者的输出，再以标准 unweighted denoising loss 训练 adapter。对应 latent diffusion 时则先把视频编码为 latent、用首帧 latent 作条件。",
+    "assumptions": [
+      "可对预训练模型做推理取得内部（去噪）中间输出；latent 情形还需访问 encoder/decoder。",
+      "域内 action-labelled 视频数据集充足、规模够小以高效训练 adapter。",
+      "预训练模型的背景/纹理先验可复用，仅动作相关区域需要 adapter 修正（mask 语义假设）。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["Coinrun (Procgen 视频游戏；100k/500k 等规模)", "RT-1 真实机器人操作数据集"],
+    "tasks": ["action-conditioned video prediction / 世界模型 rollout", "基于生成视频评估动作一致性（Action Error Ratio）、帧级质量（SSIM/LPIPS/PSNR）与整体分布（FVD/FID）"],
+    "embodiments": ["机器人操作（RT-1 arm）", "2D 平台视频游戏角色（Coinrun）"],
+    "sample_or_scale": "1024 条 held-out 测试视频；adapter 规模 11M–145M/22M–71M；预训练模型 DynamiCrafter 1.4B（RT1）"
+  },
+  "evaluation": {
+    "design": "以固定初始帧+动作序列生成 1024 条视频，对 ground truth 算 Action Error Ratio、FVD、FID、SSIM、PSNR、LPIPS，并做归一化平均；另做 mask 热图与动作 ab 类消融。",
+    "baselines": ["Action-Conditioned Finetuning", "Language-Conditioned Finetuning", "ControlNet / ControlNet Small", "Action-Conditioned Diffusion (从零)", "Classifier Guidance", "Product of Experts", "Action Classifier-Free Guidance", "Full Pretrained Base Model"],
+    "metrics": ["Action Error Ratio", "FVD (I3D)", "FID (InceptionV3)", "SSIM", "PSNR", "LPIPS (VGG)"],
+    "ablations": ["No Mask (NM)", "No Conditioning (NC，不接预训练输出)"]
+  },
+  "findings": [
+    {"finding": "AVID 在不访问预训练参数的前提下达到与需要权重的 ControlNet 相近或略优的整体性能；在 Coinrun500k 的 71M 规模取得最好 Action Error Ratio (1.154)。", "scope": "Coinrun500k 与 RT1 两个动作条件视频预测域内", "locator": "4.3 Results"},
+    {"finding": "AVID 在小模型规模下相对 from-scratch action-conditioned diffusion 更具优势（后者参数量减少时性能衰减更快）。", "scope": "Coinrun500k/RT1 可变参数规模实验", "locator": "4.3 Results"},
+    {"finding": "基于预训练输出的条件化（No Conditioning 消融）是 AVID 最关键组件；mask 在低噪声水平处更低，adapter 承担低频/物体位置信息。", "scope": "AVID 组件消融与 mask 时序分析", "locator": "4.3 Results"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "AVID adapter 针对特定预训练模型定制，不能被组合或复用到不同预训练模型。", "locator": "6 Discussion"},
+      {"limitation": "不需要参数但需要去噪中间输出（latent 时含 encoder/decoder 输出），许多 closed-source API 不提供。", "locator": "6 Discussion"},
+      {"limitation": "RT1 上从零训练的 action-conditioned diffusion 的 Action Error Ratio 最好（尽管视觉精度略低），若下游只关心动作一致性则从零训练可能是更优。", "locator": "6 Discussion"}
+    ],
+    "reader_inferred": [
+      {"boundary": "仅覆盖图像到视频扩散（DynamiCrafter），未验证与 DiT 主干视频扩散模型的确定性适配关系；对 latent DiT 的 mask 交互细节未做同尺度消融。", "basis": "方法章节以 3D UNet image-to-video adapter 为主，实验结果基于 DynamiCrafter 系列。"},
+      {"boundary": "世界模型价值通过帧级/动作一致指标 proxy，未在闭环 planning/Reward 下游做 RL 或规划评估。", "basis": "论文将 Downstream planning 列为 future work，实验仅限生成质量指标。"}
+    ]
+  },
+  "transfer_boundary": "AVID 的世界模型适配证据限于小规模、单一预训练图像到视频扩散模型（DynamiCrafter 1.4B）的两个视觉域（游戏、单臂机器人），不能直接外推到多智能体、具身多模态低层连续控制或大规模 DiT 视频生成主干，也未验证闭环决策收益。",
+  "critical_appraisal": {
+    "design_strengths": ["明确区分是否访问预训练参数的基线，fair comparison 到位", "含 from-scratch、CFG、PoE、ControlNet 等强基线", "消融（No Mask/No Conditioning）直接支撑设计关键组件"],
+    "design_risks": ["实验规模有限（2 个域、参数量小）；主要结果依赖 DynamiCrafter 预训练先验", "mask 语义依赖他观察到的背景/前景分离，可能不适用于动态复杂场景"],
+    "baseline_fairness": "合理；在 '模型访问' 与 '参数规模' 两个维度分层对齐，ControlNet Small 控制可训练参数量。",
+    "metric_validity": "作者论证帧级指标（SSIM/LPIPS/PSNR）比 FVD/FID 更适合动作一致目标；Action Error Ratio 是域内学到的分类器代理，需谨慎。",
+    "reproducibility": "公开代码与网页示例；训练时长（A100 3/7 天）与超参在附录给出。",
+    "external_validity": "仅两个游戏/机器人域和单预训练模型，外推到其他视频扩散主干/真实具身环境受限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2410.12822_C01",
+      "claim": "在 Coinrun500k 上，AVID（71M）在不访问预训练权重的所有方法中获得最佳 Action Error Ratio（1.154），整体表现与需要权重的 ControlNet 相当。",
+      "stance": "support",
+      "relation": "支持综述命题：视频扩散模型可在不暴露权重的受限访问下被适配为可行的 action-conditioned 世界模型。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "4.3 Results 的 Table 1 显示 Large AVID(71M) Action Err. Ratio 1.154，为列内 no-weight-access 方法最优；文本明言 71M 规模 AVID 对 ControlNet 多数指标第二、Action Error Ratio 最佳。",
+      "locator": "4.3 Results",
+      "source_context": "For the larger model size of 71M, AVID performs the second best for most metrics to ControlNet, but obtains the best performance for Action Error Ratio.",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Action Error Ratio",
+        "value_or_direction": "1.154 best among no-weight-access methods; 22M AVID best on all metrics",
+        "comparator": "ControlNet (weights-required) second-best on most metrics; Action-Conditioned Finetuning",
+        "task_or_sample": "Coinrun500k game-video action-conditioned world model (1024 held-out test videos)",
+        "locator": "4.3 Results (Table 1)"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "4.3 Results 全文包含 verbatim 'AVID performs the second best for most metrics to ControlNet, but obtains the best performance for Action Error Ratio' 以及 Table 1 行 'Large AVID (Ours) (71M) 1.154 ...'，精确蕴含动作误差优势；断言限定在 Coinrun500k 71M 规模，未夸大到 RT1 或全部指标。"
+      }
+    },
+    {
+      "card_id": "2410.12822_C02",
+      "claim": "AVID 虽免参数但需访问预训练模型去噪过程中的中间预测（latent 情形含 encoder/decoder 输出），这削弱其 closed-source '黑盒' 可移植性。",
+      "stance": "limit",
+      "relation": "限制综述命题：视频扩散到世界模型适配不需要权重，但若拒绝开放中间输出则受限；黑盒适配有残留假设。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 Discussion 明言需要 denoising 中间输出与 latent 的 encoder/decoder 输出，且许多 closed-source API 不提供。",
+      "locator": "6 Discussion",
+      "source_context": "AVID does not require access to pretrained model weights, but it does require access to intermediate predictions during denoising, including the outputs of the encoder and decoder in the case of latent diffusion.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "6 Discussion 全文含上述原句；该句是作者关于方法前提的直接陈述，作为限制证据成立，未声称指标对比。"
+      }
+    },
+    {
+      "card_id": "2410.12822_C03",
+      "claim": "AVID adapter 针对特定预训练模型定制，不能在不同预训练模型间复用之，限制了通用性。",
+      "stance": "limit",
+      "relation": "限制综述命题：adapter 型视频扩散-世界模型适配缺乏跨主干的可组合性。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在 Discussion 的 Limitations 直接声明 adapter 专属某一预训练模型，不能与其他模型组合。",
+      "locator": "6 Discussion",
+      "source_context": "AVID adapters are tailored to a specific pretrained model and therefore cannot be composed with different models.",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "6 Discussion 全文含该 verbatim 句（前接 'Limitations AVID adapters are tailored to...'），是作者自述限制。"
+      }
+    },
+    {
+      "card_id": "2410.12822_C04",
+      "claim": "在 RT1 上，从零训练的 action-conditioned diffusion 得到最佳 Action Error Ratio（尽管视觉质量更低），说明动作一致性优先时 from-scratch 也可取胜。",
+      "stance": "conditional",
+      "relation": "对综述命题给出条件边界：是否 choose adapter-adaptation vs from-scratch 取决于下游是否以动作一致性为重。",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "6 Discussion 作者报告 RT1 上 from-scratch 方法 Action Error Ratio 最佳但视频视觉精度略低，据此 weaser 在 action-consistency-priority 场景选 from-scratch。",
+      "locator": "6 Discussion",
+      "source_context": "In the RT1 domain we found that training an action-conditioned diffusion model from scratch resulted in the best Action Error Ratio, despite the videos being less visually accurate.",
+      "evidence_type": "experiment",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "6 Discussion 全文含该报告结果的 verbatim 句；作为条件性证据，结论依赖'some downstream applications, action consistency might be the most important'。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "方法偏 image-to-video UNet adapter 而非 DiT 主干；但作为 '视频扩散→action-conditioned 世界模型、无需权重' 的证据纳入 scoping。定量表无独立渲染、仅在文本中以行形式出现。"
+}

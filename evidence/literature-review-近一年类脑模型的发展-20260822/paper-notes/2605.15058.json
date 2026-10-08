@@ -1,0 +1,391 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2605.15058",
+  "title": "NeuroTrain: Surveying Local Learning Rules for Spiking Neural Networks with an Open Benchmarking Framework",
+  "published": "2026-05-14T16:50:15Z",
+  "url": "https://arxiv.org/abs/2605.15058",
+  "authors": [
+   "Alessio Caviglia",
+   "Filippo Marostica",
+   "Roberta Bardini",
+   "Alessandro Savino",
+   "Stefano Di Carlo"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "survey",
+  "relevance": {
+   "decision": "include",
+   "reason": "针对 SNN 训练算法(尤其局部学习规则)的分类学综述,并附 NeuroTrain 开源基准框架:直接回答综述问题中'局部学习规则与反向传播的差距、验证强度与边界'这一支线,是评估 SNN 训练路线证据质量的框架性参照。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题:SNN 训练算法激增但缺乏统一分类学与公平比较手段;局部性与性能存在权衡。"
+   },
+   {
+    "locator": "2.4 Local learning in SNNs",
+    "role": "relevant-core",
+    "purpose": "确认局部学习的定义边界:算法约束而非生物真实性声明。"
+   },
+   {
+    "locator": "4 Taxonomy",
+    "role": "method-or-design",
+    "purpose": "理解双分类学:按训练策略(转换/直训/优化)与学习范围(全局 vs 局部,再分空间/时间局部性)。"
+   },
+   {
+    "locator": "4.1 Taxonomy Categorization Axes",
+    "role": "method-or-design",
+    "purpose": "掌握分类轴定义(监督/无监督/强化、时空局部性、update locking)与六大循环机制(eligibility trace 等)。"
+   },
+   {
+    "locator": "4.2 Training Algorithms",
+    "role": "results-or-analysis",
+    "purpose": "核查直训主流(代理梯度 BPTT)的采用度判断与其非局部性限制。"
+   },
+   {
+    "locator": "4.2.1 Direct Training",
+    "role": "results-or-analysis",
+    "purpose": "梳理早期监督方法(SpikeProp/ReSuMe/SPAN 等)及其浅层与刚性时间码局限。"
+   },
+   {
+    "locator": "4.2.2 ANN-to-SNN Conversion",
+    "role": "results-or-analysis",
+    "purpose": "核查转换路线的精度/延迟证据与'学习与脉冲动力学解耦'的结构性边界。"
+   },
+   {
+    "locator": "5 NeuroTrain framework",
+    "role": "method-or-design",
+    "purpose": "理解框架三构件(dataloaders/models/trainers)与模块化、隔离化设计原则及 snnTorch 选型。"
+   },
+   {
+    "locator": "5.4 Benchmarking framework",
+    "role": "results-or-analysis",
+    "purpose": "核查基准协议(campaign/custom、Optuna、指标集)与快照实验设置(20 epochs、10 trials、约 850 GPU 小时)。"
+   },
+   {
+    "locator": "6 Conclusions and Future Challenges",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集开放挑战:可移植性、公平基准要素、算法-硬件评测收敛。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2 Background (2.1/2.2/2.3/2.5/2.6)",
+    "reason": "脉冲动力学与训练困难的基础背景,核心结论已从 2.4 与引言获得。"
+   },
+   {
+    "locator": "3 Related Work",
+    "reason": "既往综述逐一评述;'既有综述描述性、无标准化评测'的定位已从引言与 2.6 获得。"
+   },
+   {
+    "locator": "4.2.3 Optimization",
+    "reason": "进化/无梯度方法仅作分类学补充,其定位已从 4/4.1 轴定义获得。"
+   },
+   {
+    "locator": "5.1 Dataloaders / 5.2 Models / 5.3 Trainers",
+    "reason": "构件接口细节,基准协议与模型库范围已从 5.4 与图 4 说明获得。"
+   }
+  ]
+ },
+ "research_question": "SNN 训练算法(尤其局部学习规则)如何系统分类,其计算原理、学习信号与局部性属性如何刻画,以及在统一框架下如何对这些算法做可复现、可公平比较的基准评测?",
+ "contributions": [
+  "提出 SNN 训练算法的细粒度分类学:按训练策略(ANN-to-SNN 转换/直训/进化优化)、学习信号(监督/无监督/强化)与学习范围(全局 vs 局部,局部再分空间/时间)组织,并定义 update locking 等判据",
+  "发布 NeuroTrain:基于 snnTorch 的开源模块化基准框架,以 dataloaders/models/trainers 三抽象类解耦数据、结构与学习规则,支持 campaign(正交组合)与 custom 两种执行模式",
+  "集成 Optuna 超参优化与统一指标(训练/测试精度、损失、执行时间、每 epoch 时间、参数量、内存足迹、激活稀疏度),缓解'算法贡献与实验选择混淆'问题",
+  "给出路线级边界判断:代理梯度 BPTT 主流但非局部;转换路线精度高但与脉冲动力学解耦、无片上学习路径;训练规则跨数据集/架构可移植性有限"
+ ],
+ "method": {
+  "summary": "综述+基准框架双轨。综述部分以分类学组织文献:定义训练策略、监督类型、时空局部性三轴,并用六大循环机制(eligibility trace、三因子规则等)作为非排他性标注;对每类算法分析计算原理、学习信号与局部性。基准部分在 snnTorch 上实现代表性学习规则,通过正交组合 trainer×model×dataset 的 campaign 模式自动跑实验并汇总精度矩阵,配合 Optuna 调参以保证各算法在一致条件下评测。",
+  "assumptions": [
+   "统一环境下的标准化评测比各算法自带最优实现更能反映算法本质差异(作者承认可能低估个别算法的可达最佳性能)",
+   "局部性是连接生物合理性、硬件效率与可扩展性的核心组织原则,值得作为分类主轴"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "MNIST",
+   "F-MNIST",
+   "CIFAR-10",
+   "SVHN",
+   "N-MNIST",
+   "DVS Gesture",
+   "DVS CIFAR-10",
+   "SHD"
+  ],
+  "tasks": [
+   "静态与神经形态数据集上的图像/手势/语音分类(基准快照)",
+   "SNN 训练算法的文献分类学分析"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "综述覆盖直接训练(代理梯度 BPTT、局部/三因子规则、STDP 类可塑性)、ANN-to-SNN 转换与非标准优化;基准快照为小规模 FC/RC/Conv 网络(Eprop 退化为单隐层 512 单元 RNN),每实验 20 epochs、Optuna 10 trials"
+ },
+ "evaluation": {
+  "design": "基准协议:campaign 模式自动生成 trainer×model×dataset 正交实验并自动排除不兼容配置;custom 模式支持定向实验;Optuna 为每个算法调参以避免任意固定设置;结果以精度矩阵/热图汇总,不宣称最终排名",
+  "baselines": [
+   "代理梯度 BPTT(STBP 模板)及其实现在框架中的 trainer",
+   "ANN-to-SNN 转换(定位为上界参照基线)",
+   "局部/三因子学习规则实现(含 Eprop)"
+  ],
+  "metrics": [
+   "training accuracy / test accuracy / loss",
+   "total execution time / time per epoch",
+   "参数量、内存足迹、激活稀疏度"
+  ],
+  "ablations": [
+   "trainer-model-dataset 组合兼容性自动排除(N/S 条目)",
+   "Optuna 10 trials 超参搜索 vs 固定设置"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "既有 SNN 训练综述以描述性为主,方法散落在异构代码库中,难以做标准化并排评测,算法贡献与实验选择难以解耦;本文以'分类学+开放基准框架'双贡献回应",
+   "scope": "领域级判断",
+   "locator": "1 Introduction"
+  },
+  {
+   "finding": "局部性-性能权衡:局部性减少全局通信与内存压力、契合低功耗神经形态硬件与在线适应,但放宽局部性通常能在挑战性基准上提升训练性能",
+   "scope": "领域级判断",
+   "locator": "1 Introduction"
+  },
+  {
+   "finding": "STBP 式代理梯度 BPTT 已成为深度 SNN 研究中最广泛采用的训练模板;但梯度类方法在分类学意义上基本非局部(依赖全局误差传播与全时程展开)",
+   "scope": "直训路线",
+   "locator": "4.2 Training Algorithms"
+  },
+  {
+   "finding": "ANN-to-SNN 转换在静态视觉基准上历史精度最高、是部署大型预训练模型的最易途径,但学习与脉冲动力学解耦,无法利用时间编码、适配事件输入或片上学习,无设备端适应路径",
+   "scope": "转换路线",
+   "locator": "4.2.2 ANN-to-SNN Conversion"
+  },
+  {
+   "finding": "NeuroTrain 快照基准:8 个数据集×3 类架构(FC/RC/Conv),每实验 20 epochs、Optuna 10 trials,整场 campaign 约 850 GPU 小时;完整结果刻意留在 GitHub 活资源而非论文内",
+   "scope": "框架首发快照",
+   "locator": "5.4 Benchmarking framework"
+  },
+  {
+   "finding": "开放挑战:许多训练规则跨数据集与架构的可移植性有限,真实泛化性难以评估;公平基准还需处理超参优化、计算成本、内存、稀疏度与可扩展性,并需与硬件感知评测收敛",
+   "scope": "领域级判断",
+   "locator": "6 Conclusions and Future Challenges"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "标准化形式未必复现每个算法可达的绝对最佳性能——部分方法受益于定制实现、专用架构或精调实验设置",
+    "locator": "5.4 Benchmarking framework"
+   },
+   {
+    "limitation": "完整基准结果刻意不内嵌于论文,以 GitHub 活资源形式维护,论文只给快照",
+    "locator": "5.4 Benchmarking framework"
+   },
+   {
+    "limitation": "框架内的算法实现反映作者对原论文的解读,部分实现仍可被改进、精炼或扩展",
+    "locator": "5.4 Benchmarking framework"
+   },
+   {
+    "limitation": "许多训练规则跨数据集与架构的可移植性有限,难以评估其真实泛化性",
+    "locator": "6 Conclusions and Future Challenges"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "论文正文不含具体精度数字(结果在图 4 热图与 GitHub 仓库),且快照为 20 epochs 短训练、10 trials 有限超参搜索——不能把快照当作各学习规则的最终性能排名",
+    "basis": "5.4 节明示'These results are not intended to establish a definitive ranking of algorithms'"
+   },
+   {
+    "boundary": "基准架构为小规模 FC/RC/Conv(Eprop 甚至被替换为单隐层 512 单元 RNN),结论不能外推到深层大模型或 LLM 规模的 SNN 训练",
+    "basis": "图 4 说明明确 small-scale network models 与 Eprop 的架构替换"
+   },
+   {
+    "boundary": "局部性在该文中被定义为算法约束而非生物真实性声明,框架中'local'实现不能被解读为脑可塑性模型",
+    "basis": "2.4 节'principled algorithmic constraint rather than as a claim of strict biological realism'"
+   }
+  ]
+ },
+ "transfer_boundary": "本综述的判断适用于 SNN 训练算法分类学与中小规模基准协议;其基准快照(小规模网络、20 epochs、10 trials)不能外推为各算法在大规模模型、长训练或真实神经形态硬件上的排序,局部性-性能权衡亦未在十亿参数级脉冲大模型上验证;转换路线的'最高精度'结论限于静态视觉基准。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "分类学轴明确(策略/监督/局部性),可操作判据(update locking)使文献定位可复现",
+   "框架正交解耦 trainer/model/dataset,自动排除不兼容配置,并集成 Optuna 调参以提升公平性",
+   "对每条路线同时给出证据与结构性边界(转换无片上学习、梯度法非局部),不宣称普适最优"
+  ],
+  "design_risks": [
+   "论文内不提供具体精度数字,定量证据依赖外部 GitHub 资源,可审计性弱于随文表格",
+   "快照实验规模小(20 epochs、10 trials、小网络),统计功效不足以支撑算法间精细结论",
+   "以 snnTorch/LIF 单一基栈实现,可能系统性不利于依赖其他神经元模型或框架特性的算法"
+  ],
+  "baseline_fairness": "通过统一环境与 Optuna 调参提升公平性,但作者自认可能低估依赖定制实现的算法;转换路线被定位为上界参照而非平等竞争者",
+  "metric_validity": "指标覆盖精度、时间、内存与稀疏度,维度合理;但快照仅展示测试精度热图,能耗类指标缺席(留待硬件感知评测)",
+  "reproducibility": "框架与实现开源(GitHub),实验配置公开,可复现性强;但论文刻意不内嵌完整结果,复现需依赖仓库当前状态",
+  "external_validity": "结论限定 SNN 训练算法子领域;未覆盖脉冲大模型、器官智能与具身场景,硬件能效主张未经实测验证"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2605.15058-C01",
+   "claim": "该综述定位:既有 SNN 训练综述以描述性为主,方法散落在异构代码库(数据集、预处理、架构、优化细节与报告约定各异)中,无法提供标准化的并排评测;本文以'统一分类学综述+NeuroTrain 开源基准框架'双贡献填补该缺口。",
+   "stance": "support",
+   "relation": "为综述问题提供 SNN 训练支线的领域基础设施判断:算法数量激增但证据质量受制于异构评测,这正是评估各路线验证强度时必须折扣的因素。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言把'公平比较难'归因于异构代码库与实验约定,并把基准化列为核心贡献以区别于常规综述。",
+   "locator": "1 Introduction",
+   "source_context": "Existing surveys are primarily descriptive: they synthesize ideas and trends, but typically cannot provide standardized, side-by-side evaluations because methods live in heterogeneous codebases with differing datasets, preprocessing pipelines, architectures, optimization details, and reporting conventions",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对;紧随其后作者提出以基准化为关键贡献并配分类学,与卡片'双贡献填补缺口'的表述一致;该判断针对 SNN 训练算法综述领域,范围未超出。"
+   }
+  },
+  {
+   "card_id": "2605.15058-C02",
+   "claim": "局部性-性能权衡(条件性主张):局部学习规则减少全局通信与内存压力,契合低功耗神经形态硬件与在线适应;但在挑战性基准上,放宽局部性通常能提升训练性能——即局部规则的优势以基准精度为代价、以部署场景为条件。",
+   "stance": "conditional",
+   "relation": "直接回答综述问题中'局部学习规则与反向传播的差距':差距体现为基准精度损失,换取硬件契合与在线学习能力,而非无条件落后。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言以一句话给出局部性权衡的领域共识;2.5 节进一步从神经形态硬件架构约束论证局部规则的必然性。",
+   "locator": "1 Introduction",
+   "source_context": "Locality reduces global communication and memory pressure and aligns well with low-power neuromorphic hardware and online adaptation, yet relaxing locality often improves training performance on challenging benchmarks.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引言原句逐字核对,'yet relaxing locality often improves training performance'与'often'措辞保留了多数情况的限定;卡片将其转述为条件性主张而非恒定差距,与原文强度一致,适用范围为 SNN 训练文献的共识性判断。"
+   }
+  },
+  {
+   "card_id": "2605.15058-C03",
+   "claim": "STBP 式代理梯度 BPTT 管线已成为面向深度学习的 SNN 研究中最广泛采用的训练模板,因其可自然映射到现代自动微分框架并扩展到深层架构与大数据集。",
+   "stance": "support",
+   "relation": "刻画 SNN 直训路线的主流形态:类脑模型当前事实上的训练标准仍是代理化的反向传播而非纯局部规则,为综述的路线图谱提供基线定位。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.2 节在梳理 Lee/STBP/SuperSpike/SLAYER/EXODUS 谱系后给出'最广泛采用模板'判断,并指出其可扩展性来源。",
+   "locator": "4.2 Training Algorithms",
+   "source_context": "the STBP -style surrogate-gradient BPTT pipeline has arguably become the most widely adopted template in deep-learning-oriented SNN research, largely because it maps naturally onto modern autodiff frameworks and scales to deep architectures and large datasets.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 4.2 节;原文含'arguably'的弱化限定,卡片以'已成为最广泛采用的模板'表述并保留'因其可映射自动微分框架'的因果,判断范围限定面向深度学习的 SNN 研究而非全部 SNN 工作。"
+   }
+  },
+  {
+   "card_id": "2605.15058-C04",
+   "claim": "边界:尽管代理梯度训练成功扩展了 SNN 规模,该类梯度方法在所提分类学意义上基本非局部——空间上依赖全局误差传播,时间上需展开完整模拟时程并存储中间状态,因此在线学习在内存受限的神经形态硬件上仍是核心挑战。",
+   "stance": "limit",
+   "relation": "为综述问题标出主流 SNN 训练路线的边界:代理梯度 BPTT 的精度优势建立在非局部计算上,与神经形态在线学习目标存在结构冲突。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.2 节结尾明确'fundamentally non-local',并给出 BPTT 内存足迹与更新锁定到序列末端的具体机制。",
+   "locator": "4.2 Training Algorithms",
+   "source_context": "Despite these successes, most of these gradient-based methods share a common limitation regarding the proposed taxonomy: they are fundamentally non-local",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 4.2 节;空间/时间两维的非局部机制出自同节紧随句(rely on global error propagation; unrolling dynamics over the full simulation horizon and storing intermediate states),卡片边界表述与原文一致。"
+   }
+  },
+  {
+   "card_id": "2605.15058-C05",
+   "claim": "边界:ANN-to-SNN 转换路线虽然借成熟 ANN 工具链在静态视觉基准上取得历史最高精度、也是部署大型预训练模型的最易途径,但它把学习与脉冲动力学解耦——网络从不基于脉冲表示训练,因而限制时间编码利用、事件驱动输入适配与片上学习,且没有通往设备端自适应的路径。",
+   "stance": "limit",
+   "relation": "为综述问题界定转换式脉冲模型(如转换式脉冲大模型)的能力边界:精度证据强但'类脑'含量低,不覆盖在线/片上学习场景。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.2.2 节先承认转换路线的精度与部署优势,再给出结构性限制并说明本文将其作为上界参照基线处理。",
+   "locator": "4.2.2 ANN-to-SNN Conversion",
+   "source_context": "Conversion inherently decouples learning from spiking dynamics: the network never trains on spike-based representations, limiting its ability to exploit temporal coding, adapt to event-driven inputs, or perform on-chip learning.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 4.2.2 节;'历史最高精度与最易部署途径'出自同节开头'it has historically achieved some of the highest accuracy on static vision benchmarks. It remains the most accessible route to deploying large pretrained models';'无设备端适应路径'出自同节'conversion offers no path toward on-device adaptation',三处共同支撑卡片表述。"
+   }
+  },
+  {
+   "card_id": "2605.15058-C06",
+   "claim": "NeuroTrain 首发基准快照:在 8 个数据集(MNIST、F-MNIST、CIFAR-10、SVHN、N-MNIST、DVS Gesture、DVS CIFAR-10、SHD)上对可用 trainer 与 FC/RC/Conv 三类小规模架构做正交 campaign,每实验 20 epochs、Optuna 10 trials,整场约 850 GPU 小时;作者明确该快照不用于确立算法最终排名,完整结果以 GitHub 活资源维护。",
+   "stance": "support",
+   "relation": "给出 SNN 训练规则统一基准的验证强度标尺:协议统一但规模小、时长短,属于'基础设施落地'而非'算法定论'级别的证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.4 节与图 4 说明给出快照实验设置、GPU 预算与数据集/架构覆盖,并声明结果不构成最终排名。",
+   "locator": "5.4 Benchmarking framework",
+   "source_context": "Each experiment was run for 20 epochs, and hyperparameter exploration was performed using Optuna with 10 trials per experiment for a total of about 850 GPU hours.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "GPU hours and epochs and Optuna trials",
+    "value_or_direction": "about 850 GPU hours; 20 epochs; 10 trials per experiment",
+    "comparator": "benchmarking campaign across trainers, models, and datasets",
+    "task_or_sample": "MNIST, F-MNIST, CIFAR-10, SVHN, N-MNIST, DVS Gesture, DVS CIFAR-10, SHD",
+    "locator": "5.4 Benchmarking framework"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字核对位于 5.4 节图 4 说明;数据集清单与小规模架构限定出自同节正文与图 4 说明,'not intended to establish a definitive ranking'亦为同节原句;数字 20/10/850 与原文一致,卡片保留'快照、不定论'的适用范围限定。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "snnTorch"
+  },
+  {
+   "title": "NeuroBench"
+  },
+  {
+   "title": "Spatio-Temporal Back-Propagation (STBP)"
+  },
+  {
+   "title": "SLAYER"
+  },
+  {
+   "title": "EXODUS"
+  },
+  {
+   "title": "SuperSpike"
+  },
+  {
+   "title": "SpikeProp"
+  },
+  {
+   "title": "ReSuMe"
+  },
+  {
+   "title": "Quantization Clip-Floor-Shift (QCFS) activation"
+  },
+  {
+   "title": "Spiking-YOLO"
+  }
+ ],
+ "notes": "都灵理工大学(Politecnico di Torino)团队,框架开源在 github.com/smilies-polito/neurotrain,基于 snnTorch;与 NeuroBench/Tonic 生态互补(不另立数据集)。作者声明使用生成式 AI 辅助语言润色与文献初筛并经人工核验。对本综述的价值:提供 SNN 训练算法分类学与'局部规则 vs BP 差距'的框架化定位,可与 2511.04455(神经科学视角)及 2604.16475(转换式脉冲 LLM)互为对照。"
+}

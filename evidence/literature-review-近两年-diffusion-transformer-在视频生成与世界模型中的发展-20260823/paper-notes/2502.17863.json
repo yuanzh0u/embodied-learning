@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2502.17863",
+    "title": "A Survey: Spatiotemporal Consistency in Video Generation",
+    "published": "2025-02-25",
+    "url": "https://arxiv.org/abs/2502.17863",
+    "authors": ["Zhiyu Yin", "Kehai Chen", "Xuefeng Bai", "Ruili Jiang", "Juntao Li", "Hongdong Li", "Jin Liu", "Yang Xiang", "Jun Yu", "Min Zhang"]
+  },
+  "review": {
+    "question": "近两年 Diffusion Transformer 在视频生成与世界模型方向：测评如何衡量时空一致性，有哪些一致性维度与评测指标/基准，以及领域公认的未解决问题（长时一致性/时空记忆/长上下文），用于综述的 '评测与基准（EA-EVAL）' 与 '一致性限制' 命题。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "survey",
+    "relevance": {
+      "decision": "include",
+      "reason": "系统综述把视频生成分解为高维时空分布序列采样，界定空间一致性与时间一致性维度并提供一致性问题分类（Table 1）；梳理评测基准与指标、未来挑战，是 '评测维度/空间-时间一致性' 的系统梳理，用于 scoping 综述的评测与基准与一致性限制叙事。"
+    },
+    "sections_read": [
+      {"locator": "1. Introduction", "role": "problem", "purpose": "确立综述问题：把视频生成定义为高维时空分布序列采样，界定 Spatial/Temporal Consistency，提供 Table 1 一致性维度分类（主体身份/场景布局/光照风格/颜色纹理/静态语义 与 运动平滑/时序动态/闪烁抑制/动态语义）。"},
+      {"locator": "7. Benchmarks and Evaluation Metrics", "role": "method-or-design", "purpose": "1 节评测基准：Temporal 动力学类（ChronoMagic-Bench/T2VBench/MiraBench/DEVIL）与 Spatial 类基准对时空一致性/运动自然的评测。"},
+      {"locator": "7.2. Evaluation Metrics", "role": "results-or-analysis", "purpose": "评测指标三类：frame quality（PSNR/SSIM/IS/FID/Aesthetic）、video smoothness（时间一致性/运动合理）、overall video assessment；说明指标分工。"},
+      {"locator": "8. Future Directions and Challenges", "role": "conclusion-or-limitations", "purpose": "未来方向/challenges：长视频生成在长程时空一致性、动态建模与时空记忆、计算/训练稳定/推理效率上的缺口。"},
+      {"locator": "9. Conclusions", "role": "conclusion-or-limitations", "purpose": "结论点：高效时空特征表示有利、框架/训练需同时兼顾时空一致、视频生成向更复杂精细方向发展（机会+挑战）。"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "如何从高维时空分布序列采样的视角界定、分类并评测视频生成中的空间-时间一致性，其系统性评测维度/指标与公认的未解决问题有哪些？",
+  "contributions": [
+    "以'高维时空分布序列采样'重构视频生成问题并界定空间一致性（主体身份/场景布局/光照风格/颜色纹理/静态语义稳定）与时间一致性（运动平滑/时序动态/闪烁抑制/动态语义），并提供 Table 1 一致性问题分类。",
+    "按 Generation Models/Feature Representations/Generation Frameworks/Post-processing/Training/Benchmarks-Eval 系统梳理近年工作对时空一致性的贡献。",
+    "总结未来方向与挑战：长视频生成的长期一致性、动态建模与时空记忆、计算/训练稳定性/推理效率，以及高标注成本等障碍（作者综述视角）。"
+  ],
+  "method": {
+    "summary": "综述。把视频生成视为从隐式高维时空概率分布中采样并时序连接各时空单元；空间一致性=分布内任意两点语义/视觉属性兼容（主体身份、场景布局、光照风格、颜色纹理、静态语义），时间一致性=相邻单元平滑演化（运动符合物理、无跳变/闪烁），并将时间一致性表述为序列生成的转移概率建模（条件分布）；随后按模型/特征/框架/后处理/训练/评测分类归纳文献，并给出未来挑战。",
+    "assumptions": [
+      "视频可抽象为高维时空分布中按序采样得到的单元序列，时空一致性由此界定（作者框架/position，非实测）。",
+      "时空一致性可分解为类别的空间维度与时序维度，各维度可相对独立讨论。",
+      "评测维度/指标（帧质量/平滑度/整体）可作为生成模型时空一致性的可量化代理（作者综述性共识框架）。"
+    ]
+  },
+  "study_context": {
+    "datasets": ["综述引述的评测基准：ChronoMagic-Bench、T2VBench（时间一致性/逻辑）", "MiraBench、DEVIL（运动自然度数据集）", "VBench 类长视频基准（其在 7.1 提及的时序/空间基准）"],
+    "tasks": ["文本到视频（T2V）时空一致性评测", "视频生成的评测指标分类（帧质量/平滑度/整体评估）", "长视频生成与一致性挑战分析"],
+    "embodiments": ["无实体/机器人；综述评测本体为通用视频生成（含 T2V/长视频），不涉及 action-conditioned 具身，仅时空一致性叙述。"],
+    "sample_or_scale": "no empirical scale；纯文献综述（qualitative/position）。"
+  },
+  "evaluation": {
+    "design": "综述（classification+future-challenges），非实测。评测部分按 '时间动力学' 与 '空间' 两类基准，以及帧质量/视频平滑/整体三类指标梳理。",
+    "baselines": [],
+    "metrics": ["帧质量：PSNR, SSIM, IS, FID, Aesthetic Score", "视频平滑/时间一致性：运动平滑/时序一致性类指标", "整体视频评估"],
+    "ablations": []
+  },
+  "findings": [
+    {"finding": "综述把时空一致性划分为空间维度（主体身份、场景布局、光照与风格、颜色与纹理、静态语义）与时序维度（运动平滑、时序动态连贯、闪烁抑制、动态语义），并给出常见问题列表（Table 1）。", "scope": "survey crystallization（作者框架）", "locator": "1. Introduction (Table 1)"},
+    {"finding": "评测分为帧质量评估（像素/语义级、PSSR/SSIM/IS/FID/Aesthetic）与视频平滑/整体评估，用于分别量化静态空间一致性、时序一致性与整体连贯；时间动力学基准如 ChronoMagic-Bench/T2VBench 关注时序逻辑与运动自然。", "scope": "survey classification", "locator": "7. Benchmarks and Evaluation Metrics / 7.2. Evaluation Metrics"},
+    {"finding": "综述认定的核心未解决问题：长视频生成在跨越数千帧/多场景时难以保持长程时空一致性，缺失动态建模与时空记忆能力，并面临高维联合分布建模的计算/训练稳定性/推理效率挑战。", "scope": "survey position（作者对领域共识的概括）", "locator": "8. Future Directions and Challenges"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "综述自明 'spatiotemporal consistency' 为抽象概念、难以直接阐述，故采用分布-采样重构来理解它（此处即承认概念界定本身是开放/需要重构的）。", "locator": "1. Introduction"},
+      {"limitation": "作者结论称视频生成是向更复杂/精细化发展，会持续涌现新机会与挑战（对自己的综述范围持未竟/演进立场，未提出量化的评测终局）。", "locator": "9. Conclusions"}
+    ],
+    "reader_inferred": [
+      {"boundary": "综述为 qualitative 分类/position，其时空一致性分类与未来挑战是作者的框架性概括，不具备实测数据基础，也未被用于评测任意具体模型；作为 '领域缺口' position/citation-supported 证据使用。", "basis": "综述无实验结果、baselines 空；以文献归纳与框架陈述为主。"},
+      {"boundary": "未被及 Diffusion Transformer 特有指标或世界模型/action-conditioned 一致性的指标设计，亦不含物理一致性/具身一致性专门维度，故对综述命题的适用限在通用视频生成时空一致性的评测分类。", "basis": "评测与挑战章节聚焦长视频与通用 T2V；未涉世界模型/动作空间。"},
+      {"boundary": "对『评测维度是否是当前该领域公认的完整集合』需谨慎：综述给出分类但未佐证其完备性或收敛性。", "basis": "Table 1 为作者整理的一览表（含常见问题），非经过全面 meta 分析验证的完备清单。"}
+    ]
+  },
+  "transfer_boundary": "本综述证据域为通用视频生成（文本/参考条件、短视频多短片段）时空一致性的分类与评测综述，非实测、无 DiT 专属或世界模型/动作条件评测证据。其对综述命题 '评测维度/基准' 的支持是定性框架（position/citation-supported）：时空一致性的空间/时序维度分类、帧质量/平滑/整体三类指标、以及长视频长期一致性+时空记忆+计算效率的 gap 判断。这些作为 '领域共识/缺口' 引述，不作负变实测数值；不延伸至具身物理一致性或世界模型评测。",
+  "critical_appraisal": {
+    "design_strengths": ["用 '时空分布序列采样' 给出更结构化的概念重构并给出可讨论的一致性维度分类（Table 1）", "覆盖从模型/特征/框架/后处理/训练到评测的完整链条", "评测指标按帧质量/平滑/整体三层分类，便于对接具体评测工作"],
+    "design_risks": ["纯质性综述，无统一 meta-analysis 或实测数值支持其分类/结论", "一致性维度/评测指标清单的完备性与选收录入标准未透明说明", "以 '长视频生成' 为未来方向但未讨论 DiT/世界模型专属评测与物理一致性"],
+    "baseline_fairness": "不涉及模型对比（综述非 benchmark），无从评 baseline 公平性。",
+    "metric_validity": "以 PSNR/SSIM/IS/FID/Aesthetic（帧质）与平滑/整体指标作为时空一致性代理，贴近主观一致性但均为概括性、未评估其与人类一致性的相关系数。",
+    "reproducibility": "综述可复现（引文/表列出相关文献）；非实验故无实验复现议题。",
+    "external_validity": "作为综述 '时空一致性评测维度/指标分类及长时一致性缺口' 的定性框架证据；对实测性能/具身物理一致性的外部价值有限。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2502.17863_C01",
+      "claim": "综述以 '时空分布序列采样' 界定：空间一致性=分布内任意两点语义/视觉属性兼容（主体身份、场景布局、光照风格、颜色纹理、静态语义等），时间一致性=相邻样本平滑演化（表1 再细分为运动平滑/时序动态/闪烁抑制/动态语义）；时间一致性本质是序列生成的转移概率建模问题。",
+      "stance": "support",
+      "relation": "支撑综述命题：为 '时空一致性评测维度' 提供可操作的品味分解（空间 vs 时间轴及其子维度），是 EA-EVAL/一致性框架的系统梳理证据（position）。",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "1. Introduction 明确定义 Spatial/Temporal Consistency 并配 Table 1 维度分类与常见问题；作者视此为综述的核心贡献（'reformulating the problem from the perspective of sequence sampling'）。",
+      "locator": "1. Introduction",
+      "source_context": "Spatial Consistency is defined as the compatibility between any two sample points in the distribution regarding semantic and visual attributes, including stability in subject identity, scene layout, lighting style, and so forth. Temporal Consistency further requires smooth evolutionary transitions between adjacent samples in the sequence.",
+      "evidence_type": "survey",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "1. Introduction 全文含该 verbatim 两句，且配 Table 1 完整列出空间（subject identity/scene layout/lighting&style/color&texture/static semantic）与时序（motion smoothness/coherent dynamics/flicker suppression/dynamic semantic）子维度与常见问题；作为作者一致性分类框架（position），非实测。"
+      }
+    },
+    {
+      "card_id": "2502.17863_C02",
+      "claim": "综述将视频生成评测指标分为三大类：帧质量评估（像素/语义级，如 PSNR/SSIM/IS/FID/Aesthetic）、视频平滑评估（时间一致性/运动合理）、整体视频评估；并指出时间动力学类基准（ChronoMagic-Bench/T2VBench、MiraBench/DEVIL）专门用于评估时序一致性/逻辑与运动自然度。",
+      "stance": "support",
+      "relation": "支撑综述关于 '评测与基准' 命题：提供时空一致性可量化评测的指标分类与代表性基准的梳理（EA-EVAL 框架证据，position/cited-work 混合）。",
+      "confidence": "citation-supported",
+      "claim_basis": "cited-work",
+      "summary": "综述在其评测章节显著整理了三类指标与时间/空间基准，作为其系统综述的归纳而非自身实验；用时序动力学基准强调时间一致性/逻辑与运动自然。",
+      "locator": "7.2. Evaluation Metrics",
+      "source_context": "Frame quality assessment focuses on the consistency of static spatial elements within individual frames.",
+      "evidence_type": "survey",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "7.2 Evaluation Metrics 全文含该 verbatim 句，该节同时列出 PSNR/SSIM/IS/FID/Aesthetic（帧质量）与 ‘video smoothness/broadly to assess temporal consistency and the rationality of motion’，以及 overall video assessment 三类；7.1 给出 ChronoMagic-Bench/T2VBench/MiraBench/DEVIL 时序基准。作综述性归纳而非实测。"
+      }
+    },
+    {
+      "card_id": "2502.17863_C03",
+      "claim": "综述把 '长视频生成的长程时空一致性' 列为核心未解决问题：跨数千帧/多场景时难以同时保持主体身份/物体属性/环境状态统一，现有模型缺乏动态建模与时空记忆，且高维联合分布建模带来计算/训练稳定/推理效率挑战；是领域公认缺口（gover）。",
+      "stance": "gap",
+      "relation": "支撑综述关于 '向世界模型/长时一致性转型的未解决缺口' 命题：长程一致性与时空记忆现状不足，与国优化为世界模型/长上下文结合缓存方案（如本 run 中 FAST-AR/SANA-WM）形成互补叙事（position）。",
+      "confidence": "citation-supported",
+      "claim_basis": "cited-work",
+      "summary": "8. Future Directions 将该缺口归因于领域发展（演进至长视频/更复杂方向），概述对长时间一致的建模/记忆/计算瓶颈，作为其综述对领域趋势的概括而非自身实验（position）。",
+      "locator": "8. Future Directions and Challenges",
+      "source_context": "Existing generation models typically struggle to effectively capture such long-range dependencies, lacking the dynamic modeling and spatiotemporal memory capabilities required for complex and extended-duration relationships.",
+      "evidence_type": "survey",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "8. Future Directions and Challenges 全文含该 verbatim 句，同段还称长视频 'extend beyond frame-by-frame continuity to achieving long-range spatiotemporal consistency' 并列出计算/训练稳定/推理效率障碍；作综述（position/cited-work）对领域共识缺口的概括，非实测数值。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "综述（survey/position）。核心价值是其时空一致性维度分类（空间5+时序4 子维度，Table 1）、三类评测指标、以及长视频长期一致性+时空记忆+计算效率的缺口判断。证据类型 survey；定量卡不适用；共识/缺口以 citation-supported 置信表示，作者对问题的重构/框架以 author-claim（position）处理；不推断机构归属。"
+}

@@ -241,6 +241,7 @@ class VisualizeKbIndexTest(unittest.TestCase):
         self.assertIn('id="tree-wrap"', doc)
         self.assertIn('id="pane-body"', doc)
         self.assertIn("BACKLINKS", doc)
+        self.assertIn('<meta name="robots" content="noindex,follow">', doc)
 
     def test_end_to_end_writes_html_without_opening_browser(self) -> None:
         import subprocess

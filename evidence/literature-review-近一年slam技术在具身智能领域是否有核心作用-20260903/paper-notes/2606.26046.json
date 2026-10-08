@@ -1,0 +1,414 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.26046",
+  "title": "RoboAtlas: Contextual Active SLAM",
+  "published": "2026-06-24",
+  "url": "https://arxiv.org/abs/2606.26046",
+  "authors": [
+   "Alexander Schperberg",
+   "Shivam K. Panda",
+   "Abraham P. Vinod",
+   "M. K. Jawed",
+   "Stefano Di Cairano"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-VLOC"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-VLOC 论文，综述问题中'SLAM 系统自身演化'轴的第三种形态——主动 SLAM（Active SLAM）：把 LLM/VLM 基础模型作为可调度的'专家'嵌入 SLAM 探索决策环（上下文多臂老虎机在 frontier 几何探索/语义地图/egocentric VLM 三专家间在线选择），而非用端到端模型替代 SLAM。对综述问题提供四向关键证据：(1) 摘要级主张'把基础模型接地到大尺度 3D 语义地图上'而非替换底层模型，且 7B 骨干胜过 GPT-4o 基线被作者归因于语义建图框架而非骨干容量；(2) 作者论证零样本 VLM 导航路线缺全局一致度量地图、度量一致性是可靠导航的前提；(3) 真实硬件栈以经典 SLAM 工具链（SLAM Toolbox 定位+栅格建图、Nav2 规划）为底座；(4) 消融显示语义推理（基础模型专家）在无先行几何探索时欠约束——但 GOAT-Bench 头条数字在 Habitat 真值位姿下取得（SLAM 定位被绕过），构成证据强度边界。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1, Abstract 与 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定位：Active SLAM 统一感知与规划实现自主导航；现有探索管线绑定低保真几何表征与启发式目标，无法支撑语义搜索/库存追踪等高级推理；零样本基础模型策略忽略定位可靠性等平台约束"
+   },
+   {
+    "locator": "page 2-4, Section II Related Work（A 零样本 VLM/LLM 导航、B 开放词汇语义建图、C 学习型语义探索）",
+    "role": "relevant-core",
+    "purpose": "定位本文谱系与差异化主张：VLFM/ASCENT/DyNaVLM 等依赖图像感知与拓扑表征、不维护全局一致度量地图；OpenVox 假设理想定位与无限 GPU；3D-Mem/ReEXplore/HIMM 等记忆增强探索需固定策略或额外训练——RoboAtlas 以'实时 Active SLAM 管线 + 实例级 3D 语义地图 + 免训练 bandit'切入"
+   },
+   {
+    "locator": "page 4-6, Section III Contextual Active SLAM（问题陈述、OpenRoboVox、三专家混合）",
+    "role": "method-or-design",
+    "purpose": "理解问题形式化：语言指令 L_T 下的自适应目标选择（contextual goal-selection），三专家 E_Frontier/E_SemanticMap/E_EgoVLM 各输出候选目标，LiDAR OctoMap 投影占据栅格、SLAM Toolbox 提供定位"
+   },
+   {
+    "locator": "page 6-11, Section IV Implementation（CMAB/LinUCB、OpenRoboVox 三项工程改造、2D Pillar Map 与相似度场、frontier/语义地图/egocentric VLM 目标选择）",
+    "role": "method-or-design",
+    "purpose": "理解决策机制（上下文向量、奖励 Eq.5、Disjoint LinUCB）、物理部署三项改造（Scene-Dictionary 增量管理、分块体素迁移防 OOM、15Hz/5Hz 异步并行）与三专家的提示词接口"
+   },
+   {
+    "locator": "page 11-17, Section V Experiments（A 三平台设置、B OpenRoboVox 压力测试/CMAB 验证/硬件验证、C GOAT-Bench 基线对比；Table I-VIII、Fig. 3-9）",
+    "role": "results-or-analysis",
+    "purpose": "核对四组量化结果：1800 m² 硬件建图与 6 指令 100% 成功率、单专家 vs CMAB 消融（未探索/已探索）、GOAT-Bench Val Unseen 90.6%/88.8% SR 与逐模态分解、CMAB 动作分配与奖励分量分析"
+   },
+   {
+    "locator": "page 17-18, Section VI Discussion and Limitations 与 Section VII Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取四条作者自述局限（语义地图质量依赖、LLM/VLM 延迟与网络依赖、手工奖励函数、SPL 权衡）与结论（自适应切换几何/语义引导在各探索阶段有效；未来对比端到端 agentic 方法）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 6-7, Algorithm 2 LinUCB 伪代码与 Eq. 3-4 相似度上下文特征推导",
+    "role": "method-or-design",
+    "reason": "标准 LinUCB 公式（Li et al. 2010），按 scoping 深度略读；只精读奖励结构（Eq. 5、Table I 权重）与三专家接口（Eq. 16/19/20/22）"
+   },
+   {
+    "locator": "page 8-10, Section IV-B2/B3 与 IV-C 的 GPU 分块迁移（Eq. 8）、Pillar Map 构造（Eq. 9-11）、相似度场（Eq. 12-13）公式细节",
+    "role": "method-or-design",
+    "reason": "工程实现细节，按 scoping 深度略读；保留关键量纲结论（每周期更新成本 O(1)、语义延迟降约 90%、峰值显存=地图+单块缓冲、K=4）"
+   },
+   {
+    "locator": "page 18-20, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（OpenVox、SLAM Toolbox、GOAT-Bench、3D-Mem、ReEXplore、HIMM、LinUCB、ConceptGraphs、VLFM）；补充材料的附录 A（GOAT-Bench 奖励适配）未随正文提供，bandit 冷启动细节以正文 Sec. V-C 表述为准"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：现有导航/探索管线绑定低保真几何表征（占据栅格）与最近距离类启发式目标，或采用固定探索策略/固定语义推理策略的零样本 VLM 导航，均无法随环境理解程度自适应；且既有开放词汇语义建图系统（OpenVox）在 Habitat 理想条件下验证、假设完美定位与无限 GPU，无法在物理机器人上实时运行。如何构建资源受限四足机器人上实时运行的体素语义建图系统（OpenRoboVox），并用上下文多臂老虎机（CMAB）在 frontier 几何探索、全局语义地图推理、egocentric VLM 三专家间在线自适应选择导航目标？对综述问题的意义：这是'SLAM 主动探索环吸收基础模型'的代表作——基础模型被定位为 Active SLAM 决策环中可调度的专家组件而非替代者；其消融（语义专家冷启动失败）与系统架构（SLAM Toolbox+Nav2 底座）直接为'SLAM 基础设施地位'提供证据，而 GOAT-Bench 真值位姿设定同时暴露了具身导航评测生态把 SLAM 抽象掉的现象。",
+ "contributions": [
+  "OpenRoboVox：资源受限机器人上的实时体素语义建图——内存高效 TSDF、并行动态实例剪枝与更新、按距离优先的历史刷新；三项工程改造（Scene-Dictionary 增量管理器使每周期更新成本对地图规模为 O(1) 且批量掩码计算降语义延迟约 90%、64³ 分块体素迁移协议防 OOM、几何流 15Hz 与语义流 5Hz 的异步并行 ROS2 架构）",
+  "双上下文基础模型语义推理：语义地图专家（LLM 推理经相似度预过滤+序列化的全局 Scene-Dictionary）与 egocentric VLM 专家（第一视角 RGB 网格标注推理），共享同一基础模型骨干，实现语言条件、语义感知的目标预测",
+  "上下文多臂老虎机（Disjoint LinUCB）在三专家间在线自适应选择，无需任务训练/微调，部署期从冷启动在线调整；奖励=覆盖率增速+VLM 置信+相似度+任务成功×10−回退惩罚",
+  "三平台验证（Isaac Sim 物理仿真、Habitat GOAT-Bench、Unitree Go2 硬件）：GOAT-Bench Val Unseen SOTA（GPT-4o 90.6% SR，超最强基线 17.8 个百分点；Qwen2.5-VL-7B 88.8% SR）；真实两层办公环境约 1803 m²、29,588 语义实例单次运行实时建图、6 条指令 100% 成功率"
+ ],
+ "method": {
+  "summary": "三层架构。(1) 语义建图层 OpenRoboVox（基于 OpenVox 重构）：TSDF 几何后端 + 概率体素实例语义（每体素维护全局实例 ID 集上的 Dirichlet 后验），YOLO-World 检测 + TAP 分割输出经贝叶斯更新融合进 3D；针对物理部署三大瓶颈（地图扩容峰值显存翻倍致 OOM、感知串行阻塞几何线程致 >200ms 延迟与地图漂移、无可查询语义结构）引入 Scene-Dictionary 管理器（优先级并集 P_rec∪P_vis∪P_rot 调度增量提取）、分块体素迁移协议与异步并行架构。体素层蒸馏为结构化语义记忆 Scene-Dictionary（实例 ID、384 维 SBERT 特征、caption、位置、包围盒），并投影为 2D Pillar Map（每格存 top-K=4 主导实例）供目标/邻居/约束三种相似度势场计算。(2) 决策层 CMAB：Disjoint LinUCB，上下文向量含栅格覆盖率及增速、回退指示、上轮动作、VLM 置信度与相似度软计数特征。(3) 三专家各输出候选目标：frontier 探索（信息增益−路径长度，能量可行约束）、语义地图专家（Scene-Dictionary 相似度预过滤→序列化→LLM 按语义匹配与空间合理性打分排序）、egocentric VLM 专家（RGB 图像网格标注→VLM 打分+离散转向动作，H=3 决策视野，场景描述回灌语义专家）。硬件栈：机载 Jetson AGX Orin 跑 ROS2 Active SLAM 栈（SLAM Toolbox 定位+2D 栅格建图、Nav2 SMAC 全向 A* 规划），Unitree Go2 API 500Hz EKF 里程计（板载 LiDAR+关节编码器融合），SLAM Toolbox 100Hz 位姿，RGB-D 30Hz；语义推理在外部 RTX 4090 桌面（WiFi 5GHz）。",
+  "assumptions": [
+   "LLM 推理与相似度检索性能强依赖底层 3D 语义地图质量：漏检、稀疏观测或错误实例关联会传播进 Scene-Dictionary 产生错误目标提案（作者自述）",
+   "CMAB 依赖手工设计的几何+语义加权奖励函数，分量相对权重影响探索/利用倾向（作者自述）",
+   "GPT-4o 经 API 调用需网络连接与远程推理可靠性；异步设计防止延迟阻塞几何建图，但整体性能仍受其影响（作者自述）",
+   "语言指令 L_T 保持活跃直到完成；导航目标限制在占据栅格内；LiDAR OctoMap 投影占据栅格用于避障；机器人主要在 SE(2) 空间操作（2D Pillar Map 高度压缩）",
+   "GOAT-Bench 评测中模拟器提供真值位姿（SLAM Toolbox 定位被绕过），CMAB 上下文与监督奖励纯由 agent 可感知状态导出"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Isaac Sim 办公环境（CMAB 验证：找玻璃桌上的大罐子/电视旁绿植，未探索与已探索两种地图状态，各 15 试验）",
+   "Habitat HM3D 场景（GOAT-Bench 'Val Unseen'：36 场景、278 导航子任务、3 种目标模态）",
+   "真实两层办公建筑（约 1803 m²，29,588 个唯一语义实例，单次运行实时建图）"
+  ],
+  "tasks": [
+   "语言条件对象寻找与导航（硬件 6 条指令：'Find the printer'、'Find pink bowl next to flower'、含多目标关系指令等）",
+   "GOAT-Bench 多模态终身导航（object category / description / image 三种目标模态的序列子任务）",
+   "探索驱动/对象中心/库存导向的语言指令（问题形式化层面）"
+  ],
+  "embodiments": [
+   "Unitree Go2 四足机器人（真实硬件；Isaac Sim 用同 ROS2 栈仿真同平台）",
+   "Habitat 仿真 agent（GOAT-Bench，真值位姿）",
+   "无机械臂/操作本体；移动导航任务域"
+  ],
+  "sample_or_scale": "硬件：6 条指令各执行一次、100% 成功率（standoff 0.22±0.16 m）；OpenRoboVox 压力测试：约 1803 m²、29,588 实例、单次运行；CMAB 消融：4 算法×2 地图状态×15 试验；GOAT-Bench：278 子任务、2,005 次 bandit 决策、两种基础模型骨干；无多次运行方差报告（硬件指令单次执行）"
+ },
+ "evaluation": {
+  "design": "三平台递进：(1) OpenRoboVox 硬件压力测试（两层 1800 m²、~30k 实例、实时单次运行）；(2) Isaac Sim CMAB 验证——单专家（frontier/语义地图/egocentric VLM）固定使用 vs CMAB，在未探索/已探索两种设定各 15 试验，附策略适应分析（按低/中/高覆盖度统计动作分布）、奖励结构分析（分量占比）与硬件 6 指令 standoff 距离；(3) GOAT-Bench Val Unseen 基线对比（GPT-4o 与 Qwen2.5-VL-7B 双骨干）+ 逐模态分解 + CMAB 分配统计（picks 与路径份额）",
+  "baselines": [
+   "GOAT-Bench 传统方法：Modular GOAT、Modular CLIP on Wheels、SenseAct-NN（Skill Chain 与 Monolithic）",
+   "GOAT-Bench MLLM 探索系：3D-Mem、ReEXplore、HIMM（各有 Qwen2.5-VL-7B 与 GPT-4o 两种口径）、Explore-EQA（GPT-4o）、CG w/ Frontier Snapshots（GPT-4o）、3D-Mem w/o memory（GPT-4o）",
+   "CMAB 消融的内部基线：三个单专家各自固定使用（frontier-only / semantic-map-only / ego-VLM-only）"
+  ],
+  "metrics": [
+   "SR 成功率与 SPL（1.0 m 阈值，GOAT-Bench 标准口径）",
+   "平均完成时间（s）与路径长度（消融实验）",
+   "standoff 距离（m，硬件任务完成时机器人与目标的距离）",
+   "CMAB 动作分布占比（按覆盖阶段）、奖励分量统计、逐专家 picks 占比与累计路径份额（可解释性分析）"
+  ],
+  "ablations": [
+   "单专家 vs CMAB（未探索/已探索两种设定，Fig. 6 表格：未探索时语义地图 0.0%/ego-VLM 66.7%/frontier 53.3%/CMAB 100%；已探索时 93.3%/80.0%/33.3%/100%）",
+   "动作分布随覆盖阶段（Table II：低覆盖 frontier 0.636 → 高覆盖语义地图 0.559+ego-VLM 0.412、frontier 0.029）",
+   "奖励分量分解（Table IV：余弦相似度 46%、VLM 置信 29%、任务完成 15%、覆盖率 13%、回退惩罚 −4%）",
+   "CMAB 分配统计（Table VIII：ego-VLM 45.0% picks/30.6% PL、语义地图 38.7%/46.8%、frontier 16.4%/22.6%）",
+   "双骨干对照（GPT-4o vs Qwen2.5-VL-7B）：隔离基础模型容量与语义地图框架两个增益来源"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "GOAT-Bench Val Unseen（278 子任务）：RoboAtlas 用 GPT-4o 达 90.6% SR/53.4% SPL，超最强先前 GPT-4o 基线 HIMM 17.8 个 SR 百分点（90.6 vs 72.8）、超 3D-Mem(GPT-4o) 21.7 点（90.6 vs 68.9）；换用小得多的 Qwen2.5-VL-7B 仍达 88.8% SR/53.1% SPL，超过全部 Qwen2.5-VL-7B 基线（最高 HIMM 53.9%）35.6-39.2 点，且在 SR 上超过所有 GPT-4o 基线（除 HIMM 的 SPL 56.1 略高）。",
+   "scope": "Habitat HM3D，GOAT-Bench Val Unseen，真值位姿设定",
+   "locator": "page 16-17, Table VI 与分析段"
+  },
+  {
+   "finding": "专家消融（Isaac Sim 办公环境找大罐子，15 试验）：未探索地图下单独使用语义地图专家 SR 0.0%——因为它依赖足够填充的场景字典，没有先行探索时语义推理欠约束；单独 ego-VLM 66.7%、frontier 53.3%，CMAB 100% 且路径最短、用时最快（780±64 s）。已探索地图下语义地图专家 93.3%、CMAB 仍 100%。",
+   "scope": "Isaac Sim 单一办公环境，4 算法×15 试验×2 地图状态",
+   "locator": "page 13-14, Section V-B2 与 Fig. 6 表格"
+  },
+  {
+   "finding": "策略适应分析：CMAB 的动作分布随覆盖度自然演化——低覆盖阶段 frontier 探索占 63.6%，中覆盖阶段 ego-VLM 升至 33.3%，高覆盖阶段语义地图 55.9%+ego-VLM 41.2%、frontier 仅 2.9%；奖励分量上余弦相似度占 46%、VLM 置信 29%，语义信号随地图变丰富而主导奖励地形。",
+   "scope": "Isaac Sim CMAB 验证的 2,005 次决策前身的分阶段统计（Table II/IV）",
+   "locator": "page 13, Policy Adaptation 与 Reward Structure Analysis 段"
+  },
+  {
+   "finding": "硬件验证：OpenRoboVox 在 Unitree Go2 上实时单次运行建图约 1803 m²（两层）、识别 29,588 个唯一语义实例；6 条语言指令全部成功（100%），standoff 距离 0.22±0.16 m，误差主要来自深度估计小误差与避障安全边距。",
+   "scope": "真实两层办公环境，6 条指令各单次执行",
+   "locator": "page 11-12, Section V-B1/V-B3 与 Table V"
+  },
+  {
+   "finding": "CMAB 分配（GOAT-Bench，2,005 次决策）：ego-VLM 获最多选择（45.0%）但仅占 30.6% 路径（短程修正角色）；语义地图专家 38.7% 选择占 46.8% 路径（主利用通道，发现高相似候选后派长程路径点）；frontier 最少被选（16.4%）但占 22.6% 路径（预探索与真探索场景）。",
+   "scope": "GOAT-Bench Val Unseen 全部子任务聚合",
+   "locator": "page 17, Table VIII 与分析段"
+  },
+  {
+   "finding": "SPL 权衡：RoboAtlas 的 SPL（53.4）略低于 HIMM（56.1），作者归因于 Active SLAM 表述的固有属性——frontier 与实例发现臂保持可选且奖励偏向覆盖与发现，每次导航 rollout 兼作建图 rollout，以单子任务效率的适度损失换取对后续子任务有用的表征资本（首次遭遇目标时优势最大）。",
+   "scope": "GOAT-Bench Val Unseen，与 HIMM 对比",
+   "locator": "page 17, SPL 分析段"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "LLM 推理与相似度检索性能强依赖底层 3D 语义地图质量：漏检、稀疏观测或错误实例关联会传播进 Scene-Dictionary 产生错误目标提案；已探索地图下目标观测不足时仍会失败",
+    "locator": "page 17, Section VI 第一条局限"
+   },
+   {
+    "limitation": "依赖 LLM/VLM 推理引入延迟与响应时间方差（GPT-4o 经 API），整体性能依赖网络连接与远程推理可靠性；可用轻量模型（Qwen2.5-VL-7B 已验证）与更强机载计算（如 Jetson Thor）缓解",
+    "locator": "page 17-18, Section VI 第二条局限"
+   },
+   {
+    "limitation": "CMAB 依赖手工设计的几何+语义加权奖励函数，分量权重影响探索/利用倾向；更有原则或学习型奖励公式可能改善跨任务/环境泛化",
+    "locator": "page 18, Section VI 第三条局限"
+   },
+   {
+    "limitation": "GOAT-Bench 上 SPL 略低于最优先前方法：Active SLAM 表述的持续探索使导航 rollout 兼作建图 rollout，降低单子任务效率",
+    "locator": "page 18, Section VI 第四条局限"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "GOAT-Bench 头条数字（90.6%/88.8% SR）在 Habitat 真值位姿下取得（'so SLAM Toolbox localization is bypassed'，page 11），语义地图+CMAB 增益未在定位噪声下的大规模基准中验证；真实硬件验证仅 6 条指令、各单次执行、无方差——'100% 任务成功率'的样本量极小",
+    "basis": "page 11 Habitat 段与 page 12 Table V（6 行指令）交叉核对"
+   },
+   {
+    "boundary": "CMAB 消融与策略/奖励分析全部在 Isaac Sim 单一办公环境进行，未报告环境多样性；跨域结论仅有定性跨域验证图（Fig. 9）",
+    "basis": "page 13-14 实验设置（'the office environment from Isaac Sim'）与 page 15 Fig. 9"
+   },
+   {
+    "boundary": "语义推理不在机载：基础模型跑在外部 RTX 4090 桌面经 WiFi 5GHz 传输——'资源受限部署'主张只覆盖建图/导航层（Jetson AGX Orin），语义推理层的边缘部署未实现（作者仅建议 Jetson Thor 作为未来方案）",
+    "basis": "page 11 Hardware 段与 page 17-18 局限二"
+   },
+   {
+    "boundary": "与端到端 agentic 方法无对照（作者自列为未来工作）；bandit 路线只在内部三专家间对比，无法回答'CMAB 选择机制 vs 学习型策略'的问题",
+    "basis": "page 18 结论未来工作与 page 13-17 实验范围"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 RGB-D + LiDAR/里程计可用的四足机器人（Unitree Go2）或仿真平台上，以经典 SLAM 工具链（SLAM Toolbox 定位+栅格建图、Nav2 规划）为底座、OpenRoboVox 实时体素语义建图为表征层、LLM/VLM 为可调度专家、CMAB 在线选择，可在语言条件对象寻找/导航任务上取得高成功率（仿真基准 SR 88.8-90.6%——真值位姿设定、硬件 6 指令 100%）与千平米级实时语义建图。对机械臂操作、无里程计/LiDAR 平台、机载语义推理、定位噪声下的大规模基准表现、以及'CMAB vs 端到端 agentic'对比，本文未提供证据。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "三平台递进（物理仿真 Isaac Sim → 真值位姿基准 Habitat → 真实硬件）且明确批评'多数相关工作只在 Habitat 做基准、抽象掉真实 SLAM 漂移等部署挑战'的生态缺陷",
+   "消融设计干净：单专家 vs CMAB 双设定（未探索/已探索）直接检验'语义推理需先行几何探索'的机理；动作分布、奖励分量、CMAB 分配三层可解释性分析支撑归因",
+   "双骨干对照（GPT-4o vs 7B）隔离'基础模型容量'与'语义地图框架'两个增益来源，是'信息来自语义建图而非骨干容量'归因的关键设计"
+  ],
+  "design_risks": [
+   "GOAT-Bench 头条数字使用真值位姿（SLAM 被绕过），与硬件小样本（6 指令、单次执行）之间存在证据强度断层",
+   "CMAB 消融仅 Isaac Sim 单环境；无多次运行方差；无跨环境统计检验",
+   "与端到端 agentic 路线无对照，'上下文决策优于固定策略'的结论仅在内部三专家对比中成立"
+  ],
+  "baseline_fairness": "GOAT-Bench 基线覆盖传统模块化（GOAT、CoW）、端到端学习（SenseAct-NN 两种）、MLLM 探索系（3D-Mem、ReEXplore、HIMM、Explore-EQA、CG），标 * 取自 GOAT-Bench 原文、标 † 在同子集重评估，口径披露透明；双骨干分别与同骨干基线对比（Qwen 版 88.8% vs Qwen 基线最高 53.9%）。Isaac Sim 消融的对照是自身单专家（内部对照），非外部方法——作者以消融目的论之，合理但需注意。SPL 落后 HIMM 的解释（探索压力的刻意权衡）由 Table VIII 路径份额数据支撑。",
+  "metric_validity": "SR/SPL@1.0m 为 GOAT-Bench 标准口径且与 3D-Mem/ReEXplore 协议一致；standoff 距离是硬件任务的自然度量但受避障安全边距影响（作者披露误差来源）；奖励分量占比与动作分布是机制可解释性指标而非任务性能指标，用途正当。",
+  "reproducibility": "系统组件全部为公开可复现件（SLAM Toolbox、Nav2、YOLO-World、TAP、SBERT、GPT-4o/Qwen2.5-VL-7B、LinUCB）；硬件型号与全链路频率（500Hz 里程计、100Hz 位姿、30Hz RGB-D、0.07-0.2Hz 目标、15Hz/5Hz 双流）披露完整；奖励权重（Table I）与系统提示词（Fig. 4）全文公开；未见代码开源声明。缺：Scene-Dictionary 序列化截断阈值 δ_T/δ_N 等部分超参数值。",
+  "external_validity": "跨仿真-真实硬件、跨楼层规模（1800 m²）的外效度努力突出；但对象寻找导航任务域窄（无操作/交互）、Habitat 数字依赖真值位姿、语义推理依赖外接桌面 GPU 与网络——向全机载部署与操作任务外推受限。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.26046-C01",
+   "claim": "作者主张：把基础模型接地（grounding）到大尺度 3D 语义地图上是实现稳健高效上下文主动 SLAM 的关键——用小得多的 Qwen2.5-VL-7B 模型 RoboAtlas 仍达 88.8% SR、超过所有用 GPT-4o 的基线，揭示了语义建图框架获得的信息的重要性高于简单替换底层基础模型。",
+   "stance": "support",
+   "relation": "直接回应'基础模型 vs SLAM 基础设施'之争的核心命题：作者用双骨干对照论证性能增益来自 SLAM 式 3D 语义建图（显式空间表征）而非基础模型容量——'grounding foundation models with large-scale 3D semantic maps'的表述本身就把基础模型定位为需要被显式空间表征接地的组件，支持'SLAM 演化路线是吸收基础模型而非被替代'的判断；也是导航/空间推理环节 SLAM 表征价值的最强量化证据之一。",
+   "summary": "把基础模型接地到大尺度 3D 语义地图：7B 骨干 88.8% SR 胜过所有 GPT-4o 基线，增益来自语义建图而非骨干容量",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 1, Abstract",
+   "source_context": "Using the much smaller Qwen2.5-VL-7B model, it still achieves 88.8% SR, outperforming all baselines using GPT- 4o in SR, and revealing the importance of the information gained by our semantic mapping framework over simply replacing the underlying foundation model. The results demonstrate that grounding foundation models with large-scale 3D semantic maps enables robust and efficient contextual Active SLAM.",
+   "evidence_type": "claim",
+   "quantitative": {
+    "metric": "SR（成功率，GOAT-Bench Val Unseen，1.0 m 阈值）",
+    "value_or_direction": "Qwen2.5-VL-7B 骨干 88.8% SR，超过所有使用 GPT-4o 的基线",
+    "comparator": "GPT-4o 基线（最强 HIMM 72.8%，数值见 page 16-17 Table VI）",
+    "task_or_sample": "GOAT-Bench Val Unseen 278 子任务、36 场景",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 Abstract：'88.8% SR'、'outperforming all baselines using GPT-4o in SR'、'revealing the importance of the information gained by our semantic mapping framework over simply replacing the underlying foundation model'、'grounding foundation models with large-scale 3D semantic maps enables robust and efficient contextual Active SLAM' 均为原文措辞；claim 中的比较对象（GPT-4o 基线）在摘要中以'all baselines using GPT-4o'表述，具体基线名称与数值（HIMM 72.8 等）在 page 16 Table VI 核对一致；'小得多的模型'对应摘要原文 'the much smaller Qwen2.5-VL-7B model'。未添加原文之外的断言。"
+   }
+  },
+  {
+   "card_id": "2606.26046-C02",
+   "claim": "作者对零样本 VLM/LLM 导航路线（VLFM、ASCENT、DyNaVLM 等）的批评：这类方法主要依赖图像感知与拓扑场景表征、不维护全局一致的度量地图，导致语义推理和导航常与几何定位和建图解耦；相比之下 RoboAtlas 把视觉-语言推理直接集成进实时 Active SLAM 管线与实例级 3D 语义地图，在做语言条件决策的同时保持可靠导航所需的度量一致性。",
+   "stance": "support",
+   "relation": "这是 SLAM 社区对'端到端/零样本基础模型导航路线'的系统性批评陈述：作者把'维护全局一致度量地图'（SLAM 核心能力）定位为可靠导航的前提条件，把基础模型定位为被集成进 Active SLAM 管线的推理组件——直接支持'SLAM 是导航环节基础设施、正吸收而非被替代'的判断；同时该批评也构成对隐式空间记忆/拓扑表征路线的边界主张。",
+   "summary": "零样本 VLM 导航不维护全局一致度量地图、语义推理与几何定位解耦；RoboAtlas 将 VL 推理集成进实时 Active SLAM 保持度量一致性",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 2, Section II-A 末段",
+   "source_context": "However, these approaches primarily rely on image-based perception and topological scene representation that do not maintain a globally consistent metric map of the environment. As a result, semantic reasoning and navigation are often decoupled from geometric localization and mapping. In contrast, RoboAtlas integrates vision-language reasoning di- rectly with a real-time Active SLAM pipeline and an instance- level 3D semantic map, enabling language-conditioned deci- sion making while preserving metric consistency required for reliable navigation.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 2 Section II-A 末段：三句均为原文连续措辞（含连字符换行 'di- rectly'、'instance- level'、'deci- sion'）；被批评方法的列举（VLFM [7]、ASCENT [21]、DyNaVLM [22]）来自同节上文，claim 中的方法名与正文一致；'metric consistency required for reliable navigation' 为原文措辞，claim 未加码。"
+   }
+  },
+  {
+   "card_id": "2606.26046-C03",
+   "claim": "真实硬件部署的系统架构：机载 Jetson AGX Orin 在 ROS2 下运行 Active SLAM 栈——用 SLAM Toolbox 做定位与 2D 栅格建图、Nav2 做自主导航（SMAC 全向 A* 规划器在占据栅格上搜索）；Unitree Go2 API 以 500 Hz 提供融合板载 LiDAR 与关节编码器的 EKF 里程计，SLAM Toolbox 以 100 Hz 提供位姿估计，RGB-D 以 30 Hz 流入 RoboAtlas 生成 0.07-0.2 Hz 的导航目标。",
+   "stance": "support",
+   "relation": "这是'SLAM 作为具身系统基础设施'的架构级证据：在展示基础模型语义推理能力的同一系统里，定位、栅格建图与路径规划全部由经典 SLAM/导航工具链（SLAM Toolbox + Nav2）承担——基础模型专家只做目标选择决策，位姿与占据栅格这两个下游必需品仍由传统 SLAM 供给；说明'基础模型进入具身导航'并未消除对 SLAM 定位建图层的工程依赖。",
+   "summary": "Go2 真机栈：SLAM Toolbox 定位+2D 栅格建图（100Hz 位姿）、Nav2 规划、500Hz EKF 里程计——基础模型只做目标选择",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 11, Section V-A Hardware 段",
+   "source_context": "The Jetson runs the Active SLAM stack under ROS2, using SLAM Toolbox [54] for localization and 2D grid mapping and Nav2 [60] for autonomous navigation. We use the Nav2 SMAC planner, which performs a holonomic A* search over the occupancy grid while modeling the robot as a rectangular footprint for collision avoidance [61]. Odometry at 500 Hz is obtained from the Unitree Go2 API, which fuses onboard LiDAR and joint-encoder data through an Extended Kalman Filter, and the SLAM Toolbox provides pose estimates at 100 Hz.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "系统频率（Hz）：定位位姿、里程计、RGB-D、目标生成",
+    "value_or_direction": "SLAM Toolbox 位姿 100 Hz、EKF 里程计 500 Hz、RGB-D 30 Hz、导航目标 0.07-0.2 Hz",
+    "comparator": "无（系统描述）",
+    "task_or_sample": "Unitree Go2 四足机器人 + Jetson AGX Orin 机载栈 + 外部 RTX 4090",
+    "locator": "page 11, Section V-A Hardware 段"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 11 Section V-A Hardware 段：SLAM Toolbox [54]/Nav2 [60]/SMAC 规划器/500 Hz EKF 里程计（LiDAR+关节编码器）/100 Hz 位姿均为原文措辞；30 Hz RGB-D 与 0.07-0.2 Hz 目标生成频率在同段下文（'RGB-D images at 30 Hz are streamed to RoboAtlas, which generates navigation goals (x, y) at 0.07–0.2 Hz'）逐字核对一致，均位于 page 11。"
+   }
+  },
+  {
+   "card_id": "2606.26046-C04",
+   "claim": "专家消融（Isaac Sim 办公环境找大罐子任务、15 试验、未探索地图设定）：单独使用语义地图专家失败——因为它依赖足够填充的场景字典，没有先行探索时语义推理是欠约束的；单独 egocentric VLM 成功率 67%，CMAB 在全部试验中达到 100% 成功率。CMAB 的动作分布随覆盖度自然演化：低覆盖阶段 frontier 探索占 63.6%，高覆盖阶段转向语义地图专家 55.9% 与 ego-VLM 41.2%、frontier 降至 2.9%。",
+   "stance": "conditional",
+   "relation": "为'基础模型语义导航以 SLAM 式几何探索为前提条件'提供机理性证据：LLM 语义专家（基于场景字典的全局推理）在地图未建立时完全失效——语义推理的效用条件于先行的几何探索与建图；同时高覆盖阶段语义专家接管（frontier 降至 2.9%）说明几何探索的价值集中在冷启动阶段。对综述问题的含义是双向的：支持'几何探索/建图不可被纯语义模型从零启动替代'，但也表明基础模型在地图就绪后承担主要决策——SLAM 与基础模型是分阶段互补而非全程必需。",
+   "summary": "语义地图专家冷启动失败（欠约束）；CMAB 100% vs ego-VLM 67%；低覆盖 frontier 63.6% → 高覆盖语义 55.9%+VLM 41.2%",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 13, Section V-B2 CMAB Validation 与 Policy Adaptation 段",
+   "source_context": "Frontier exploration consistently succeeds but is inefficient, as the robot explores nearly the entire map before locating the target. In contrast, the semantic map expert fails in this setting because it relies on a sufficiently populated scene dictionary; without prior exploration, semantic reasoning is under-constrained. The egocentric VLM exhibits more variable behavior: in some cases it identifies semantically meaningful structures (e.g., doorways) that accelerate discovery, while in others it becomes locally trapped due to limited global context.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "成功率 SR 与 CMAB 动作分布占比（按覆盖阶段）",
+    "value_or_direction": "未探索设定：语义地图专家失败、ego-VLM 67%、CMAB 100%；覆盖阶段动作分布：低覆盖 frontier 63.6%，高覆盖 semantic map 55.9% + ego-VLM 41.2%、frontier 2.9%",
+    "comparator": "三个单专家（frontier / semantic map / ego-VLM）vs CMAB 混合策略",
+    "task_or_sample": "Isaac Sim 办公环境，找大罐子任务，15 试验，未探索地图设定",
+    "locator": "page 13, Section V-B2 CMAB Validation 与 Policy Adaptation 段"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 13：source_context 三句为原文连续措辞；'the semantic map expert fails in this setting'、'egocentric VLM achieves a 67% success rate'、'CMAB achieves a 100% success rate across all trials' 均在 page 13 原文核对一致；动作分布数字 63.6%/33.3%/55.9%/41.2%/2.9% 出自 page 13 Policy Adaptation Analysis 段（'frontier exploration dominates (63.6%)'...'selecting semantic map (55.9%) and egocentric VLM (41.2%) experts while largely abandoning frontier exploration (2.9%)'），均在所引页面；语义地图专家 0.0% 的具体数值在 page 14 Fig. 6 表格，claim 中仅用'失败'（原文措辞）避免跨页引用。"
+   }
+  },
+  {
+   "card_id": "2606.26046-C05",
+   "claim": "GOAT-Bench Val Unseen 上的归因分析：RoboAtlas（Qwen2.5-VL-7B）在 SR 和 SPL 两项指标上都超过除 HIMM 外的所有 GPT-4o 基线——例如在 SR（88.8 vs 68.9）和 SPL（53.1 vs 48.9）上均超过 3D-Mem（GPT-4o）；对 HIMM 仍在成功率上领先（88.8 vs 72.8）、仅 SPL 落后。作者据此主张：一个 7B 骨干能与 GPT-4o 规模基线竞争，说明改进来自语义建图与上下文专家选择，而非骨干容量。",
+   "stance": "support",
+   "relation": "对'堆大基础模型能否替代显式空间表征基础设施'的定量否证：当基础模型从 GPT-4o 缩到 7B 而系统性能基本不降（88.8 vs 90.6 SR）且反超 GPT-4o 基线时，增益的来源被隔离到 SLAM 式 3D 语义地图（OpenRoboVox）与专家选择机制上——支持'SLAM 建图表征是具身导航性能的主要贡献者'；对照 3D-Mem/ReEXplore/HIMM 等 MLLM 基线（隐式/记忆式空间表征路线）落后 16-35 个百分点，构成显式语义地图路线对隐式记忆路线的优势证据。",
+   "summary": "7B 骨干反超 GPT-4o 基线（SR 88.8 vs 68.9/72.8）：增益来自语义建图与专家选择而非基础模型容量",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 17, Section V-C 基线对比分析段",
+   "source_context": "It surpasses 3D-Mem (GPT-4o), for instance, on both SR (88.8 vs. 68.9) and SPL (53.1 vs. 48.9). Against HIMM, RoboAtlas still leads in success rate (88.8 vs. 72.8) and trails only in SPL. A 7B backbone competing with GPT-4o-scale baselines suggests the improvements come from our semantic mapping and contextual expert selection rather than backbone capacity.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR 与 SPL（GOAT-Bench Val Unseen，1.0 m 阈值）",
+    "value_or_direction": "RoboAtlas (Qwen2.5-VL-7B)：SR 88.8、SPL 53.1，超过 3D-Mem (GPT-4o) 的 SR 68.9/SPL 48.9；对 HIMM SR 领先（88.8 vs 72.8）、SPL 落后",
+    "comparator": "3D-Mem (GPT-4o)、HIMM (GPT-4o) 等 MLLM 探索基线",
+    "task_or_sample": "GOAT-Bench Val Unseen 278 子任务、36 场景",
+    "locator": "page 17, Section V-C 基线对比分析段"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 17：source_context 三句为原文连续措辞；SR/SPL 数值（88.8 vs 68.9、53.1 vs 48.9、88.8 vs 72.8）与 'A 7B backbone competing with GPT-4o-scale baselines suggests the improvements come from our semantic mapping and contextual expert selection rather than backbone capacity' 均在 page 17 原文核对一致；GPT-4o 版 90.6%/17.8 个百分点等数值在 page 16（未用于本卡避免跨页引用）。claim 未外推。"
+   }
+  },
+  {
+   "card_id": "2606.26046-C06",
+   "claim": "评测设定的边界事实：GOAT-Bench 大规模评测在 Habitat 中进行，模拟器直接提供真值 agent 位姿与渲染的 RGB-D 观测，因此 SLAM Toolbox 定位被绕过——RoboAtlas 消费模拟器位姿构建 3D 语义地图与 Scene-Dictionary，目标由 Habitat agent 的导航接口执行；作者同时指出多数相关工作只在 Habitat 做基准，这抽象掉了物理部署的主要挑战：有界计算预算下的实时推理与规划、有噪里程计与真实世界 SLAM 的定位漂移、有噪深度感知、执行与足印约束、连续大规模运行时有界机载 GPU 显存。",
+   "stance": "limit",
+   "relation": "该证据从两个方向限制本文化证据的强度：(1) 头条 SOTA 数字（90.6%/88.8% SR）是在理想定位（真值位姿、SLAM 被绕过）条件下取得的——'接地基础模型的大尺度语义地图优于基线'的结论未在定位噪声下的大规模基准中检验，硬件验证仅 6 条指令；(2) 它同时暴露具身导航评测生态的现状——最广泛使用的基准（Habitat）默认把 SLAM 定位排除在回路外，作者对'抽象掉真实世界 SLAM 漂移'的批评本身反向印证了真实 SLAM 是被评测文化系统性绕过的环节，限制'SLAM 在具身导航不可或缺'主张在仿真基准语境下的可证性。",
+   "summary": "GOAT-Bench 评测用真值位姿、SLAM Toolbox 定位被绕过；作者批评 Habitat 基准文化抽象掉真实世界 SLAM 漂移等部署挑战",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 11, Section V-A Habitat 段",
+   "source_context": "Here the simulator provides ground-truth agent pose and rendered RGB-D obser- vations directly, so SLAM Toolbox localization is bypassed. RoboAtlas consumes the simulator pose and RGB-D render, builds the 3D semantic map and Scene-Dictionary as before, and issues goals that are executed by the Habitat agent’s navigation interface rather than Nav2. We note that most related works benchmark exclusively in Habitat, which abstracts away the principal challenges of physical deployment: real-time inference and planning under a bounded computational budget; localization drift from noisy odometry and real-world SLAM; noisy real-world depth sens- ing and the imperfect perception built upon it; actuation and footprint constraints; and bounded on-board GPU memory during continuous large-scale operation.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 11 Section V-A Habitat 段：'the simulator provides ground-truth agent pose and rendered RGB-D obser- vations directly, so SLAM Toolbox localization is bypassed' 与 'We note that most related works benchmark exclusively in Habitat, which abstracts away the principal challenges of physical deployment: ... localization drift from noisy odometry and real-world SLAM; ...' 均为原文连续措辞（含连字符换行 'obser- vations'、'sens- ing'）；claim 中的挑战清单（实时推理/定位漂移/深度噪声/足印约束/GPU 显存）逐项对应原文列举，未添加原文之外的断言。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "OpenVox: Real-time instance-level open-vocabulary probabilistic voxel representation",
+   "arxiv_id": "",
+   "role": "OpenRoboVox 的直接前身（概率实例体素语义建图）；其'理想化条件假设'（完美定位、无限 GPU）是本文重工程化的动机（page 7-8）"
+  },
+  {
+   "title": "SLAM Toolbox: SLAM for the dynamic world",
+   "arxiv_id": "",
+   "role": "真实硬件栈的定位与 2D 栅格建图组件（C03）；GOAT-Bench 中被绕过的正是这一层（C06）"
+  },
+  {
+   "title": "GOAT-Bench: A benchmark for multi-modal lifelong navigation",
+   "arxiv_id": "",
+   "role": "主要评测基准（Val Unseen 278 子任务）；传统方法基线（Modular GOAT、SenseAct-NN）来源"
+  },
+  {
+   "title": "3D-Mem: 3D scene memory for embodied exploration and reasoning",
+   "arxiv_id": "",
+   "role": "最强 MLLM 记忆式基线之一（GPT-4o 68.9% SR）；隐式/记忆式空间表征路线的代表（C05 对照）"
+  },
+  {
+   "title": "HIMM: Human-inspired long-term memory modeling for embodied exploration and question answering",
+   "arxiv_id": "",
+   "role": "最强先前基线（GPT-4o 72.8% SR / SPL 56.1%）；RoboAtlas SR 领先 17.8 点但 SPL 略低的对比对象"
+  },
+  {
+   "title": "ReEXplore: Improving MLLMs for embodied exploration with contextualized retrospective experience replay",
+   "arxiv_id": "2511.19033",
+   "role": "Qwen2.5-VL-7B 基线（53.2% SR）；评测协议来源之一"
+  },
+  {
+   "title": "A contextual-bandit approach to personalized news article recommendation",
+   "arxiv_id": "",
+   "role": "LinUCB 算法来源（CMAB 决策层的经典基础）"
+  },
+  {
+   "title": "ConceptGraphs: Open-vocabulary 3D scene graphs for perception and planning",
+   "arxiv_id": "",
+   "role": "开放词汇 3D 场景图路线代表（Related Work II-B 谱系）；CG w/ Frontier Snapshots 亦为 GOAT-Bench 基线"
+  },
+  {
+   "title": "VLFM: Vision-language frontier maps for zero-shot semantic navigation",
+   "arxiv_id": "",
+   "role": "零样本 VLM 导航路线代表（C02 批评对象谱系）"
+  }
+ ],
+ "notes": "补充观察：(1) 本文是综述问题中'SLAM 主动探索环'演化的代表：基础模型没有被用来替代 SLAM，而是作为 Active SLAM 决策环中可调度的三个'专家臂'之一（连同经典 frontier 探索），由免训练的 LinUCB 在线选择——SLAM 框架本身（定位+建图+探索决策）是承载结构。(2) stance 分布说明：C01/C02/C03/C05 为 support（SLAM 表征价值、度量一致性前提、经典工具链底座、增益归因语义建图），C04 为 conditional（语义推理效用以先行几何探索为条件、高覆盖后被语义专家接管——分阶段互补而非全程必需），C06 为 limit（头条数字在真值位姿下取得 + 评测生态把 SLAM 排除在回路外的现状）。(3) 作者明确把'与端到端 agentic 方法对比'列为未来工作（page 18）——CMAB 路线与端到端路线的正面交锋在该文中缺席，是综述'是否被替代'问题的开放点。(4) MERL + UCLA 作者构成（工业实验室主导）反映 Active SLAM 研究的工程化取向。(5) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。(6) core_citations 中多数条目未在参考文献中给出 arXiv id（仅出版信息），故 id 留空；ReEXplore 例外（arXiv:2511.19033）。"
+}

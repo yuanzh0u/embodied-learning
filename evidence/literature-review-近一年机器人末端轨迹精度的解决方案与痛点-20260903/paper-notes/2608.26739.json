@@ -1,0 +1,435 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.26739",
+  "title": "Residual Deep Reinforcement Learning-Based Computed Torque Control for a Cable-Driven Lower-Limb Rehabilitation Robot under Disturbances and Parametric Uncertainties",
+  "published": "2026-08-27",
+  "url": "https://arxiv.org/abs/2608.26739",
+  "authors": [
+   "Mohammad-Hossein Fakouri",
+   "Ali Keymasi-Khalaji"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述'控制层方案'族的残差学习分支：针对绳驱动下肢康复机器人的末端笛卡尔轨迹精度，用逐关节有界（±[5,3,2] N·m）的DDPG残差力矩增强CTC，在10%参数不确定+带限白噪声外扰的仿真中给出配对量化改善（RMS降约42%、十种子43.69±1.17%），并系统暴露绳驱动方案族痛点：pull-only张紧可行性仅为代数诊断而非动力学实现、跟踪-绳力需求权衡（最大绳需求+12.2%）、换轨迹后关节限位违反反而增多、纯仿真无真机验证。机制、量化、适用条件与痛点证据齐备。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. Introduction",
+    "role": "problem",
+    "purpose": "定位问题：绳驱动康复机器人跟踪受模型不确定、外扰、关节约束与pull-only绳驱动约束影响；CTC可解释但对失配敏感，纯学习控制透明性差；残差RL折中动机与三个工程问题（配对条件下残差是否降误差、约束是否满足、对种子/时区/初值/换轨迹的敏感性）。"
+   },
+   {
+    "locator": "2.4. Reference trajectory and constrained inverse kinematics",
+    "role": "data-or-setting",
+    "purpose": "主参考轨迹（式14，10s平滑闭合康复路径）与带关节限位的fmincon/SQP逆运动学；关节限位（式17）。"
+   },
+   {
+    "locator": "3.2. Nominal controller model, uncertain plant, and disturbance",
+    "role": "method-or-design",
+    "purpose": "误差源建模：1-5s内质量/COM惯量/长度相关动力学系数同时+10%（确定性、时 localized、运动学标定不变）；5-9s三通道带限白噪声力矩外扰（功率0.1、相关0.5s、种子1001/2001/3001）。"
+   },
+   {
+    "locator": "3.3. Torque-to-tension calculation and pull-only feasibility",
+    "role": "relevant-core",
+    "purpose": "pull-only约束处理：方阵系统F_p=(J_c^T)^{-1}τ*无非平凡零空间可再分配张力；Simulink分配块接受非负解否则零回退；绳力仅为并行代数诊断（logged非负由构造保证），非闭环张紧伺服；硬件化需QP分配器。"
+   },
+   {
+    "locator": "4.1. Nominal computed torque control",
+    "role": "method-or-design",
+    "purpose": "CTC基线：τ_ctc=D_n v+C_n+G_n，v=q̈_d+K_d ė+K_p e，K_p=60I、K_d=20I；理想名义模型下误差动力学指数收敛（式42），失配时不成立。"
+   },
+   {
+    "locator": "4.2. Bounded residual DDPG compensation",
+    "role": "relevant-core",
+    "purpose": "核心机制：τ_cmd=τ_ctc+τ_RL，τ_RL逐关节限幅±[5,3,2] N·m；观测12维[q,q̇,e,ė]，动作3维；actor两层256 ReLU+tanh缩放，critic分离观测/动作路径；DDPG训练（γ=0.99、buffer 1e6、minibatch 256），评估用归档checkpoint确定性执行不在线更新。"
+   },
+   {
+    "locator": "4.3. Reward and training objective",
+    "role": "relevant-core",
+    "purpose": "奖励=关节误差+误差率+归一化残差幅值+残差变化的加权和（式47-49），后两项抑制大幅/快速残差；训练统计与checkpoint选择依据未保留，不呈现训练曲线。"
+   },
+   {
+    "locator": "5.2. Primary comparison protocol",
+    "role": "data-or-setting",
+    "purpose": "配对比较协议：基线与残差分支共用轨迹/名义模型/CTC增益/积分步长/初值/不确定时机/扰动实现，唯一差异是加入确定性actor输出；主轨迹即训练环境轨迹（已知轨迹补偿而非泛化）。"
+   },
+   {
+    "locator": "5.3. Metrics and constraint indicators",
+    "role": "data-or-setting",
+    "purpose": "指标定义：RMS/peak笛卡尔误差、IAE、ISE；绳指标（最小/最大logged代数绳需求、零张力边界）；关节限位channel-samples；J_c秩/σ_min/条件数；改进率定义100(M_CTC-M_RL)/M_CTC。"
+   },
+   {
+    "locator": "6.1. Sampled workspace, static tension feasibility, and cable-Jacobian conditioning",
+    "role": "results-or-analysis",
+    "purpose": "91,125采样中37.22%满足静态非负张力测试且期望路径100%在内；沿路径秩3、σ_min=0.01481、最大κ_2=71.25（数值敏感性）。"
+   },
+   {
+    "locator": "6.2. Representative combined uncertainty/disturbance case",
+    "role": "results-or-analysis",
+    "purpose": "代表组合案例（表11）：RMS 0.0221→0.0128 m（-42%）、IAE -63.5%、ISE -66.8%、peak -19.4%；CTC有61个关节限位样本（0.61s）而残差0；CTC绳需求触及零回退边界而残差最小3.41 N；最大绳需求76.87→86.24 N（+12.2%）。"
+   },
+   {
+    "locator": "6.3. Four-case comparison and dataset provenance",
+    "role": "results-or-analysis",
+    "purpose": "四情景独立case-matrix（表12）：RMS降幅21.1%/39.4%/27.7%/41.6%（名义/不确定/外扰/组合）；名义IAE几乎不变（+0.15%）；两数据集组合降幅42.0%对41.6%的差异处理。"
+   },
+   {
+    "locator": "6.4. Ten-seed robustness and interval-wise behavior",
+    "role": "results-or-analysis",
+    "purpose": "十种子组合案例：CTC 0.022945±0.000533 m vs 残差0.012916±0.000082 m（均值降43.69±1.17%），残差std更小；区间分析：不确定区间降81.84%、外扰区间降68.45%、瞬态23.82%、恢复22.64%。"
+   },
+   {
+    "locator": "6.6. Residual authority and alternate-trajectory diagnostic",
+    "role": "results-or-analysis",
+    "purpose": "残差权限审计：归一化峰值0.972/0.307/0.898，仅关节1有0.2%近限样本；残差RMS力矩为CTC的11.85%/7.79%/20.79%（从属地位成立）；圆形换轨迹：RMS -44.56%但关节限位样本44→101、最小张力双双为零。"
+   },
+   {
+    "locator": "6.7. Overall interpretation, relation to prior work, and scope",
+    "role": "conclusion-or-limitations",
+    "purpose": "总体解释：CTC主导+有界DDPG补偿可重复失配与扰动误差；与康复控制文献不做直接数值排名（机制/轨迹/指标不同）；残差支路更高峰值绳力使跟踪-驱动权衡显式化。"
+   },
+   {
+    "locator": "7. Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与明确边界声明：不建立形式稳定性、动力学绳力实现、执行器饱和可行性、临床收益或硬件安全；换轨迹测试显示笛卡尔改善可与关节限位违反共存；未来需QP分配器、约束感知奖励、更广分布与硬件验证。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.2. Forward kinematics / 2.3. Cable lengths and actuation Jacobian",
+    "role": "method-or-design",
+    "reason": "标准三连杆正运动学与绳长-雅可比推导，仅需其结论（符号约定与J_c定义，已在2.4/3.3使用处核对），逐式精读对综述问题无增量。"
+   },
+   {
+    "locator": "3.1. Implemented joint-space dynamic model",
+    "role": "method-or-design",
+    "reason": "标准D(q)q̈+C+G=τ形式与表3参数（连杆0.45/0.35/0.21 m、质量11.125/5.05/1.38 kg）已读取，逐项惯量推导跳过。"
+   },
+   {
+    "locator": "5.1. Implementation and model-consistency checks",
+    "role": "data-or-setting",
+    "reason": "已读取结论（EOM/Simscape/ADAMS互检RMS差异0.98%-2.67%运动范围、纯仿真对仿真非实验验证）与表6/7，图表逐幅核对跳过。"
+   }
+  ]
+ },
+ "research_question": "在参数不确定（+10%质量/惯量/长度系数）、外部扰动、关节限位与pull-only绳驱动约束下，用逐关节有界的残差DDPG力矩增强名义计算力矩控制，能否以及在多大程度上改善绳驱动下肢康复机器人的末端笛卡尔轨迹跟踪精度，且不破坏绳张紧可行性与关节限位？",
+ "contributions": [
+  "平面3-DOF三绳下肢康复机构的文档化运动学/动力学模型：带关节限位的约束逆运动学参考生成、显式绳长雅可比映射与关节/绳可行性检查定义",
+  "名义CTC与三动作残差DDPG策略的集成：残差力矩逐关节限幅±[5,3,2]^T N·m，保留CTC的可解释名义指令结构，残差权限可通过归一化动作峰值/近限时长/RMS力矩比直接审计",
+  "四情景配对比较（名义、10%同时参数不确定、外扰、组合）：同一轨迹/模型/增益/初值/扰动实现下仅控制器差异，用RMS/peak/IAE/ISE与绳需求、关节限位指标量化",
+  "轨迹特定可行性与鲁棒性诊断：91,125采样静态非负张力工作空间（37.22%可行）、J_c秩/σ_min/条件数、十扰动种子、区间化误差、四个邻近初值与换轨迹圆形路径迁移评估"
+ ],
+ "method": {
+  "summary": "残差深度强化学习增强的计算力矩控制：τ_cmd=τ_ctc+τ_RL。CTC层用名义模型D_n、C_n、G_n生成主指令（K_p=60I、K_d=20I，含10/(s+10)一阶指令滤波）；DDPG层只输出有界补偿力矩τ_RL∈±[5,3,2]^T N·m（tanh输出逐关节缩放到界），观测为12维[q;q̇;e;ė]（无自动归一化），actor两层256 ReLU，critic为观测/动作分离路径的Q网络；训练用DDPG（γ=0.99、replay 1e6、minibatch 256、探索噪声方差0.05、目标网络平滑5e-3、≤300 episodes×1000步、平均奖励>-0.05停止），奖励惩罚关节误差、误差率、归一化残差幅值与残差变化（w_e=2.0、w_ė=0.35、w_u=0.05、w_Δu=0.20）；评估用归档checkpoint（Agent20_3cables.mat）确定性执行、不在线更新。失配解释式(45)：ë+K_d ė+K_p e=Δ-D_p^{-1}τ_RL，actor学习压低Δ（失配+滤波+外扰的聚合项）。绳驱动方面：被仿真对象为关节力矩驱动，绳力计算F_p=(J_c^T)^{-1}τ*为并行代数审计（非负则接受否则零回退，不驱动机架）；pull-only可行性另用91,125点静态采样测试与沿路径J_c秩/σ_min/κ_2诊断。",
+  "assumptions": [
+   "运动学几何（连杆长度）已标定且不失效——参数不确定仅施加于被仿真对象的动力学系数（质量/COM惯量/长度相关系数同时+10%，1-5s），运动学计算保持名义值",
+   "不确定性为确定性、时localized、同时的+10%扰动，不是统计人群模型；外扰为三通道带限白噪声力矩（5-9s，功率0.1，种子固定或十种子重采样）",
+   "被仿真对象为理想关节力矩驱动（绳-电机-滑轮-弹性-张紧伺服动力学不建模），绳力输出仅为诊断信号",
+   "主评估在训练环境所用轨迹上进行（已知轨迹补偿），换轨迹能力仅由圆形路径单独诊断",
+   "CTC增益K_p=60、K_d=20为两分支共用的固定选择；actor在评估间不再训练或适配"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无外部数据集：MATLAB/Simulink R2022b仿真（10s、0.01s固定步长ode3），脚本/结果/checkpoint可向通讯作者合理索取（原始训练种子与随机源状态未保留）",
+   "模型一致性检验：解析EOM vs Simscape Multibody vs MSC ADAMS，RMS差异为对应运动范围的0.98%-2.67%、最大绝对差异2.47%-6.15%"
+  ],
+  "tasks": [
+   "主任务：式(14)的10s平滑闭合康复样末端笛卡尔路径跟踪，四情景（C1名义/C2仅不确定/C3仅外扰/C4组合）",
+   "诊断任务：换轨迹圆形路径迁移（组合情景）、四个邻近初值、十扰动种子重复、残差权限审计"
+  ],
+  "embodiments": [
+   "平面3-DOF三连杆下肢康复机构（髋/膝/踝类关节），连杆0.45/0.35/0.21 m、质量11.125/5.05/1.38 kg，三根pull-only绳驱动（3×3方阵绳雅可比，无冗余零空间）"
+  ],
+  "sample_or_scale": "单机构单轨迹主比较+1换轨迹诊断；十种子重复（扰动情景）；91,125工作空间采样点；DDPG训练≤300 episodes×1000步（表4全参数披露）"
+ },
+ "evaluation": {
+  "design": "配对比较：基线CTC与CTC+残差DDPG在相同期望轨迹、名义模型、CTC增益、仿真时长/步长、初始状态、不确定时机与扰动实现下运行，唯一差异是加入确定性actor输出；四情景因子设计（不确定×外扰）分离两类误差源；扩展诊断含十种子均值±标准差（无推断统计检验声明）、区间化（0-1/1-5/5-9/9-10s）、四邻近初值与换轨迹圆形路径；绳/关节约束指标与跟踪指标并列报告；两个独立生成的数据集（代表后处理文件与case-matrix）不合并、分别报告。",
+  "baselines": [
+   "名义CTC（同增益、同滤波、同实现的配对基线）"
+  ],
+  "metrics": [
+   "RMS笛卡尔误差（m）、peak笛卡尔误差（m）",
+   "IAE（m·s）、ISE（m²·s）",
+   "最小/最大logged代数绳需求（N）、零张力回退边界触及",
+   "关节限位channel-samples与违反时长（s）",
+   "J_c秩、σ_min、条件数κ_2（可行性/数值敏感性诊断）",
+   "残差权限：归一化动作峰值ρ_max、近限（≥0.95）样本占比、残差/CTC RMS力矩比"
+  ],
+  "ablations": [
+   "四情景因子分离：不确定only vs 外扰only vs 组合 vs 名义（表12）——区分模型失配补偿与扰动抑制的贡献",
+   "区间化误差（图19）：瞬态/不确定/外扰/恢复区间的RMS降幅分离",
+   "残差权限审计（图21）：验证学习层从属于名义层（RMS力矩比11.85-20.79%、近限占比0-0.2%）",
+   "换轨迹迁移（图22）：训练轨迹外的圆形路径，跟踪与关节限位行为并列报告"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "代表组合案例（+10%参数不确定1-5s+带限白噪声外扰5-9s，表11）：残差DDPG使RMS笛卡尔误差从0.0221419 m降至0.0128462 m（-42.0%），IAE -63.5%、ISE -66.8%、peak -19.4%；IAE/ISE降幅远大于peak说明压低的是全程持续误差而非孤立峰值（peak均出现于共享初始瞬态）。",
+   "scope": "单次代表运行（10s、组合情景、已归档扰动实现）",
+   "locator": "6.2. Representative combined uncertainty/disturbance case, Table 11"
+  },
+  {
+   "finding": "四情景配对比较（表12）：RMS降幅在名义21.1%、仅不确定39.4%、仅外扰27.7%、组合41.6%——不确定情景增益最大，支持actor主要补偿名义模型失配的机制解释；名义IAE几乎不变（+0.15%）区分了持续误差改善与瞬态差异。",
+   "scope": "独立case-matrix数据集、主（训练）轨迹",
+   "locator": "6.3. Four-case comparison and dataset provenance, Table 12"
+  },
+  {
+   "finding": "十种子鲁棒性：组合情景均值RMS为CTC 0.022945±0.000533 m vs 残差0.012916±0.000082 m（均值降幅43.69±1.17%），残差支路标准差约小6.5倍，跨扰动实现的敏感性降低；区间分析显示最大且最一致的增益出现在不确定区间（-81.84%）与外扰区间（-68.45%）。",
+   "scope": "组合情景、十个扰动种子、区间化RMS",
+   "locator": "6.4. Ten-seed robustness and interval-wise behavior"
+  },
+  {
+   "finding": "残差从属性成立：残差RMS力矩为CTC对应值的11.85%/7.79%/20.79%（关节1-3），归一化动作峰值0.972/0.307/0.898，仅关节1有0.200%样本近限（≥0.95）——学习层保持有界校正而非接管主控制。",
+   "scope": "代表组合案例的力矩日志审计",
+   "locator": "6.6. Residual authority and alternate-trajectory diagnostic"
+  },
+  {
+   "finding": "跟踪-绳力需求权衡：残差支路把最大logged代数绳需求从76.87 N提高到86.24 N（+12.2%）的同时降低跟踪误差；CTC支路最小绳需求触及零回退边界而残差支路保持3.41445 N；由于F_max未定义，绳需求为诊断量而非执行器饱和可行性证明。",
+   "scope": "代表组合案例、静态/代数绳力审计",
+   "locator": "6.2. Representative combined uncertainty/disturbance case, Table 11"
+  },
+  {
+   "finding": "换轨迹迁移的双面性：圆形路径（组合情景）RMS从0.021738降至0.012052 m（-44.56%），笛卡尔跟踪能力可迁移；但关节限位channel-samples从44增至101、两支路最小张力均为零——改进的笛卡尔跟踪可与轨迹依赖的关节限位违反共存。",
+   "scope": "单一换轨迹诊断（圆形路径）",
+   "locator": "6.6. Residual authority and alternate-trajectory diagnostic, Fig. 22"
+  },
+  {
+   "finding": "绳驱动可行性背景：91,125个关节限位采样中仅37.22%满足静态非负张力测试；沿期望路径J_c保持秩3、σ_min=0.01481、最大κ_2=71.25——满秩避免奇异但条件数峰值提示不利姿态下张力推断的数值敏感性。",
+   "scope": "静态采样工作空间与沿路径诊断",
+   "locator": "6.1. Sampled workspace, static tension feasibility, and cable-Jacobian conditioning, Table 10"
+  },
+  {
+   "finding": "关节限位改善：代表案例中CTC有61个关节限位channel-samples（0.61 s）而残差支路为0；扰动后恢复时间CTC 0.08 s vs 残差0（阈值保持型恢复指标）。",
+   "scope": "代表组合案例",
+   "locator": "6.2. Representative combined uncertainty/disturbance case, Table 11"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "结果不建立形式稳定性、动力学绳力实现、执行器饱和可行性、临床收益或硬件安全；绳力为诊断性力矩等效需求，未经仿真绳驱动回路施加",
+    "locator": "7. Conclusion"
+   },
+   {
+    "limitation": "换轨迹测试显示改进的笛卡尔跟踪可与轨迹依赖的关节限位违反共存（圆形路径残差支路101个限位样本 vs CTC 44个）",
+    "locator": "7. Conclusion"
+   },
+   {
+    "limitation": "主轨迹即训练环境所用轨迹，主比较评估的是已知轨迹上的补偿而非宽泛轨迹泛化；不确定扰动为确定性时localized +10%，非统计人群模型",
+    "locator": "5.2. Primary comparison protocol / 3.2. Nominal controller model, uncertain plant, and disturbance"
+   },
+   {
+    "limitation": "原始训练统计与checkpoint选择依据未保留（不呈现训练曲线、不声称checkpoint最优）；代表运行的随机源状态未保留，原始扰动实现不能保证精确复现",
+    "locator": "4.3. Reward and training objective / Data availability"
+   },
+   {
+    "limitation": "当前奖励只含跟踪与残差正则项，未含绳张力裕度、关节限位接近度、交互力、舒适度与执行器功率——留待约束感知训练阶段",
+    "locator": "4.3. Reward and training objective / 7. Conclusion"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "纯仿真研究且模型一致性检验本身有0.98%-2.67% RMS差异（最大6.15%），毫米级以下误差结论受实现差异影响；无真机/临床验证",
+    "basis": "5.1节表6与'These results remain simulation-to-simulation comparisons and do not constitute hardware, experimental, or clinical validation'"
+   },
+   {
+    "boundary": "残差RMS误差改善后的绝对水平仍为0.0128 m（约13 mm）量级，距亚毫米/毫米级精密末端跟踪需求尚远；且peak误差（0.078 m）由共享初始瞬态主导，残差对瞬态峰值的改善有限（-19.4%）",
+    "basis": "表11/表12数值：RMS 0.0128462 m、peak 0.0782787 m；'the largest excursion occurs in the shared initial transient'"
+   },
+   {
+    "boundary": "与鲁棒/自适应/阻抗等康复控制文献无直接数值可比性（作者自述机制/轨迹/患者模型/指标不同）；基线仅名义CTC一档，未与滑模、扰动观测器等鲁棒控制层方案对比，残差学习的边际价值相对其他鲁棒化手段未量化",
+    "basis": "6.7节'direct numerical ranking is not meaningful'；表12仅CTC vs CTC+DDPG"
+   },
+   {
+    "boundary": "pull-only绳可行性结论仅限静态重力补偿意义与沿路径代数诊断；零回退使logged信号构造性非负，不能作为动态绳可行性证据；绳弹性/预紧/电机饱和均未建模",
+    "basis": "3.3节与5.3节的解释性声明；表11脚注'*The allocation output is nonnegative by construction'"
+   }
+  ]
+ },
+ "transfer_boundary": "仅在平面3-DOF三绳下肢康复机构的MATLAB仿真、已知训练轨迹与配对CTC基线上验证的有界残差DDPG方案（RMS误差降21-44%、改善后绝对RMS仍约13 mm、十种子稳定），pull-only绳可行性仅为静态/代数诊断，换轨迹后关节限位违反可能增多，无形式稳定性与真机/临床证据，不能外推到动态绳驱动实现或高精度（亚毫米）末端跟踪需求。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "配对比较设计严谨：两分支共享一切条件仅差actor输出，避免有利扰动抽样/初值差异被误归因；两个独立数据集分别报告不合并",
+   "评估维度罕见地完整：跟踪指标（RMS/peak/IAE/ISE）+绳需求+关节限位+J_c条件数+残差权限审计+十种子+区间化+换轨迹，自我限定与解释性声明系统而诚实",
+   "误差源因子分离（名义/不确定/外扰/组合）支持机制归因（残差主要补偿模型失配）",
+   "训练/评估全参数披露（表4），残差权限直接可审计是残差学习方案的可推广评估实践"
+  ],
+  "design_risks": [
+   "主评估轨迹即训练轨迹，42%等主数字反映已知轨迹补偿；换轨迹仅一个圆形路径且暴露关节限位恶化，泛化证据薄弱",
+   "基线仅名义CTC，无鲁棒/自适应/滑模/扰动观测器对照，无法判断同样界内权限下更简单的鲁棒项能否达到相近改善",
+   "模型一致性检验存在~1-2.7% RMS差异而报告精度为1e-4 m量级，实现噪声与结论量级接近",
+   "绳力审计的零回退构造使非负性证据无效（作者已声明）；DDPG训练种子未保留，复现训练过程不完全可保证"
+  ],
+  "baseline_fairness": "与唯一基线（名义CTC）的比较设计公平（配对、同增益、同实现），且残差权限审计排除了'学习层接管控制'的解释；但缺少与其他鲁棒化控制器的横向基线，方法边际价值未定位。",
+  "metric_validity": "RMS/peak/IAE/ISE定义清晰且IAE/ISE区分持续误差与峰值；peak因共享初始瞬态而缺乏区分度（作者已识别）；绳需求与关节限位指标为诊断性而非物理可行性证明（作者明确标注）；十种子仅描述性统计无检验。",
+  "reproducibility": "表4披露DDPG全参数与checkpoint文件名，脚本/结果可索取但非公开仓库；原始训练种子与随机源状态未保留（作者承认不能保证精确复现代表扰动实现）；Simulink求解器设置披露完整。",
+  "external_validity": "结论限于平面3-DOF三绳机构仿真、单一主轨迹+单一换轨迹、确定性+10%失配与固定谱白噪声外扰；对3D机构、冗余绳驱动（有零空间再分配）、真实患者交互、绳弹性与电机饱和场景无证据；作者自己把硬件/临床验证列为必要前置。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.26739-C01",
+   "claim": "在平面3-DOF三绳下肢康复机器人仿真的代表组合案例（1-5s同时+10%参数不确定、5-9s带限白噪声力矩外扰）中，有界残差DDPG使末端RMS笛卡尔误差从0.0221419 m降至0.0128462 m（约42%），IAE降63.5%、ISE降66.8%、峰值误差降19.4%——持续误差的压缩远大于瞬态峰值。",
+   "stance": "support",
+   "relation": "支撑综述命题'残差强化学习增强模型基控制可在参数不确定+外扰下大幅改善绳驱动机器人末端轨迹跟踪精度'，为控制层残差学习方案族提供量化效果锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.2节原文：代表后处理数据集上RMS笛卡尔误差从0.0221419 m降至0.0128462 m（41.9826%，约42%），peak/IAE/ISE分别降19.4%/63.5%/66.8%；表11同数值并列最小绳需求0→3.41445 N、关节限位样本61→0。",
+   "locator": "6.2. Representative combined uncertainty/disturbance case, Table 11",
+   "source_context": "Table 11 is generated from the representative post-processing dataset. RMS Cartesian error decreases from 0.0221419 m to 0.0128462 m, a 41.9826% reduction, reported as approximately 42%. Peak error decreases by 19.4%, IAE by 63.5%, and ISE by 66.8%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMS / peak Cartesian error, IAE, ISE",
+    "value_or_direction": "RMS 0.0221419→0.0128462 m (-42.0%); peak -19.4%; IAE -63.5%; ISE -66.8%",
+    "comparator": "nominal CTC (paired: same trajectory, model, gains, initial state, disturbance realization)",
+    "task_or_sample": "representative combined case: +10% simultaneous parameter uncertainty (1-5 s) + band-limited white-noise torque disturbance (5-9 s), 10 s run, planar 3-DOF 3-cable lower-limb robot simulation",
+    "locator": "Table 11"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对6.2节首段（0.0221419/0.0128462/41.9826%/19.4%/63.5%/66.8%六个数值）与表11行值（RMS/peak/IAE/ISE两列及降幅列）完全一致；'约42%'的表述与6.3节两数据集42.0%/41.6%的差异说明核对；主张限定于代表组合案例的单次运行。"
+   }
+  },
+  {
+   "card_id": "2608.26739-C02",
+   "claim": "四情景配对比较（独立case-matrix数据集）中，残差DDPG的RMS笛卡尔误差降幅为：名义21.1%、仅不确定39.4%、仅外扰27.7%、组合41.6%；不确定情景增益最大，支持残差策略主要补偿名义模型失配的机制解释。",
+   "stance": "support",
+   "relation": "支撑综述命题'残差学习的核心机制是补偿模型基控制的失配残差'，并用因子分离把模型不确定与外扰两类误差源的改善分开量化。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.3节原文：残差DDDPG在名义/仅不确定/仅外扰/组合四情景分别降RMS误差21.1%/39.4%/27.7%/41.6%；作者解释不确定情景的更大增益支持'actor补偿名义模型失配'，且名义情景的非零改善可源于指令滤波、数值微分、离散化等未被理想CTC抵消的效应。表12给出绝对值（如组合0.022032→0.012863 m）。",
+   "locator": "6.3. Four-case comparison and dataset provenance, Table 12",
+   "source_context": "Table 12 compares the four primary scenarios using an independently generated case-matrix file. Residual DDPG reduces RMS error by 21.1% in the nominal case, 39.4% with uncertainty only, 27.7% with disturbance only, and 41.6% in the combined case. The larger gains in the uncertainty-containing cases support the interpretation that the actor compensates for nominal-model mismatch.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMS Cartesian error reduction by scenario",
+    "value_or_direction": "21.1% (nominal), 39.4% (uncertainty only), 27.7% (disturbance only), 41.6% (combined)",
+    "comparator": "nominal CTC, paired design, independent case-matrix dataset",
+    "task_or_sample": "four scenarios C1-C4 on the primary (training-environment) trajectory, 10 s runs, planar 3-DOF 3-cable robot simulation",
+    "locator": "Table 12"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对6.3节首段四个百分比与机制解释句；与表12逐行核对（名义0.016479→0.013001约-21.1%、不确定0.021239→0.012875约-39.4%、外扰0.018034→0.013034约-27.7%、组合0.022032→0.012863约-41.6%）方向与幅度一致；名义IAE +0.15%的细节在紧随段落核对。"
+   }
+  },
+  {
+   "card_id": "2608.26739-C03",
+   "claim": "组合情景经十个扰动种子重复：CTC均值RMS误差0.022945±0.000533 m，残差DDPG为0.012916±0.000082 m（均值降幅43.69±1.17%），且残差支路标准差约小6.5倍——改善跨扰动实现稳定并降低对扰动抽样的敏感性。",
+   "stance": "support",
+   "relation": "支撑综述命题'残差学习改善在扰动随机性下可重复'，为控制层方案量化效果提供跨种子稳定性证据（区别于单次运行）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.4节原文：扰动启用情景以十种子重复，组合案例CTC均值RMS 0.022945±0.000533 m、残差0.012916±0.000082 m、均值降幅43.69±1.17%；残差控制器更小的标准差表明跨测试扰动实现的敏感性降低；区间分析另给出不确定区间-81.84%、外扰区间-68.45%的最大增益。",
+   "locator": "6.4. Ten-seed robustness and interval-wise behavior",
+   "source_context": "Disturbance-enabled cases were repeated with ten seeds. For the combined case, mean RMS error is 0.022945 ± 0.000533 m for CTC and 0.012916±0.000082 m for CTC + residual DDPG, giving a mean reduction of 43.69±1.17%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean ± std of RMS Cartesian error over ten disturbance seeds",
+    "value_or_direction": "CTC 0.022945±0.000533 m vs residual 0.012916±0.000082 m; mean reduction 43.69±1.17%",
+    "comparator": "nominal CTC (same trajectory and settings, ten disturbance realizations)",
+    "task_or_sample": "combined uncertainty/disturbance scenario, ten disturbance seeds, primary trajectory, planar 3-DOF 3-cable robot simulation",
+    "locator": "Section 6.4, Fig. 18"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对6.4节首段（含'0.022945 ± 0.000533'与'0.012916±0.000082'的空格差异原样保留）与43.69±1.17%；'标准差更小/敏感性降低'为下一句原文（图18摘要）；区间降幅81.84%/68.45%/23.82%/22.64%在同段核对；标准差约6.5倍之比为读者计算并标注'约'。"
+   }
+  },
+  {
+   "card_id": "2608.26739-C04",
+   "claim": "残差DDPG在降低跟踪误差的同时把最大logged代数绳需求从76.87 N提高到86.24 N（+12.2%）——存在跟踪精度-绳力需求权衡，且因F_max未定义该绳需求只是诊断量而非执行器饱和可行性证明。",
+   "stance": "limit",
+   "relation": "限制综述命题'学习增强控制可无损改善绳驱动机器人跟踪精度'——跟踪改善以更高绳力需求为代价且物理可行性未验证，是绳驱动方案族的未解痛点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.2节原文：残差控制器把最大logged代数绳需求从76.87 N提高到86.24 N同时降低跟踪误差，量化了跟踪-需求权衡，并提示在物理电机/线轴/绳/预紧/F_max规格定义后应把绳力裕度纳入奖励与分配层；表11标注+12.2% higher且logged分配值非负由构造保证。",
+   "locator": "6.2. Representative combined uncertainty/disturbance case, Table 11",
+   "source_context": "The residual controller raises the maximum logged algebraic cable demand from 76.87 N to 86.24 N while reducing tracking error. This quantifies the associated tracking–demand tradeoff and motivates incorporating cable-force margin into the reward and allocation layers once physical motor, spool, cable, pretension, and 𝐹 𝑚𝑎𝑥 specifications are defined.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "maximum logged algebraic cable demand",
+    "value_or_direction": "76.87 N → 86.24 N (+12.2%) while RMS error -42.0%",
+    "comparator": "nominal CTC branch",
+    "task_or_sample": "representative combined uncertainty/disturbance case, algebraic cable-demand audit (diagnostic, not applied to plant)",
+    "locator": "Table 11"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对6.2节权衡段（含'tracking–demand'连接号与'𝐹 𝑚𝑎𝑥'数学字形间空格原样保留）；76.87/86.24与表11'最大logged绳需求76.8738→86.2373 N、12.2% higher'交叉核对一致；F_max未定义与诊断性定位在3.3节与表11脚注核对。"
+   }
+  },
+  {
+   "card_id": "2608.26739-C05",
+   "claim": "换轨迹（圆形路径、组合情景）迁移评估显示双面结果：残差DDPG把RMS笛卡尔误差从0.021738降至0.012052 m（轨迹特定44.56%降幅），但关节限位channel-samples从44增至101、两支路最小logged张力均为零——改进的笛卡尔跟踪可与轨迹依赖的关节限位违反共存。",
+   "stance": "limit",
+   "relation": "限制综述命题'末端轨迹精度改善即整体方案改善'——笛卡尔精度指标改善可能伴随关节空间约束恶化，为控制层方案评测痛点（单指标盲区）与泛化边界提供证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "6.6节原文：圆形路径上残差DDPG降RMS误差44.56%（轨迹特定），但关节限位channel-samples为44（CTC）对101（残差支路），最小张力双零、最大推断张力230.42 N对162.58 N；结论是展示了笛卡尔跟踪性能的迁移并识别出应纳入后续约束感知训练的扩展关节坐标范围；7.结论再次明确'改进的笛卡尔跟踪可与轨迹依赖的关节限位违反共存'。",
+   "locator": "6.6. Residual authority and alternate-trajectory diagnostic",
+   "source_context": "The alternate circular path evaluates trajectory transfer and the associated joint-coordinate coverage. Residual DDPG reduces RMS Cartesian error from 0.021738 to 0.012052 m (a trajectory-specific 44.56% reduction), while joint-limit channel-samples are 44 for CTC and 101 for the residual branch.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMS Cartesian error and joint-limit channel-samples on alternate trajectory",
+    "value_or_direction": "RMS 0.021738→0.012052 m (-44.56%); joint-limit channel-samples 44→101 (worse); min logged tension 0 for both; max inferred tension 230.42→162.58 N",
+    "comparator": "nominal CTC",
+    "task_or_sample": "circular-path transfer evaluation under combined uncertainty/disturbance scenario (single alternate trajectory, no retraining)",
+    "locator": "Section 6.6, Fig. 22"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对6.6节迁移段与图22标题说明（0.021738/0.012052/44.56%/44/101及最小张力双零、最大张力230.42/162.58 N）；'improved Cartesian tracking can coexist with trajectory-dependent joint-limit violations'在7. Conclusion原文核对；主张限定于单一换轨迹诊断。"
+   }
+  },
+  {
+   "card_id": "2608.26739-C06",
+   "claim": "作者自述边界：结果支持有界残差学习作为该仿真模型的有效补偿层，但不建立形式稳定性、动力学绳力实现、执行器饱和可行性、临床收益或硬件安全；改进的笛卡尔跟踪可与轨迹依赖的关节限位违反共存。",
+   "stance": "limit",
+   "relation": "支撑综述命题'残差学习控制层方案目前的证据边界是纯仿真+诊断级约束验证'，把稳定性/真机实现/安全性列为该方案族的未解痛点。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "7. Conclusion原文明确列举不建立的四类主张（形式稳定性、动力学绳力实现、执行器饱和可行性、临床收益或硬件安全），并以圆形路径测试为例说明笛卡尔改善与关节限位违反可共存；未来工作需定义物理预紧与绳力界、实现带不可行指令处理的QP分配器、把约束量纳入学习与监控层，并需更广随机化训练/测试与硬件验证。",
+   "locator": "7. Conclusion",
+   "source_context": "The results support bounded residual learning as a useful compensation layer for the evaluated simulation model. They do not establish formal stability, dynamic cable-force realization, actuator-saturation feasibility, clinical benefit, or hardware safety. The circular-path test further shows that improved Cartesian tracking can coexist with trajectory- dependent joint-limit violations.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对7. Conclusion边界段三句：'useful compensation layer for the evaluated simulation model'、'do not establish formal stability, dynamic cable-force realization, actuator-saturation feasibility, clinical benefit, or hardware safety'与圆形路径共存活句均与原文一致；未来工作条目在同节后两段核对。"
+   }
+  }
+ ],
+ "core_citations": [
+  "1509.02971"
+ ],
+ "notes": "本族定位：控制层方案族的'残差强化学习×模型基控制（CTC）'分支，绳驱动康复机器人应用。对综述映射：方案='CTC名义层+逐关节有界（±[5,3,2] N·m）DDPG残差力矩，奖励含残差幅值/变化正则，评估用确定性归档checkpoint'；误差源=+10%同时参数不确定（动力学系数、运动学标定不变）+带限白噪声外扰+pull-only绳约束；量化效果=RMS降21-44%（组合约42%、十种子43.69±1.17%），改善后绝对RMS仍约13 mm；适用条件=已知训练轨迹、配对CTC基线、仿真对象为理想关节力矩驱动；痛点=跟踪-绳力需求权衡（最大需求+12.2%）、换轨迹后关节限位违反增多（44→101）、绳可行性仅静态/代数诊断（零回退构造性非负）、无稳定性/真机/临床证据、训练种子未保留。该文自我限定与诊断披露的规范程度可作为综述中'评测方法学'的正面对照。"
+}

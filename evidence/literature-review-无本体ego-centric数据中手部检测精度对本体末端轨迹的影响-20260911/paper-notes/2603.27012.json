@@ -1,0 +1,283 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.27012",
+  "title": "UMI-Underwater: Learning Underwater Manipulation without Underwater Teleoperation",
+  "published": "2026-03-27",
+  "url": "https://arxiv.org/abs/2603.27012",
+  "authors": [
+   "Hao Li",
+   "Long Yin Chung",
+   "Jack Goler",
+   "Ryan Zhang",
+   "Xueli Xie",
+   "Huy Ha",
+   "Shuran Song",
+   "Mark R. Cutkosky"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "UMI 族手持接口（UMI-Aquatic）在水下感知退化场景的适配：AprilTag 夹爪追踪 + 滑窗闭合检测 + CoTracker3 回追构成自动标注链，深度 affordance 作为跨域感知接口替代外观依赖；直接覆盖综述问题中的特殊环境退化、误差传播路径与缓解手段。注意其无本体数据仅训练感知模块，动作轨迹来自 ROV 自监督采集。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "水下感知退化与遥操作成本双重瓶颈"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "UMI 族与自监督采集的定位"
+   },
+   {
+    "locator": "III. APPROACH",
+    "role": "method-or-design",
+    "purpose": "ROV 自监督采集管线、UMI-Aquatic 手持接口、AprilTag 夹爪追踪与跨相机几何对齐、affordance 训练"
+   },
+   {
+    "locator": "IV. EXPERIMENTS",
+    "role": "results-or-analysis",
+    "purpose": "ID/OOD/新物体三组评测与失效模式（overshoot 目标切换）"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述局限：仅深度条件化的信息损失与 PID 过冲"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "ACKNOWLEDGMENTS",
+    "role": "appendix-or-supplement",
+    "purpose": "致谢与证据无关"
+   },
+   {
+    "locator": "REFERENCES",
+    "role": "appendix-or-supplement",
+    "purpose": "参考文献列表，不影响证据判定"
+   }
+  ]
+ },
+ "research_question": "如何在不依赖水下遥操作的情况下获得可用的水下操作数据与策略：用自监督 ROV 管线自动采集成功抓取水下定示，并用陆上 UMI-Aquatic 手持示教训练的深度 affordance 模型实现陆到水的零样本迁移。",
+ "contributions": [
+  "自监督水下采集管线：启发式 PD 视觉伺服 + 恢复行为 + 自动成功过滤，536 次抓取示教中取 233 次成功训练策略",
+  "UMI-Aquatic 手持接口：iPhone 相机 + AprilTag 夹爪状态追踪，2.2 小时采 800 条陆上示教（6 类物体、8 背景）",
+  "深度 affordance 作为跨域感知接口：陆上训练、水下零样本部署（无混合训练、无微调），跨相机 plane-at-depth 几何对齐"
+ ],
+ "method": {
+  "summary": "两路数据分离『在哪抓』与『如何控』：水下端用启发式控制器（SAM2-tiny 分割选目标、PD 伺服、Depth Anything V2 单目深度触发闭合、3 秒拖拽验证成功）自动采集；陆上用 UMI-Aquatic 手持夹爪（iPhone 视角对齐水下相机 + AprilTag 追踪开合状态），以滑窗变点检测确定闭合时刻 t*、CoTracker3 回追接触像素，自动生成 affordance 关键点监督；affordance U-Net 仅以深度为输入，陆上训练后经 plane-at-depth 重投影对齐水下相机几何并零样本部署；affordance+深度条件的扩散策略在水下成功示教上做行为克隆。",
+  "assumptions": [
+   "深度表征对陆-水外观域差（光照/颜色/浊度）比 RGB 更不变",
+   "iPhone 与水下相机可通过平面假设重投影对齐（R=I，仅平移），残余几何误差可接受",
+   "AprilTag 闭合时刻检测 + 点追踪回追产生的接触关键点标签足够准确，可直接作为监督"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "536 次自监督水下抓取示教（233 次成功用于训练）",
+   "800 条陆上 UMI-Aquatic 手持示教（6 类物体、8 背景，约 2.2 小时）"
+  ],
+  "tasks": [
+   "多物体场景指定目标的 pick-and-drag 抓取"
+  ],
+  "embodiments": [
+   "QYSEA 系 tethered ROV + 1-DoF 夹爪 + 前置/顶部相机",
+   "UMI-Aquatic 手持夹爪（iPhone + AprilTags）"
+  ],
+  "sample_or_scale": "每方法-条件 20 次试验；2×4 m 泳池"
+ },
+ "evaluation": {
+  "design": "三种设置：ID（见物体+训练背景）、OOD 背景壁纸、OOD 新物体（仅陆上出现的物体，零样本）；三物体场景以陆上 goal 图指定目标；成功定义为抓住指定目标且 3 秒拖拽不滑脱，抓错物体计失败",
+  "baselines": [
+   "DP + RGB（goal-agnostic，仅水下示教训练）",
+   "DP + RGB + Aff + Depth（RGB 添加消融，同一 affordance 模型）"
+  ],
+  "metrics": [
+   "成功率（20 次/条件）"
+  ],
+  "ablations": [
+   "RGB 添加消融",
+   "affordance 预训练来源（陆上 UMI vs 池内自监督，后者因数据偏窄被弃用）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "ID 设置 DP+Aff+Depth 85% vs DP+RGB 65%；OOD 背景 80% vs 0%（RGB）与 0%（RGB+Aff+Depth）；新物体零样本 75% vs 50%",
+   "scope": "泳池 pick-and-drag，每条件 20 次",
+   "locator": "IV. EXPERIMENTS, Tables I-III"
+  },
+  {
+   "finding": "陆上 RGB 输入的 affordance 模型向水下迁移很差，故改用深度输入；即使保留 Aff+Depth，额外加入 RGB 也会在强外观偏移下崩溃到 0%",
+   "scope": "陆到水跨域",
+   "locator": "D. OOD Visual Generalization Under Unseen Backgrounds"
+  },
+  {
+   "finding": "overshoot 导致目标切换失效模式：视点偏移使目标部分出画或与 goal 错位，affordance 模型将高置信度放到干扰物上，并使恢复行为反向传播错误目标",
+   "scope": "部署期失效模式",
+   "locator": "E. Novel-Object Generalization via On-Land Pretraining"
+  },
+  {
+   "finding": "AprilTag 夹爪追踪 + 滑窗闭合检测 + CoTracker3 回追提供自动 affordance 监督，替代人工关键点标注",
+   "scope": "陆上 UMI-Aquatic 标注链",
+   "locator": "C. Goal-Conditioned Data Preprocessing and Training"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "仅以预测深度为条件会丢弃颜色/纹理线索（高光、材质、深度估计差时的物体边界、细粒度目标身份），在深度噪声大或物体几何相似时不理想",
+    "locator": "V. CONCLUSION"
+   },
+   {
+    "limitation": "底层 PID 控制存在过冲，既降低抓取可靠性又诱发视点变化触发目标切换失效",
+    "locator": "V. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "AprilTag 闭合时刻检测与 CoTracker3 回追的标注精度未作任何量化评估；affordance 标签质量对最终策略的贡献未经消融，标注误差传播只停留在机制层面",
+    "basis": "III-C-b 仅描述标注链设计，全文无标注精度数值"
+   },
+   {
+    "boundary": "plane-at-depth 重投影假设场景近似平面（R=I 仅平移），大视差或非平面场景的跨相机对齐误差不适用此口径",
+    "basis": "III-C-d 几何推导"
+   },
+   {
+    "boundary": "动作轨迹全部来自 ROV 自监督采集而非手持示教重定向；本文不回答手持轨迹直接重定向为机器人末端轨迹的问题",
+    "basis": "III-B 与 III-D：策略训练只用池内成功示教"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限于：泳池尺度的单目 RGB→深度感知、1-DoF 夹爪 pick-and-drag、每条件 20 次试验；无本体手持数据仅作为感知（affordance）监督来源而非动作标签来源；不回答手持轨迹到机器人末端轨迹的直接重定向精度问题，affordance 标注链的精度亦无定量误差条。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "RGB 添加消融在同一 affordance/深度输入下隔离 RGB 的影响，因果归因清晰",
+   "三物体场景 + 陆上 goal 图的目标指定方式使『抓对目标』成为显式度量",
+   "失效模式（overshoot 目标切换）有机制层面的解释与缓解建议"
+  ],
+  "design_risks": [
+   "每条件仅 20 次试验，统计分辨率低（5 个百分点/次）",
+   "DP+RGB 基线无 goal 输入，与本文方法的信息条件不对等（作者声明为中心偏置隐式目标，但仍是公平性折扣）",
+   "AprilTag 标注链精度未量化； affordance 监督质量与策略性能之间的因果链未消融"
+  ],
+  "baseline_fairness": "DP+RGB 不设 goal，代表『无跨域目标指定』的常见设置但信息不对等；RGB 添加消融控制了 affordance 与深度输入，公平。",
+  "metric_validity": "成功率含 3 秒拖拽验证与目标正确性，是部署相关指标；但无轨迹级或标注级精度指标。",
+  "reproducibility": "管线阶段、检测器型号（SAM2-tiny、Depth Anything V2、CoTracker3）与训练超参（RTX 5090、batch 56、150 epochs）完整；声称代码与视频开放。",
+  "external_validity": "泳池 2×4 m、单任务族；开放海域部署仅在致谢中提及（in-the-wild ocean deployment tests），未报告结果。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.27012-C01",
+   "claim": "以陆上 UMI-Aquatic 手持示教训练的深度 affordance 模型为零样本感知接口时，水下抓取策略在 ID 设置达 85%（RGB 基线 65%），在未见背景 OOD 下保持 80% 而 RGB 基线与 RGB 添加消融均崩溃到 0%，在仅陆上出现的新物体上零样本达 75%（RGB 基线 50%），每方法-条件 20 次试验。",
+   "stance": "support",
+   "relation": "说明无本体 ego-centric 手持数据在感知退化场景的可行使用方式：不经手部轨迹重定向，而是经检测驱动的 affordance 监督训练跨域感知接口；其可用性取决于表征对水下外观退化的不变性而非 RGB 外观保真。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Tables I-III 分别报告 ID 85/65、OOD 背景 80/0/0、新物体 75/50；IV-D 正文确认背景偏移下 RGB 策略崩溃且加入 RGB 的消融同样归零。",
+   "locator": "B. Methods Compared; D. OOD Visual Generalization Under Unseen Backgrounds",
+   "source_context": "Table II shows that under background shift, RGB-based policies fail catastrophically.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "grasp success rate (%) with 3 s drag verification",
+    "value_or_direction": "ID 85 vs 65; OOD background 80 vs 0 (RGB) vs 0 (RGB+Aff+Depth); novel-object zero-shot 75 vs 50",
+    "comparator": "DP + RGB goal-agnostic baseline and DP + RGB + Aff + Depth ablation, same pool demonstrations",
+    "task_or_sample": "pool pick-and-drag grasping, 20 trials per method-condition",
+    "locator": "B. Methods Compared, Table I; D. OOD Visual Generalization Under Unseen Backgrounds, Tables II-III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "六组数值与 Tables I-III 及 IV-C/IV-D/IV-E 正文逐一核对；claim 保留每条件 20 次与零样本口径，未推广到轨迹级精度。"
+   }
+  },
+  {
+   "card_id": "2603.27012-C02",
+   "claim": "UMI-Aquatic 的自动标注链以 AprilTag 追踪估计夹爪开合宽度，用滑窗变点检测（陡降后平台）确定闭合时刻 t*，再从闭合帧用 CoTracker3 点追踪向早期帧回追夹爪-物体接触像素，生成每帧 affordance 关键点监督；该标签质量完全依赖闭合时刻检测与点追踪的准确性，但论文未对标注链精度作任何量化评估。",
+   "stance": "conditional",
+   "relation": "刻画采集端手部/夹爪检测误差的第一条传播路径：闭合时刻检测错→接触关键点回追错→affordance 标签错位→策略目标定位偏。该路径在本文中以机制形式存在且无精度量化，是综述中误差传播证据的边界。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-C-b 与 Fig. 6 描述标注链：AprilTag 宽度信号→滑窗检测 t*→CoTracker3 回追接触像素 (u_t, v_t)；全文未报告检测或回追的误差率。",
+   "locator": "C. Goal-Conditioned Data Preprocessing and Training",
+   "source_context": "we use an AprilTag-based gripper tracking pipeline (Fig. 6) to estimate gripper openness/width and to determine the grasp/contact timing in the camera frame.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "机制描述与 III-C-b 原文一致；『未量化』经全文检索确认（无任何标注精度数值），claim 限定在机制层面。"
+   }
+  },
+  {
+   "card_id": "2603.27012-C03",
+   "claim": "陆上 RGB 输入的 affordance 模型向水下迁移很差（严重外观偏移），故系统改用单目深度作为 affordance 输入；水下成像的波长相关衰减、散射/后向散射、浊度与快速变化的光照和焦散会使同一环境内的外观发生显著漂移。",
+   "stance": "limit",
+   "relation": "回答特殊环境对视觉检测的退化：水下 ego 视角的外观信息不可信，依赖 RGB 外观的手部/目标检测与表征会失效；几何（深度）接口是本文采用的缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-C 声明 RGB affordance 跨域差是改用深度的直接原因；I. INTRODUCTION 列举水下感知退化因子；IV-D 的 0% 崩溃提供实证。",
+   "locator": "I. INTRODUCTION",
+   "source_context": "wavelength-dependent attenuation, scattering/backscatter, tur- bidity, and rapidly changing illumination and caustics",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "退化因子列表逐字来自引言；RGB 迁移差的声明与 III-C 原文一致（『transfer poorly ... due to severe appearance shift』）。"
+   }
+  },
+  {
+   "card_id": "2603.27012-C04",
+   "claim": "部署期存在 overshoot 诱发的目标切换失效：ROV 过冲使目标部分出画或与 goal 规格错位，affordance 模型转而对保持可见的干扰物给出高置信度，把策略引向错误物体；该失效还会使恢复策略反向重追到干扰物而非原目标。",
+   "stance": "limit",
+   "relation": "展示误差从控制/视点传播到感知标签再传播到动作的闭环路径：低层控制误差改变 ego 视点，检测（affordance）锚定失败直接污染后续动作与恢复行为。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-E 后段 Failure mode 明确描述该失效链及其对恢复策略的破坏，并给出低层控制改进与时序一致性两处缓解方向。",
+   "locator": "E. Novel-Object Generalization via On-Land Pretraining",
+   "source_context": "an overshoot-induced target switch can cause recovery to re-approach the distractor rather than returning to the original goal.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "失效模式描述与 IV-E『F. Failure mode』段落一致；claim 未赋予其出现频率数值（原文亦未给）。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "citation": "Chi et al., Universal Manipulation Interface (UMI), arXiv:2402.10329",
+   "role": "UMI-Aquatic 所派生的手持接口基准"
+  },
+  {
+   "citation": "Liu et al., Self-improving autonomous underwater manipulation (AquaBot), 2024",
+   "role": "自监督水下采集管线的直接前作"
+  }
+ ],
+ "notes": "无本体数据仅训练感知模块（affordance），动作标签来自 ROV 自监督采集——综述引用时须注意其不直接回答手部轨迹重定向精度问题，价值在于退化环境下检测/标注链与表征选择。Tables I-III 在 html-flat 抽取中落入相邻 section 表面，复合 locator 已核对。"
+}

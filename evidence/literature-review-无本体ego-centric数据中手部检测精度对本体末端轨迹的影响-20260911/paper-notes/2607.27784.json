@@ -1,0 +1,305 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.27784",
+  "title": "DexDirect: Direct Kinesthetic Arm Guidance for Efficient Dexterous Demonstration Collection",
+  "published": "2026-07-30",
+  "url": "https://arxiv.org/abs/2607.27784",
+  "authors": [
+   "Beom Jun Kim",
+   "Shiu-Jen Wang",
+   "Jonathan Liu",
+   "Alvin Zhu",
+   "Quanyou Wang",
+   "Hanzhang Fang",
+   "Feng Xu",
+   "Mingzhang Zhu",
+   "Yuchen Cui",
+   "Dennis W. Hong"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "灵巧演示采集接口论文：以'动觉直录臂部轨迹（关节编码器+正运动学，采集期无臂侧位姿估计/重定向/IK）+视觉通路收缩为手局部手指构型'的混合架构，显式绕开视觉追踪闭环的误差源（追踪延迟、位姿估计误差、工作空间失配），并在同平台对照用户研究中给出纯视觉基线 AnyTeleop 白板/键盘 0 成功、吞吐 17.2×/3.2× 差距的定量证据——是'绕开视觉检测的替代路线'与'追踪质量不足时演示可用性坍缩'两个命题的直接证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble (Abstract)",
+    "role": "problem",
+    "purpose": "摘要：动觉臂引导+视觉手部重定向混合接口；481 vs 151 vs 28 成功演示；NASA-TLX 负荷；90% 策略成功率"
+   },
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位低setup追踪闭环的四类失效因素（追踪延迟/位姿估计误差/工作空间失配/坐标映射认知负担）与'绕开代理环路'的设计动机"
+   },
+   {
+    "locator": "II. RELATED WORK",
+    "role": "relevant-core",
+    "purpose": "四类采集接口（直接物理/外骨骼/视觉与位姿遥操作/手持捕获）的取舍地图；单目视觉遥操作的自遮挡、延迟与抖动弱点"
+   },
+   {
+    "locator": "III. SYSTEM DESIGN",
+    "role": "method-or-design",
+    "purpose": "系统设计：重力补偿拖动模式与系统辨识、编码器直录轨迹、MediaPipe 21 标志点+AnyTeleop dex-retargeting、不使用单目腕部位姿的设计、200/60/30Hz 多模记录"
+   },
+   {
+    "locator": "IV. EXPERIMENTS AND RESULTS",
+    "role": "results-or-analysis",
+    "purpose": "AnyTeleop/TeleDex 基线实现、10 人 5 任务用户研究设计、吞吐量/成功率/完成时间结果、NASA-TLX 负荷、200 演示扩散策略 90% 成功"
+   },
+   {
+    "locator": "V. LIMITATIONS",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述四条限制：共址与平台约束、双手控单臂手、手指单目检测仍有追踪/重定向误差敏感性、评估规模与未分离因素"
+   },
+   {
+    "locator": "VI. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：消除臂侧追踪与重定向环路是可扩展灵巧学习的有效路径"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "role": "relevant-core",
+    "reason": "参考文献列表，仅按需回查引用编号（[10] AnyTeleop、[12] TeleDex、[37] MediaPipe、[16] Li et al. 示教模态研究）"
+   }
+  ]
+ },
+ "research_question": "如何设计一个低setup、可扩展的灵巧操作演示采集接口，在保证轨迹机器人可执行性的同时提高吞吐并降低操作者负荷？",
+ "contributions": [
+  "提出 DexDirect：动觉直录 6-DoF 臂（重力补偿拖动+关节编码器记录）与单目 webcam 视觉手指重定向（MediaPipe+AnyTeleop dex-retargeting，16 关节 13-DoF MIDAS 手）的混合接口，消除 leader 硬件、臂侧追踪噪声/遮挡/延迟与臂侧重定向",
+  "10 名参与者 5 任务用户研究：DexDirect 成功演示吞吐为 TeleDex 的 3.2×、AnyTeleop 的 17.2×，且每任务成功率最高",
+  "NASA-TLX 评估显示心理需求、努力与挫败感显著下降（总负荷 2.01 vs 3.08/3.81），唯物理需求上升；200 条演示训练的扩散策略在方块抓取放置任务达 90% 成功率"
+ ],
+ "method": {
+  "summary": "平台为 Agilex PIPER 6-DoF 臂+MIDAS 灵巧手（16 关节 13 驱动、283 触觉 taxel、0.75kg 末端负载）。臂侧：重力补偿拖动模式（零位置刚度+低阻尼，200Hz 关节控制器），经分级系统辨识估计重力方向/负载质心/扭矩标定/库仑摩擦并以 MuJoCo 模型前馈补偿；操作者通过刚性手柄直接 positioning，轨迹从关节编码器记录、正运动学得末端位姿，采集期无臂侧位姿估计/重定向/IK/笛卡尔运动生成。手指侧：掌向 Logitech C270 webcam 30Hz 采右手，MediaPipe Hands 出 21 个 3D 标志点，腕系相对标志点经 AnyTeleop 优化式 dex-retargeting 映到 MIDAS 关节目标；不使用 webcam 估计的全局腕部位姿/朝向，前臂托架保持手掌居中。记录：臂/手状态 200Hz、触觉 60Hz、腕相机 30Hz，最近邻时间戳对齐成 30Hz 片段。策略：DINOv2 ViT-S/14 视觉嵌入+13D 手部绝对位置+4D 触觉摘要，扩散策略输出 19D 动作（6D 末端相对位姿+13 手指目标）。",
+  "assumptions": [
+   "机器人臂可安全低阻抗重力补偿拖动（共址、平台受限）",
+   "手指构型可在手局部坐标系表示，全局位姿由臂独立决定，故视觉通路无需度量腕部位姿",
+   "操作者一手拖臂一手控手指的分工符合人体工学（前臂托架固定右前臂）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "DexDirect 采集的演示（用户研究 481 条成功 + 策略训练用 200 条方块抓取放置演示）"
+  ],
+  "tasks": [
+   "Jenga 抽块",
+   "USB 拔插",
+   "Lazy Susan 旋转+抓取放置",
+   "白板擦拭",
+   "键盘打字",
+   "方块抓取放置（策略学习）"
+  ],
+  "embodiments": [
+   "Agilex PIPER 6-DoF 臂 + MIDAS 16 关节 13-DoF 灵巧手"
+  ],
+  "sample_or_scale": "10 名无先验经验参与者 × 3 接口 × 5 任务（Jenga 180s、其余 120s 时间预算）；策略评估 20 episode"
+ },
+ "evaluation": {
+  "design": "被试内三接口对照（DexDirect/TeleDex/AnyTeleop），接口顺序 ABC/BCA/CAB 循环 counterbalance；每任务 1 分钟练习后在固定时间预算内尽可能多成功重复；任务成功标准逐任务预定义；NASA-TLX（Raw 六维）配 participant 级 Wilcoxon 符号秩检验；视频复盘做失败归因；另以 200 条演示训练扩散策略做 20 次无干预评估",
+  "baselines": [
+   "AnyTeleop（作者复现臂控通路：RealSense 腕部位姿估计+CuRobo receding-horizon MpcSolver 120Hz，手背黑色轻板改善追踪）",
+   "TeleDex（作者开源软硬件，手机腕戴位姿追踪）"
+  ],
+  "metrics": [
+   "固定时间预算内成功演示数（吞吐）",
+   "逐任务成功率与成功执行完成时间",
+   "adapted Raw NASA-TLX 六维负荷",
+   "策略任务成功率（20 episode）"
+  ],
+  "ablations": [
+   "无因素分离消融（作者自述：评估的是直接耦合的综合效应，未分离坐标重映射、延迟与被动接触线索）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "DexDirect 在同时间预算下采得 481 条成功演示，TeleDex 151 条、AnyTeleop 28 条（3.2×/17.2×）；逐任务成功率 DexDirect 0.71–0.96、TeleDex 0.32–0.85、AnyTeleop 0–0.50",
+   "scope": "单一 PIPER-MIDAS 平台、10 名无经验参与者、5 个短时接触丰富任务",
+   "locator": "C. Demonstration Throughput and Task Performance"
+  },
+  {
+   "finding": "AnyTeleop 在白板擦拭与键盘打字上 0 成功：视频复盘显示操作者无法调节末端相对白板的法向深度（接触不足/不稳），且延迟响应使短暂按压-释放动作难以执行、重复触发同一键",
+   "scope": "同上；归因为视频复盘质性观察",
+   "locator": "C. Demonstration Throughput and Task Performance"
+  },
+  {
+   "finding": "DexDirect 总 Raw TLX 2.01 vs TeleDex 3.08 vs AnyTeleop 3.81（Wilcoxon p=0.01953/0.00195）；心理需求 3.19→1.77、挫败 2.79→1.47、努力 3.40→2.17；唯物理需求升至 3.23",
+   "scope": "10 名参与者 participant-level 分数",
+   "locator": "D. Operator Workload"
+  },
+  {
+   "finding": "单操作者用 DexDirect 另采 200 条演示训练的扩散策略在方块抓取放置 20 次评估中 90%（18/20）成功",
+   "scope": "单一简单策略任务，单操作者采集",
+   "locator": "E. Policy Training"
+  },
+  {
+   "finding": "作者自述：手指控制仍依赖单目标志点检测与形态相关重定向，仍易受追踪与重定向误差影响；评估未分离坐标重映射/延迟/被动接触线索的独立贡献",
+   "scope": "V. LIMITATIONS 全节",
+   "locator": "V. LIMITATIONS"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "系统本质共址，要求机器人可安全低阻抗重力补偿引导；不支持远程遥操作，对更大/高惯量臂人体工学较差；物理需求上升与此一致",
+    "locator": "V. LIMITATIONS"
+   },
+   {
+    "limitation": "双手控制一个臂-手系统，无法单操作者双臂控制；扩展到每手耦合一臂并追踪同手手指的方案其可见性/人体工学/安全性待研究",
+    "locator": "V. LIMITATIONS"
+   },
+   {
+    "limitation": "手指控制依赖单目标志点检测与形态相关重定向，仍易受追踪与重定向误差影响；无分布式指尖力反馈",
+    "locator": "V. LIMITATIONS"
+   },
+   {
+    "limitation": "评估限于 10 名参与者、5 个短任务、1 个机器人平台与 1 个策略学习任务；评估的是直接耦合的综合效应，未分离坐标重映射、延迟与被动接触线索",
+    "locator": "V. LIMITATIONS"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "DexDirect 相对 AnyTeleop 的吞吐/成功率优势不能归因于'手部检测精度'单一变量：臂侧追踪误差、坐标重映射、延迟、接触线索被一并移除，论文自身未做分离消融；对综述问题而言，它证明的是'绕开臂侧视觉估计可大幅提升演示可用性'，而非量化了位姿误差阈值",
+    "basis": "V. LIMITATIONS 自述 combined effect without isolating coordinate remapping, latency, and passive contact cues；全文无臂侧轨迹精度的毫米级测量"
+   },
+   {
+    "boundary": "AnyTeleop 基线为作者在自有平台上的复现（RealSense 腕部位姿+CuRobo MPC 管线），其 0 成功与 28 条吞吐可能部分反映复现管线与原系统的差异，外推到'所有纯视觉追踪方案'需谨慎",
+    "basis": "A. Baseline Implementations：'We reproduced the arm-control pathway of AnyTeleop on the same PIPER–MIDAS platform'；手背另加黑色轻板改善追踪可靠性"
+   }
+  ]
+ },
+ "transfer_boundary": "本文证据针对灵巧演示采集接口场景：臂侧轨迹误差靠动觉直录（所录即机器人物理可达状态）彻底消除，该手段对无本体 ego 视频管线不可直接迁移（没有可拖动的机器人）。但三点可直接映射到 ego 视频重定向分析：(1) 误差源分类——追踪延迟、位姿估计误差、工作空间失配、坐标映射认知负担；(2) 设计原则——把视觉估计的作用域从全局 6-DoF 腕部位姿收缩到手局部手指构型、避免单目度量腕部位姿，正是 ego 管线降低手部估计误差敏感性的同构思路；(3) 定量下限证据——当纯视觉追踪质量不足时，演示可用性坍缩为任务级 0 成功（白板/键盘），说明追踪误差经控制环路直接传播为末端接触失败。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同一机器人平台、同一手指重定向管线、同一视觉反馈与任务环境下的三接口被试内对照，变量集中于'全局手部运动的指令方式'",
+   "接口顺序 counterbalance + 任务成功标准逐任务预定义 + participant 级 Wilcoxon 检验",
+   "视频复盘对 AnyTeleop 0 成功任务做机制性失败归因（深度调节失败、延迟响应），把吞吐数字与追踪误差机制连起来",
+   "以 200 条演示训练扩散策略做端到端可用性验证（90%），闭环证明'所录即可学'"
+  ],
+  "design_risks": [
+   "样本量小（n=10）、任务短（120–180s）、单一平台与单一策略任务，统计外推性有限",
+   "未做因素分离消融：臂侧追踪误差消除与被动接触线索、零延迟耦合混在一起",
+   "AnyTeleop 为作者复现版而非原系统，基线强度可能低于原论文报告",
+   "未直接测量末端轨迹精度（mm 级），以任务成功/吞吐作为可用性代理"
+  ],
+  "baseline_fairness": "基线为两篇已发表低setup系统（AnyTeleop、TeleDex），臂-手硬件、手指重定向管线、视觉反馈与任务环境跨条件固定，仅改变操作者指令全局手部运动的方式——对'臂侧追踪环路'这一变量控制较公平；但 AnyTeleop 是作者复现（RealSense+CuRobo MPC，另加手背黑版改善追踪），其性能可能不代表原系统上限，属中等公平。",
+  "metric_validity": "吞吐量（固定预算内成功演示数）、逐任务成功率、完成时间与 NASA-TLX 是演示采集接口的标准度量；成功标准逐任务预定义、含不可逆错误判负；但全程无轨迹精度的直接几何度量（如末端位置误差），'精度'以任务成功与接触质量代理——对本综述问题而言是可用性证据而非精度阈值证据。",
+  "reproducibility": "平台型号（PIPER、MIDAS、OAK-1 Wide、C270）、各流频率（200/60/30Hz）、追踪与重定向管线（MediaPipe Hands+AnyTeleop dex-retargeting）、策略架构（DINOv2+19D 动作）均写明；TeleDex 用官方开源软硬件；但重力补偿的分级系统辨识细节、成功判定的评分者一致性未完整公开，复现需一定工程逆向。",
+  "external_validity": "结论限于 6-DoF 可拖动臂+13-DoF MIDAS 手、桌面接触丰富任务、单目 webcam 手指追踪、共址采集；向高惯量臂、双臂操作、远程采集与无本体 ego 视频场景外推需谨慎（作者自述前两项为限制）。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.27784-C01",
+   "claim": "DexDirect 将低 setup 采集系统（视觉/位姿追踪类）演示性能受损归因于追踪闭环的四类因素：追踪延迟、位姿估计误差、工作空间失配、以及维持操作者-机器人坐标映射的认知负担——即手部/腕部位姿估计误差经'人动-机器人跟随'的追踪控制环路传播为机器人末端轨迹误差与演示失败。",
+   "stance": "support",
+   "relation": "直接回答综述问题的'误差来源与传播路径'维度：把视觉追踪管线中位姿估计误差→追踪闭环→演示性能退化的传播链显式命名，是该论文绕开视觉检测路线的动机陈述。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "引言在引出'避免代理环路的自然方式是直接引导机器人'之前，逐句列出低setup系统演示性能受影响的四类因素。",
+   "locator": "I. INTRODUCTION（追踪闭环归因段） / 6 DOF（extraction 图题被解析为伪节，引言该段实际落入此节面）",
+   "source_context": "Consequently, demonstration performance is affected by factors such as tracking latency, pose estimation error, workspace mismatch, and the cognitive burden of maintain- ing a coordinate mapping between the operator and the robot.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字给出四类因素（tracking latency / pose estimation error / workspace mismatch / cognitive burden of coordinate mapping），claim 仅复述该归因并点明其'追踪闭环'性质（同段上文 'Low-setup systems, however, generally rely on a tracking-based control loop'），未虚构数值或阈值；'maintain- ing' 保留原文换行连字符。"
+   }
+  },
+  {
+   "card_id": "2607.27784-C02",
+   "claim": "DexDirect 的缓解路线是让被直接拖动的物理机器人记录臂部轨迹：采集期完全不需要臂侧位姿估计、重定向、IK 求解器或笛卡尔运动生成器，所录每个构型都是机器人在关节与控制器限内的物理可达状态；与此互补，视觉通路被收缩为仅提供手局部坐标系下的手指构型，显式不使用单目 webcam 估计的全局腕部位姿。",
+   "stance": "support",
+   "relation": "直接回答'缓解手段'：这是架构级绕开手部/腕部视觉检测误差的替代路线——把追踪误差从臂侧轨迹记录中彻底移除，并把视觉估计的作用域从全局 6-DoF 位姿收缩到 13-DoF 手指关节，与 ego 视频管线中'避免单目度量腕部位姿'的降敏设计同构。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "III-B 给出'编码器直录+正运动学、采集期无估计/重定向/IK'的完整陈述；III-C 给出'不使用 webcam 全局腕部位姿、视觉管线限于手局部手指构型'的设计声明。",
+   "locator": "B. Direct Kinesthetic Arm Guidance / C. Vision-Based Finger Retargeting",
+   "source_context": "effector poses are obtained through forward kinematics. No arm-side pose estimation, retargeting, inverse-kinematics solver, or Cartesian motion generator is required during col- lection. Each recorded configuration therefore corresponds to a state physically attained by the robot, subject to its joint and controller limits.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字覆盖'编码器直录、无臂侧估计/重定向/IK、物理可达状态'三断言（'col- lection' 保留原文连字符）；claim 第二分句'不使用单目腕部位姿、限于手局部构型'由 III-C 同节原文 'No global wrist position or orientation estimated from the webcam is used for robot control... confines the vision pipeline to hand-local finger articulation' 支持，locator 复合指向两节。claim 未声称手指侧无误差（作者在 V. LIMITATIONS 自述仍有追踪/重定向误差敏感性），边界一致。"
+   }
+  },
+  {
+   "card_id": "2607.27784-C03",
+   "claim": "在 10 名参与者 × 5 任务、同时间预算的被试内对照中，纯视觉追踪方案 AnyTeleop 仅产出 28 条成功演示（DexDirect 481 条、TeleDex 151 条，对应 17.2× 与 3.2× 吞吐差距），逐任务成功率 AnyTeleop 0–0.50 且在白板擦拭与键盘打字两任务上 0 成功——视频复盘将白板任务失败归因于操作者无法调节末端法向深度导致接触不足/不稳，即视觉追踪质量不足时演示可用性坍缩为任务级失败。",
+   "stance": "support",
+   "relation": "直接回答'追踪精度如何影响重定向后轨迹可用性'：这是同平台对照下'纯视觉追踪（含单目/深度位姿估计与延迟）→末端接触控制失败→成功演示坍缩'的定量实证，为 ego 视频管线中手部检测精度不足时的下游后果提供任务级参照。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C 给出 481/151/28 吞吐、17.2×/3.2× 倍数、三方法逐任务成功率区间（0.71–0.96 / 0.32–0.85 / 0–0.50）、AnyTeleop 白板与键盘 0 成功及视频复盘的深度调节失败归因。",
+   "locator": "C. Demonstration Throughput and Task Performance",
+   "source_context": "Under the same time budget per-condition, DexDirect col- lected 481 successful demonstrations across participants and tasks, compared with 151 for TeleDex and 28 for AnyTeleop. This corresponds to 3.2× the successful-demonstration throughput of TeleDex and 17.2× that of AnyTeleop. As summarized in Table I, DexDirect achieved the highest success rate on every task. Its success rate ranged from 0.71 on keyboard typing to 0.96 on Lazy Susan rotation and pick- and-place, whereas TeleDex ranged from 0.32 to 0.85 and AnyTeleop from 0 to 0.50. In particular, AnyTeleop produced no successful whiteboard or keyboard demonstrations within the evaluation budget. Video review showed that partici- pants struggled to regulate the end-effector depth normal to the whiteboard, resulting in insufficient or unstable contact during erasing.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "successful demonstrations collected under the same time budget; per-task success rate",
+    "value_or_direction": "DexDirect 481 vs TeleDex 151 vs AnyTeleop 28 (17.2x and 3.2x throughput); success rate 0.71-0.96 / 0.32-0.85 / 0-0.50; AnyTeleop 0 success on whiteboard erasing and keyboard typing",
+    "comparator": "TeleDex and AnyTeleop baselines in the same within-subject user study",
+    "task_or_sample": "10 名无先验经验参与者 × 3 接口 × 5 个接触丰富灵巧任务（Jenga 抽块、USB 拔插、Lazy Susan 旋转+抓取放置、白板擦拭、键盘打字），Jenga 180s、其余 120s 时间预算",
+    "locator": "C. Demonstration Throughput and Task Performance (Table I)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字覆盖吞吐数字（481/151/28）、倍数（3.2×/17.2×）、三方法成功率区间、白板/键盘 0 成功与深度调节失败归因（'col- lected'、'pick- and-place'、'partici- pants' 保留原文连字符）；键盘任务的延迟归因（delayed robot response）紧随其后同节，claim 末句'追踪质量不足→可用性坍缩'是对 0 成功+归因的概括性复述，未引入外推数值。AnyTeleop 为作者复现版基线这一边界已在 reader_inferred 标注，不影响本卡的事实陈述。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref_key": "10",
+   "citation": "Y. Qin et al., AnyTeleop: A general vision-based dexterous robot arm-hand teleoperation system, RSS 2023",
+   "reason": "两大基线之一（纯视觉追踪路线代表），其优化式 dex-retargeting 框架同时被 DexDirect 复用于手指重定向——是本笔记定量对照与设计同源性的核心引用"
+  },
+  {
+   "ref_key": "12",
+   "citation": "O. Rayyan, M. Gilles, and Y. Cui, TeleDex: Accessible dexterous teleoperation, 2026, arXiv:2603.17065",
+   "reason": "另一基线（手机位姿追踪路线），代表'手持设备位姿追踪绕开视觉遮挡但零环境阻力'的中间路线"
+  },
+  {
+   "ref_key": "37",
+   "citation": "F. Zhang et al., MediaPipe Hands: On-device real-time hand tracking, 2020, arXiv:2006.10214",
+   "reason": "DexDirect 手指追踪器（21 个 3D 标志点，30Hz 单目 webcam），是手指侧残留追踪误差的来源组件"
+  },
+  {
+   "ref_key": "16",
+   "citation": "H. Li, Y. Cui, and D. Sadigh, How to train your robots? The impact of demonstration modality on imitation learning, ICRA 2025",
+   "reason": "动觉示教对非专家友好性的依据（本批次 2503.07017 同主题论文），支撑'直接引导避免代理环路'的动机"
+  },
+  {
+   "ref_key": "36",
+   "citation": "A. Zhu et al., MIDAS Hand: Modular low-impedance direct-drive anthropomorphic sensing hand, 2026, arXiv:2607.14487",
+   "reason": "实验所用 16 关节 13-DoF 灵巧手平台（283 触觉 taxel），界定硬件边界"
+  }
+ ],
+ "notes": "ID 段容量 3（0523-0525），本笔记恰含 3 卡全部投影。第四条候选卡（V. LIMITATIONS 自述'手指控制仍依赖单目标志点检测与形态相关重定向，仍易受追踪与重定向误差影响'——残余误差源 stance=limit）因段容量不足未建卡，内容已完整保留在 findings[4] 与 limitations.author_stated[3]，供综述写作时按 note 引用。模板作者名已按原文修正（Beom Jun Kim、Hanzhang Fang）。"
+}

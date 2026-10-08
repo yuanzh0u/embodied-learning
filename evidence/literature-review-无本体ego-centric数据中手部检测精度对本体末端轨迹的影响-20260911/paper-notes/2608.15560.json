@@ -1,0 +1,428 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.15560",
+  "title": "ReForce: Learning Force-aware Retargeting for Dexterous Manipulation",
+  "published": "2026-08-16",
+  "url": "https://arxiv.org/abs/2608.15560",
+  "authors": [
+   "Yuhang Wu",
+   "Lingqi Zeng",
+   "Changwei Jing",
+   "Jianglong Ye",
+   "Xiaolong Wang"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "虽非 ego-centric 视频管线（手部姿态来自 Manus 手套与 Quest/AprilTag），但该文直接量化了两条与综述问题相关的链条：(1) 纯运动学重定向参考经开环回放会把参考/接触误差传导到执行端（力追踪误差与失接触失败）；(2) 力感知残差执行层与 reference-stall/pose-drift 结构化数据增强是吸收参考噪声与漂移的具体缓解手段，并给出仿真 14,605 episodes 上的量化收益。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题陈述：运动学重定向是 coarse motion match，操作由力决定；提出力感知重定向动机。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位本文在人类示教学习与灵巧重定向谱系中的位置，确认其上游参考源假设。"
+   },
+   {
+    "locator": "3 Method",
+    "role": "method-or-design",
+    "purpose": "理解闭环力感知重定向控制器、post-hoc 目标、行为克隆目标与人类示教参考的组成方式。"
+   },
+   {
+    "locator": "3.1 Problem Formulation",
+    "role": "method-or-design",
+    "purpose": "核对状态/参考/误差定义与有界关节增量命令形式化。"
+   },
+   {
+    "locator": "3.2 Force-Aware Policy Learning and Execution",
+    "role": "method-or-design",
+    "purpose": "核对训练数据中接触时序、力响应、失接触与残余力变化如何暴露控制器于接触偏差。"
+   },
+   {
+    "locator": "3.3 Learning from Human Demonstration",
+    "role": "method-or-design",
+    "purpose": "确认人类手部运动如何经运动学重定向为机器人关节参考、ACT 参考策略的输入与训练目标。"
+   },
+   {
+    "locator": "4 Experimental Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "确认三个评估问题与整体实验设计。"
+   },
+   {
+    "locator": "4.1 Real-World Evaluation",
+    "role": "data-or-setting",
+    "purpose": "核对传感/执行硬件（Quest 腕部、Manus 手套、FSR、AprilTag+RealSense L515、xArm+XHand）与力追踪指标定义。"
+   },
+   {
+    "locator": "4.1 Real-World Evaluation",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table 1 回放力追踪误差与 Table 2 学习参考下的 force-safe success/失接触/过力数据。"
+   },
+   {
+    "locator": "4.2 Simulation Ablation of Training Data and Policy Inputs",
+    "role": "results-or-analysis",
+    "purpose": "提取 reference-stall/pose-drift 增强与输入表示对力追踪误差影响的消融数据。"
+   },
+   {
+    "locator": "5 Conclusion and Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者自述局限（无视觉输入的参考策略、仅法向指尖力）。"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "核对训练超参、观测扰动（高斯关节噪声、0.1 N 力噪声、0.30 力 dropout）与示教数量。"
+   }
+  ],
+  "sections_skipped": []
+ },
+ "research_question": "如何把人类示教中的运动与接触力转化为能在真实接触场景中复现意图接触的机器人动作，使重定向从纯运动学匹配升级为力感知执行？",
+ "contributions": [
+  "提出 general force tracking 范式：在运动学重定向动作之上预测残差，用在线力反馈适配参考，无需数字孪生。",
+  "采集大规模仿真手-物交互轨迹（关节位置+接触力）并训练单一闭合力追踪器。",
+  "在仿真与真实硬件、在线遥操作与离线翻译两种设置下验证力追踪与多指接触保持的改进。"
+ ],
+ "method": {
+  "summary": "REFORCE 是闭环力感知重定向控制器：输入当前手部关节状态、指尖法向力、上游运动-接触参考及目标-测量误差，输出有界关节命令增量（约 5°/步）。训练数据来自随机化仿真手-物交互，监督信号为示教的一步关节更新，post-hoc 目标为未来窗口的运动-接触状态均值。人类示教侧：手部运动经运动学重定向为机器人关节配置，FSR 触觉测量校准映射到机器人指尖，ACT 参考策略（无视觉输入，仅关节历史+任务相位）预测运动与力参考块，经 temporal ensembling 后交由 REFORCE 用在线力反馈执行。",
+  "assumptions": [
+   "上游参考源（遥操作或 ACT 参考策略）提供的运动-力参考在任务意图上正确，误差可由执行层残差吸收。",
+   "人侧 FSR 与机器人侧触觉测量已校准到统一的牛顿量纲。",
+   "训练分布（含接触时序/力响应/失接触/残余力变化）覆盖部署时遇到的接触偏差。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Dex1B 资产与目标抓取（仿真示教种子）",
+   "大规模仿真手-物交互轨迹（关节+接触力）",
+   "每任务约 30-40 条人类示教（ACT 参考策略）"
+  ],
+  "tasks": [
+   "纸杯抓取（侧抓/顶抓）",
+   "夹子（tongs）操作"
+  ],
+  "embodiments": [
+   "UFACTORY xArm + 12-DoF XHand（指尖触觉）",
+   "人类侧：Quest 手柄（腕部）+ Manus 手套（手姿）+ 指尖 FSR；示教采集用 AprilTag + RealSense L515 追踪腕部"
+  ],
+  "sample_or_scale": "真实世界每配置 5-11 次试验；仿真消融在 14,605 个 held-out episodes、3 个随机种子上评估"
+ },
+ "evaluation": {
+  "design": "真实世界对照：同一参考轨迹下 replay / admittance / REFORCE 三方比较（Table 1）；学习参考策略单独、+admittance、+REFORCE 比较（Table 2）。仿真消融：4 种训练数据混合 × 3 种输入表示。",
+  "baselines": [
+   "直接回放（无力反馈修正）",
+   "手工设计的任务空间 admittance 控制（同一力参考与触觉观测）"
+  ],
+  "metrics": [
+   "平均绝对力追踪误差（N，对时间与指尖平均）",
+   "force-safe success（任务完成+低于阈值+无严重失接触）",
+   "过力试验数",
+   "严重失接触试验数（≥3 指从未接触）",
+   "平均活跃手指数"
+  ],
+  "ablations": [
+   "训练数据构成：Base / +20% reference-stall / +10% pose-drift / 70-20-10 混合",
+   "策略输入：状态+力目标 / +位姿参考 / +误差特征"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "直接回放运动学重定向参考在纸杯抓取上力追踪误差最高（侧抓 0.309±0.006 N、顶抓 0.736±0.000 N），REFORCE 最低（0.247±0.036 / 0.474±0.049 N）。",
+   "scope": "真实世界纸杯抓取，每方法 5 次试验，同一记录参考轨迹",
+   "locator": "4.1 Real-World Evaluation, Table 1"
+  },
+  {
+   "finding": "学习参考设置下，REFORCE 在纸杯任务取得最高 force-safe success（70%）、最低追踪误差（0.124 N）、零严重失接触；但在夹子上 admittance 的 force-safe success（90%）与追踪误差（0.419 N）优于 REFORCE（54.5%、0.441 N，4/11 过力）。",
+   "scope": "真实世界两任务、每配置约 10-11 次试验",
+   "locator": "4.1 Real-World Evaluation, Table 2"
+  },
+  {
+   "finding": "加入位姿参考输入使力追踪误差在全部训练分布上相对状态+力目标输入降低约 32-35%；误差特征进一步改进；组合两种结构化增强取得最低总误差 0.0379±0.0006 N。",
+   "scope": "仿真 14,605 episodes、3 种子",
+   "locator": "4.2 Simulation Ablation of Training Data and Policy Inputs"
+  },
+  {
+   "finding": "力感知重定向相对纯运动学回放的优势主要体现在接触建立与力释放的平衡上；对 admittance 的力追踪优势是任务依赖的。",
+   "scope": "真实世界两任务定性+定量综合",
+   "locator": "4.1 Real-World Evaluation"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "ACT 参考策略仅依赖关节状态历史与任务相位，无法根据观测到的任务状态适配参考；纳入视觉观测可生成更任务感知的运动-力参考。",
+    "locator": "5 Conclusion and Limitations"
+   },
+   {
+    "limitation": "REFORCE 当前仅使用法向指尖力；剪切力、滑移与接触分布等更丰富的触觉信号可提供更完整的物理交互表示。",
+    "locator": "5 Conclusion and Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论对手部姿态上游误差的适用性限于手套/标记点级精度的参考源：人侧手姿来自 Manus 手套、腕部来自 Quest 手柄或 AprilTag+RGB-D，并非 ego-centric 视频手部检测器；其'参考误差可被力反馈吸收'的证据不能直接被读作对视频检测噪声（遮挡、深度模糊、2D 关键点抖动）的容忍度结论。",
+    "basis": "4.1 节硬件描述（Figure 3 说明）与 3.3 节示教管线均未涉及视觉手部估计或其误差统计。"
+   },
+   {
+    "boundary": "所有量化指标在力域（牛顿）与接触保持域，未报告末端位置/姿态误差；对综述中'末端轨迹精度'维度只能作间接类比。",
+    "basis": "4.1 节指标定义（Eq. 9）与 Table 1/2 全部以力追踪误差、force-safe success、接触计数为指标。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：有人侧高质量手部姿态（手套/标记点级）与力参考、机器人侧具备指尖力反馈的灵巧手重定向执行层；其'力反馈残差吸收参考误差'的机制可迁移为视频管线下游的误差吸收设计。不直接适用于：评估 ego-centric 视频手部检测精度本身，或无触觉反馈的纯开环轨迹重放；指标在力域而非末端位姿误差域。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "同一参考轨迹下 replay/admittance/REFORCE 三方对照，隔离了执行层修正机制的贡献。",
+   "仿真消融规模大（14,605 held-out episodes、3 种子），数据构成与输入表示两因子分离。",
+   "指标设计区分了'低力=安全'与'低力=失接触'的歧义（force-safe success + 严重失接触计数 + 活跃手指数）。"
+  ],
+  "design_risks": [
+   "真实世界样本量小（每配置 5-11 次试验），Table 2 中 REFORCE 夹子配置分母为 11 且含 1 次缺失触觉数据被剔除。",
+   "力安全阈值（纸杯 1.0 N、夹子 3.0 N）为经验选取，影响 force-safe success 的绝对水平。",
+   "ACT 参考策略无视觉输入，纸杯 70% 的成功部分受益于任务本身相位可预测。"
+  ],
+  "baseline_fairness": "admittance 基线与 REFORCE 使用相同力参考与触觉观测，仅力-运动映射为手工设计，属公平对照；replay 基线无力反馈，作为下界参考合理。",
+  "metric_validity": "力追踪误差（Eq. 9）直接测量接触复现质量，是本文主张（force-aware retargeting）的对应指标；但对综述关注的末端位姿精度仅为代理。force-safe success 依赖任务特定经验阈值。",
+  "reproducibility": "附录给出训练超参、扰动设置（0.1 N 力噪声、0.30 力 dropout）、示教数量与频率；仿真资产来自 Dex1B；真实硬件配置明确。",
+  "external_validity": "结论限于两任务的抓握/夹取类接触场景与 xArm+XHand 平台；上游参考质量为手套/标记点级别，向 ego-centric 视频参考迁移需额外的检测噪声鲁棒性证据。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.15560-C01",
+   "claim": "在相同人类示教参考轨迹下，纯运动学重定向的直接回放在纸杯抓取上产生最高力追踪误差（侧抓 0.309±0.006 N、顶抓 0.736±0.000 N，各 5 次试验），而执行端力感知残差修正（REFORCE）将误差降至 0.247±0.036 N 与 0.474±0.049 N；作者同时指出运动学重定向忽略几何与接触动力学，输出仅为 coarse motion match。",
+   "stance": "support",
+   "relation": "支持综述命题'误差传播路径：运动学参考误差若不在执行端被吸收，会直接表现为接触/力域的执行失败'，并量化了一种下游缓解手段（力反馈残差）的吸收量（约 20%-36% 力误差下降）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 报告同一记录参考轨迹下三种执行方式的力追踪误差（牛顿，5 次试验均值±标准差），replay 最高、REFORCE 最低；1 Introduction 明确指出运动学重定向忽略接触动力学、输出为 coarse motion match。",
+   "locator": "4.1 Real-World Evaluation; 1 Introduction",
+   "source_context": "Grasp Replay Admittance REFORCE\nSide 0.309 ± 0.006 0.280 ± 0.013 0.247 ± 0.036\nTop 0.736 ± 0.000 0.619 ± 0.048 0.474 ± 0.049",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "mean absolute force-tracking error (N)",
+    "value_or_direction": "replay 0.309±0.006 (side) / 0.736±0.000 (top); REFORCE 0.247±0.036 / 0.474±0.049; admittance 0.280±0.013 / 0.619±0.048",
+    "comparator": "direct replay and hand-designed admittance control under the same recorded reference trajectory",
+    "task_or_sample": "real-world paper-cup grasping, side and top grasps, five trials per method",
+    "locator": "4.1 Real-World Evaluation, Table 1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 的数值、单位（N）、试验数（5）与对照设置（同一记录轨迹下 replay/admittance/REFORCE）在 4.1 节原文中逐项核对一致；claim 限定于纸杯抓取与该硬件设置，未外推到视频检测噪声情形，误差吸收幅度的百分比为读者按表内数值直接计算。"
+   }
+  },
+  {
+   "card_id": "2608.15560-C02",
+   "claim": "当参考由学习的 ACT 策略（约 30-40 条人类示教训练）生成时，执行端力反馈修正对接触保持的收益是任务依赖的：纸杯任务 force-safe success 从参考策略单独的 30.0% 提升到 REFORCE 的 70%，严重失接触从 7/10 降为 0/10，追踪误差从 0.812 降到 0.124 N；但夹子任务上 admittance（90.0%、0.419 N）优于 REFORCE（54.5%、0.441 N，4/11 过力试验）。",
+   "stance": "conditional",
+   "relation": "限定综述命题'下游力反馈可吸收上游参考误差'：该吸收对接触建立（失接触减少）一致有效，但对力安全/过力的收益依赖任务接触特性，过力风险可抵消 force-safe success。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 完整报告两任务三种执行配置的 force-safe success、追踪误差、过力与严重失接触计数；正文 4.1.2 明确承认 REFORCE 对 admittance 的力追踪优势是任务依赖的。",
+   "locator": "4.1 Real-World Evaluation",
+   "source_context": "Task Method Force-safe success ↑ Tracking error ↓ Over-force ↓ Severe missing contact ↓ Active fingers ↑\nPaper cup Reference policy 30.0% 0.812 0/10 7/10 0.17\nPaper cup Reference policy + Admittance 60.0% 0.683 4/10 1/10 1.26\nPaper cup Reference policy + REFORCE 70% 0.124 2/10 0/10 2.61\nTongs Reference policy 50.0% 0.454 0/10 5/10 0.94\nTongs Reference policy + Admittance 90.0% 0.419 0/10 1/10 1.34",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "force-safe success / force-tracking error (N) / severe missing-contact count",
+    "value_or_direction": "paper cup 30.0%->70% success, 7/10->0/10 missing contact, 0.812->0.124 N; tongs REFORCE 54.5% vs admittance 90.0%, 4/11 over-force",
+    "comparator": "learned reference policy alone and reference policy + admittance control",
+    "task_or_sample": "real-world paper-cup grasping and tongs manipulation, 10-11 trials per configuration",
+    "locator": "4.1 Real-World Evaluation, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 2 各行数值与 4.1.2 正文叙述（REFORCE 在纸杯最高 force-safe success、夹子上 admittance 最优、REFORCE 4 次过力试验拉低成功率）逐条核对一致；claim 保留了两任务相反方向的结论，未将吸收收益泛化为无条件成立。"
+   }
+  },
+  {
+   "card_id": "2608.15560-C03",
+   "claim": "通过训练期结构化增强让控制器接触'参考失真'情形（reference-stall 冻结部分参考分量模拟停滞参考、pose-drift 从低力状态向关节限位扰动模拟位姿漂移），并向策略输入显式误差特征，可在仿真 held-out 14,605 episodes 上把力追踪误差从 Base+状态/力目标输入的 0.0601±0.0002 N 降到组合增强+误差特征的 0.0379±0.0006 N；仅加入位姿参考输入即可在各训练分布上降低约 32-35% 误差。",
+   "stance": "support",
+   "relation": "支持综述命题'缓解手段：训练期数据增强（模拟参考停滞/漂移）+ 显式误差特征输入可吸收上游参考噪声'，为视频检测噪声（抖动、漂移、遮挡致停滞）的下游吸收提供可迁移设计模式。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.2 节描述两种结构化增强的构造与训练混合比例，Table 3 报告 4 种训练分布 × 3 种输入的力追踪误差（3 种子），正文给出 32-35% 与最优 0.0379±0.0006 N 的结论。",
+   "locator": "4.2 Simulation Ablation of Training Data and Policy Inputs; 4.1 Real-World Evaluation",
+   "source_context": "Base 0.0601 ± 0.0002 0.0400 ± 0.0013 0.0388 ± 0.0015\nBase + Reference-stall aug. 0.0592 ± 0.0012 0.0401 ± 0.0025 0.0381 ± 0.0005\nBase + Pose-drift aug. 0.0609 ± 0.0006 0.0396 ± 0.0010 0.0385 ± 0.0013\nBase + Both aug. 0.0590 ± 0.0012 0.0396 ± 0.0030 0.0379 ± 0.0006",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "force-tracking error (N), mean ± sample std over 3 seeds",
+    "value_or_direction": "0.0601±0.0002 (Base, state+force target) down to 0.0379±0.0006 (Base+Both aug., error features); pose-reference input alone reduces error ~32-35% across training distributions",
+    "comparator": "training-data composition (Base / reference-stall / pose-drift / both) x input representation (state+force / +pose reference / +error features)",
+    "task_or_sample": "N = 14,605 held-out simulated episodes, three random seeds, Dex1B-seeded assets",
+    "locator": "4.2 Simulation Ablation of Training Data and Policy Inputs, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 3 的 12 个数值、4.2 节正文对增强构造（reference-stall 冻结力活跃手指的参考分量、pose-drift 低力状态扰动并重算标签）与 32-35%/0.0379±0.0006 N 结论均逐项核对一致；claim 将增强目的限定为模拟参考失真，未声称其等价于真实视频检测噪声分布。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Real-world paper cup grasping replay. Force-tracking error in Newtons, reported as mean ± standard deviation over five trials. Lower is better.",
+   "section": "4.1 Real-World Evaluation",
+   "rows": [
+    [
+     "Grasp",
+     "Replay",
+     "Admittance",
+     "REFORCE"
+    ],
+    [
+     "Side",
+     "0.309 ± 0.006",
+     "0.280 ± 0.013",
+     "0.247 ± 0.036"
+    ],
+    [
+     "Top",
+     "0.736 ± 0.000",
+     "0.619 ± 0.048",
+     "0.474 ± 0.049"
+    ]
+   ],
+   "usage": "作者用该表对比同一参考轨迹下三种执行方式的力追踪误差，支撑执行端力反馈修正的吸收作用。"
+  },
+  {
+   "table_id": "T2",
+   "caption": "Real-world execution with learned references. Force-safe success requires task completion, forces below the task-specific threshold, and no severe missing-contact failure. Tracking error is the mean absolute force error over time and fingertips, reported in Newtons.",
+   "section": "4.1 Real-World Evaluation",
+   "rows": [
+    [
+     "Task",
+     "Method",
+     "Force-safe success",
+     "Tracking error",
+     "Over-force",
+     "Severe missing contact",
+     "Active fingers"
+    ],
+    [
+     "Paper cup",
+     "Reference policy",
+     "30.0%",
+     "0.812",
+     "0/10",
+     "7/10",
+     "0.17"
+    ],
+    [
+     "Paper cup",
+     "Reference policy + Admittance",
+     "60.0%",
+     "0.683",
+     "4/10",
+     "1/10",
+     "1.26"
+    ],
+    [
+     "Paper cup",
+     "Reference policy + REFORCE",
+     "70%",
+     "0.124",
+     "2/10",
+     "0/10",
+     "2.61"
+    ],
+    [
+     "Tongs",
+     "Reference policy",
+     "50.0%",
+     "0.454",
+     "0/10",
+     "5/10",
+     "0.94"
+    ],
+    [
+     "Tongs",
+     "Reference policy + Admittance",
+     "90.0%",
+     "0.419",
+     "0/10",
+     "1/10",
+     "1.34"
+    ],
+    [
+     "Tongs",
+     "Reference policy + REFORCE",
+     "54.5%",
+     "0.441",
+     "4/11",
+     "1/11",
+     "1.62"
+    ]
+   ],
+   "usage": "作者用该表展示学习参考下力感知执行对接触保持与力安全的任务依赖性影响。"
+  },
+  {
+   "table_id": "T3",
+   "caption": "Simulation ablation of training-data composition and policy inputs. Force-tracking error is reported in Newtons as mean ± sample standard deviation over three seeds. Lower is better.",
+   "section": "4.2 Simulation Ablation of Training Data and Policy Inputs",
+   "rows": [
+    [
+     "Training distribution",
+     "State + force target",
+     "+ pose reference",
+     "+ error features"
+    ],
+    [
+     "Base",
+     "0.0601 ± 0.0002",
+     "0.0400 ± 0.0013",
+     "0.0388 ± 0.0015"
+    ],
+    [
+     "Base + Reference-stall aug.",
+     "0.0592 ± 0.0012",
+     "0.0401 ± 0.0025",
+     "0.0381 ± 0.0005"
+    ],
+    [
+     "Base + Pose-drift aug.",
+     "0.0609 ± 0.0006",
+     "0.0396 ± 0.0010",
+     "0.0385 ± 0.0013"
+    ],
+    [
+     "Base + Both aug.",
+     "0.0590 ± 0.0012",
+     "0.0396 ± 0.0030",
+     "0.0379 ± 0.0006"
+    ]
+   ],
+   "usage": "作者用该表分离训练数据构成与输入表示对力追踪误差的影响。"
+  }
+ ],
+ "notes": "非 ego-centric 视频管线：人侧手姿来自 Manus 手套，腕部来自 Quest 手柄（遥操作）或 AprilTag+RealSense L515（示教采集）。对综述的价值在于下游误差吸收机制（力反馈残差、结构化增强、误差特征输入）的量化证据，而非检测精度本身。"
+}

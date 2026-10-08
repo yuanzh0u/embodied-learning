@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2406.15349",
+    "title": "NAVSIM: Data-Driven Non-Reactive Autonomous Vehicle Simulation and Benchmarking",
+    "published": "2024-06-21",
+    "url": "https://arxiv.org/abs/2406.15349",
+    "versioned_id": "2406.15349v2",
+    "authors": [
+      "Daniel Dauner",
+      "Marcel Hallgarten",
+      "Tianyu Li",
+      "Xinshuo Weng",
+      "Zhiyu Huang",
+      "Zetong Yang",
+      "Hongyang Li",
+      "Igor Gilitschenski",
+      "Boris Ivanovic",
+      "Marco Pavone",
+      "Andreas Geiger",
+      "Kashyap Chitta"
+    ]
+  },
+  "review": {
+    "question": "如何比轨迹距离更好地评估规划？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "如何比轨迹距离更好地评估规划？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3 NAVSIM: Non-Reactive Autonomous Vehicle Simulation; 3.1 Generating Standardized and Challenging Train and Test Splits",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "4.1 Alignment Between Open-Loop and Closed-Loop Evaluation; 4.2 Analysis of the State of the Art in End-to-End Autonomous Driving",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "5 Discussion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "如何比轨迹距离更好地评估规划？",
+  "contributions": [
+    "从 OpenScene 筛除简单或标注异常片段；策略仅在初始帧被调用，固定轨迹经控制器和运动学模型执行，PDMS 综合安全、舒适与进度。"
+  ],
+  "method": {
+    "summary": "从 OpenScene 筛除简单或标注异常片段；策略仅在初始帧被调用，固定轨迹经控制器和运动学模型执行，PDMS 综合安全、舒适与进度。",
+    "assumptions": [
+      "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "OpenScene",
+      "nuPlan",
+      "NAVSIM"
+    ],
+    "tasks": [
+      "如何比轨迹距离更好地评估规划？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "与 nuPlan 闭环分数做相关性分析；重训视觉方法和无视觉 ego 基线。",
+    "baselines": [
+      "统一重训和服务器提高可比性，碰撞归责、导航来源和数据筛选仍改变任务。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "与 nuPlan 闭环分数做相关性分析；重训视觉方法和无视觉 ego 基线。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "NAVSIM 仅在初始帧调用规划策略，随后固定计划进行非反应式模拟，没有环境反馈给策略。",
+      "scope": "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。",
+      "locator": "3 NAVSIM: Non-Reactive Autonomous Vehicle Simulation"
+    },
+    {
+      "finding": "NAVSIM 作者指出，高 PDMS 并不总对应高闭环分数，建议配合 CARLA 等闭环评测。",
+      "scope": "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。",
+      "locator": "5 Discussion"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "非反应式协议不测错误累积，部分交通规则与数据标注存在限制。",
+        "locator": "5 Discussion"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。",
+        "basis": "与 nuPlan 闭环分数做相关性分析；重训视觉方法和无视觉 ego 基线。"
+      }
+    ]
+  },
+  "transfer_boundary": "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "与 nuPlan 闭环分数做相关性分析；重训视觉方法和无视觉 ego 基线。"
+    ],
+    "design_risks": [
+      "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。"
+    ],
+    "baseline_fairness": "统一重训和服务器提高可比性，碰撞归责、导航来源和数据筛选仍改变任务。",
+    "metric_validity": "验证类型与指标限定为：与 nuPlan 闭环分数做相关性分析；重训视觉方法和无视觉 ego 基线。",
+    "reproducibility": "公开工具、划分及指标；本文锚定 2406.15349 的恢复版本。",
+    "external_validity": "非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2406.15349-C01",
+      "claim": "NAVSIM 仅在初始帧调用规划策略，随后固定计划进行非反应式模拟，没有环境反馈给策略。",
+      "stance": "support",
+      "relation": "如何比轨迹距离更好地评估规划？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "协议直接排除了通常意义上的策略交互闭环。",
+      "locator": "3 NAVSIM: Non-Reactive Autonomous Vehicle Simulation",
+      "source_context": "driving agents are only queried in the initial frame",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "协议直接排除了通常意义上的策略交互闭环。 适用边界：非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。"
+      }
+    },
+    {
+      "card_id": "2406.15349-C02",
+      "claim": "NAVSIM 作者指出，高 PDMS 并不总对应高闭环分数，建议配合 CARLA 等闭环评测。",
+      "stance": "limit",
+      "relation": "如何比轨迹距离更好地评估规划？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "作者限制节明确承认非反应性、错误累积和交通规则覆盖的不足。",
+      "locator": "5 Discussion",
+      "source_context": "A high PDMS does not always imply a high CLS",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "作者限制节明确承认非反应性、错误累积和交通规则覆盖的不足。 适用边界：非反应式评测不包含策略反复观测和错误累积；NAVSIM 1.x 与后续版本不可混同。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "NAVSIM",
+    "core": false,
+    "stack": {}
+  }
+}

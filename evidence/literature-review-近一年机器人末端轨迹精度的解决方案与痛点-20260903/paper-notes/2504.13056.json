@@ -1,0 +1,380 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2504.13056",
+  "title": "Adaptive Task Space Nonsingular Terminal Super-Twisting Sliding Mode Control of a 7-DOF Robotic Manipulator",
+  "published": "2025-09-16",
+  "url": "https://arxiv.org/abs/2504.13056",
+  "authors": [
+   "Lucas Wan",
+   "Sean Smith",
+   "Ya‐Jun Pan",
+   "Emmanuel Witrant"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述'控制层方案'族的滑模分支：面向7-DOF机械臂任务空间（笛卡尔）轨迹精度，用自适应增益NT-STSM同时处理平移+旋转跟踪、未知摩擦/外扰/时变负载与抖振抑制，给出仿真与真机（Franka）量化RMSE改善（对PD-med降29.0%/27.6%、对[21]增益约束方案避免71.3%/69.4%退化），并暴露SMC族痛点（NTSM失稳、STSM抖振、旋转速度噪声、多参数手动调参）。机制、量化效果、适用条件与痛点齐备，是控制层方案的核心样本。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题：高DOF臂非线性动力学+模型不确定+外扰下的精确任务空间跟踪；现有NT-STSM仅关节空间、低DOF、常仅仿真、稳定性证明强加增益约束；任务空间SM控制需同时处理平移与旋转，旋转更易抖振。"
+   },
+   {
+    "locator": "A. Dynamic Model",
+    "role": "method-or-design",
+    "purpose": "关节/任务空间动力学与性质（M正定、Ṁ-2C斜对称、J满秩）；扰动τ_d=摩擦+未建模动力学+外扰的集总建模。"
+   },
+   {
+    "locator": "B. Trajectory Generation",
+    "role": "method-or-design",
+    "purpose": "期望轨迹生成：平移用clamped cubic spline，姿态用单位四元数cubic Hermite插值避免标准插值不一致。"
+   },
+   {
+    "locator": "C. Third Order Sliding Mode Observer",
+    "role": "method-or-design",
+    "purpose": "TOSM观测器估计任务空间速度（含线性项加速收敛），收敛初期用有限差分+指数滑动平均兜底并按阈值η_q切换——解决Franka内置速度估计噪声/延迟引发的抖振。"
+   },
+   {
+    "locator": "III. ADAPTIVE ROBUST CONTROLLER DESIGN",
+    "role": "method-or-design",
+    "purpose": "控制器主体：滑模面s=e+βė^α（四元数姿态误差经H阵映射，det H=η̃≠0）、超螺旋控制律、自适应增益律(13)-(14)；Assumption 1-4（姿态误差小、扰动导数有界、噪声有界、初值区域）。"
+   },
+   {
+    "locator": "C. Non-Singular Terminal Super-Twisting Sliding Mode Controller Convergence Analysis",
+    "role": "method-or-design",
+    "purpose": "有界性分析：ζ坐标变换为伪线性形式，Theorem 1给出|s|≤μ_α邻域全局鲁棒有限时间稳定与噪声下误差界|e|≤2μ_α；Remark 2给出放松[21]固定增益比后的增益选择指南（椭圆容许域）。"
+   },
+   {
+    "locator": "A. Implementation",
+    "role": "data-or-setting",
+    "purpose": "实验设置：Franka+Gazebo+ROS、1kHz实时接口；基线公式与公平性措施（全部SM控制器共用同一自适应增益律同参数、PD三组增益）；仿真未知摩擦参数（表II）、外扰时序；指标定义RMSE_p/RMSE_ξ/RMSE_φk/TV_τ。"
+   },
+   {
+    "locator": "B. Simulation Results",
+    "role": "results-or-analysis",
+    "purpose": "仿真结果：速度估计方法对比（图4，旋转段噪声显著更高）；表III无外扰与表IV有外扰的RMSE/τ_avg/TV_τ；NTSM失稳、STSM抖振；对[21]与PD的百分比比较。"
+   },
+   {
+    "locator": "C. Experimental Results",
+    "role": "results-or-analysis",
+    "purpose": "真机倾倒任务（0.5kg时变负载、t=18s起非线性减重）：表V轴级RMSE与控制力矩/TV_τ对比，z轴（负载敏感）显著改善而y轴PD略好。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论（任务空间自适应SM控制适用于未建模扰动+时变负载的实时高DOF控制）与作者自述局限（多参数手动调参耗时，拟用学习/优化自动化）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "Proof steps 2)-5) within C. Non-Singular Terminal Super-Twisting Sliding Mode Controller Convergence Analysis (lines ~1600-2860)",
+    "role": "method-or-design",
+    "reason": "Lyapunov推导的中间代数步骤（式22-64逐项展开）逐行精读对综述问题无增量信息，仅精读定理陈述、假设、式(21)误差界与Remark 1/2调参指南后跳过其余证明细节。"
+   }
+  ]
+ },
+ "research_question": "如何在高自由度（7-DOF）机械臂的任务空间直接设计滑模控制器，同时实现平移与旋转的精确鲁棒轨迹跟踪，在未知关节摩擦、外部力/力矩与时变负载下抑制抖振与失稳，且不要求扰动界的先验知识？",
+ "contributions": [
+  "任务空间NT-STSM控制器：非奇异终端滑模面s=e+βė^α与超螺旋二阶结构结合，姿态以单位四元数表示并经H阵映射避免运动学奇异，实现平移+旋转有限时间跟踪且控制信号连续（低抖振）",
+  "自适应增益律(13)-(14)：κ1、κ2按滑模量与阈值μ_α的偏差动态调整，无需扰动界先验；配套新颖有界性证明放松了[21]的固定增益比κ2=1/4Γκ1，通过Ω1/Ω2/γ/θ定义容许增益椭圆域并给出实用调参指南（Remark 2）",
+  "任务空间TOSM观测器+指数滑动平均的混合速度估计：解决内置速度估计噪声/延迟诱发抖振的问题，含观测器收敛期的切换逻辑(8)-(9)",
+  "7-DOF Franka仿真+硬件验证：与PD-low/med/high、NTSM、STSM、NT-STSM[21]在未知摩擦、外部扰动序列与时变负载（倾倒钢球）下全面比较，报告RMSE、平均控制力矩与控制输入总变差"
+ ],
+ "method": {
+  "summary": "在任务空间（笛卡尔）直接设计非奇异终端超螺旋滑模控制。误差向量e=[p̃; ϵ̃]（平移误差+四元数姿态误差），滑模面s=e+βė^α（元素幂、1<α<2取9/7）；控制律u=M̄(ẍ_d+H^{-1}(-ė^{(2-α)}/(αβ)-κ1|S|^{1/2}sign(s)+ν))+C̄+Ḡ，ν̇=-κ2sign(s)为超螺旋积分项，使不连续项经积分平滑以抑制抖振；实际实施将sign替换为tanh(k_s·)并经τ=J^T u变换到关节空间。增益κ1、κ2由自适应律驱动：L̇_i按|s_i|-μ_α的符号在η_α/ω_α间调整并限幅于[κ1min,κ1max]，再经式(14)映射为κ1、κ2，从而无需扰动界先验。稳定性分析把闭环动力学经ζ坐标变换为伪线性形式，用Lyapunov证明s全局鲁棒有限时间收敛到|s|≤μ_α邻域（要求μ_α>噪声界ε_c），并导出跟踪误差界|e|≤2μ_α、|ė|≤(μ_α/β)^{1/α}；相比[21]的严格关系κ2=1/4Γκ1，本文以式(15)/(65)的椭圆容许域放松增益约束。速度由任务空间TOSM观测器估计（含线性项加速收敛），收敛初期用指数滑动平均兜底并按阈值η_q切换，避免初始估计不准引起不可预测行为。",
+  "assumptions": [
+   "期望姿态轨迹足够接近当前姿态（|ϵ̃|<ϵ̄）保证H可逆（det H=η̃≠0），实践强制|η̃|≥0.1避免病态求逆（Assumption 1）",
+   "集总扰动Π=HM̄^{-1}f_d一阶可微且导数全局有界|Π̇|≤δ（Assumption 2）",
+   "测量噪声有界于ε_c且选取μ_α>ε_c（Assumption 3与定理条件）",
+   "初始状态位于控制律良定义区域且κ1(0)∈[κ1min,κ1max]（Assumption 4）",
+   "名义动力学参数M、C、G、J可得（仿真用罚函数法辨识值、硬件用Franka内部实时数值），控制器不显式估计参数误差"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "无外部数据集：Gazebo仿真（含未建模关节摩擦，表II参数）+Franka Emika硬件实验"
+  ],
+  "tasks": [
+   "仿真任务：xyz各0.05 m平移+绕xyz各25°旋转的同时运动，分无外扰与有外扰两轮；外扰为5/10/14/17 s施加1 s的外力/力矩（5 N、5 Nm量级，模拟环境接触、负载变化或碰撞）",
+   "硬件任务：抓持装钢球容器（总质量0.5 kg）的倾倒任务——y向0.1 m平移+z轴40°旋转，t=18 s起钢球流出使质量非线性减小、质心与转动惯量变化，形成非结构化时变扰动"
+  ],
+  "embodiments": [
+   "Franka Emika 7-DOF机械臂（Panda），Gazebo仿真环境+ROS，控制器与观测器运行于1 kHz实时控制接口（∆t=0.001 s）"
+  ],
+  "sample_or_scale": "单平台单任务族；仿真与硬件各一组代表性运行（未报告重复次数与统计检验）；控制器/观测器/自适应律全参数见表I（如β=1、α=9/7、k_s=30、μ_α=0.001），仿真摩擦参数见表II；实验视频公开（YouTube）"
+ },
+ "evaluation": {
+  "design": "仿真（Gazebo，未知关节摩擦）分无外扰/有外扰两轮+真机时变负载倾倒任务；与PD-low/med/high、NTSM[1]、STSM[3]、NT-STSM[21]比较；公平性措施：所有SM控制器共用同一自适应增益律(13)与同一参数，PD测试三组增益以选取公平基线（选定PD-med为后续任务基线）；硬件实验仅对比PD-med。指标为RMSE_p（三笛卡尔轴平均）、RMSE_ξ（四元数点积的geodesic距离）、RMSE_φk（欧拉角逐轴）、τ_avg（平均控制力矩）与TV_τ（控制输入总变差，抖振度量）。",
+  "baselines": [
+   "任务空间PD+前馈（PD-low/med/high，K_p分别200/800/2000与50/200/500）",
+   "NTSM控制器[1]（终端滑模面，无超螺旋结构）",
+   "STSM控制器[3]（线性滑模面+超螺旋结构）",
+   "NT-STSM[21]（Sun等2024，关节空间设计+严格增益比κ2=1/4Γκ1，移植到任务空间）"
+  ],
+  "metrics": [
+   "RMSE_p（m，三轴平均平移跟踪RMSE）",
+   "RMSE_ξ（rad，实际与期望单位四元数间geodesic距离的RMSE）",
+   "RMSE_φk（rad，转成欧拉角后逐旋转轴RMSE）",
+   "τ_avg（Nm，平均控制力矩/能耗代理）",
+   "TV_τ（Nm，控制输入总变差，越小越平滑/低抖振）"
+  ],
+  "ablations": [
+   "同增益律下NTSM/STSM/NT-STSM[21]/NT-STSM(ours)对比：隔离终端滑模面×超螺旋结构×放松增益约束的组合贡献（NTSM因失稳被省略）",
+   "速度估计方法对比（图4）：Franka内置（Act，噪声大）、低通滤波（Smooth，引入延迟）vs TOSM观测器（Ob）",
+   "PD增益三档扫描：精度-控制力矩权衡（PD-low 7.25e-3 m但0.369 Nm；PD-high 1.54e-3 m但0.566 Nm）",
+   "无外扰（表III）vs 有外扰（表IV）两轮仿真：扰动抑制能力"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "仿真绝对性能（未知关节摩擦、无外扰，表III）：所提NT-STSM的RMSE_p=1.76e-3 m、RMSE_ξ=2.25e-2 rad、τ_avg=0.490 Nm、TV_τ=8.45e3 Nm——旋转精度全控制器最高、控制输入最平滑，平移与PD-high（1.54e-3 m、0.566 Nm）相当但力矩更低；PD-low受摩擦扰动影响严重（7.25e-3 m）。",
+   "scope": "Gazebo仿真、7-DOF Franka模型、0.05m平移+25°旋转复合轨迹",
+   "locator": "B. Simulation Results, Table III"
+  },
+  {
+   "finding": "机制证据：[21]的严格增益比κ2=1/4Γκ1移植到任务空间后RMSE_p增71.3%、RMSE_ξ增69.4%（6.13e-3 m、7.36e-2 rad vs 本文1.76e-3 m、2.25e-2 rad），证明稳定性证明施加的增益约束是该方案族此前的性能瓶颈，放松约束（椭圆容许域）带来大幅改善。",
+   "scope": "同任务同增益律下的结构对比（表III）",
+   "locator": "B. Simulation Results"
+  },
+  {
+   "finding": "相对PD基线：较PD-med（同等控制力矩0.506 vs 0.490 Nm）RMSE_p降29.0%、RMSE_ξ降27.6%；较PD-high跟踪相当但控制力矩低13.4%——PD-high靠最高控制力矩换精度，存在能耗与执行器上限风险。",
+   "scope": "仿真无外扰轮（表III）",
+   "locator": "B. Simulation Results, Table III"
+  },
+  {
+   "finding": "仿真+外扰轮（表IV）：NT-STSM的RMSE_p=1.89e-3 m vs PD-med 2.72e-3 m（降约30%），同等平均控制力矩（均0.713 Nm）下TV_τ=7.89e3 vs 6.11e4（约低8倍），外扰下鲁棒性与平滑性同时保持。",
+   "scope": "仿真，末端施加4次外力/力矩序列（5/10/14/17 s）",
+   "locator": "B. Simulation Results, Table IV"
+  },
+  {
+   "finding": "真机时变负载（表V）结果轴依赖：PD-med在y向RMSE更低（7.30e-3 vs 9.41e-3 m）、φy相当（2.74e-2 vs 2.79e-2 rad），而NT-STSM在负载最敏感的z向显著更好（2.74e-3 vs 7.23e-3 m，约2.6倍），t=18 s负载变化时PD退化而NT-STSM维持跟踪；NT-STSM平均控制力矩0.883 vs 1.30 Nm（低32%）、TV_τ=7.98e3 vs 2.07e4（约低2.6倍）。仿真中的全面优势在真机收敛为'负载敏感轴+能耗/平滑性'优势。",
+   "scope": "Franka硬件倾倒任务（0.5 kg时变负载），仅对比PD-med",
+   "locator": "C. Experimental Results, Table V"
+  },
+  {
+   "finding": "SMC族痛点：在相同自适应增益律与tanh平滑下，NTSM控制器在复杂任务空间运动中仍严重抖振致失稳（被省略），STSM在14-17 s显著抖振（RMSE_ξ=1.19e-1 rad、TV_τ=1.45e5）；作者指出调低κ1/κ2可减抖但会牺牲跟踪精度，不再与NT-STSM精度可比。",
+   "scope": "仿真无外扰轮（表III）",
+   "locator": "B. Simulation Results"
+  },
+  {
+   "finding": "旋转跟踪的结构性难点：Franka内置速度估计在旋转段（9-13 s、16-20 s）噪声显著高于纯平移段（0-5 s），增大抖振易感性——这是任务空间SM控制此前少用于高DOF旋转跟踪的原因之一，也是本文引入TOSM观测器的动机。",
+   "scope": "速度估计对比实验（图4）",
+   "locator": "B. Simulation Results, Fig. 4"
+  },
+  {
+   "finding": "作者自述痛点：控制器需手动整定多个参数，需专门操作时间；拟用学习/优化方法自动化参数选择，并扩展到多机械臂协同与力反馈。",
+   "scope": "结论与未来工作",
+   "locator": "V. CONCLUSION"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "所提控制器需要手动整定多个参数，需要专门的调试操作时间；未来工作将用基于学习或优化的方法自动化参数选择",
+    "locator": "V. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "真机实验仅对比PD-med单一基线且为单任务，NTSM/STSM/[21]仅在仿真比较；真机y轴RMSE（9.41e-3 m）反而劣于PD-med（7.30e-3 m），真机上的全面优势证据弱于仿真",
+    "basis": "表V仅两行控制器；III-C/IV-B中y轴劣势由作者原文承认（'While the PD controller achieves lower tracking error in the y direction'）"
+   },
+   {
+    "boundary": "跟踪误差由机器人内部模型/编码器计算（Franka内部动力学数值与内置测量），无激光跟踪仪等外部计量验证绝对末端精度；RMSE衡量的是相对期望轨迹的控制误差而非绝对定位精度",
+    "basis": "IV-A：'the manipulator's internal software provides real-time numerical values for the dynamic parameters'；全文无外部测量装置描述"
+   },
+   {
+    "boundary": "收敛性为有界收敛（|s|≤μ_α）而非渐近零误差，噪声下误差界|e|≤2μ_α依赖μ_α与噪声界关系；精度-抖振-噪声间存在未量化的权衡（tanh的k_s、μ_α、增益限幅）",
+    "basis": "Theorem 1与式(21)；IV-A承认k_s是'tracking accuracy and convergence speed'的折衷参数"
+   },
+   {
+    "boundary": "验证限于Franka级刚性7-DOF臂+已知名义动力学+小姿态误差假设（|η̃|≥0.1）；对轻量/低成本臂（更大力矩噪声与柔性）、强参数不确定性（无内置动力学）或大姿态机动场景无证据；单次运行无重复统计",
+    "basis": "Assumption 1/动力学参数来源（IV-A）；表III/V未报告试验重复次数与方差"
+   }
+  ]
+ },
+ "transfer_boundary": "在已知名义动力学、小姿态误差（|η̃|≥0.1）、扰动导数有界的Franka级刚性7-DOF臂上验证的任务空间自适应滑模跟踪：仿真全面优于PD/NTSM/STSM/[21]（平移RMSE最低1.76e-3 m量级、旋转RMSE_ξ 2.25e-2 rad），真机仅在负载敏感轴（z）与控制力矩/平滑性上占优且y轴劣于PD，多参数手动调参与抖振-精度权衡是其落地痛点。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "公平性设计明确：所有SM控制器共用同一自适应增益律与同一参数，PD测试三组增益后选定PD-med作基线，避免稻草人基线",
+   "仿真与真机双层验证且真机扰动真实非结构化（钢球流出导致质量/质心/惯量非线性时变）",
+   "指标体系兼顾精度（RMSE_p/RMSE_ξ geodesic）、能耗（τ_avg）与抖振（TV_τ），旋转误差用四元数geodesic距离在几何上合理",
+   "定理级增益选择指南（椭圆容许域、Remark 2）与表I/II全参数披露使理论-实现衔接充分"
+  ],
+  "design_risks": [
+   "真机仅PD-med一档基线、单任务、无重复统计；y轴劣势与z轴优势并存，叙事聚焦z轴",
+   "误差来自机器人内部估计，无外部计量独立验证绝对末端精度",
+   "NTSM/STSM基线共用为NT-STSM设计的自适应增益律，其失稳/抖振可能部分归因于增益律适配而非方法本质（作者自述可降增益减抖但牺牲精度），基线调参空间未完全探索",
+   "tanh平滑、μ_α阈值与增益限幅引入多重精度-抖振权衡，文中未给出权衡曲线或敏感性分析"
+  ],
+  "baseline_fairness": "仿真侧较公平（同增益律、PD三档择优）；但SM基线共用为本文结构设计的增益律且未单独调优，NTSM/STSM的失稳结论应理解为'该增益配置下'的结果；NT-STSM[21]为关节空间设计移植到任务空间，非其原生设定；硬件仅PD-med单基线，真机相对优势证据强度有限。",
+  "metric_validity": "RMSE_p/RMSE_ξ定义清晰且与任务空间跟踪语义一致，TV_τ是合理的抖振代理指标；但所有RMSE基于内部模型反馈，衡量控制/跟踪误差而非绝对末端精度，且未报告统计不确定性，mm级以下差异不可辨。",
+  "reproducibility": "表I/II披露控制器、观测器、自适应律、摩擦全参数，实验视频公开，动力学辨识方法（罚函数优化）与1kHz接口频率明确；但无代码/数据开源，期望轨迹细节与试验重复次数未完整披露，复现需自建Franka+ROS环境。",
+  "external_validity": "结论限于Franka级刚性高DOF臂+已知名义动力学+小姿态误差场景；对低成本轻量臂、强参数不确定、大姿态机动或接触丰富的任务无证据；真机优势集中于负载敏感轴与能耗/平滑性而非全轴精度碾压，外推到'通用高精度末端跟踪'应谨慎。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2504.13056-C01",
+   "claim": "在含未知关节摩擦的Gazebo仿真（无外部扰动）中，自适应NT-STSM控制器在7-DOF Franka上取得全部控制器中最高的旋转跟踪精度（RMSE_ξ=2.25e-2 rad）、最平滑的控制输入（TV_τ=8.45e3 Nm最低），平移RMSE_p=1.76e-3 m与PD-high（1.54e-3 m）相当，同时平均控制力矩0.490 Nm低于PD-med（0.506）与PD-high（0.566 Nm）。",
+   "stance": "support",
+   "relation": "支撑综述命题'自适应滑模控制层方案可在高DOF机械臂任务空间实现毫米级平移+约1.3°等效旋转精度的鲁棒跟踪且低抖振低能耗'，为控制层滑模方案族提供量化效果锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B原文：所提NT-STSM平移跟踪与PD-high相当、旋转精度全控制器最高、控制力矩水平低，且TV_τ全控制器最低（最平滑）；表III给出具体数值（RMSE_p 1.76e-3 m、RMSE_ξ 2.25e-2 rad、τ_avg 4.90e-1 Nm、TV_τ 8.45e3 Nm）。",
+   "locator": "B. Simulation Results, Table III",
+   "source_context": "As shown in Table III, the proposed NT-STSM controller achieved comparable translational tracking to the PD-high controller and the highest rotational tracking accuracy of all the controllers while maintaining a low level of control effort. The NT-STSM controller also provides the lowest TV τ among all controllers, indicating it has the smoothest control inputs.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMSE_p / RMSE_ξ / τ_avg / TV_τ",
+    "value_or_direction": "RMSE_p 1.76e-3 m, RMSE_ξ 2.25e-2 rad, τ_avg 0.490 Nm, TV_τ 8.45e3 Nm (ours); PD-high 1.54e-3 m / 2.50e-2 rad / 0.566 Nm / 8.67e4",
+    "comparator": "PD-low/med/high, NTSM (omitted, unstable), STSM, NT-STSM [21]",
+    "task_or_sample": "Gazebo simulation on Franka 7-DOF: 0.05 m x/y/z translation + 25° x/y/z rotation with unknown joint friction, no external disturbance",
+    "locator": "Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B两句原文（含跨行连字符与'TV τ'下标空格原样保留）与表III逐行数值（NT-STSM ours 1.76e-3/2.25e-2/4.90e-1/8.45e3；PD-high 1.54e-3/2.50e-2/5.66e-1/8.67e4）；'最高旋转精度'与'最低TV_τ'为作者原话且与表III一致；控制力矩'低于PD-med/high'由表III 4.90e-1 vs 5.06e-1/5.66e-1核对（PD-low 3.69e-1更低但其跟踪误差最大，主张中未称全场最低）。"
+   }
+  },
+  {
+   "card_id": "2504.13056-C02",
+   "claim": "将[21]的关节空间NT-STSM（受κ2=1/4Γκ1严格增益比约束）原样用于任务空间后，RMSE_p较本文放松增益约束的方法增加71.3%、RMSE_ξ增加69.4%（6.13e-3 m、7.36e-2 rad vs 1.76e-3 m、2.25e-2 rad），表明稳定性证明强加的增益关系是该方案族此前的直接性能瓶颈。",
+   "stance": "support",
+   "relation": "支撑综述命题'NT-STSM方案族的核心机制改进在于放松稳定性证明的增益约束（椭圆容许域替代固定比例）'，提供控制层方案机制-效果的因果证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B原文：把[21]的NT-STSM（原为关节空间设计、带κ1-κ2约束关系）用于任务空间导致RMSE_p增71.3%、RMSE_ξ增69.4%；作者结论是该稳定证明的严格增益关系限制控制器性能、不适合本应用；表III给出两者绝对值。",
+   "locator": "B. Simulation Results",
+   "source_context": "Applying the NT-STSM controller from [21], originally de- signed for the joint space, to the task space with its constrained relationship between κ 1 and κ 2 , resulted in a 71.3% increase in RMSE p , and a 69.4% increase in RMSE ξ , compared to our approach. This result indicates that the strict gain relationship required by the stability proof in [21] limits the controller performance and is not suitable for this application.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMSE_p and RMSE_ξ increase of NT-STSM [21] relative to proposed",
+    "value_or_direction": "+71.3% RMSE_p (6.13e-3 vs 1.76e-3 m), +69.4% RMSE_ξ (7.36e-2 vs 2.25e-2 rad)",
+    "comparator": "proposed task-space NT-STSM with relaxed gain region",
+    "task_or_sample": "same simulation task (unknown friction, no external disturbance), same adaptive gain law",
+    "locator": "Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B整段（含'de- signed'跨行连字符、'κ 1'/'κ 2'下标空格、'RMSE p'/'RMSE ξ'下标空格原样保留）；71.3%/69.4%两数字、增益比约束归因句与原文一致。与表III交叉核对：[21]行6.13e-3 m、7.36e-2 rad vs ours 1.76e-3 m、2.25e-2 rad，(6.13-1.76)/6.13=71.3%、(7.36-2.25)/7.36=69.4%——百分比实际以[21]为分母计算（即本文较[21]降低71.3%/69.4%），方向（本文更优）与幅度量级与表III一致；本卡措辞保留原文'增加71.3%'的表述方向，引用绝对值时以表III为准。"
+   }
+  },
+  {
+   "card_id": "2504.13056-C03",
+   "claim": "同等控制力矩下，所提NT-STSM较PD-med使RMSE_p降低29.0%、RMSE_ξ降低27.6%；较PD-high跟踪性能相当但平均控制力矩低13.4%——即以更低能耗取得与强增益PD同级的任务空间跟踪精度。",
+   "stance": "support",
+   "relation": "支撑综述命题'自适应滑模相对经典PD控制层方案有可量化的精度/能耗优势'，为控制层方案族提供与最常用工业基线的对比锚点。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B原文给出与PD两档的百分比比较：对PD-med为29.0%/27.6%的RMSE降幅且控制力矩相近，对PD-high为跟踪相当但控制力矩低13.4%；表III显示PD-high以最高平均控制力矩（0.566 Nm）换取最好PD精度（1.54e-3 m），存在能耗与执行器上限风险。",
+   "locator": "B. Simulation Results, Table III",
+   "source_context": "Compared to the PD-med controller, the proposed NT-STSM controller reduced RMSE p by 29.0% and RMSE ξ by 27.6%, with similar control effort. Compared to the PD-high controller, the proposed NT-STSM controller achieved similar tracking performance with 13.4% lower control effort.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMSE_p / RMSE_ξ reduction vs PD-med; control effort reduction vs PD-high",
+    "value_or_direction": "-29.0% RMSE_p and -27.6% RMSE_ξ vs PD-med at similar effort; -13.4% control effort vs PD-high at similar tracking",
+    "comparator": "PD-med and PD-high task-space PD controllers",
+    "task_or_sample": "Gazebo simulation, 0.05 m translation + 25° rotation composite trajectory with unknown joint friction",
+    "locator": "Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B两句（含'RMSE p'/'RMSE ξ'下标空格原样保留），29.0%/27.6%/13.4%三个数字与比较对象与原文一致；与表III交叉验证方向性：ours 1.76e-3/2.25e-2 vs PD-med 2.48e-3/3.11e-2（约-29%/-28%）、τ_avg 0.490 vs 0.566 Nm（约-13.4%）吻合。"
+   }
+  },
+  {
+   "card_id": "2504.13056-C04",
+   "claim": "真机倾倒任务（0.5 kg钢球容器、t=18 s起负载非线性时变）中改进是轴依赖的：PD-med在y向RMSE更低（7.30e-3 vs 9.41e-3 m）且φy相当，但NT-STSM在负载最敏感的z向RMSE显著更低（2.74e-3 vs 7.23e-3 m，约2.6倍改善），负载变化时PD性能退化而NT-STSM维持跟踪，同时平均控制力矩低32%（0.883 vs 1.30 Nm）、TV_τ低约2.6倍（7.98e3 vs 2.07e4）。",
+   "stance": "conditional",
+   "relation": "限制综述命题'自适应滑模真机全面优于PD'——真机优势集中于负载敏感轴与能耗/平滑性，非全轴精度优势；为控制层方案的'仿真强、真机条件性'痛点提供证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV-C原文明确承认PD在y向与ε_z姿态上误差更低，而NT-STSM在负载最敏感的z轴显著改善，t=18 s负载变化时PD退化而NT-STSM维持跟踪，控制输入显著更低；表V给出轴级数值（y：7.30e-3 vs 9.41e-3 m；z：7.23e-3 vs 2.74e-3 m；φy：2.74e-2 vs 2.79e-2 rad；τ_avg：1.30 vs 0.883 Nm；TV_τ：2.07e4 vs 7.98e3）。",
+   "locator": "C. Experimental Results, Table V",
+   "source_context": "While the PD controller achieves lower tracking error in the y direction and ϵ z orientation, the NT-STSM controller demonstrates significantly improved tracking along the z-axis, which is most sensitive to the payload. This is clear at t = 18 s, where the payload change degrades the PD controller’s performance while the NT-STSM controller maintains more accurate tracking.",
+   "evidence_type": "system-result",
+   "quantitative": {
+    "metric": "axis-wise RMSE (y, z translation; φy rotation), τ_avg, TV_τ",
+    "value_or_direction": "y: 9.41e-3 vs 7.30e-3 m (PD better); z: 2.74e-3 vs 7.23e-3 m (NT-STSM ~2.6x better); φy: 2.79e-2 vs 2.74e-2 rad (comparable); τ_avg 0.883 vs 1.30 Nm; TV_τ 7.98e3 vs 2.07e4",
+    "comparator": "PD-med task-space controller",
+    "task_or_sample": "hardware pouring task on Franka 7-DOF with 0.5 kg time-varying payload (0.1 m y-translation + 40° z-rotation, payload starts changing at t = 18 s)",
+    "locator": "Table V"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对IV-C原文（含'ϵ z'下标空格与'controller’s'弯撇号原样保留）：y向PD更低、z向NT-STSM显著改善、t=18 s负载变化时间点与PD退化/NT-STSM维持的表述均与原文一致；表V两行数值（PD-med 7.30e-3/7.23e-3/2.74e-2/1.30/2.07e4；NT-STSM 9.41e-3/2.74e-3/2.79e-2/8.83e-1/7.98e3）逐项核对，2.6倍与32%为读者据表计算的约数并在claim中标注'约'。"
+   }
+  },
+  {
+   "card_id": "2504.13056-C05",
+   "claim": "在与所提控制器相同的自适应增益律和tanh平滑处理下，传统NTSM控制器在7-DOF任务空间复合运动中仍严重抖振导致失稳（被从对比中省略），STSM控制器在14 s起显著抖振至17 s才恢复稳定（RMSE_p=7.04e-3 m、TV_τ=1.45e5 Nm）——抖振与失稳是传统滑模方案用于高DOF真机复杂运动的结构性痛点。",
+   "stance": "limit",
+   "relation": "限制综述命题'滑模控制可直接用于末端高精度跟踪'——为控制层滑模方案族提供'抖振致失稳/精度退化'的痛点证据，并衬托超螺旋+自适应增益机制的必要性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III-B原文：尽管采用了抖振消减技术（tanh替换sign），NTSM仍严重抖振致失稳而被省略；STSM在14 s（旋转扰动段）开始显著抖振直到17 s稳定；表III中STSM的RMSE_p=7.04e-3 m、RMSE_ξ=1.19e-1 rad、TV_τ=1.45e5 Nm均为差档；作者补充：调低κ1/κ2可减抖但会牺牲跟踪精度。",
+   "locator": "B. Simulation Results, Table III",
+   "source_context": "Despite chattering reduction techniques, the NTSM con- troller exhibited severe chattering, leading to instability, and is omitted. The STSM controller performed well until 14 s, when it began to chatter significantly until stabilizing at 17 s.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "RMSE_p / RMSE_ξ / TV_τ of SM baselines under same adaptive gain law",
+    "value_or_direction": "NTSM: unstable, omitted (N/A); STSM: RMSE_p 7.04e-3 m, RMSE_ξ 1.19e-1 rad, TV_τ 1.45e5 Nm with chattering 14-17 s",
+    "comparator": "proposed NT-STSM (1.76e-3 m, 2.25e-2 rad, 8.45e3 Nm)",
+    "task_or_sample": "Gazebo simulation, composite 0.05 m + 25° trajectory with unknown joint friction",
+    "locator": "Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对III-B两句（含'con- troller'跨行连字符原样保留）与表III中NTSM行N/A与STSM行数值（7.04e-3/1.19e-1/1.92/1.45e5）；'相同自适应增益律与tanh平滑'的前提在IV-A原文（'all SM controllers were implemented using the same adaptive gain law (13) with the same parameters'与'sign(s) terms are substituted with tanh'）核对成立。"
+   }
+  },
+  {
+   "card_id": "2504.13056-C06",
+   "claim": "作者自述局限：所提控制器需要手动整定多个参数，需要专门的调试操作时间，是该方法落地的成本痛点；作者计划以基于学习或优化的方法自动化参数选择作为未来工作。",
+   "stance": "limit",
+   "relation": "支撑综述命题'控制层方案的多参数整定成本高、自动化调参是未解痛点'，为滑模方案族的适用条件（需要专业调参时间）提供作者自述证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "V. CONCLUSION原文明确承认：尽管有诸多优势，一个局限是需要手动整定多个参数、需要专门操作时间；未来工作将聚焦用学习或优化方法自动化参数选择，并扩展到多机械臂与力反馈协同。",
+   "locator": "V. CONCLUSION",
+   "source_context": "Despite its advantages, one limitation of the proposed con- troller is that it requires manual tuning of multiple parameters, which requires dedicated operation time. Future work will fo- cus on automating parameter selection through learning-based or optimization-based approaches.",
+   "evidence_type": "author-judgment",
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对V. CONCLUSION局限段（含'con- troller'与'fo- cus'两处跨行连字符原样保留）：手动多参数整定、专门操作时间与学习/优化自动化未来工作的表述均与原文一致，无外推。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "本族定位：控制层方案族的'任务空间自适应滑模（NT-STSM）'分支。对综述映射：方案='任务空间非奇异终端超螺旋滑模+自适应增益律（免扰动界先验）+四元数姿态误差+TOSM观测器速度估计'；误差源=未建模关节摩擦、外部力/力矩、时变负载（质量/质心/惯量）、速度测量噪声；量化效果=仿真RMSE_p 1.76e-3 m/RMSE_ξ 2.25e-2 rad（vs PD-med -29.0%/-27.6%，较[21]降低71.3%/69.4%），真机z轴2.74e-3 m（vs PD 7.23e-3）且力矩-32%；适用条件=已知名义动力学、小姿态误差（|η̃|≥0.1）、扰动导数有界、Franka级刚性臂；痛点=NTSM/STSM抖振失稳、旋转段速度噪声更高、多参数手动调参、真机优势轴依赖（y轴劣于PD）。注意：文中'增加71.3%'的百分比实以[21]值为分母（本文较[21]降低71.3%），引用绝对值以表III为准；真机仅PD-med单基线、无外部计量、无重复统计。"
+}

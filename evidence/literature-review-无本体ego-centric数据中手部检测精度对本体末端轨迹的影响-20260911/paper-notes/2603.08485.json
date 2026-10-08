@@ -1,0 +1,433 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.08485",
+  "title": "3PoinTr: 3D Point Tracks for Learning Manipulation from Unconstrained Human Videos",
+  "published": "2026-03-09",
+  "url": "https://arxiv.org/abs/2603.08485",
+  "authors": [
+   "Adam Hung",
+   "Bardienus P. Duisterhof",
+   "Jeffrey Ichnowski"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "3PoinTr 以 3D 点轨为中间表征从非约束人类视频学习操控，完全移除 embodiment（人臂）点、不做手部关键点重定向；其数据管线（2D 点追踪+立体深度 lifting+SAM3 人臂分割）与可见性掩码训练直接对应综述的误差来源与缓解问题，并给出毫米级轨迹误差与下游策略成功率的定量证据。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction (extraction heading '20 Robot Demos' 正文区)",
+    "role": "problem",
+    "purpose": "确认问题（从非约束人类视频学习、embodiment gap）与贡献声明。"
+   },
+   {
+    "locator": "2 Related Work (extraction heading '20 Robot Demos' 正文区)",
+    "role": "relevant-core",
+    "purpose": "梳理点轨表征三轴分类（视频假设/轨迹驱动方式/2D vs 3D）及对手部关键点重定向路线的批评。"
+   },
+   {
+    "locator": "3 Method (extraction heading '20 Robot Demos' 正文区)",
+    "role": "method-or-design",
+    "purpose": "理解 3D 点轨预测（可见性掩码 transformer）与轨迹条件闭环策略（Perceiver-IO 压缩+残差交叉注意力）。"
+   },
+   {
+    "locator": "4 Experiments, 4.1-4.5 (extraction heading '20 Robot Demos' 正文区)",
+    "role": "results-or-analysis",
+    "purpose": "提取 Table 1（毫米级 ADE）、Table 2/3（仿真/真机成功率）、Figure 4 与 Table 5（消融，含 2D vs 3D 点轨）。"
+   },
+   {
+    "locator": "5 Conclusion, 6 Limitations (extraction heading '20 Robot Demos' 正文区)",
+    "role": "conclusion-or-limitations",
+    "purpose": "记录作者陈述的局限（实验室条件、数据规模）。"
+   },
+   {
+    "locator": "Appendix A-G (extraction heading '20 Robot Demos' 正文区)",
+    "role": "appendix-or-supplement",
+    "purpose": "核对数据采集管线（CoTracker3+FoundationStereo+SAM3）、Table 4/5 完整数值与 Appendix G 的 2D 追踪失败条件。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "relevant-core",
+    "reason": "参考文献列表仅用于按需回查引文编号，不直接承载证据。"
+   }
+  ]
+ },
+ "research_question": "能否从非约束（人类无需模仿机器人运动学）的人类视频中预测稠密 3D 点轨，并以此作为中间表征训练样本高效的闭环多任务机器人策略？",
+ "contributions": [
+  "首个以稠密 3D 点轨为中间表征、从非约束人类视频学习闭环机器人策略的方法（移除全部 embodiment 点，不做手部-机器人关键点映射）。",
+  "轨迹条件策略架构：Perceiver-IO 将稠密轨迹压缩为少量点轨 token，经全局 FiLM 条件与 U-Net 每块残差交叉注意力注入 flow-matching 动作头。",
+  "可见性感知的轻量 3D 点轨预测 transformer，通过对暂时遮挡点保留监督，在真实数据两项 3D 位移指标上优于 General Flow 基线。"
+ ],
+ "method": {
+  "summary": "两阶段：(1) 点轨预测——给定初始点云（相机坐标系、剔除 embodiment 点），3 层 MLP tokenizer + 2 个 decoder block 的 transformer 输出每点 T 步 3D 轨迹，训练时对可见点-时刻对施加 L1 损失、以可见性掩码 m∈{0,1} 屏蔽不可见对；(2) 策略——冻结点轨预测器，Perceiver-IO 把 2048 条轨迹压缩为 4 个点轨 token，与当前点云（PointNet）和机器人构型拼接成全局条件，并在 flow-matching U-Net 动作头每个残差块插入零初始化的点轨 token 交叉注意力；动作为相机系下末端位置+6D 旋转+夹爪。真实数据管线：CoTracker3 提取 2D 点轨迹与可见性掩码，FoundationStereo 立体深度将 2D 轨迹提升为 3D，SAM3 以 'human arm' 为文本提示分割并剔除人臂点。",
+  "assumptions": [
+   "可获取立体相机（ZED Mini）深度以将 2D 点轨提升为 3D；相机静止且经 eye-to-hand 标定。",
+   "2D 点追踪模型（CoTracker3）在数据采集时足够准确（作者承认透明/遮挡/反光/阴影下会失败）。",
+   "SAM3 能可靠分割人臂 embodiment 点；剔除后人臂运动不再进入表征。",
+   "任务可由单帧初始观测开环预测的点轨完整指定（短时程任务）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "仿真：程序化生成的 xArm7 演示（视频预训练+策略学习）",
+   "真实：非约束人类演示视频（每任务 50 段）+ 20 条 Xbox 遥操作机器人演示"
+  ],
+  "tasks": [
+   "仿真：Block Stack, Right Glass, Pot Lid, Open Microwave",
+   "真实：Open Drawer, Right Glass, Throw Away Paper, Fold Sock"
+  ],
+  "embodiments": [
+   "UFactory xArm 7 + 平行夹爪",
+   "ZED Mini 立体相机（eye-to-hand 标定、静止第三视角）"
+  ],
+  "sample_or_scale": "真实：每任务 20 条机器人演示 + 50 段人类视频；仿真：20/50/100 条演示 + 100 段无动作视频；点轨误差在 100 个未见仿真样本与 20 个未见真实样本上计算。"
+ },
+ "evaluation": {
+  "design": "点轨预测用 3D ADE 与前 5% 最大运动点的 5% ADE（毫米，仅对可见 ground-truth 点-时刻对计误差），真实任务对比 General Flow；策略用每任务 200 次 rollout（仿真）/20 次 rollout（真实）的成功率，对比 DP、DP3、ATM、AMPLIFY 及 4 个消融变体。",
+  "baselines": [
+   "Diffusion Policy (DP)",
+   "3D Diffusion Policy (DP3)",
+   "ATM",
+   "AMPLIFY",
+   "General Flow（点轨预测基线）"
+  ],
+  "metrics": [
+   "ADE 与 5% ADE（毫米）",
+   "成功率（%）"
+  ],
+  "ablations": [
+   "No Perceiver-IO",
+   "No U-Net Xattn",
+   "2D Point Tracks（2D 替代 3D 点轨）",
+   "No Extra Videos（不用额外视频）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "真实任务上 3PoinTr 的 3D 点轨 ADE/5% ADE 全部优于 General Flow，平均误差降低 28%/44%，作者归因于可见性掩码保留了对暂时遮挡点的监督。",
+   "scope": "四个真实任务、各 20 个未见样本、毫米级 3D 位移误差。",
+   "locator": "4.3 Results: 3D Point Track Prediction, Table 1"
+  },
+  {
+   "finding": "仅用 20 条机器人演示+50 段非约束人类视频，3PoinTr 真实任务成功率 20/20、20/20、18/20、17/20，平均比最强基线 DP3 高 25.0 个百分点；ATM 在夹爪遮挡物体的 Throw Away Paper 上 0/20。",
+   "scope": "四个真实任务、每任务 20 次 rollout、xArm7 真机。",
+   "locator": "4.4 Results: Sample-Efficient Policy Learning, Table 3"
+  },
+  {
+   "finding": "仿真消融中 2D 点轨变体平均成功率 35.8%，远低于 3D 点轨的 64.9%；逐任务 2D 变体 35.0/26.5/44.0/37.5% vs 3PoinTr 66.0/51.0/67.5/75.0%。",
+   "scope": "四个仿真任务、每任务 200 次 rollout、20 条演示设定。",
+   "locator": "4.5 Results: Ablations, Figure 4; Appendix F, Table 5"
+  },
+  {
+   "finding": "作者承认方法在数据采集时依赖准确的 2D 点追踪，而追踪在透明物体、遮挡、反光物体与阴影条件下会失败。",
+   "scope": "作者 future work/limitations 陈述（Appendix G）。",
+   "locator": "Appendix G Future Work"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "实验仍依赖相对一致的实验室条件下录制的视频才能达到可处理的样本效率；扩展到互联网规模 in-the-wild 视频留作未来工作。",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "3PoinTr 在数据采集时依赖准确的 2D 点追踪，该追踪在透明物体、被遮挡物体、反光物体和阴影等条件下会失败。",
+    "locator": "Appendix G Future Work"
+   },
+   {
+    "limitation": "未解决跨相机视角、环境等变化下的泛化；点轨单一表征可能不足以指定某些任务组合（或需颜色/文本等额外模态）。",
+    "locator": "Appendix G Future Work"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "数据采集依赖第三视角静止立体相机（ZED Mini+标定），并非 ego-centric 单目设定；将管线迁移到头戴 ego-centric 视频时，相机运动会破坏'首帧开环预测、全程复用'的假设，且立体深度不可用。",
+    "basis": "4 节 Real-World Setup 明确相机静止并经 eye-to-hand 标定；3.1 节点轨仅从初始观测生成一次。"
+   },
+   {
+    "boundary": "ADE 只在可见 ground-truth 点-时刻对上计算，遮挡期间的轨迹精度未被度量；遮挡严重场景下报告的误差可能系统性偏乐观。",
+    "basis": "4.3 节明确 'errors are computed only for visible ground-truth point-timestep pairs'。"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：静止第三视角立体相机、短时程桌面任务、平行夹爪臂、每任务约 20 条机器人演示+约 50 段非约束人类视频的设定；点轨监督来自 CoTracker3+立体深度+SAM3 分割的自动管线。不能直接外推到：ego-centric 运动相机、单目 RGB（无立体深度）、透明/强反光/重遮挡物体、长时程或需要力控的任务，以及无机器人演示的零样本设定。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "点轨预测与下游策略分别报告误差（毫米级 ADE）与成功率，表征质量与执行效用可分开归因。",
+   "消融覆盖表征维度（2D vs 3D）、架构组件（Perceiver-IO、交叉注意力）与数据（是否用额外视频），因果链较完整。",
+   "可见性掩码的设计直接针对遮挡这一 ego-centric/操作场景的核心误差源，并给出定量收益。"
+  ],
+  "design_risks": [
+   "ADE 仅在可见点上计算，遮挡段误差被排除在评估之外，与'遮挡下保留监督'的卖点存在度量盲区。",
+   "真实实验每任务仅 20 次 rollout、4 个任务，样本量小；人类视频仅 50 段/任务，非互联网规模。",
+   "点轨 ground truth 由 CoTracker3+FoundationStereo 自动生成，未报告该伪标签管线的自身误差标定。"
+  ],
+  "baseline_fairness": "General Flow 在本数据集上从头重训且同样剔除 embodiment 点，仿真中两方法训练数据完全相同（Table 4 双方各胜两任务），公平性较好；ATM 按原方法在机器人+人类视频上训练。策略基线 DP/DP3 不用视频预训练，属于不同类别但作者已分类比较。",
+  "metric_validity": "ADE/5% ADE 是毫米级 3D 轨迹位移误差，比像素级 2D 指标更接近末端轨迹可用性，但仍是表征级代理；成功率是二值部署指标，未报告末端轨迹的连续执行误差。5% ADE 为作者新提指标，合理（背景静态点稀释总 ADE）但缺少外部验证。",
+  "reproducibility": "架构超参（层数、维度、点数 2048、噪声 σ=0.01）与数据管线（CoTracker3、FoundationStereo、SAM3 'human arm' 提示）披露到可复现粒度；有项目主页。训练/评测代码是否开源在本抽取中未确认。",
+  "external_validity": "人类视频为实验室静止第三视角录制，非 ego-centric 也非 in-the-wild；'unconstrained' 仅指人类动作不模仿机器人，不指采集条件。结论向 ego-centric 场景的迁移需要重新验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.08485-C01",
+   "claim": "在真实操作数据中，可见性感知的 3D 点轨预测（对暂时遮挡点保留监督、仅屏蔽对应点-时刻的损失）使 3D 轨迹误差较 General Flow 基线平均降低 28%（ADE）与 44%（5% ADE，任务关键运动点）；General Flow 因预处理时丢弃任何含不可见点-时刻的轨迹，在 Throw Away Paper 等遮挡严重任务上完全失去对被操作物体的监督。",
+   "stance": "support",
+   "relation": "支持综述命题：遮挡是点轨/轨迹重建的主要误差源，而在训练端采用逐点-时刻可见性掩码（而非整条轨迹丢弃）是有效的缓解手段，可量化降低 3D 轨迹误差。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 1 给出四个真实任务的毫米级 ADE/5% ADE，3PoinTr 全部优于 General Flow；正文明确归因于可见性掩码保留暂时遮挡点的监督（Throw Away Paper 中所有纸点末帧不可见，General Flow 因而无纸运动监督）。",
+   "locator": "4.3 Results: 3D Point Track Prediction, Table 1 (extraction section '20 Robot Demos')",
+   "source_context": "Open Drawer 2.54 16.37 2.18 13.19 Right Glass 3.34 30.38 2.29 18.55 Throw Away Paper 2.40 22.87 1.47 8.17 Fold Sock 1.56 10.09 1.14 4.68",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "3D Average Displacement Error (ADE) 与前 5% 最大运动点的 5% ADE（毫米）",
+    "value_or_direction": "3PoinTr 较 General Flow 平均误差降低 28%（ADE）与 44%（5% ADE）；逐任务如 Throw Away Paper 2.40/22.87 → 1.47/8.17 mm",
+    "comparator": "General Flow（同数据集从头重训、同样剔除 embodiment 点）",
+    "task_or_sample": "四个真实任务（Open Drawer, Right Glass, Throw Away Paper, Fold Sock），各 20 个未见样本",
+    "locator": "4.3 Results: 3D Point Track Prediction, Table 1 (extraction section '20 Robot Demos')"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 1 数值与 28%/44% 平均降幅在 4.3 节原文逐字出现；遮挡监督机制解释与 Throw Away Paper 例子亦为原文陈述；claim 限定在真实任务与可见点评估口径内。"
+   }
+  },
+  {
+   "card_id": "2603.08485-C02",
+   "claim": "以 3D 点轨（剔除人臂 embodiment 点）为中间表征、仅用 20 条机器人演示与每任务 50 段非约束人类视频，3PoinTr 在四个真实任务上成功率 20/20、20/20、18/20、17/20，平均比最强基线 DP3 高 25.0 个百分点；逐步重预测点轨的 ATM 基线受人类-机器人分布偏移与执行时遮挡影响，在夹爪遮挡物体的 Throw Away Paper 上成功率为 0/20。",
+   "stance": "support",
+   "relation": "支持综述命题：绕开手部姿态重定向、改用剔除 embodiment 的物体点轨作为下游策略条件，在有限机器人数据下仍可得到高末端执行成功率；同时显示执行时逐帧重追踪（暴露于遮挡）的路线更脆弱。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 3 报告四个真实任务 20 次 rollout 的成功数；正文明确指出 ATM 的 per-step 重预测在遮挡点丢失表征，Throw Away Paper 0% 成功；+25.0pp 为作者陈述的平均差距。",
+   "locator": "4.4 Results: Sample-Efficient Policy Learning, Table 3 (extraction section '20 Robot Demos')",
+   "source_context": "Task ATM [4] DP3 [17] 3PoinTr Open Drawer 6/20 14/20 20/20 Right Glass 3/20 18/20 20/20 Throw Away Paper 0/20 9/20 18/20 Fold Sock 7/20 14/20 17/20",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "真实机器人任务成功率（每任务 20 次 rollout）",
+    "value_or_direction": "3PoinTr 20/20、20/20、18/20、17/20；平均比 DP3 高 25.0 个百分点",
+    "comparator": "DP3（14/20、18/20、9/20、14/20）与 ATM（6/20、3/20、0/20、7/20）",
+    "task_or_sample": "四个真实任务（Open Drawer, Right Glass, Throw Away Paper, Fold Sock），xArm7 真机，20 演示+50 人类视频/任务",
+    "locator": "4.4 Results: Sample-Efficient Policy Learning, Table 3 (extraction section '20 Robot Demos')"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 3 数值、+25.0pp 表述与 ATM 遮挡失败分析均在 4.4 节原文逐字核实；claim 未外推到其他任务或更大数据规模。"
+   }
+  },
+  {
+   "card_id": "2603.08485-C03",
+   "claim": "在相同仿真设定（20 条演示/任务、每任务 200 次 rollout）下，将 3D 点轨替换为 2D 点轨（并换用 2D 图像编码器）使平均成功率从 64.9% 降至 35.8%，逐任务为 35.0/26.5/44.0/37.5% vs 66.0/51.0/67.5/75.0%，说明带深度的 3D 提升对点轨表征的下游策略效用有实质贡献。",
+   "stance": "conditional",
+   "relation": "为综述的'2D→3D 提升'问题提供证据：3D 点轨（依赖深度）显著优于 2D 点轨，反过来说 2D 表征缺失深度信息会损害下游策略；但注意这是在仿真、监督完备条件下测得。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Figure 4 报告消融平均成功率（2D Point Tracks 35.8 vs 3PoinTr 64.9），Appendix F Table 5 给出逐任务数值；消融同时更换了图像编码器（DP 的 2D encoder 替代 DP3 的 3D encoder）。",
+   "locator": "Appendix F Additional Ablation Results, Table 5 (extraction section '20 Robot Demos')",
+   "source_context": "Task 2D Point Tracks No Perceiver-IO No U-Net Xattn No Extra Videos 3PoinTr Block Stack 35.0 24.5 56.0 69.0 66.0 Right Glass 26.5 25.0 41.0 19.5 51.0 Pot Lid 44.0 55.5 62.5 57.5 67.5 Open Microwave 37.5 29.0 70.0 60.0 75.0",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "仿真任务成功率（%），每任务 200 次 rollout",
+    "value_or_direction": "2D 点轨变体平均 35.8% vs 3D 点轨 64.9%（约 -29 个百分点）；逐任务 35.0/26.5/44.0/37.5 vs 66.0/51.0/67.5/75.0",
+    "comparator": "完整 3PoinTr（3D 点轨）及其他消融变体",
+    "task_or_sample": "四个仿真任务（Block Stack, Right Glass, Pot Lid, Open Microwave），20 条演示/任务",
+    "locator": "Appendix F Additional Ablation Results, Table 5 (extraction section '20 Robot Demos')"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table 5 逐任务数值与 Figure 4 平均值（35.8 vs 64.9）均在原文核实；已注明该消融同时更换编码器，claim 表述为'带深度的 3D 提升'与作者归因一致，未声称分离深度与编码器的独立贡献。"
+   }
+  },
+  {
+   "card_id": "2603.08485-C04",
+   "claim": "3PoinTr 的真实世界 3D 点轨监督来自全自动伪标签管线：CoTracker3 提取 2D 点轨迹与可见性掩码，FoundationStereo 立体深度将 2D 轨迹提升为 3D，SAM3 以文本提示 'human arm' 分割并剔除人臂点；作者承认该方法在数据采集时依赖准确的 2D 点追踪，而追踪在透明物体、遮挡物体、反光物体与阴影条件下会失败。",
+   "stance": "limit",
+   "relation": "限制综述命题：点轨路线的轨迹精度上限由现成 2D 追踪器与深度模型的误差决定，作者明确列出失败条件；人臂剔除还引入了分割误差这一额外来源。这些是 ego-centric 场景同样面临的误差来源。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Appendix D 逐字描述三步伪标签管线；Appendix G 逐字陈述对准确 2D 追踪的依赖及四类失败条件。两处的组合（管线构成+失败条件）均为作者直接陈述。",
+   "locator": "Appendix G Future Work (extraction section '20 Robot Demos')",
+   "source_context": "3PoinTr also relies on accurate 2D point tracking at data collection time, which can fail under certain conditions such as transparent objects, occluded objects, reflective objects, and shadows.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "失败条件句逐字来自 Appendix G；管线三步构成逐字来自 Appendix D（'we obtain 2D point trajectories and visibility masks using a 2D point tracking model ... lift the 2D tracks to 3D using depth ... segment embodiment points with SAM3'）；claim 未量化误差幅度，与原文一致。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "reference": "Karaev et al., CoTracker3 (arXiv:2410.11831, 2024)",
+   "why_core": "真实世界 2D 点轨迹与可见性掩码的来源，其精度决定 3D 点轨伪标签上限。"
+  },
+  {
+   "reference": "Yuan, Wen, Zhang, Gao, General Flow as Foundation Affordance for Scalable Robot Learning",
+   "why_core": "点轨预测的主要对比基线，差异点在遮挡轨迹的保留与掩码。"
+  },
+  {
+   "reference": "Wen et al., Any-point Trajectory Modeling for Policy Learning (arXiv:2401.00025)",
+   "why_core": "逐步重预测 2D 点轨的对照路线，其遮挡脆弱性支撑本文开环预测+闭环条件的设计。"
+  }
+ ],
+ "notes": "对综述最关键的点：(1) 全程不做手部姿态估计，人臂仅作为待剔除的 embodiment 点（SAM3 'human arm' 分割），将手部检测误差转化为分割误差；(2) ADE 仅在可见点计算，遮挡段精度无度量（gap）；(3) 采集为静止第三视角立体相机，非 ego-centric，迁移需谨慎。抽取的 section 结构扁平（正文均在 '20 Robot Demos' 标题下），locator 已相应标注。",
+ "tables": [
+  {
+   "table_id": "T1",
+   "caption": "Average Displacement Error (ADE) and ADE of the 5% of points that move the most (5% ADE) for 3PoinTr and General Flow on real-world tasks (millimeters).",
+   "section": "4.3 Results: 3D Point Track Prediction",
+   "rows": [
+    [
+     "Task",
+     "General Flow ADE",
+     "General Flow 5% ADE",
+     "3PoinTr ADE",
+     "3PoinTr 5% ADE"
+    ],
+    [
+     "Open Drawer",
+     "2.54",
+     "16.37",
+     "2.18",
+     "13.19"
+    ],
+    [
+     "Right Glass",
+     "3.34",
+     "30.38",
+     "2.29",
+     "18.55"
+    ],
+    [
+     "Throw Away Paper",
+     "2.40",
+     "22.87",
+     "1.47",
+     "8.17"
+    ],
+    [
+     "Fold Sock",
+     "1.56",
+     "10.09",
+     "1.14",
+     "4.68"
+    ]
+   ],
+   "usage": "作者用该表证明可见性掩码带来的毫米级 3D 轨迹误差优势；本笔记用于 C01。"
+  },
+  {
+   "table_id": "T3",
+   "caption": "Real-world success rates for policies trained with 20 robot demonstrations and 50 human videos per task.",
+   "section": "4.4 Results: Sample-Efficient Policy Learning",
+   "rows": [
+    [
+     "Task",
+     "ATM",
+     "DP3",
+     "3PoinTr"
+    ],
+    [
+     "Open Drawer",
+     "6/20",
+     "14/20",
+     "20/20"
+    ],
+    [
+     "Right Glass",
+     "3/20",
+     "18/20",
+     "20/20"
+    ],
+    [
+     "Throw Away Paper",
+     "0/20",
+     "9/20",
+     "18/20"
+    ],
+    [
+     "Fold Sock",
+     "7/20",
+     "14/20",
+     "17/20"
+    ]
+   ],
+   "usage": "作者用该表展示少样本真机策略效果；本笔记用于 C02。"
+  },
+  {
+   "table_id": "T5",
+   "caption": "Ablation simulation success rates (%) over 200 rollouts per task, policies trained with 20 demonstrations.",
+   "section": "Appendix F Additional Ablation Results",
+   "rows": [
+    [
+     "Task",
+     "2D Point Tracks",
+     "No Perceiver-IO",
+     "No U-Net Xattn",
+     "No Extra Videos",
+     "3PoinTr"
+    ],
+    [
+     "Block Stack",
+     "35.0",
+     "24.5",
+     "56.0",
+     "69.0",
+     "66.0"
+    ],
+    [
+     "Right Glass",
+     "26.5",
+     "25.0",
+     "41.0",
+     "19.5",
+     "51.0"
+    ],
+    [
+     "Pot Lid",
+     "44.0",
+     "55.5",
+     "62.5",
+     "57.5",
+     "67.5"
+    ],
+    [
+     "Open Microwave",
+     "37.5",
+     "29.0",
+     "70.0",
+     "60.0",
+     "75.0"
+    ]
+   ],
+   "usage": "作者用该表给出消融逐任务数值；本笔记用于 C03（2D vs 3D 点轨）。"
+  }
+ ]
+}

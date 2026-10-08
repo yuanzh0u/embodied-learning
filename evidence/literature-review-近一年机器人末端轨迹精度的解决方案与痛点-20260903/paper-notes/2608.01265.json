@@ -1,0 +1,406 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.01265",
+  "title": "Hermite Curves as Trajectory Priors for Vision-Language-Action Models",
+  "published": "2026-08-02",
+  "url": "https://arxiv.org/abs/2608.01265",
+  "authors": [
+   "Qi Lv",
+   "Jianming Xing",
+   "Zhao Yang",
+   "Mingyuan Yao",
+   "Yinan Shi",
+   "Yawei Jueluo",
+   "Mike Zheng Shou",
+   "Xiang Deng"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接命中综述问题的『轨迹先验参数化』方案族：针对 VLA 动作块的块内锯齿与重规划 seam 边界不连续（末端轨迹精度的核心痛点），提出三次 Hermite 轨迹先验并在仿真与真机上量化了成功率、jerk、SPARC 与 seam 不连续度，含作者自述局限。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题：扁平逐步动作表示导致块内不连贯与块间边界不连续，及三个变体的总体设计与关键数字"
+   },
+   {
+    "locator": "2.3 Trajectory Priors and Motion Primitives",
+    "role": "relevant-core",
+    "purpose": "与 FAST/DCT 谱系数、Spline Policy、外部 seam 修复方法的定位差异"
+   },
+   {
+    "locator": "3.2 Action Chunks and Hermite Trajectory Operator",
+    "role": "method-or-design",
+    "purpose": "Hermite 边界变量（端点位置与速度）与固定基矩阵 D_H(θ)=Hθ 的构造"
+   },
+   {
+    "locator": "3.3 Instantiating the Hermite Trajectory Prior",
+    "role": "method-or-design",
+    "purpose": "三个变体的机制：DH 量化边界 token 自回归、CH scaffold+残差、Reg 仅辅助训练目标"
+   },
+   {
+    "locator": "3.4 Theoretical Analysis of the Hermite Prior",
+    "role": "method-or-design",
+    "purpose": "监督几何（H^T H 度量）、表达带宽与 seam 约束的三个命题"
+   },
+   {
+    "locator": "4.1 Experimental Setup",
+    "role": "data-or-setting",
+    "purpose": "LIBERO/LIBERO-plus 协议、三个真机平台、四个任务与轨迹质量指标定义"
+   },
+   {
+    "locator": "4.2 Implementation Details",
+    "role": "data-or-setting",
+    "purpose": "骨干、K=2、T/W/D、训练与采样超参（30k 步、8×H100、N=10 去噪步）"
+   },
+   {
+    "locator": "4.3 Main Results",
+    "role": "results-or-analysis",
+    "purpose": "仿真与真机主表（Table 2/3/4）、分阶段通过率与增益来源定位"
+   },
+   {
+    "locator": "4.4 Ablation Studies",
+    "role": "results-or-analysis",
+    "purpose": "λ 注入强度、段数 K、监督设计与边界基（Table 5-8）"
+   },
+   {
+    "locator": "4.5 Smoothness and Trajectory-Quality Analysis",
+    "role": "results-or-analysis",
+    "purpose": "jerk/SPARC/失败子集分层/seam 不连续度（Table 10-12, Fig. 6-11）"
+   },
+   {
+    "locator": "5 LIMITATION AND FUTURE WORK",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者自述：软先验 vs 硬约束、仅动作侧结构与接触事件"
+   },
+   {
+    "locator": "6 CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "总结三个集成层级与零推理开销结论"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1 Vision-Language-Action Models for Manipulation",
+    "reason": "背景综述，对综述问题无增量信息"
+   },
+   {
+    "locator": "2.2 Action Chunk Representation",
+    "reason": "背景综述，要点已在 2.3 与引言中体现"
+   },
+   {
+    "locator": "Appendix A-C（命题证明与附加表格）",
+    "reason": "正文已给出命题结论与实验佐证；证明细节对综述问题非必需"
+   }
+  ]
+ },
+ "research_question": "在 VLA 动作块层面显式引入分段三次 Hermite 轨迹先验（端点位置+速度参数化），能否同时修复块内运动锯齿与闭环重规划 seam 的边界不连续，从而提升末端执行器轨迹精度与任务成功率，以及在离散/连续建模范式与训练/推理期三种集成层级中哪种用法最有效？",
+ "contributions": [
+  "提出以端点位置与速度为边界变量的分段三次 Hermite 轨迹算子 D_H(θ)=Hθ，把块内平滑性与块间边界连续性显式编码进 VLA 动作表示，而非依赖数据隐式学习",
+  "在共享同一算子的前提下系统考察三种集成层级：HERMITE-VLA^DH（量化边界变量自回归 token）、HERMITE-VLA^CH（Hermite scaffold+逐步残差的连续生成）、HERMITE-VLA^Reg（仅作辅助训练正则，推理管线不变）",
+  "实证发现轨迹先验最有效的作用位置是训练期归纳偏置而非推理期约束：Reg 以零推理开销取得三变体中最佳结果（LIBERO 95.9%→98.7%，LIBERO-plus 85.7%→90.9%，四个真机任务 63.4%→90.0%）",
+  "给出超越成功率的运动学刻画：中位 jerk、SPARC 谱平滑度、seam 不连续度 ρ 与成功/失败子集分层，证明平滑度增益独立于任务成败并量化了重规划边界的普遍不连续现象"
+ ],
+ "method": {
+  "summary": "把动作块的平滑子空间（末端位姿连续通道，排除二值夹爪）表示为 K 段三次 Hermite 曲线：每段由端点位置与端点速度 4 组边界变量参数化，经预计算基矩阵 H 一次矩阵乘法解码回逐步控制。三个变体共享该算子：(1) DH 把边界变量量化为 256 bin 的 token 组做段级自回归；(2) CH 在 flow-matching 的 x0 预测上把干净动作分解为 Hermite scaffold 与逐步残差；(3) Reg 仅在训练时对辅助头加 λ=10 的 Hermite 重建正则，部署时保留原始 π0.5 动作头与采样流程（零推理开销）。理论分析说明轨迹空间监督等价于 H^T H 加权的 θ 空间最小二乘，且速度列被 O(4/27) 上界限制，天然抑制高频锯齿。",
+  "assumptions": [
+   "动作块的平滑通道（末端位姿平移/旋转）可被低阶分段三次曲线在 K=2 段内充分逼近，残差项补偿三次样条外的高频细节",
+   "闭环部署以固定视界重规划（W≤T），seam 处的速度连续可通过让解码器对边界量训练而软性逼近，无需运行时约束模块",
+   "演示数据本身是平滑轨迹（C2 采样假设），先验是归纳偏置而非对非平滑接触动力学的建模"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "LIBERO（Spatial/Object/Goal/10 四套件，每任务 50 次 rollout，共 500 episodes/套件）",
+   "LIBERO-plus（七类测试时扰动：Camera/Robot/Language/Light/Background/Noise/Layout，10,030 个扰动实例）",
+   "自采真机演示数据（Table 1：单臂 Franka 1–3 任务、Cybopal 单/双臂、ARX 双臂；PICO VR 采集 4.6 小时 805 段演示等）"
+  ],
+  "tasks": [
+   "仿真：LIBERO 四套件共 40 任务（含长时程 LIBERO-10）",
+   "真机四任务（三阶段式 open→place→close / pick→fold→place）：Task 1/2 同指令不同单臂平台、Task 3 双臂协同放置、Task 4 形变物体（折叠）操作"
+  ],
+  "embodiments": [
+   "Franka 单臂（7 DoF，末端控制）",
+   "Cybopal 臂（6 DoF/臂，单臂与双臂构型）",
+   "ARX 双臂（6 DoF/臂）"
+  ],
+  "sample_or_scale": "仿真每任务 50 rollout；LIBERO-plus 10,030 实例；真机每任务 15 次随机放置 rollout；模型约 3.3B 参数（π 系列骨干），8×H100 微调 30k 步；真机控制 30 Hz，T=50、W=20，仿真 T=10、W=5"
+ },
+ "evaluation": {
+  "design": "受控对比：五个模型（π0-FAST、π0.5、DH、CH、Reg）共享同一训练框架与训练设置，仅动作头与损失不同；在标准仿真、扰动仿真与三个真机平台上评估；另设轨迹质量分析（仅限连续策略家族，避免离散化混淆）",
+  "baselines": [
+   "自回归：OpenVLA（~7B）、WorldVLA（~7B）、π0-FAST（~3.3B）",
+   "连续生成：Diffusion Policy（157M）、Octo（93M）、DiT Policy（334M）、OpenVLA-OFT（~7B）、π0.5（~3.3B，共享骨干）"
+  ],
+  "metrics": [
+   "任务成功率 SR（LIBERO 官方协议、LIBERO-plus 实例加权平均、真机累计分阶段通过率）",
+   "Jerk（时间域平滑度，位置三阶导）",
+   "SPARC（速度谱弧长，频域平滑度）",
+   "Seam 不连续度 Δa_seam 与交接/内部步长比 ρ"
+  ],
+  "ablations": [
+   "辅助损失权重 λ∈{0,1,5,10,20}（Table 5，λ=10 最优 98.7%，中位 jerk 单调下降 0.00046→0.00041）",
+   "段数 K∈{1,2,3,4}（Table 6，K=2 最优，K 过大使段跨度坍缩、稀释低频先验）",
+   "监督空间设计：θ 空间最小二乘/有限差分 vs 轨迹空间 vs +残差（Table 7，轨迹空间+残差 97.7%）",
+   "边界基对比：全局多项式/Bernstein/B-spline vs Hermite（Table 8，Hermite 98.7% 最高且 jerk 最低）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "训练期 Hermite 正则（Reg）在零推理开销下把 π0.5 平均成功率从 95.9% 提升到 98.7%（标准 LIBERO）、85.7%→90.9%（LIBERO-plus）、63.4%→90.0%（四个真机任务）",
+   "scope": "π0.5 骨干 + LIBERO/LIBERO-plus/三个真机平台",
+   "locator": "1 INTRODUCTION / Table 2 / Table 3 / Table 4"
+  },
+  {
+   "finding": "离散变体 DH 把 π0-FAST 从 85.5% 提到 95.4%（LIBERO）、61.6%→69.4%（LIBERO-plus）；长时程 LIBERO-10 收益最大（60.2%→90.4%，+30.2%），表明边界参数化抑制了扩展闭环执行中的误差累积",
+   "scope": "π0-FAST 骨干 + LIBERO/LIBERO-plus",
+   "locator": "4.3 Main Results"
+  },
+  {
+   "finding": "真机重规划 seam 处所有策略的控制不连续度都显著高于块内部（ρ=5.5–8.6）；Hermite Reg 把 seam 中位数降到基线的 0.72×（Task 2）与 0.48×（Task 3），但只能收窄而不能消除 seam 尖峰",
+   "scope": "真机 Task 2/3，W=20、T=50、30 Hz 末端控制",
+   "locator": "4.5 Smoothness and Trajectory-Quality Analysis (Table 12)"
+  },
+  {
+   "finding": "轨迹先验最有效的作用方式是训练期归纳偏置而非推理期约束：仅训练的 Reg 优于显式 scaffold 的 CH（真机 90.0% vs 81.7%），且不改变部署管线",
+   "scope": "π0.5 骨干的三种集成层级对比",
+   "locator": "4.3 Main Results / 6 CONCLUSION"
+  },
+  {
+   "finding": "λ 从 0→10 使中位执行 jerk 从 0.00046 单调降到 0.00041；K=2 最优，K 过大（3/4）反而因段跨度过小耦合相邻帧而增大 jitter",
+   "scope": "标准 LIBERO，Reg 变体",
+   "locator": "4.4 Ablation Studies (Table 5/Table 6)"
+  },
+  {
+   "finding": "失败 rollout 的 jerk 系统性高于成功 rollout（如 π0.5：0.00070 vs 0.00046）；Reg 在成功/失败两个子集上都最平滑且失败次数最少（26 vs π0.5 的 82），说明平滑度与任务成功率并非幸存者偏差",
+   "scope": "LIBERO 全量 rollout 分层",
+   "locator": "4.5 Smoothness and Trajectory-Quality Analysis (Table 11)"
+  },
+  {
+   "finding": "CH 变体在 LIBERO-plus 的 Light/Background/Noise 纯外观扰动上低于 π0.5 基线（总平均 85.0% vs 85.7%），提示当预训练动作头已能建模密集动作时，显式结构约束在外观分布偏移下可能损失表达力",
+   "scope": "LIBERO-plus 外观类扰动",
+   "locator": "4.3 Main Results (Table 3)"
+  },
+  {
+   "finding": "真机增益几乎全部来自中间的精确放置/折叠阶段（Task 2 中段通过率 26.7%→66.7%，Task 3 53.3%→93.3%），且 Task 2 第一阶段低于基线仍获增益，说明收益来自操作执行本身（轨迹规整）而非更可靠的接近",
+   "scope": "真机 Task 2/3 分阶段统计",
+   "locator": "4.3 Main Results (Table 4)"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "Hermite 正则把轨迹平滑建模为软性归纳偏置而非严格约束，以牺牲绝对轨迹连续性换取策略表达力（即 seam 只能收窄不能消除）",
+    "locator": "5 LIMITATION AND FUTURE WORK"
+   },
+   {
+    "limitation": "先验只关注动作序列结构，独立于视觉侧表征与非平滑接触事件；未覆盖高动态、接触密集任务",
+    "locator": "5 LIMITATION AND FUTURE WORK"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论主要在 π 系列（PaliGemma+action expert）骨干上得出，向其它 VLA 家族（如 OpenVLA 7B、diffusion 头）的迁移只通过 DH 对 π0-FAST 验证，未覆盖更大或异构骨干",
+    "basis": "4.2 Implementation Details 指明所有变体基于 π-series 骨干；Table 2 中其它家族基线为引用数字而非同框架复训"
+   },
+   {
+    "boundary": "真机统计功效有限：每任务仅 15 次 rollout，63.4%→90.0% 的增益区间较宽，且四个任务均为桌面放置/折叠类，未涉及高频投掷、擦拭等对轨迹带宽要求更高的任务",
+    "basis": "4.1 Experimental Setup 规定每任务 15 runs；任务集合为三阶段放置/折叠"
+   },
+   {
+    "boundary": "低阶三次先验显式限制高频表达能力，依赖残差项（CH）或软监督（Reg）补偿；对需要非平滑、急动动作的接触丰富操作未验证",
+    "basis": "Proposition 3.2 带宽分析 + Table 7 显示无残差时 CH 降至 96.2% + 作者局限第二条"
+   },
+   {
+    "boundary": "平滑度指标（jerk/SPARC/自设 seam 比 ρ）与绝对末端跟踪误差（如毫米级位置误差）之间未建立定量映射，轨迹精度改善主要以成功率与相对 seam 倍数呈现",
+    "basis": "4.1 轨迹质量指标定义处仅列 jerk/SPARC/seam，无绝对跟踪误差指标"
+   }
+  ]
+ },
+ "transfer_boundary": "该轨迹先验的量化结论限定于 π 系列骨干、以末端位姿为主的桌面操作任务（放置/折叠）与每任务 15 次的真机统计；对高频接触密集任务、非 π 骨干及需要硬实时连续性保证的场景不适用（作者自述软先验与动作侧局限）。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "五个模型共享同一训练框架与设置、仅变动作头与损失，π 系列内部对比是干净的受控实验",
+   "三种集成层级（token/scaffold/正则）构成对『结构应该注入在哪一层』的系统消融，直接回答方案族内部的设计问题",
+   "超越成功率的运动学评估（jerk、SPARC、seam ρ）+ 成功/失败子集分层，主动排除了平滑度=幸存者偏差的替代解释",
+   "边界基消融（多项式/Bernstein/B-spline）排除了『任意低阶多项式平滑都行』的替代假设"
+  ],
+  "design_risks": [
+   "非 π 系基线（OpenVLA、Diffusion Policy 等）直接引用原论文数字，评测协议未必与本框架一致，跨家族比较需谨慎",
+   "真机每任务 15 次 rollout，成功率差的置信区间较宽；四任务均为低速精密操作，未覆盖高速/接触丰富域",
+   "K=2、λ=10 等超参仅在 LIBERO 上扫描，真机（T=50）上未重新验证最优性",
+   "seam 指标 ρ 为作者自定义，缺绝对末端误差参照，读者难以换算为工程上的跟踪精度"
+  ],
+  "baseline_fairness": "π0-FAST/π0.5 与三个变体同框架复训，比较公平；外部基线引用原文数字，协议匹配性未逐项说明，存在轻微不公平风险。",
+  "metric_validity": "SR+分阶段通过率衡量任务层面，jerk/SPARC/seam 衡量执行层面，互补性好；但均未给出绝对末端跟踪误差（mm），『轨迹精度』的证据是间接的（相对 seam 倍数与 jerk 下降）。",
+  "reproducibility": "项目页面与训练超参（K、λ、学习率、批大小、GPU 数、去噪步数）披露完整，π 系列开源检查点可得；但 Cybopal/ARX 自建硬件与自采演示数据复现门槛高。",
+  "external_validity": "结论在 LIBERO/LIBERO-plus 与三个真机平台间方向一致，且在 Camera/Robot 扰动下增益最大、纯外观扰动增益小，支持『动作侧先验』的机制解释；但骨干单一、任务族窄（放置/折叠），向高动态接触任务与异构本体的外推未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.01265-C01",
+   "claim": "在 π0.5 骨干上，仅作训练期辅助正则的 Hermite 变体（Reg）以零推理开销把平均成功率从 95.9% 提升到 98.7%（标准 LIBERO）、85.7%→90.9%（LIBERO-plus 分布偏移）、63.4%→90.0%（四个真机任务）。",
+   "stance": "support",
+   "relation": "支撑综述命题『轨迹先验参数化（结构化动作表示）能显著提升末端轨迹相关任务成功率』，且证明该收益可在不增加推理延迟的条件下获得。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "引言与摘要给出同一组主结果数字：Reg 在三个评测域上一致超过共享 π 系列基线，且 Reg 保留基线动作头与采样流程，未引入运行时开销。",
+   "locator": "1 INTRODUCTION",
+   "source_context": "Against the shared π-series baseline, the strongest vari- ant HERMITE-VLA Reg improves the average success rate from 95.9% to 98.7% on standard LIBERO, from 85.7% to 90.9% under the distribution shifts of LIBERO-plus, and from 63.4% to 90.0% on four real-robot tasks.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "平均任务成功率 SR",
+    "value_or_direction": "95.9%→98.7%（LIBERO）；85.7%→90.9%（LIBERO-plus）；63.4%→90.0%（真机四任务），零推理开销",
+    "comparator": "同框架复训的 π0.5 基线",
+    "task_or_sample": "LIBERO 四套件（每任务 50 rollout）、LIBERO-plus 10,030 扰动实例、三个真机平台四任务（每任务 15 rollout）",
+    "locator": "1 INTRODUCTION / Table 2 / Table 3 / Table 4"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对引言中该句与摘要、Table 2/3/4 的数字一致（98.7/90.9/90.0 与基线 95.9/85.7/63.4），且 4.2 节确认 Reg 部署时不改变基线动作头，『零推理开销』表述被原文支持；范围限定在 π0.5 骨干与上述评测集。"
+   }
+  },
+  {
+   "card_id": "2608.01265-C02",
+   "claim": "在真机 30 Hz、W=20、T=50 的闭环重规划设置下，Hermite 正则把重规划交接处的位移不连续中位数降到 π0.5 基线的 0.72×（Task 2）与 0.48×（Task 3）。",
+   "stance": "support",
+   "relation": "支撑综述命题『显式轨迹先验能缓解闭环重规划 seam 处的末端轨迹不连续（精度痛点）』，并给出可迁移的量化幅度。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.5 节 seam 分析直接给出相对中位数：Reg 相对 π0.5 基线把 handover 跳变降到 0.72×/0.48×；原文同时说明该比值因内部步同时被平滑而保守低估绝对收益。",
+   "locator": "4.5 Smoothness and Trajectory-Quality Analysis",
+   "source_context": "Second, Hermite regularization sub- stantially mitigates this handover jump, with HERMITE- VLA Reg reducing the relative seam median to 0.72× on Task 2 and 0.48× on Task 3 compared to π 0.5 baseline.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "重规划交接处末端位移不连续中位数（Δa_seam，相对基线倍数）",
+    "value_or_direction": "Task 2 降至 1.00×→0.72×，Task 3 降至 1.00×→0.48×",
+    "comparator": "π0.5 基线（1.00×；绝对中位数 Task 2 0.0056、Task 3 0.0059）",
+    "task_or_sample": "真机 Task 2 与 Task 3（精密放置），W=20、T=50、30 Hz 末端控制",
+    "locator": "4.5 Smoothness and Trajectory-Quality Analysis (Table 12)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "该句与 Table 12 的 rel. 列（0.72×、0.48×）及 ρ 列一致；任务设置（W=20、T=50）与 4.2 节实现细节相符；claim 未超出两个精密放置任务的范围。"
+   }
+  },
+  {
+   "card_id": "2608.01265-C03",
+   "claim": "作者自述：Hermite 正则把轨迹平滑建模为软性归纳偏置而非严格约束，以牺牲绝对轨迹连续性换取策略表达力，且先验独立于视觉表征与非平滑接触事件。",
+   "stance": "limit",
+   "relation": "为综述提供『轨迹先验族』的未解痛点证据：软先验无法保证 seam 绝对连续，接触丰富/高动态操作未被覆盖。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "限制与未来工作一节原文给出两条方法学权衡，直接界定该方案的适用边界，是方案族痛点的一手作者陈述。",
+   "locator": "5 LIMITATION AND FUTURE WORK",
+   "source_context": "Our study highlights two key methodological trade-offs. First, Hermite regularization models trajectory smoothness as a soft inductive bias rather than strict constraints, preserv- ing policy expressivity at the expense of absolute trajectory continuity. Second, the proposed prior focuses on action- sequence structure, operating independently of vision-side representations and of non-smooth contact events.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字复制限制章节两句原文；『软偏置不保证绝对连续』与 4.5 节『narrows the seam spike, it does not completely eliminate it』相互印证，claim 与原文措辞完全对齐。"
+   }
+  },
+  {
+   "card_id": "2608.01265-C04",
+   "claim": "在 LIBERO-plus 外观类扰动（Light/Background/Noise）下，显式 scaffold 变体 CH 的成功率低于 π0.5 基线（总平均 85.0% vs 85.7%）；作者将此解释为：当预训练动作头已有效建模密集动作时，Hermite 结构更适合作为补充性监督。",
+   "stance": "conditional",
+   "relation": "为综述提供适用条件证据：把轨迹结构作为显式输出表示在纯外观分布偏移下可能损失表现，仅训练期正则更稳，界定了该机制族的适用范围。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.3.1 节 LIBERO-plus 分析与 Table 3 显示 CH 在几何类扰动领先但在三类外观扰动上低于基线，作者给出机制性解释，构成条件性结论而非单纯失败案例。",
+   "locator": "4.3 Main Results",
+   "source_context": "85.0% average SR, leading on geometric perturbations but falling below the baseline on Light, Background, and Noise. The comparison suggests that, when the pretrained action predictor already models dense actions effectively, Hermite structure is more beneficial as complementary supervision.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "LIBERO-plus 实例加权平均成功率",
+    "value_or_direction": "CH 85.0% < 基线 85.7%（Light/Background/Noise 三类低于基线；Reg 90.9% 最优）",
+    "comparator": "π0.5 基线与 Reg 变体",
+    "task_or_sample": "LIBERO-plus 七类扰动 10,030 实例",
+    "locator": "4.3 Main Results (Table 3)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "该句与 Table 3 中 CH 行（Light 87.0、Background 85.9、Noise 73.9 均低于 π0.5 的 95.5/95.0/89.6）及总平均 85.0 vs 85.7 一致；『complementary supervision』解释为作者原话，claim 未越界。"
+   }
+  },
+  {
+   "card_id": "2608.01265-C05",
+   "claim": "在该真机设置下，所有策略变体（含 Hermite 变体）在重规划交接步的控制不连续度都显著高于块内部执行（交接/内部比 ρ 达 5.5–8.6），说明重规划边界不连续是闭环分块执行 VLA 的普遍结构性痛点。",
+   "stance": "gap",
+   "relation": "为综述的『未解痛点』提供跨方案证据：即使引入轨迹先验，seam 处的不连续仍以数倍于内部步的水平存在，是末端轨迹精度方案族共同面对的残留问题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.5 节边界评估的第一条结论对所有被测连续策略成立，量化为 ρ 范围 5.5–8.6；该现象与仿真分析一致，构成与具体方案无关的结构性问题陈述。",
+   "locator": "4.5 Smoothness and Trajectory-Quality Analysis",
+   "source_context": "every policy variant exhibits significantly higher control discontinuity at replan- ning handovers than during interior execution (ρ ranging from 5.5 to 8.6), which is consistent with the observation",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "交接步与内部步的位移不连续比 ρ = Δa_seam/Δa_interior",
+    "value_or_direction": "所有变体 ρ=5.5–8.6（Hermite Reg 最低 5.5–7.0，π0.5 最高 7.6–8.6）",
+    "comparator": "块内部执行步",
+    "task_or_sample": "真机 Task 2/Task 3 重规划 handover（W=20、T=50）",
+    "locator": "4.5 Smoothness and Trajectory-Quality Analysis (Table 12)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "该句为 4.5 节三条 insight 之首，ρ 范围与 Table 12 中六行数据的 ρ 列（5.5–8.6）吻合；『every policy variant』限定为文中比较的三个连续策略，claim 精确保留该范围。"
+   }
+  },
+  {
+   "card_id": "2608.01265-C06",
+   "claim": "论文的核心机制结论：显式结构化轨迹先验最有效的作用方式是作为学习阶段的归纳偏置而非运行时约束——训练期 Reg 变体在三个评测域上均超过把先验作为部署输出的 CH，同时保持原始推理管线。",
+   "stance": "support",
+   "relation": "支撑综述中『先验注入位置（训练期 vs 推理期）』这一设计维度的结论：同一几何先验以零运行时成本的训练期注入即可获得最大收益，为方案选择提供依据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要的 Trajectory analyses 句与正文 4.3（Reg 90.0% > CH 81.7% 真机；98.7% > 97.7% LIBERO）共同支撑该论断；Reg 不引入运行时延迟的属性使其区别于 primitive-as-policy 架构。",
+   "locator": "preamble (Abstract)",
+   "source_context": "Across simulation benchmarks and real-robot platforms, Hermite Regularization achieves superior performance among these three variants, improving π 0.5 baseline success rates from 95.9% to 98.7% on LIBERO, 85.7% to 90.9% on LIBERO-plus, and 63.4% to 90.0% across four real-robot tasks without additional inference overhead. Trajectory analyses reveal that explicitly structuring trajectory priors serves most effectively as a learning inductive bias rather than a runtime constraint.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "两句均逐字摘自摘要；『learning inductive bias rather than a runtime constraint』为原文措辞，且与 4.3.2/6 CONCLUSION 中 Reg>CH 的实验排序一致；claim 限定在三个 Hermite 变体与所测基准内。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2510.13626",
+  "2606.07386",
+  "2509.23224",
+  "2512.24673",
+  "2512.05964",
+  "2506.21539"
+ ],
+ "notes": "TPAMI 格式长文（v2, 2026-08-09）。对综述的价值：(1) 轨迹先验族的代表工作，量化了 seam 不连续 ρ=5.5–8.6 这一跨方案痛点；(2) 训练期归纳偏置优于推理期结构约束的结论对整个方案族有设计指导意义；(3) 0.72×/0.48× 的 seam 缓解幅度可与异步执行族的平滑/对齐机制横向比较。注意其评测以成功率+jerk/SPARC 为主，无绝对末端跟踪误差（mm）指标。"
+}

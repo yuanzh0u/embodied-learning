@@ -1,0 +1,369 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.04907",
+  "title": "WAM-Nav: Asymmetric Latent World-Action Modeling for Unified Visual Navigation",
+  "published": "2026-06-13",
+  "url": "https://arxiv.org/abs/2606.04907",
+  "authors": [
+   "Ning Yang",
+   "Yan Huang",
+   "Kaiwen Peng",
+   "Ziheng He",
+   "Kai Wang",
+   "Cui Miao",
+   "Kailin Lyu",
+   "Guo Li",
+   "Xiaofeng Wang",
+   "Zheng Zhu",
+   "Jing Liu",
+   "Nianfeng Liu"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "导航环节'世界模型替代 SLAM/显式地图'极的直接样本：WAM-Nav 是完全 mapless 的潜在世界-动作模型——无显式地图、无全局定位、无外部位姿输入，空间状态仅由 k=8 滑窗观测+动作积分自我运动承载，在 6000 episodes 零样本仿真（Image-Goal 50.2 SR，超 NavDP 15.7%）与 G1 人形真机部署（4 环境平均 85%）上验证。论文开篇即把 ORB-SLAM3/RTAB-Map/Active Neural SLAM 定位为'被学习范式替代的传统解耦建图-规划管线'。对综述问题的独特价值在于它同时暴露替代的边界：世界模型有效前瞻视距仅 1 步（长视距反而崩塌）、自我运动为开环航位推算（无全局一致性机制）——即 SLAM 的职能是被任务口径（mapless 相对目标）绕开，而非被长程空间推理能力替代。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-3, Abstract 与 Sec 1 Introduction",
+    "role": "problem",
+    "purpose": "确认动机：反应式策略缺乏前瞻推理；模块化世界模型（视觉想象）带来延迟与误差累积；单一目标口径方法需重训。注意开篇对'解耦建图-规划管线（ORB-SLAM3/RTAB-Map/Active Neural SLAM）→ 学习范式'演变的定性叙事"
+   },
+   {
+    "locator": "page 3, Sec 2 Related Work",
+    "role": "relevant-core",
+    "purpose": "定位谱系：学习型导航基础模型（GNM/ViNT/NoMaD/NavDP）与世界模型/视觉想象路线（Pathdreamer/NWM/NavigateDiff）两条线及其缺陷"
+   },
+   {
+    "locator": "page 3-6, Sec 3 Methodology（3.1 目标对齐、3.2 双流条件、3.3 非对称生成、3.4 训练与推理）",
+    "role": "method-or-design",
+    "purpose": "理解共享 DiT 流匹配联合生成 H_act=24 动作与 H_vis=1 潜在视觉前瞻、DSCC 双流（DINOv2 视觉记忆+运动学历史）、统一目标对齐与 16 候选轨迹采样执行"
+   },
+   {
+    "locator": "page 6, Sec 4.1（训练数据/评测平台/指标/基线）",
+    "role": "data-or-setting",
+    "purpose": "确认 VLN-N1 训练集（400 小时/200K 轨迹）、IsaacSim 零样本评测（ClutterScenes+InternScenes，6000 episodes，Dingo）、SR/SPL/Area/Time 指标与三类基线"
+   },
+   {
+    "locator": "page 7-8, Sec 4.1 Result Analysis（Q1-Q4）与 Sec 4.2 Real World",
+    "role": "results-or-analysis",
+    "purpose": "核对三任务主结果、效率对照（Table 1）、组件消融叙事与 G1 真机 85% 成功率"
+   },
+   {
+    "locator": "page 8, Sec 5 Conclusion 与 Limitations 段",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取结论与作者自述的两类失败模式（相机高度/视场受限、未建模本体）"
+   },
+   {
+    "locator": "page 12-19, Appendix B-H（问题定义、Algorithm 1、方法细节、超参、基线、完整结果与消融、真机部署、失败案例）",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 Algorithm 1（动作积分位姿更新与自我中心化）、Table 2 超参（k=8、H_vis=1）、Table 3/4/5/6/7/8/9 完整数字、真机硬件（G1+D455+RTX 4060+MPC）与失败案例机理"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 9-11, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表：仅提取对证据不可或缺的核心被引（ORB-SLAM3、NavDP、NWM、WAM、VLN-N1），无需逐条精读"
+   }
+  ]
+ },
+ "research_question": "论文自身问题：如何在 mapless 视觉导航中赋予策略前瞻推理（预判障碍、平滑轨迹）而不引入模块化世界模型的推理延迟与自回归误差累积，并让单一策略统一 Image-Goal/Point-Goal/No-Goal 三种目标口径。对综述问题的意义：这是'导航环节以潜在世界-动作模型完全替代显式地图/SLAM'的代表性样本——需要考察其空间状态来源（滑窗观测+动作积分自我运动，无全局定位/回环）、世界模型的有效空间推理深度（前瞻视距仅 1 步）、以及真机零样本部署是否引入任何定位模块（无：全机载 RGB-D+MPC）。",
+ "contributions": [
+  "非对称动作-前瞻生成：共享 Diffusion Transformer 以流匹配联合生成长视距动作轨迹（H_act=24）与短视距潜在视觉前瞻（H_vis=1），让潜在前瞻作为感知接地约束直接正则化动作生成，避免长自回归视觉展开的延迟与误差累积",
+  "双流上下文条件（DSCC）：目标调制的视觉记忆流（DINOv2 编码 RGB 滑窗，目标查询经 sigmoid 注意残差更新）+ 轨迹感知运动历史流（动作积分自我运动、自我中心化、因果 Transformer 编码），经 Transformer Decoder 融合为条件上下文",
+  "统一目标对齐：把异构目标投影为视觉语义查询 g_V 与几何查询 g_G 双功能嵌入，单一策略在 Image-Goal/Point-Goal/No-Goal 间保持平衡性能而无需架构切换",
+  "零样本仿真评测（6000 episodes：Image-Goal 50.2/48.2、Point-Goal 80.4/78.0、No-Goal 171.1 m²，超 NavDP 分别 +15.7%/+3.3% SR）与 Unitree G1 人形真机零样本部署（4 环境平均 85% 成功率），且实时可部署（0.26 s / 0.7 TFLOPs）"
+ ],
+ "method": {
+  "summary": "WAM-Nav 是 mapless 视觉导航的潜在世界-动作模型。输入：k=8 滑窗 RGB 观测历史（DINOv2 ViT-S/14 编码为视觉记忆张量，目标视觉查询 g_V 以 sigmoid 注意力残差强化相关 patch）与运动历史流（Algorithm 1：当前平面位姿由上一位姿加已执行动作积分更新 s_t←s_{t−1}+a_{t−1}，滑窗缓冲在当前自我中心系重表达为相对位移/航向序列，因果 Transformer 编码后由几何查询 g_G 交叉注意力提取运动学向量），两流经 Transformer Decoder 融合为条件上下文 C。生成：冻结 Stable Diffusion VAE 把未来观测压为 16×16×4 潜网格，共享 16 层 DiT 以流匹配（10 步 Euler）联合去噪长视距动作（H_act=24）与短视距潜在前瞻（H_vis=1），动作与视觉 token 在每层共享自注意力交互并对 C 交叉注意力；损失为速度回归+InfoNCE 目标对齐（λ_img=0.25、λ_align=0.1）。执行：每步采样 16 条候选轨迹、取第一条执行（与 NavDP 一致的滚退时域控制）。真机部署：G1 人形+RealSense D455（云台 20° 下俯、RGB-D 30 Hz），RTX 4060 机载 1 Hz 推理，MPC 50 Hz 将轨迹转为速度命令。关键架构事实：全程无显式地图、无全局定位、无外部位姿输入、无回环校正——空间信息全部隐式承载于滑窗观测特征与动作积分相对运动学中。",
+  "assumptions": [
+   "任务口径为 mapless：目标以图像或相对坐标给定（点目标为自我中心相对坐标），不要求全局度量一致性",
+   "滑窗 k=8 内的开环动作积分漂移可容忍（消融显示 k=16 反而降低对突变几何的响应）",
+   "预训练视觉先验（DINOv2、SD-VAE）的通用表征可迁移为导航条件生成的底座",
+   "仿真域随机化采集的 400 小时无碰撞平滑轨迹（VLN-N1）足以支撑真实环境零样本泛化",
+   "1 步潜在前瞻提供的近未来几何约束足以支撑避障（更长前瞻反而因视点变化下的误差累积而有害）"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "VLN-N1 训练集（InternRobotics）：六类 3D 场景资产（Replica/Matterport3D/Gibson/3D-FRONT/HSSD/HM3D）+ 域随机化，400+ 小时、200K+ 条无碰撞平滑第一人称导航轨迹",
+   "零样本评测：IsaacSim 上的 ClutterScenes（10 易+10 难，随机杂乱障碍布局，难例更密）与 InternScenes（20 家居+20 商业：超市/餐厅等），共 60 场景 × 100 episodes = 6000 episodes"
+  ],
+  "tasks": [
+   "Image-Goal 导航（SR/SPL）",
+   "Point-Goal 导航（SR/SPL）",
+   "No-Goal 探索（探索 Area m² 与 Time s，Time 上限 120 s，局部卡死提前终止）",
+   "真机零样本导航（会议室/仓库/大厅/停车场，成功率）"
+  ],
+  "embodiments": [
+   "仿真主评测：ClearPath Dingo 轮式机器人",
+   "仿真跨本体：Unitree G1、H2 人形（Table 8，无重训练零样本迁移）",
+   "真机：Unitree G1 人形 + Intel RealSense D455（云台 20° 下俯，RGB-D 30 Hz）+ RTX 4060 背负机载计算"
+  ],
+  "sample_or_scale": "仿真 6000 episodes（60 场景 × 100）；真机 4 环境 × 10 trials；训练约 8×120 GPU 小时（学习率 1.5×10⁻⁴，batch 256）；推理 0.26 s / 0.7 TFLOPs，机载 1 Hz + MPC 50 Hz"
+ },
+ "evaluation": {
+  "design": "五问式零样本评测（Q1 泛化与任务平衡/Q2 避障机理定性对比/Q3 计算效率/Q4 组件消融/Q5 真机迁移）+ 附录补充消融（目标对齐、记忆窗 k、DSCC 目标注入、DiT 耦合架构、前瞻视距、跨本体、难度分层）",
+  "baselines": [
+   "Image-Goal：GNM、ViNT、NoMaD、NWM（世界模型）、NavDP",
+   "Point-Goal：DD-PPO、iPlanner、ViPlanner、NavDP",
+   "No-Goal：GNM、ViNT、NoMaD、NavDP",
+   "效率对照：NWM、NavDP（延迟/参数/TFLOPs）"
+  ],
+  "metrics": [
+   "SR 与 SPL（Image-Goal/Point-Goal）",
+   "探索 Area（m²）与 Time（s，上限 120 s）（No-Goal）",
+   "推理延迟（s）、总/可训练参数、TFLOPs（效率）",
+   "真机任务成功率（%）"
+  ],
+  "ablations": [
+   "组件消融（Table 4）：基线 42.1/40.8 → 仅潜在预测 45.7/43.8 → 仅运动轨迹 43.9/42.9 → 双流 50.2/48.2",
+   "目标对齐（Table 6）：仅 g_V 55.6（Image-Goal）但 Point-Goal 62.1；仅 g_G Point-Goal 83.5 但 Image-Goal 47.9；双查询最平衡且 No-Goal 最优 171.1",
+   "记忆窗与架构（Table 5）：k=4 46.6、k=8 50.2、k=16 44.9；w/o 目标注入 44.5；解耦 DiT 45.9、部分共享 47.5 vs 完全共享 50.2",
+   "前瞻视距（Table 7）：H_vis=1 最优 50.2/48.2，H_vis=4 46.2/43.8、H_vis=8 39.6/37.3、H_vis=24 30.4/28.1",
+   "跨本体（Table 8）与难度分层（Table 9：Hard 子集 25.0 vs NavDP 17.4，差距随难度增大）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "零样本主结果：Image-Goal 50.2% SR/48.2% SPL、Point-Goal 80.4% SR/78.0% SPL、No-Goal 探索 171.1 m²，三任务平均最优；相对最强基线 NavDP（43.4/41.4、77.8/74.8）Image-Goal SR 相对提升 15.7%、Point-Goal 3.3%（摘要口径）。",
+   "scope": "IsaacSim 零样本评测，ClutterScenes+InternScenes 共 6000 episodes，Dingo 平台",
+   "locator": "page 7, Sec 4.1 Result Analysis；完整表 page 15, Table 3"
+  },
+  {
+   "finding": "世界模型类基线表现差：NWM（生成式导航世界模型）Image-Goal 平均仅 8.1/7.7，远低于反应式 NavDP 43.4/41.4——在本基准上模块化视觉想象路线不敌端到端策略与联合建模。",
+   "scope": "Image-Goal 零样本评测（Table 3）",
+   "locator": "page 15, Table 3"
+  },
+  {
+   "finding": "组件消融：仅潜在预测把 SR 从 42.1% 提至 45.7%（前瞻帮助预判局部障碍约束）；仅运动轨迹在 ClutterScenes 提升但在语义复杂的 InternScenes 退化（43.9 vs 双流 50.2）——运动学历史改善平滑性但不能替代感知前瞻。",
+   "scope": "Image-Goal 组件消融（Table 4）",
+   "locator": "page 7, Q4 分析；page 15, Table 4"
+  },
+  {
+   "finding": "非对称视距消融：固定 H_act=24，H_vis=1 最优（50.2/48.2），更长视觉前瞻单调退化至 H_vis=24 的 30.4/28.1——作者结论：视觉前瞻应提供近未来几何约束，长自回归视觉展开在大自我中心视点变化下误差累积有害。",
+   "scope": "Image-Goal 前瞻视距消融（Table 7）",
+   "locator": "page 16, Table 7 与 F.3 叙述"
+  },
+  {
+   "finding": "效率与真机：推理 0.26 s/0.7 TFLOPs（NavDP 0.16 s/1.3，NWM 1.43 s/8.3）；G1 人形真机 4 个室内外环境平均 85% 成功率，全机载部署（RTX 4060 1 Hz 推理+MPC 50 Hz），无任何建图/定位模块。",
+   "scope": "效率对照（Table 1）与真机零样本部署（4 环境 × 10 trials）",
+   "locator": "page 8, Table 1 与 Sec 4.2；部署细节 page 17-18, Appendix G"
+  },
+  {
+   "finding": "空间状态来源为动作积分航位推算：Algorithm 1 以 s_t←s_{t−1}+a_{t−1} 更新平面位姿并维护 k 步滑窗，缓冲在当前自我中心系重表达（重定中心/旋转/包裹航向差）为相对运动序列而非绝对场景坐标——系统无全局定位与漂移校正。",
+   "scope": "运动历史流的在线构建（部署阶段）",
+   "locator": "page 12-13, Algorithm 1 与 Sec C.1"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "真机部署中相机高度与视场受限，近场障碍感知不足，可能导致轨迹预测不准或避障延迟",
+    "locator": "page 8, Sec 5 Limitations 段"
+   },
+   {
+    "limitation": "当前策略未显式建模机器人本体，造成相机级避障与全身可通行性不匹配（附录 H 失败案例：侧方障碍仅保证相机通过而机身碰撞）",
+    "locator": "page 8, Sec 5 Limitations 段；page 18-19, Appendix H"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "无全局度量一致性机制：位姿为开环动作积分（航位推算），无回环/外部校正，漂移误差未量化；No-Goal 的 120 s 时长上限与提前终止规则客观上限制了漂移暴露窗口——对需要回环、重定位或跨房间度量一致性的长程任务，该管线的适用性没有任何证据",
+    "basis": "page 12-13 Algorithm 1 与 C.1（相对运动序列、无绝对坐标）；page 6 指标设置（Episode Time capped at 120 seconds, locally stuck 提前终止）"
+   },
+   {
+    "boundary": "真机评测规模小（4 环境 × 10 trials = 40 trials）且无方差/显著性；与 NavDP 的真机对比仅在 Fig 4(b) 图示中逐环境给出，无汇总数字",
+    "basis": "page 8 Sec 4.2 与 Fig 4"
+   },
+   {
+    "boundary": "Image-Goal 绝对成功率仍低：平均 50.2%，InternScenes 商业场景仅 30.7 SR——无地图前瞻在语义复杂场景的边界明显，替代叙事不能外推到全部导航场景",
+    "basis": "page 15, Table 3"
+   },
+   {
+    "boundary": "NWM 等世界模型基线在本基准远低于其设计场景的表现（8.1 vs NavDP 43.4），世界模型类基线可能未被充分调优，'联合建模优于解耦世界模型'的对比强度存疑",
+    "basis": "page 15, Table 3 与 page 14, Appendix E 基线描述（各用原预训练权重）"
+   },
+   {
+    "boundary": "训练数据全为仿真采集（VLN-N1），真机泛化依赖域随机化；未报告真机环境的规模/路径长度分布；参考文献 [33] 含 'arXiv number placeholder' 占位符，引用信息不完整",
+    "basis": "page 6 Sec 4.1、page 17-18 App G、page 11 References"
+   }
+  ]
+ },
+ "transfer_boundary": "最窄可辩护范围：在 IsaacSim 仿真的杂乱与室内外商业场景（6000 episodes）及 4 个真实环境（G1 人形，各 10 trials）、时程 ≤120 s 的 mapless 导航任务（图像目标/相对坐标点目标/免目标探索）上，以 k=8 滑窗观测+动作积分自我运动为条件的潜在世界-动作模型可实现优于反应式扩散策略 NavDP 的零样本导航（Image-Goal SR +15.7% 相对）与 85% 真机成功率，且不需要任何显式地图、全局定位或 SLAM 模块。该结论不覆盖：长时程全局一致性需求（回环、重访、跨房间度量推理）、精确度量任务、语义复杂商业场景的高成功率要求（该处仅 30.7 SR）、以及训练分布外的极端动态。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "五问式评测结构把泛化/机理/效率/消融/真机分离回答，且所有仿真评测为零样本（原预训练权重、无微调）",
+   "消融覆盖异常完整：组件、目标对齐、记忆窗、目标注入、DiT 耦合架构、前瞻视距、跨本体（Dingo/G1/H2 无重训练）、难度分层均有对照",
+   "效率对照（0.26 s/0.7 TFLOPs vs NWM 1.43 s/8.3 TFLOPs）直接回应'世界模型不能实时导航'的常见质疑",
+   "真机部署细节完整（硬件、相机俯角、推理频率、MPC 跟踪频率、GPU 显存），并诚实给出失败案例机理分析"
+  ],
+  "design_risks": [
+   "世界模型类基线 NWM 在本基准表现极低（8.1 SR），可能未充分调优——'联合世界-动作建模优于解耦世界模型'的结论部分依赖基线实现差距",
+   "真机仅 40 trials 且无显著性；NavDP 真机对比仅图示",
+   "自我运动为开环积分，漂移未量化；120 s 时长上限可能掩盖长程漂移问题",
+   "Image-Goal 绝对成功率 50.2%（商业场景 30.7%）说明无地图方法在语义复杂场景仍受限，但摘要只强调相对提升 15.7%"
+  ],
+  "baseline_fairness": "基线覆盖 RL（DD-PPO）、反应式规划（iPlanner/ViPlanner）、导航基础模型（GNM/ViNT/NoMaD/NavDP）与世界模型（NWM）四类，全部零样本用各自预训练权重，设置统一；NavDP 为最强对照且推理协议对齐（16 候选采样、H_act=24）；但 NWM 远低于其设计场景表现，世界模型路线的对比强度存疑；真机阶段无第三方基线的定量汇总。",
+  "metric_validity": "SR/SPL/Area/Time 均为标准指标且口径明确（120 s 上限、卡死提前终止、成功阈值）；'Higher values indicate better performance for all metrics' 使 Time 指标语义（探索持续时间）依赖终止规则实现；真机成功率无置信区间；效率指标（延迟/TFLOPs/参数）报告完整。",
+  "reproducibility": "超参数表完整（k=8、H_act=24、H_vis=1、DiT 16 层/8 头、λ_img=0.25、λ_align=0.1、10 步 Euler、batch 256、学习率日程）；训练集 VLN-N1 公开于 HuggingFace；真机硬件与部署协议细节充分；但代码未声明开源，评测场景生成细节（ClutterScenes 随机布局种子）未给出。",
+  "external_validity": "真机覆盖室内外 4 类环境但规模小；跨本体（G1/H2）仅仿真验证；结论限于 ≤120 s 时程、mapless 相对目标口径的导航——对需要全局定位/回环的长程任务、户外大范围环境、动态行人场景无证据；'零样本'依赖 400 小时仿真轨迹的域随机化覆盖。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.04907-C01",
+   "claim": "作者对导航领域范式演变的定性判断：过去几年主导性导航范式已从传统解耦的建图-规划管线（其引用 [6, 7, 8] 分别为 ORB-SLAM3、RTAB-Map、Active Neural SLAM）逐渐转向基于学习的方法，端到端反应式方法直接把视觉观测映射为可执行动作。",
+   "stance": "limit",
+   "relation": "直接支持综述问题中'导航环节 SLAM 正被替代'叙事的作者侧证词：2026 年的导航方法论文把视觉/激光 SLAM 系统（ORB-SLAM3、RTAB-Map）与 Active Neural SLAM 归类为'传统解耦建图-规划管线'，并宣告学习范式已成主导——SLAM 在该领域的自我定位从基础设施退化为被替代的旧范式。但这是动机性领域叙事（未附证据），其功能是为 mapless 方法铺路，应作为立场证据而非事实证据使用。",
+   "summary": "作者宣称导航范式已从 SLAM 式解耦建图-规划管线（ORB-SLAM3/RTAB-Map/Active Neural SLAM）转向学习方法",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 1, Sec 1 Introduction",
+   "source_context": "Over the past few years, the dominant navigation paradigm has gradually transitioned from traditional de- coupled mapping-and-planning pipelines [6, 7, 8] to learning-based intelligent methods.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 原文（Sec 1 第二段）：'gradually transitioned from traditional decoupled mapping-and-planning pipelines [6, 7, 8] to learning-based intelligent methods' 为原文措辞（连字符换行 de-/coupled 按原文保留为 'de- coupled'）。[6, 7, 8] 的身份（ORB-SLAM3、RTAB-Map、Active Neural SLAM）逐条核对 page 9 References：[6] ORB-SLAM3（Campos et al.）、[7] RTAB-Map（Labbé and Michaud）、[8] Active Neural SLAM（Chaplot et al.），无误。claim 限定为作者的定性判断。"
+   }
+  },
+  {
+   "card_id": "2606.04907-C02",
+   "claim": "零样本仿真评测（IsaacSim，ClutterScenes+InternScenes，6000 episodes）中，完全 mapless 的潜在世界-动作模型 WAM-Nav 在三任务上取得最优平均性能：Image-Goal 50.2% SR/48.2% SPL、Point-Goal 80.4% SR/78.0% SPL、No-Goal 探索面积 171.1 m²；相对最强基线 NavDP（Image-Goal 43.4/41.4、Point-Goal 77.8/74.8，Table 3），Image-Goal SR 相对提升 15.7%。",
+   "stance": "limit",
+   "relation": "定量支持'导航不需要 SLAM 式显式地图/定位基础设施'：系统的全部空间信息为 k=8 滑窗观测特征+动作积分相对运动学（无地图、无全局定位），却能在杂乱与语义复杂场景上超过反应式扩散策略与世界模型基线——避障与前瞻推理职能可由端到端世界-动作建模承担。但 Image-Goal 绝对成功率仅 50.2%（商业场景 30.7%），说明该替代在语义复杂场景仍不完整。",
+   "summary": "无地图世界-动作模型零样本三任务平均最优：Image-Goal 50.2/48.2、Point-Goal 80.4/78.0",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 7, Sec 4.1 Result Analysis (Q1)",
+   "source_context": "For Q1, Table 3 (full results in Appendix F.1) summarizes the zero-shot evalua- tion results across Image-Goal, Point-Goal, and No-Goal exploration. WAM-Nav achieves the best average performance across the three task settings, reaching 50.2% SR / 48.2% SPL on Image-Goal, 80.4% SR / 78.0% SPL on Point-Goal, and 171.1 m 2 explored area in No-Goal exploration.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL / explored area, zero-shot",
+    "value_or_direction": "WAM-Nav 50.2 SR / 48.2 SPL Image-Goal; 80.4 SR / 78.0 SPL Point-Goal; 171.1 explored area No-Goal",
+    "comparator": "NavDP 43.4/41.4 Image-Goal and 77.8/74.8 Point-Goal (Table 3, Appendix F.1)",
+    "task_or_sample": "zero-shot, ClutterScenes + InternScenes (IsaacSim), Dingo platform",
+    "locator": "page 7, Sec 4.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 7 Q1 段（50.2% SR / 48.2% SPL、80.4% SR / 78.0% SPL、171.1 m²）与 page 15 Table 3 平均列（Ours 50.2 48.2 / 80.4 78.0 / 171.1 75.6；NavDP 43.4 41.4 / 77.8 74.8 / 167.2 72.5）；15.7% 相对提升见 page 1 Abstract（'improves success rates by 15.7% and 3.3%'）。claim 限于零样本仿真设置。"
+   }
+  },
+  {
+   "card_id": "2606.04907-C03",
+   "claim": "WAM-Nav 的空间状态全部来自动作积分航位推算：部署时当前平面位姿由上一时刻位姿加已执行动作更新（Algorithm 1：s_t←s_{t−1}+a_{t−1}）并进入长度 k 的滑窗缓冲；缓冲在当前自我中心系中重表达（重定中心、旋转平移、包裹航向差），策略接收的是相对运动序列而非绝对场景坐标——系统不含全局定位、外部位姿输入或漂移校正。",
+   "stance": "conditional",
+   "relation": "划定'世界模型替代 SLAM'的成立条件：替代之所以可行，是因为任务口径本身为 mapless（图像目标靠视觉匹配、点目标为相对坐标、探索无目标），整个管线只需要短窗（k=8）内的相对运动学；SLAM 的核心职能——全局定位与度量一致性——不是被世界模型的能力替代，而是被任务定义绕开。一旦任务需要回环、重定位或跨房间度量推理，该管线既未实现也无证据。",
+   "summary": "位姿由执行动作积分得到（无全局定位/漂移校正），空间状态=滑窗相对运动+视觉特征",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 13, Sec C.1 Trajectory-Aware Motion History",
+   "source_context": "At deployment, each executed action a t−1 updates the current planar pose s t , which is appended to a length-k sliding buffer and zero-padded at the front when the episode is shorter than k steps. The buffer is then re-expressed in the current egocentric frame—re-centering on s t , rotating translations by θ t , and wrapping heading differences—so that the stream receives a complete relative-motion sequence ˜ S t = {(∆x i , ∆y i , ∆θ i )} t i=t−k+1 rather than absolute scene coordinates.",
+   "evidence_type": "system",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 13 Sec C.1 首段与 page 12 Algorithm 1（'s_t ← s_{t−1} + a_{t−1}'、滑窗缓冲、自我中心化步骤），数学符号按提取文本的换行分块原样保留（如 'a t−1 updates'、'˜ S t = {(∆x i , ∆y i , ∆θ i )} t i=t−k+1'）。'无全局定位/漂移校正'为对全文（Sec 3 方法、App B 问题定义、App G 部署）的核查结论：全文不含任何定位/回环/外部位姿模块，mapless 口径见 App B（'We consider mapless visual navigation under three goal modalities'）。"
+   }
+  },
+  {
+   "card_id": "2606.04907-C04",
+   "claim": "非对称视距消融（Table 7，Image-Goal，固定 H_act=24）：短视距潜在前瞻 H_vis=1 时性能最优（50.2/48.2），视觉前瞻视距增大单调退化——H_vis=4 为 46.2/43.8、H_vis=8 为 39.6/37.3、H_vis=24 为 30.4/28.1；作者结论：导航中视觉前瞻应提供可靠的近未来几何约束，而非在大自我中心视点变化下误差累积的长自回归视觉展开。",
+   "stance": "conditional",
+   "relation": "限定'世界模型承担空间推理'的实际深度：在导航中真正起作用的世界模型只有 1 步潜空间预测，长时程视觉想象不仅无益反而有害（H_vis=24 时 SR 从 50.2 跌至 30.4）——替代 SLAM 地图的不是具备长程空间想象力的世界模型，而是'1 步近未来几何约束 + 24 步动作轨迹先验'的组合；这同时解释了 NWM 类自回归世界模型路线在导航基准上的失败（Table 3 中 8.1 SR），即'世界模型替代 SLAM'的叙事必须限定为短视距局部约束。",
+   "summary": "世界模型有效前瞻仅 1 步：H_vis 从 1 增至 24，SR 从 50.2 单调跌至 30.4",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 16, Table 7 与 Sec F.3",
+   "source_context": "The best performance is obtained with short-horizon visual foresight (H vis = 1), while longer visual horizons progressively degrade performance. This supports our core design motiva- tion: in navigation, visual foresight should provide reliable near-future geometric constraints rather than long autoregressive visual rollouts, which are more prone to error accumulation under large egocentric viewpoint changes.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "SR / SPL (Image-Goal, horizon ablation)",
+    "value_or_direction": "H_vis=1: 50.2/48.2; H_vis=4: 46.2/43.8; H_vis=8: 39.6/37.3; H_vis=24: 30.4/28.1 (H_act=24 fixed)",
+    "comparator": "visual foresight horizon H_vis variants",
+    "task_or_sample": "Image-Goal ablation (Table 7)",
+    "locator": "page 16, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值逐字核对 page 16 Table 7 四行（H_act=24 下 H_vis=1/4/8/24 分别 50.2 48.2、46.2 43.8、39.6 37.3、30.4 28.1）与紧随其后的 F.3 叙述（'The best performance is obtained with short-horizon visual foresight (H_vis = 1), while longer visual horizons progressively degrade performance'）。claim 限于该 Image-Goal 消融。"
+   }
+  },
+  {
+   "card_id": "2606.04907-C05",
+   "claim": "真机零样本部署：WAM-Nav 在 Unitree G1 人形机器人（Intel RealSense D455 相机）上跨 4 个室内外环境（会议室/仓库/大厅/停车场，每环境 10 trials）实现平均 85% 任务成功率；部署为全机载（附录 G：RTX 4060 机载 1 Hz 推理，MPC 50 Hz 跟踪），全程无任何建图、定位或 SLAM 模块。",
+   "stance": "limit",
+   "relation": "真机层面的替代证据：短时程 mapless 导航在真实人形平台上不依赖任何显式空间基础设施（无地图、无定位、无回环）即可达 85% 成功率——SLAM 在这类部署中不是必需组件；替代的适用边界同样清晰：仅 40 trials、时程受 120 s 口径约束、且作者自述近场障碍感知与本体建模缺陷导致碰撞失败，对长程/全局一致性任务无证据。",
+   "summary": "G1 人形真机零部署平均 85% 成功率，全机载且无任何建图/定位/SLAM 模块",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 8, Sec 4.2 Deployment on Real World",
+   "source_context": "For Q5, we deploy WAM-Nav in a zero-shot manner on a real-world Unitree G1 humanoid robot equipped with an Intel RealSense D455 camera. Evaluation is conducted across four indoor and outdoor environments: a meeting room, warehouse, lobby, and parking lot, with 10 trials per scene. As shown in Fig. 4(a), WAM-Nav consistently predicts feasible trajectories under diverse layouts and lighting conditions, achieving an average 85% success rate.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average task success rate, zero-shot real-world",
+    "value_or_direction": "85% average success rate, 10 trials per scene",
+    "comparator": "NavDP (per-scene comparison in Fig. 4(b))",
+    "task_or_sample": "4 indoor/outdoor environments: meeting room, warehouse, lobby, parking lot; Unitree G1 with RealSense D455",
+    "locator": "page 8, Sec 4.2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 8 Sec 4.2 首段（G1 humanoid、RealSense D455、4 类环境、10 trials per scene、average 85% success rate）与 page 17-18 Appendix G（RTX 4060 机载、1 Hz 推理、50 Hz MPC、无任何定位模块的部署链路）。'无任何建图/定位/SLAM 模块'为对全文方法与部署章节的核查结论（系统组件清单中不存在此类模块）。claim 限于该 40-trial 真机设置。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "ORB-SLAM3: An Accurate Open-Source Library for Visual, Visual-Inertial, and Multimap SLAM",
+   "arxiv_id": "2007.11898",
+   "role": "C01 的关键映射对象：被本文引为'传统解耦建图-规划管线'代表的视觉 SLAM 系统"
+  },
+  {
+   "title": "NavDP: Learning Sim-to-Real Safe Navigation with Diffusion Policy and Critic Score",
+   "arxiv_id": "2505.08712",
+   "role": "最强对照基线与推理协议来源（16 候选轨迹采样、H_act=24、VLN-N1 训练口径）"
+  },
+  {
+   "title": "Navigation World Models",
+   "role": "被比较的模块化视觉想象/世界模型路线代表（Table 1 效率对照与 Table 3 性能对照对象）"
+  },
+  {
+   "title": "World Action Models are Zero-Shot Policies",
+   "arxiv_id": "2602.15922",
+   "role": "操作领域的 WAM 先驱：本文将其自回归范式识别为导航不适用的原因（延迟与视点变化下的误差累积）"
+  },
+  {
+   "title": "InternVLA-N1 / InternData-N1 (VLN-N1 dataset)",
+   "role": "训练数据来源：400+ 小时/200K+ 条仿真导航轨迹（HuggingFace 公开）"
+  }
+ ],
+ "notes": "补充观察：(1) SLAM 在正文中仅以三种身份出现：被替代的旧范式（[6,7,8] = ORB-SLAM3/RTAB-Map/Active Neural SLAM，page 1/9）；此外全文无任何 SLAM 组件。替代显式地图的方案 = 滑窗（k=8）DINOv2 视觉特征 + 动作积分相对运动学 + 1 步 SD-VAE 潜空间前瞻，全部隐式、无全局一致性机制。(2) 对综述问题最有价值的细分：这篇论文同时给出替代的成功面（真机 85% 无定位模块）与边界（H_vis>1 即退化、NWM 长展开路线失败、商业场景仅 30.7 SR）——'世界模型替代 SLAM'实际是'短视距局部几何约束替代局部避障建图'，SLAM 的全局定位职能是被 mapless 任务口径绕开而非被解决。(3) 与 MG-Nav（2511.22609）构成路线对照：MG-Nav 用显式稀疏图记忆补端到端策略的长程短板（24.7→78.5），WAM-Nav 则完全无显式记忆、靠动作轨迹先验撑长程（50.2）；两者共同点是局部避障均由端到端策略承担、均无在线度量定位。(4) extraction.method 按校验器枚举记为 pdf-text（实际提取管道为 alphaxiv-fulltext-api）。"
+}

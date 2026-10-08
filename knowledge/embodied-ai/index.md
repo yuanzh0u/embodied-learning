@@ -19,7 +19,7 @@ tags: [embodied-ai, index]
 | EA-VLOC | 图像视觉定位 | [visual-localization.md](visual-localization.md) | LR-VLOC |
 | EA-FIELD | 现场采集 Hub 与物流分拣考察 | [field-data-collection-hubs.md](field-data-collection-hubs.md) | S-LOGISTICS-HUB-SURVEY; S-EMBODIED-DATA-FRAMEWORK |
 | EA-XEMBODIMENT | 跨本体与数据迁移 | [cross-embodiment-transfer.md](cross-embodiment-transfer.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-UMI; LR-EGO-DATA; LR-LOCOMANIP; LR-MULTIMODAL-TRAINING-YEAR |
-| EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-ACT-ROBOTWIN; LR-WM-DATA; LR-4D; LR-EGO-DATA; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR |
+| EA-MODEL | 模型与预训练 | [models-pretraining.md](models-pretraining.md) | S-EA-QUESTIONS; LR-VLA-ALIGN; LR-ACT-ROBOTWIN; LR-WM-DATA; LR-4D; LR-EGO-DATA; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR; LR-BRAIN-YEAR |
 | EA-EVAL | 评测体系与世界模型 | [evaluation-world-models.md](evaluation-world-models.md) | S-EA-QUESTIONS; LR-WM-EVAL; LR-ACT-ROBOTWIN; LR-WM-DATA; LR-SENSOR-ERROR; LR-VLOC; LR-CONTAM; LR-VLA-WM-SHIFT; LR-LOCOMANIP; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1 |
 | EA-4D | 4D 时空推理与世界动态 | [4d-spatiotemporal-reasoning.md](4d-spatiotemporal-reasoning.md) | LR-4D; LR-4D-DATA; LR-VLA-WM-SHIFT; LR-WM-TASKS; LR-VLA-BREAKTHROUGH-HY1 |
 | EA-ALIGN | VLA 多模态与动作对齐 | [vla-multimodal-action-alignment.md](vla-multimodal-action-alignment.md) | LR-VLA-ALIGN; LR-ACT-ROBOTWIN; LR-VLA-WM-SHIFT; LR-VLA-BREAKTHROUGH-HY1; LR-MULTIMODAL-TRAINING-YEAR |
@@ -48,4 +48,4 @@ tags: [embodied-ai, index]
 | 图像视觉定位方法如何选、为何失效 | EA-VLOC + EA-SENSOR + EA-EVAL |
 | 具身数据污染如何发现、隔离和治理 | EA-DATA + EA-EVAL + EA-MODEL |
 | 机器人失败是看错还是想错 | ERR-EMBODIED + EA-SENSOR + EA-ALIGN + EA-EVAL |
-| 查 19 项基础综述或 14 项跨 run 综合的范围、论文池与成稿 | [文献综述成果目录](../literature-review-catalog.md) |
+| 查 22 项基础综述或 14 项跨 run 综合的范围、论文池与成稿 | [文献综述成果目录](../literature-review-catalog.md) |

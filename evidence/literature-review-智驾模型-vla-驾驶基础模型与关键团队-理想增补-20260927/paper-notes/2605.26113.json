@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.26113",
+    "title": "AnyScene: Towards Highly Controllable Driving Scene Generation at Anywhere and Beyond",
+    "published": "2026-05-25",
+    "url": "https://arxiv.org/abs/2605.26113",
+    "versioned_id": "2605.26113v1",
+    "authors": [
+      "Haiming Zhang",
+      "Junfei Zhou",
+      "Feng Jiang",
+      "Jingzhong Li",
+      "Zhenglong Guo",
+      "Penglin Dai",
+      "Jifeng Dai",
+      {
+        "name": "Yan Xie",
+        "author_key": "yan-xie-liauto",
+        "role": "paper-author",
+        "institutions": []
+      },
+      "Benjin Zhu"
+    ]
+  },
+  "review": {
+    "question": "如何从可编辑几何约束生成多视角驾驶场景？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "如何从可编辑几何约束生成多视角驾驶场景？"
+    },
+    "sections_read": [
+      {
+        "locator": "1 Introduction",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "3.1 Representation; 3.2 Occupancy Generation; 3.3 Video Generation",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "4 Experiments",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "5 Conclusion and Limitations",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "如何从可编辑几何约束生成多视角驾驶场景？",
+  "contributions": [
+    "BEV 与占据联合编码后由时空占据 DiT 自回归生成；以占据语义、坐标和相机几何约束冻结 Wan2.1 视频底座及可训练控制分支，支持场景布局、相机和文本天气控制。"
+  ],
+  "method": {
+    "summary": "BEV 与占据联合编码后由时空占据 DiT 自回归生成；以占据语义、坐标和相机几何约束冻结 Wan2.1 视频底座及可训练控制分支，支持场景布局、相机和文本天气控制。",
+    "assumptions": [
+      "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "nuCraft v2",
+      "nuScenes"
+    ],
+    "tasks": [
+      "如何从可编辑几何约束生成多视角驾驶场景？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "占据质量、视频质量、检测一致性与可控性消融；未报告该生成器训练 VLA 后的闭环提升。",
+    "baselines": [
+      "几何质量和可控性可以成立，但不是策略能力独立增益；生成参考帧配置需分开。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "占据质量、视频质量、检测一致性与可控性消融；未报告该生成器训练 VLA 后的闭环提升。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "AnyScene 将占据几何作为可控视频生成的中间约束，目标是扩展驾驶场景与传感器视角。",
+      "scope": "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。",
+      "locator": "Abstract; 3 Method"
+    },
+    {
+      "finding": "AnyScene 明确不建模交通流或反应式主体，其生成代理受固定 BEV 布局控制。",
+      "scope": "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。",
+      "locator": "5 Conclusion and Future Work"
+    }
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {
+        "limitation": "无反应式交通主体；后续需要接交通行为模型。",
+        "locator": "5 Conclusion and Future Work"
+      }
+    ],
+    "reader_inferred": [
+      {
+        "boundary": "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。",
+        "basis": "占据质量、视频质量、检测一致性与可控性消融；未报告该生成器训练 VLA 后的闭环提升。"
+      }
+    ]
+  },
+  "transfer_boundary": "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "占据质量、视频质量、检测一致性与可控性消融；未报告该生成器训练 VLA 后的闭环提升。"
+    ],
+    "design_risks": [
+      "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。"
+    ],
+    "baseline_fairness": "几何质量和可控性可以成立，但不是策略能力独立增益；生成参考帧配置需分开。",
+    "metric_validity": "验证类型与指标限定为：占据质量、视频质量、检测一致性与可控性消融；未报告该生成器训练 VLA 后的闭环提升。",
+    "reproducibility": "公开全文与项目；未运行生成或测车端成本。",
+    "external_validity": "固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.26113-C01",
+      "claim": "AnyScene 将占据几何作为可控视频生成的中间约束，目标是扩展驾驶场景与传感器视角。",
+      "stance": "support",
+      "relation": "如何从可编辑几何约束生成多视角驾驶场景？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "方法链连接布局、占据和视频；不把图像逼真度等同物理交互真实性。",
+      "locator": "Abstract; 3 Method",
+      "source_context": "occupancy sequences from BEV layouts",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "方法链连接布局、占据和视频；不把图像逼真度等同物理交互真实性。 适用边界：固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。"
+      }
+    },
+    {
+      "card_id": "2605.26113-C02",
+      "claim": "AnyScene 明确不建模交通流或反应式主体，其生成代理受固定 BEV 布局控制。",
+      "stance": "limit",
+      "relation": "如何从可编辑几何约束生成多视角驾驶场景？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "这是排除完整交互世界模型结论的直接依据。",
+      "locator": "5 Conclusion and Future Work",
+      "source_context": "does not model traffic flow or reactive agent behavior",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "这是排除完整交互世界模型结论的直接依据。 适用边界：固定 BEV 中的交通参与者不对自车作反应；不能当作已完成交通交互与 RL 的 MindSim。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "AnyScene",
+    "core": false,
+    "stack": {}
+  }
+}

@@ -1,0 +1,511 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2602.07055",
+  "title": "Theory of Space: Can Foundation Models Construct Spatial Beliefs through Active Exploration?",
+  "published": "2026-02-04",
+  "url": "https://arxiv.org/abs/2602.07055",
+  "authors": [
+   "Pingyue Zhang",
+   "Zihan Huang",
+   "Yue Wang",
+   "Jieyu Zhang",
+   "Letian Xue",
+   "Zihan Wang",
+   "Qineng Wang",
+   "Keshigeyan Chandrasegaran",
+   "Ruohan Zhang",
+   "Yejin Choi",
+   "Ranjay Krishna",
+   "Jiajun Wu",
+   "Li Fei-Fei",
+   "Manling Li"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "EA-MODEL 论文，是综述问题中'基础模型派能否替代 SLAM 功能内核'一侧最重要的能力审计证据：不评测 SLAM 本身，而是系统检验零样本基础模型能否承担 SLAM 的功能性三件套——主动探索（决定下一步看什么）、空间信念/地图构建与维护、动态信念修正——结论是三环节全部失败（Active-Passive Gap、信念不稳定退化、Belief Inertia）。三个发现对综述问题均有直接投射：(1) 主动-被动差距与效率差距（程序化脚本代理 9 步 vs 模型 ≥14 步）证明基础模型尚无法自足完成空间信息主动采集闭环；(2) Oracle 地图消融（真值认知地图→≈95% 近完美）是'显式空间基础设施+基础模型推理'混合架构的最直接实验证据；(3) 信念不稳定与惯性直接反驳'隐式空间记忆可替代显式地图'的替代论。同时 C08（外化差距）校准探测证据强度，C03（模态差距）指出瓶颈在感知-几何层而非推理层。边界：仿真网格世界+抽象动作，无连续控制与真实感知噪声，无混合架构系统基线（Oracle 消融除外）。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-3, Abstract 与 Section 1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题定位：部分可观测下空间具身智能需要主动信息采集（act to acquire missing information），多模态基础模型的主动自导探索能力未被系统研究，现有基准分 passive 与 task-driven 两类均不覆盖"
+   },
+   {
+    "locator": "page 3-4, Section 2 THEORY OF SPACE 定义与 Section 2.1 评估范式",
+    "role": "method-or-design",
+    "purpose": "理解概念框架：ToS = construct/revise/exploit 内部空间信念三操作（B_t(S)≈P(S|h_t) 形式化），空间版 Theory of Mind；评估范式三组件：任务无关主动探索、信念利用评估（Route/Survey）、显式信念探测（认知地图外化）"
+   },
+   {
+    "locator": "page 4-8, Section 3 Benchmarking（环境构造、动作空间、下游任务套件 Table 1、评估维度 D1-D5、探索策略）与 Section 4 评估设置",
+    "role": "method-or-design",
+    "purpose": "理清环境与协议：程序化 N×M 网格多房间树拓扑、Goto/Rotate/Observe/Query 动作空间、text/vision 平行世界（ThreeDWorld+Objaverse）、100 场景×9 任务×3 问=2700 题、主动探索 vs 脚本代理被动对照（SCOUT/STRATEGIST）、6 模型+人类基线"
+   },
+   {
+    "locator": "page 8-10, Section 4 Evaluation and Analysis（Table 2 主动、Table 3 被动、Table 4 多房间、Fig. 4 信息增益、探索行为模式）",
+    "role": "results-or-analysis",
+    "purpose": "核对量化结果：主动-被动差距、SCOUT 9 步 vs 模型 ≥14 步、跟随短代理轨迹反超自主探索、4 房间时差距扩大、GPT-5.2 非系统探索 vs Gemini rotate-and-scan 镜像 SCOUT"
+   },
+   {
+    "locator": "page 10-13, Section 5.1 认知地图探测与 5.2 不确定性探测（Table 5、Table 6、Oracle 消融、对齐测试、Pearson 相关）",
+    "role": "results-or-analysis",
+    "purpose": "核对信念质量诊断：模态差距（vision 朝向正确性 20.2/32.2 vs text 91.0/92.5）、感知瓶颈、自追踪非瓶颈、信念不稳定退化机制、Oracle 地图 ≈95%、外化差距、地图正确性-下游性能相关 r=0.418-0.645"
+   },
+   {
+    "locator": "page 13-15, Section 5.3 Belief Revision Task（False Belief 协议、Belief Inertia 度量、Table 7）",
+    "role": "results-or-analysis",
+    "purpose": "核对动态修正量化：k=4 物体重定位/重定向后重探索，vision 朝向惯性 68.9/51.1 vs text 5.5/7.9、朝向识别 F1 14.3/23.9、冗余步数与位置信念正确性对比"
+   },
+   {
+    "locator": "page 15-16, Section 6 Related Work 与 Section 7 Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "定位谱系（被动基准 disembodied、任务驱动探索混淆探索效率与任务表现）与结论三大瓶颈总结（主动探索瓶颈、信念不稳定、信念惯性）；确认无独立 Limitations 小节、边界声明散见正文"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 16-20, References",
+    "role": "appendix-or-supplement",
+    "reason": "文献表，按 scoping 深度略读；核心引文（VSI-Bench/MindCube/EXCALIBUR/Chrastil & Warren/Tolman/Wimmer & Perner/Siegel & White）经正文引用语境核对"
+   },
+   {
+    "locator": "page 21-25, Appendix A 技术细节（环境规格、AC-3 信息增益计算、SCOUT/STRATEGIST 实现细节、探索/评测/探测提示词全文）",
+    "role": "method-or-design",
+    "reason": "工程与提示词细节，按 scoping 深度略读；保留关键结论（293 个 3D 模型 6 类 37 子型、树拓扑约束、SCOUT 的 visit–sweep–advance 例程、STRATEGIST 的域收缩视点选择、动作语法硬约束）"
+   },
+   {
+    "locator": "page 26-27, Appendix B 补充结果（2/4 房间 Table 8-11）",
+    "role": "results-or-analysis",
+    "reason": "补充表格，主文 Table 4 已给结论（规模增大时主动-被动差距扩大、高分辨率无增益）；逐表数值未全部抄录"
+   },
+   {
+    "locator": "page 28-34, Appendix C 可视化示例与分析平台（任务格式示例、GPT-5.2 逐回合认知地图、各模型探索轨迹、分析平台截图）",
+    "role": "appendix-or-supplement",
+    "reason": "示例图与平台截图，按 scoping 深度略读；轨迹级行为证据由主文 Exploration Pattern 段（page 10）承载"
+   }
+  ]
+ },
+ "research_question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？（本文投射的子问题：零样本基础模型能否自足完成 SLAM 的功能内核——主动空间信息采集、空间信念/地图的构建与持久维护、动态环境下的信念修正？）",
+ "contributions": [
+  "THEORY OF SPACE 概念框架与形式化定义：把空间能力定义为 construct/revise/exploit 内部空间信念的三操作（B_t(S)≈P(S|h_t)），定位为 Theory of Mind 的空间对应物——建模世界的隐藏物理结构而非他人的隐藏心理状态",
+  "平行 text/vision 双世界基准：程序化多房间网格环境（ThreeDWorld+Objaverse），任务无关的好奇心驱动主动探索 + Route/Survey 两级 9 项下游任务套件（100 场景×9 任务×3 问=2700 题/设置，种子绑定跨模态一致）",
+  "认知地图探测方法学：要求模型在探索任意时刻外化结构化 JSON 认知地图（全局 allocentric+局部 egocentric）与不确定性地图，把黑盒内部空间信念变为可测量对象（正确性/感知/自追踪/局部-全局一致性/稳定性五维诊断）",
+  "脚本代理对照设计（SCOUT 系统扫描 / STRATEGIST 信念驱动视点选择+AC-3 约束传播）：把探索能力与推理能力干净解耦，被动-主动对照直接量化探索瓶颈",
+  "False Belief 范式与 Belief Inertia 量化指标（方向对齐×邻近加权）：动态扰动下测信念修正，发现并量化'空间信念惯性'现象"
+ ],
+ "method": {
+  "summary": "概念框架+基准+探测三合一。THEORY OF SPACE 定义为主动构建、修正、利用内部空间信念的能力，在 POMDP 式框架下形式化为对后验 P(S|h_t) 的三操作。实现上：(1) 程序化生成 N×M 网格多房间（树拓扑）布局，每场景 12 物体（3 连通 6×6 房间×4 物体），text-world 给符号化分箱观测（8 向方位+6 档距离），vision-world 给 ThreeDWorld 渲染的 384×384 ego-centric RGB，同布局跨模态一致；(2) 高层动作空间 Goto/Rotate/Observe/Query，主动探索至自主终止（上限 20 步）；(3) 核心创新是信念探测——每步外化 JSON 认知地图与从候选点中选出未观测点的不确定性地图；(4) 评估维度 D1 探索效率（AC-3 信息增益/节点覆盖）、D2-D3 认知地图与不确定性质量、D4 False Belief 信念修正、D5 下游任务（Route: pairwise direction/persp.take/perc.dec/act2view/view2act；Survey: alloc.map/ment.rot/loc2view/view2loc）；(5) 两种设定：主动探索 vs 脚本代理（SCOUT/STRATEGIST）预生成轨迹的被动理解，解耦探索与推理。",
+  "assumptions": [
+   "高层动作抽象（Goto 直接跳转可见物体、90° FOV、网格世界）绕过低层运动控制——测的是空间认知而非可部署的建图/导航栈",
+   "零样本基础模型代理：不做任何环境特定训练，探测即用提示词外化内部信念",
+   "认知地图外化是内部空间信念的有效（虽有损）代理——经 Oracle 充分性测试与 Pearson 相关双重验证",
+   "离散空间关系分箱（8 向方位+6 档距离）足以表达任务所需空间结构；False Belief 扰动规模固定 k=4 物体"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "THEORY OF SPACE 基准（自建：100 个程序化生成场景，场景 ID 作随机种子绑定 text/vision 两模态 bit-for-bit 一致）",
+   "ThreeDWorld 仿真平台（vision-world 渲染）",
+   "Objaverse 3D 资产库（293 个物体模型，6 类 37 子型，每场景物体类型不重复）"
+  ],
+  "tasks": [
+   "任务无关主动探索（探索步数、信息增益、自主终止）",
+   "认知地图探测（最终正确性 + 逐回合感知/自追踪/局部-全局一致性/稳定性诊断）",
+   "不确定性地图探测（候选点未观测区域识别，F1）",
+   "False Belief 信念修正（变化识别 F1、重探索步数与冗余、信念正确性、Belief Inertia）",
+   "下游信念利用 9 任务：Route 级（pairwise direction/persp.take/perc.dec/act2view/view2act）与 Survey 级（alloc.map/ment.rot/loc2view/view2loc）"
+  ],
+  "embodiments": [
+   "仿真网格智能体（text: 符号化观测；vision: 384×384 ego-centric RGB），无物理具身、无真实机器人、无连续控制"
+  ],
+  "sample_or_scale": "主设定 3 连通 6×6 房间×4 物体=12 物体/场景；100 场景×9 任务×3 问=2700 题/设置；评估 6 个基础模型（GPT-5.2/Gemini-3 Pro/Claude-4.5-Sonnet/GLM-4.6V/Qwen3-VL 235B/InternVL-3.5 241B，后者因最多 10 图被 vision 设定省略）；人类基线 3 名被试×5 text+5 vision 场景（含带量角器/指南针的工具条件）；扩展设定 2/4 房间"
+ },
+ "evaluation": {
+  "design": "主动探索 vs 脚本代理被动轨迹双设定（同一批模型对照，隔离探索策略差异）；text vs vision 平行世界同布局（隔离感知 vs 推理失败）；2/3/4 房间规模梯度（复杂度效应）；认知地图 Oracle 充分性消融（真值地图条件作答）与显式推理对齐消融（先生成地图再作答）；Pearson 相关验证（每样本 5 次独立地图运行平均）；SCOUT 代理额外用于 text-world 的交叉对照；开放性问题（非选择题）降低知识泄漏",
+  "baselines": [
+   "6 个零样本基础模型：GPT-5.2、Gemini-3 Pro、Claude-4.5-Sonnet（闭源，temp=1，32768 tokens）、GLM-4.6V、Qwen3-VL-235B-A22B-Thinking、InternVL-3.5-241B（开源，temp=0）",
+   "SCOUT 脚本代理（vision-world 被动轨迹源，360° 扫描+固定房间访问序）与 STRATEGIST 脚本代理（text-world，信念驱动视点选择+AC-3 域收缩）",
+   "HUMAN 与 HUMAN WITH TOOL（量角器/指南针）"
+  ],
+  "metrics": [
+   "下游任务准确率（direction/distance 各 0.5 分；坐标任务用坐标相似度）",
+   "探索效率：步数与归一化信息增益 E（text，AC-3 约束传播）/节点覆盖（vision）",
+   "认知地图：最终正确性（pos.acc/dir.acc/facing.acc 等权组合）+ 逐回合感知、自追踪、局部↔全局一致性、稳定性",
+   "不确定性建模 F1（候选点未观测识别）",
+   "False Belief：变化识别 F1、总步数与冗余步数、信念正确性（限变化物体）、Belief Inertia（残差与旧信念方向对齐×邻近加权）",
+   "认知地图正确性与下游性能的 Pearson r"
+  ],
+  "ablations": [
+   "Oracle 地图充分性测试：真值认知地图条件作答 → ≈95%（两模型两世界）",
+   "显式推理对齐测试：先生成认知地图再作答 → 轻微退化（外化差距）",
+   "SCOUT 代理用于 text-world：GPT-5.2/Gemini 达 83.9/86.7，高于自主探索的 72.0/81.5",
+   "房间数 2/4 扩展：主动-被动差距随规模扩大（4 房间 text GPT-5.2 86.5→66.0）",
+   "更高分辨率图像：无性能增益"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "Active-Passive Gap：要求自主采集信息时性能系统性退化。vision-world 被动→主动平均：GPT-5.2 57.1→46.0、Gemini-3 Pro 60.5→57.3、Claude-4.5-Sonnet 43.1→29.6；text-world：GPT-5.2 90.4→72.0、Gemini 86.5→81.5；开源模型 vision 主动平均仅 14.4-24.9。抽象页码版：摘要口径 GPT-5.2 0.57→0.46。",
+   "scope": "100 场景×9 任务×3 问/设置，主动上限 20 步",
+   "locator": "page 8-9, Table 2 与 Table 3"
+  },
+  {
+   "finding": "人类基线全面领先且在 vision 中差距最大：人类 vision 主动平均 96.4%、text 86.7%；带工具（量角器/指南针）99.0%/99.0%；人类平均步数 9.8（vision）/10.8（text）低于全部模型（模型 vision 13.6-19.6 步）。",
+   "scope": "3 名人类被试，5 text+5 vision 场景",
+   "locator": "page 8-9, Table 2 与正文 Humans 段"
+  },
+  {
+   "finding": "效率差距与代理对照：规则代理约 9 步达目标覆盖率，模型冗余探索 ≥14 步且不提升信念精度；text-world 跟随 SCOUT 短轨迹（约 9 步）时 GPT-5.2/Gemini-3 Pro 达 83.9/86.7，反超其自主探索的 72.0/81.5——模型在短而高效的代理路径引导下表现更好。",
+   "scope": "text/vision-world，SCOUT/STRATEGIST 脚本代理",
+   "locator": "page 3 与 page 9, 效率差距段"
+  },
+  {
+   "finding": "规模效应：房间数从 2 增至 4 时主动-被动差距扩大（GPT-5.2 text 77.8→66.0 主动、vision 51.5→40.3；被动 92.3→86.5、59.3→52.6），探索成本随之上升（text 6.2→16.4 步、vision 10.8→23.2 步）；Gemini-3 Pro 退化最少。",
+   "scope": "2/3/4 房间设定，GPT-5.2 与 Gemini-3 Pro",
+   "locator": "page 10, Table 4"
+  },
+  {
+   "finding": "认知地图质量模态差距：vision-world 朝向正确性仅 20.2%（GPT-5.2）/32.2%（Gemini-3 Pro），text-world 达 91.0%/92.5%；overall 正确性 vision 32.2/52.1 vs text 80.0/81.4；自追踪不是主要瓶颈（vision 93.3/98.8），感知（尤其物体朝向识别近乎随机）是关键限制；不确定性建模 Gemini（70.2/79.2）优于 GPT-5.2（53.7/64.5）。",
+   "scope": "认知地图探测，逐回合+最终评估",
+   "locator": "page 12, Table 5 与分析段"
+  },
+  {
+   "finding": "地图表征的充分性与诊断效度：Oracle 真值认知地图条件作答升至 ≈95%（两模型两世界）；先生成地图再作答轻微退化（外化差距，隐含信念比外化 JSON 更丰富）；地图正确性与下游性能显著正相关（Pearson r：text 41.8/46.6、vision 57.0/64.5，均 p<.001，vision 相关更强）。",
+   "scope": "认知地图验证消融，每样本 5 次独立地图运行平均",
+   "locator": "page 12-13, Section 5.1 末段与 Table 6"
+  },
+  {
+   "finding": "信念修正失败量化（False Belief，k=4 物体重定位/重定向后重探索）：vision-world 朝向信念惯性 GPT-5.2 68.9%、Gemini-3 Pro 51.1%（text 仅 5.5%/7.9%）；朝向变化识别 F1 vision 14.3%/23.9%（text 97.9%/98.7%）；位置信念正确性 vision 42.9%/63.1% vs text 69.7%/72.9%；冗余步数 vision 6.20/3.23 vs text 0.55/0.18。",
+   "scope": "False Belief 任务，text/vision 双世界",
+   "locator": "page 15, Table 7"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "认知地图外化是内部状态的有损压缩，存在外化差距——显式地图应作为保守的诊断信号而非决定性证据使用",
+    "locator": "page 12, Section 5.1 Cognitive Map Validation 段"
+   },
+   {
+    "limitation": "相关不蕴含因果：地图正确性与下游性能的相关性只支持把显式地图作为诊断代理，不构成因果证明",
+    "locator": "page 13, Section 5.1 末段"
+   },
+   {
+    "limitation": "多智能体扩展（协调与跨智能体空间信念对齐/共享）留作未来工作，当前框架仅覆盖单智能体",
+    "locator": "page 3, Introduction 末段"
+   },
+   {
+    "limitation": "InternVL-3.5 最多支持 10 张图像，vision-world 设定中被省略（视觉模态开源对比不完整）",
+    "locator": "page 8, Section 4 评估设置段"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "抽象动作空间（JumpTo 直达可见物体、90° FOV、网格化树拓扑房间）剥离了连续控制、里程计噪声与感知噪声——测得的是'空间认知能力'而非'可部署的建图/导航能力'，不能直接外推到真实机器人 SLAM 场景",
+    "basis": "page 5 动作空间定义（Goto to move directly to a currently visible object）与 page 21 Appendix A.1 环境规格交叉核对"
+   },
+   {
+    "boundary": "Query 原语可直接返回可见物体的绝对 2D 坐标（把度量定位变成显式可调用动作），与真实系统中定位必须由 SLAM 隐式维护的过程不同；且作者报告模型几乎不调用 Query",
+    "basis": "page 5 动作空间与成本段（'across all models Query is invoked only rarely'）"
+   },
+   {
+    "boundary": "无混合架构系统基线：除 Oracle 地图消融外，未测试'外部空间记忆/建图模块+基础模型'的集成系统——基础模型 vs 脚本代理的对比不等于 vs SLAM 集成智能体；C07 的混合架构推论是消融外推而非系统级验证",
+    "basis": "page 7-8 评估设置（仅两种设定：主动探索 vs 脚本代理被动）与 page 12 Oracle 消融"
+   },
+   {
+    "boundary": "规模有限且人类基线极小：100 场景、3 名人类被试×10 场景，人类分数（含带工具条件）的方差与统计力不足；主动探索 20 步上限可能系统性压低主动得分",
+    "basis": "page 8 评估设置（'maximum of 20 exploration steps'、'three human subjects across five text and five vision scenes'）"
+   }
+  ]
+ },
+ "transfer_boundary": "结论限定于零样本基础模型代理在抽象网格/仿真多房间环境（ThreeDWorld 渲染、384×384）中的空间信念构建能力。不可直接外推到：真实机器人连续控制与真实感知噪声场景、大规模真实环境、或配备外部空间记忆/工具的混合智能体（除 Oracle 消融外未测）。text-world 的优势依赖符号化预处理观测（方向/距离已离散分箱），真实感知不存在此类便利，故 text 高分应理解为'给定符号/几何前端输出后的推理能力'而非端到端能力。主动探索得分受 20 步上限约束；闭源模型版本漂移影响长期可比性。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "text/vision 平行世界+场景 ID 种子绑定，实现跨模态 bit-for-bit 一致布局，干净隔离感知与推理失败",
+   "脚本代理对照（SCOUT/STRATEGIST）把探索能力与推理能力解耦，主动-被动对比直接量化探索瓶颈",
+   "认知地图外化探测把黑盒空间信念变为可测对象，并经 Oracle 充分性测试（表征格式无瓶颈）与 Pearson 相关（r=0.418-0.645，p<.001）双重效度验证",
+   "False Belief 范式移植自发展心理学（Wimmer & Perner 1983），Belief Inertia 的方向对齐×邻近加权量化设计精巧，把'过时先验吸引'变成可测标量",
+   "开放性问题而非选择题降低知识泄漏；信息增益用 AC-3 约束传播可复现计算"
+  ],
+  "design_risks": [
+   "探测本身可能干扰模型：对齐测试显示先生成地图再作答轻微退化，主动探测与被动评测的耦合未被完全分离",
+   "20 步上限与动作抽象（JumpTo 跳过路径执行）可能系统性压低主动探索得分，效率度量偏向离散步数而非真实成本",
+   "无混合架构/外部空间记忆基线，'程序代理 vs 模型'的二元对比无法回答'模型+显式地图'集成系统的真实水平（仅 Oracle 消融旁证）",
+   "效率度量在 text（信息增益）与 vision（节点覆盖）之间不同构，跨模态效率结论依赖间接推断"
+  ],
+  "baseline_fairness": "六模型统一推理预算（闭源 temp=1/32768 tokens，开源 temp=0），但提示词为英文且动作语法为硬约束（违反即无效），对指令遵循与格式遵循差异敏感；人类基线允许物理工具（量角器/指南针）与模型零工具设定不完全对等；人类仅 3 人×10 场景，与 100 场景模型评测的样本量不对等；InternVL-3.5 在 vision 设定缺席使开源视觉对比不完整。",
+  "metric_validity": "认知地图正确性为 pos/dir/facing 三分量等权组合，权重选择无敏感性分析；Belief Inertia 的 σ 取自首批重观测未变对象的 RMS 定位误差，动态噪声尺度引入额外方差来源；信息增益依赖 AC-3（作者已声明不保证全局一致但 ground truth 不被剪枝）；坐标类任务用相似度分而非阈值正确率，绝对水平解释需谨慎；text 与 vision 的效率度量不同构（信息增益 vs 节点覆盖）。",
+  "reproducibility": "高：代码（github.com/mll-lab-nu/Theory-of-Space）、数据（HuggingFace MLL-Lab/tos-data）、网站（theory-of-space.github.io）全部公开；场景 ID 作为随机种子绑定跨模态布局，声称 bit-for-bit 可复现；闭源模型（GPT-5.2/Gemini-3 Pro/Claude-4.5）版本漂移是长期复现风险。",
+  "external_validity": "有限：抽象网格+树拓扑房间+JumpTo 动作远离真实机器人感知-控制回路，无连续控制、里程计噪声与真实感知噪声；对'基础模型空间信念能力'的结论有效，对'具身系统是否需要 SLAM'仅间接——需经 C07（Oracle 地图 95% vs 自主构建 20-52%）的混合架构外推，且该外推未经集成系统验证；text-world 优势依赖符号化分箱观测这一现实中不存在的便利。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2602.07055-C01",
+   "claim": "核心实证发现'主动-被动差距'（Active-Passive Gap）：当下游任务要求智能体自主采集信息而非消费预生成轨迹时性能系统性退化（摘要口径 GPT-5.2: 0.57→0.46，vision-world 被动→主动平均分）；并伴随第二个瓶颈'低效性'——模型以非系统、高冗余方式探索，效率不及程序化代理且结果并不更好。",
+   "stance": "support",
+   "relation": "支持综述中'SLAM/主动空间信息采集基础设施未被端到端基础模型替代'一侧：主动探索（决定'下一步看什么'+在线信息采集）正是 Active SLAM 的功能内核；最前沿多模态基础模型在该环节出现量化性能塌陷——被动可推理不等于主动可采集，端到端模型尚无法自足完成空间信息主动获取闭环。该证据限定于零样本基础模型代理，不排除训练/工具增强路线的未来改善。",
+   "summary": "主动-被动差距：模型须自主采集信息时性能退化（GPT-5.2 0.57→0.46），且探索非系统、高冗余、效率不及程序代理",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 1, Abstract",
+   "source_context": "Our evaluation of state-of-the-art models on a suite of downstream tasks reveals critical bottlenecks: (1) The Active-Passive Gap: Performance degrades when agents must autonomously gather information (e.g., GPT-5.2: 0.57→0.46); (2) Inefficiency: Models explore in an unsystematic way and with high redundancy, failing to match the efficiency of program-based proxies while producing no better results.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "GPT-5.2 passive vs active average accuracy (vision-world)",
+    "value_or_direction": "0.57→0.46",
+    "comparator": "passive comprehension vs active exploration",
+    "task_or_sample": "vision-world 9 spatial tasks, 100 scenes x 2700 questions",
+    "locator": "page 1, Abstract"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 1 Abstract 末段：'Our evaluation of state-of-the-art models...no better results' 整句为原文连续措辞，无连字符换行；'0.57→0.46' 出现在所引页面（'GPT-5.2: 0.57→0.46'）；'unsystematic way and with high redundancy''failing to match the efficiency of program-based proxies' 均为原文直接表述，claim 中'非系统、高冗余''效率不及程序化代理'为忠实转述，未越出原文断言范围。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C02",
+   "claim": "效率差距：基于规则的脚本代理约 9 步即达到目标覆盖率，而基础模型冗余探索需至少 14 步且不带来信念精度提升——程序化系统探索在效率与效果上均优于最前沿基础模型的自主探索。",
+   "stance": "support",
+   "relation": "支持'经典算法式探索基础设施仍不可替代'：SCOUT（visit–sweep–advance 系统扫描）与 STRATEGIST（信念驱动视点选择+AC-3 约束传播）这类程序化代理是性能与效率的双重基准；结合 C10（最优模型的涌现行为恰是镜像 SCOUT 策略），经典系统化探索策略（传统 SLAM/探索管线的核心逻辑）仍是被追赶的参照系而非被淘汰物。与第4篇（2511.13719）的数据缩放立场形成对照：当前零样本模型连探索效率都未达程序水平。",
+   "summary": "效率差距：规则代理约 9 步达目标覆盖率 vs 基础模型 ≥14 步且不提升信念精度",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 3, Section 1 Introduction 末段",
+   "source_context": "We also find a major efficiency gap: rule-based proxy agents reach target coverage in ∼ 9 steps, whereas foundation models explore redundantly, requiring ≥ 14 steps without improving belief accuracy.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "exploration steps to reach target coverage",
+    "value_or_direction": "rule-based proxies ∼ 9 steps vs foundation models ≥ 14 steps",
+    "comparator": "scripted proxy agents vs foundation models (autonomous exploration)",
+    "task_or_sample": "active exploration setting, text/vision worlds",
+    "locator": "page 3, Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 Introduction 末段：'We also find a major efficiency gap...without improving belief accuracy.' 为原文连续措辞，跨行处无连字符拆词（'efficiency\ngap' 为普通换行）；'∼ 9 steps''≥ 14 steps' 两个量化数字均出现在所引页面；claim 中'约 9 步''至少 14 步'与'不带来信念精度提升'均为原文直接表述的忠实转译。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C03",
+   "claim": "模态差距贯穿全部认知地图质量指标：vision-world 认知地图朝向正确性仅 20.2%（GPT-5.2）/32.2%（Gemini-3 Pro），text-world 达 91.0%/92.5%；感知是最初的瓶颈，物体朝向识别近乎随机水平（near-chance facing Correctness）——视觉模态下基础模型的隐式空间信念构建远未成熟，而符号化输入下空间推理已相当强。",
+   "stance": "conditional",
+   "relation": "替代可行性呈模态条件性：text-world 高分说明基础模型在符号化观测上的空间推理已较强（给定 SLAM 式符号/几何前端输出即可推理），而 raw-vision 端到端空间信念构建不可行——瓶颈恰好集中在 SLAM 前端传统提供的感知-几何层（朝向、距离、相对方位的度量估计）。既不支持'端到端视觉模型已可替代'，也提示'几何感知前端+基础模型推理'的混合分工路线；对综述问题构成条件证据：替代论成立与否取决于观测是否被符号化/几何化预处理。",
+   "summary": "模态差距：vision 朝向正确性 20.2/32.2 vs text 91.0/92.5，感知（尤其朝向）是瓶颈——符号输入下推理已强",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 12, Section 5.1 Cognitive Map Probing（Table 5 与分析段）",
+   "source_context": "Perception remains a key limitation for state-of-the-art models in visual world settings. In particular, recognizing an object’s facing direction is especially challenging: agents frequently fail to infer orientation and achieve near-chance (or worse) facing Correctness.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "orientation correctness of probed cognitive map (Table 5)",
+    "value_or_direction": "vision 20.2 (GPT-5.2) / 32.2 (GEMINI-3 PRO) vs text 91.0 / 92.5",
+    "comparator": "vision-based World vs text-based World",
+    "task_or_sample": "cognitive map probing, 100 scenes",
+    "locator": "page 12, Table 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 12 Section 5.1 分析段：'Perception remains a key limitation...facing Correctness.' 为原文连续措辞，跨行处无连字符拆词；量化数字 20.2/32.2（vision 朝向正确性）与 91.0/92.5（text）均出现在所引页面 Table 5 行（'GPT-5.2 20.2 42.0 32.2...'、'GEMINI-3 PRO 32.2 62.5 52.1...'、text 行 'GPT-5.2 91.0...'、'GEMINI-3 PRO 92.5...'）；'near-chance facing Correctness' 为原文措辞支撑'近乎随机水平'转述；同页 'Results in Table 5 indicate a substantial modality gap between vision and text: performance drops markedly in the vision setting across all metrics' 支撑'贯穿全部指标'的表述。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C04",
+   "claim": "信念不稳定与退化：即使物体最初被正确感知，后续轮次智能体也频繁以错误预测覆写已验证事实，空间记忆随回合累积而退化——低最终正确性不只源于感知误差，更源于不稳定信念更新的累积效应（valid spatial memories degrade over the course of the episode）。",
+   "stance": "support",
+   "relation": "支持 SLAM 侧'显式地图维护不可替代'：一致、持久、免退化的空间状态维护（SLAM 地图维护与回环一致性机制的功能）无法以隐式方式在当前基础模型内可靠实现——隐式空间记忆随时间退化直接削弱'隐式空间记忆替代显式地图'的替代论；该发现与 C08 的外化差距共同界定：模型不是没有空间信息，而是无法稳定保持与调用。",
+   "summary": "信念不稳定：正确感知的事实被后续错误预测覆写，空间记忆随回合累积退化",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 12, Section 5.1 Stability & Decay 段",
+   "source_context": "This performance gap highlights a critical failure in state maintenance: even when objects are correctly perceived initially, the agent frequently overwrites these verified facts with incorrect predictions in subsequent turns. Thus, the low final Correctness stems not solely from perceptual errors, but from the cumulative effect of unstable belief updates, where valid spatial memories degrade over the course of the episode.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 12 Stability & Decay 段：'This performance gap highlights a critical failure in state maintenance...over the course of the episode.' 为原文连续措辞，跨行处无连字符拆词；claim 中'正确感知的事实被后续错误预测覆写'对应原文 'overwrites these verified facts with incorrect predictions in subsequent turns'，'随回合累积退化'对应 'cumulative effect of unstable belief updates'，均为忠实转述；该段位于 Table 5 的 Stability 列（vision ori 65.4/68.3、pos 56.4/61.8 vs text ori 96.7/90.8）分析语境内，claim 未引入表外数字。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C05",
+   "claim": "False Belief 范式揭示'空间信念惯性'（spatial belief inertia）：环境改变（物体重定位/重定向）后重新探索时，即使直接观测到新配置，模型仍坚持初始的、已不正确的坐标——基础模型缺乏响应物理变化修正内部认知地图的可塑性；该问题在文本智能体中存在、视觉模型中尤为严重。",
+   "stance": "support",
+   "relation": "支持 SLAM 侧：动态环境下的地图修正（SLAM 的动态更新/重定位/地图维护能力）是当前基础模型的严重短板；非平稳环境中'丢弃过时先验、纳入新证据'的信念修订机制缺失——对具身系统意味着依赖 VLM 内部隐式空间记忆会在环境变化后产生持久过时地图，显式可覆写空间记忆基础设施的必要性增强。量化严重度见 C06。",
+   "summary": "信念惯性：环境变化后即使直接观测到新配置，模型仍坚持初始错误坐标——缺乏修正内部认知地图的可塑性",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 3, Section 1 Introduction 倒数第二段",
+   "source_context": "By altering the environment (relocating or reorienting objects) after the agent’s initial exploration, we uncover a phenomenon we term spatial belief inertia: agents (particularly in vision-based settings) struggle to overwrite obsolete spatial priors with new sensory evidence. Despite directly observing the new configuration, models persist in their initial, now incorrect coordinates. This reveals a critical failure in spatial memory revision, where foundational models lack the plasticity to revise their internal cognitive maps in response to physical changes.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 3 Introduction 倒数第二段：'By altering the environment...in response to physical changes.' 为原文连续措辞，跨行处无连字符拆词；claim 中'空间信念惯性''即使直接观测到新配置仍坚持初始错误坐标''缺乏修正内部认知地图的可塑性''视觉模型尤为严重'分别对应原文 'spatial belief inertia'、'Despite directly observing the new configuration, models persist in their initial, now incorrect coordinates'、'lack the plasticity to revise their internal cognitive maps'、'particularly in vision-based settings'，均为忠实转述；本卡为现象定义与作者定性主张，量化数据由 C06（page 15 Table 7）承载。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C06",
+   "claim": "信念修正量化失败（Table 7，k=4 物体变化后重探索）：vision-world 中朝向信念惯性 GPT-5.2 达 68.9%、Gemini-3 Pro 51.1%（text 仅 5.5%/7.9%）；朝向变化识别 F1 低至 14.3%/23.9%（text 为 97.9%/98.7%）；位置信念正确性 vision 42.9%/63.1% vs text 69.7%/72.9%；冗余步数 vision 6.20/3.23 vs text 0.55/0.18——视觉智能体的朝向修正接近系统性失败。",
+   "stance": "support",
+   "relation": "为 C05 提供量化严重度并定位失败模态：动态修正缺口在视觉模态达灾难级（朝向识别 F1 14.3-23.9%、惯性 51-69%）而 text 模态可修（识别 98%+、惯性个位数）——再次指向感知层而非推理层是修正失败主因；对综述问题：非平稳环境（真实具身作业的常态）中隐式空间记忆无法可靠更新，强化'显式可覆写空间记忆基础设施'的必要性判断；同时 text 可修性提示给定符号化前端后修正可行，与 C03 的条件性一致。",
+   "summary": "Table 7 量化：vision 朝向惯性 68.9/51.1 vs text 5.5/7.9，朝向识别 F1 14.3/23.9 vs text 97.9/98.7——视觉模态修正灾难级失败",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 15, Table 7",
+   "source_context": "Table 7: Belief updating under environmental shifts. After relocating/reorienting k=4 objects, we evaluate change identification, re-exploration cost (including redundancy (red.)), and belief correctness/update in text- vs. vision-worlds. Vision agents require more redundant steps and show severe orientation inertia, failing to overwrite obsolete facing beliefs despite new evidence.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Belief Inertia (lower better) and identification F1 (higher better), Table 7",
+    "value_or_direction": "orientation inertia vision 68.9 (GPT-5.2) / 51.1 (GEMINI-3 PRO) vs text 5.5 / 7.9; orientation identification F1 vision 14.3 / 23.9 vs text 97.9 / 98.7",
+    "comparator": "vision-based World vs text-based World, k=4 shifted objects",
+    "task_or_sample": "False Belief revision task after re-exploration",
+    "locator": "page 15, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 15 Table 7 表题：'Table 7: Belief updating under environmental shifts...despite new evidence.' 为原文连续措辞，跨行处无连字符拆词；claim 中全部数字（68.9、51.1、5.5、7.9、14.3、23.9、97.9、98.7、42.9、63.1、69.7、72.9、6.20、3.23、0.55、0.18）均出现在所引页面表体行（'GPT-5.2 13.06 6.20 14.3 68.0 16.7 42.9 68.9 34.7'、'GEMINI-3 PRO 10.29 3.23 23.9 82.5 30.3 63.1 51.1 14.4' 及 text 行 'GPT-5.2 6.92 0.55 97.9 98.4 89.5 69.7 5.5 12.5'、'GEMINI-3 PRO 7.79 0.18 98.7 98.8 91.8 72.9 7.9 5.7'）；列语义（Identification/Belief Correctness/Belief Inertia 的 ori./pos.）由同页表头与 page 14 度量定义段逐字核对。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C07",
+   "claim": "充分性测试（Oracle Map）：将真值认知地图作为条件输入后，两个模型在两个世界中性能均升至约 95% 的近完美水平——认知地图表征已捕获任务所需全部信息，性能瓶颈在于模型无法准确构建该地图，而非表征格式本身。",
+   "stance": "support",
+   "relation": "混合架构论的最直接实验证据：显式外部地图（SLAM 式空间基础设施的产出物）+ 基础模型推理 ≈ 95% 近满分，而模型自主构建隐式地图 vision 仅 20-52%（C03）——支持'显式建图基础设施与基础模型推理分工互补'而非'端到端隐式替代'。同页对齐测试进一步显示让模型先生成地图再作答反而轻微退化，说明模型缺的是可靠的地图构建而非地图利用能力。边界：这是消融外推，非集成系统验证（见 reader_inferred）。",
+   "summary": "Oracle 真值地图条件作答升至 ≈95%：显式地图表征充分，瓶颈在模型无法构建而非表征格式",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 12, Section 5.1 Cognitive Map Validation & Correlation 消融段",
+   "source_context": "Sufficiency Test (Oracle Map): We conditioned the model on the ground-truth cognitive map before generating answers for evaluation. Performance rose to near-perfect levels (≈ 95% for both models in both worlds). This confirms that our cognitive map representation captures all necessary information for the tasks; performance bottlenecks stem from the agent’s inability to accurately construct the map, not the representation format itself.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "downstream task accuracy conditioned on ground-truth cognitive map",
+    "value_or_direction": "≈ 95% for both models in both worlds",
+    "comparator": "oracle map condition vs self-constructed map",
+    "task_or_sample": "cognitive map sufficiency ablation",
+    "locator": "page 12, Section 5.1"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 12 Cognitive Map Validation 消融段：'Sufficiency Test (Oracle Map): We conditioned...not the representation format itself.' 为原文连续措辞，跨行处无连字符拆词；'≈ 95%' 出现在所引页面；claim 中'表征已捕获任务所需全部信息''瓶颈在模型无法构建地图而非表征格式'分别对应原文 'captures all necessary information for the tasks' 与 'stem from the agent's inability to accurately construct the map, not the representation format itself'，为忠实转述；与 C03 的 vision 自主构建正确性（20.2-32.2%）对照支撑 relation 中 20-52% 的对比区间（52.1 为 Gemini vision overall，同页 Table 5）。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C08",
+   "claim": "外化差距（externalization gap）：模型被要求先生成认知地图再作答时性能轻微退化——潜在内部空间信念比其外化的离散 JSON 输出更丰富或更准确，显式地图是内部状态的有损压缩但仍是强诊断信号。",
+   "stance": "limit",
+   "relation": "限制基于探测的'基础模型缺隐式空间记忆'论断的证据强度：外化有损意味着 C03-C06 的探测分数可能低估模型真实的内部空间知识——基础模型的隐式空间表征并非空白。但注意该证据同时说明模型无法可靠外化并利用其隐式信念（先生成地图反而轻微退化），对具身智能体而言操作上相关的能力（可显式调用的稳定空间状态）仍然缺失，故该限制校准而非推翻'显式空间基础设施必要性'判断。",
+   "summary": "外化差距：隐含内部空间信念比外化 JSON 更丰富准确——探测分数可能低估模型隐式空间知识",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 12, Section 5.1 Cognitive Map Validation & Correlation 末段",
+   "source_context": "These results reveal an externalization gap: the model’s latent internal spatial belief is richer or more accurate than the discretized JSON output it produces. While it is a lossy compression of the agent’s true internal state, the explicit map remains a strong diagnostic signal.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 12 Cognitive Map Validation 末段：'These results reveal an externalization gap...a strong diagnostic signal.' 为原文连续措辞，跨行处无连字符拆词；claim 中'潜在内部空间信念比外化 JSON 更丰富或更准确'对应原文 'the model's latent internal spatial belief is richer or more accurate than the discretized JSON output it produces'，'有损压缩''强诊断信号'均为原文措辞（'lossy compression''strong diagnostic signal'）；'先生成地图再作答轻微退化'的消融依据在同页上文 'We prompted the model to explicitly generate the cognitive map before answering...slight performance degradation'，claim 未越出原文断言。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C09",
+   "claim": "方法论立场：认知地图（结构化、allocentric 的地图式表征）被采用为空间隐藏结构的规范（canonical）表征——要求模型在探索任意时刻外化其认知地图以直接评估表征胜任度，把空间评测从行为成功转向对内部空间模型的直接测量。",
+   "stance": "support",
+   "relation": "元层面支持'显式地图式空间表征未被替代'：即便由基础模型阵营（Stanford/Fei-Fei 等）撰写的评测工作，衡量空间智能的规范语言仍是地图式显式表征（定位/方向/朝向精度、局部-全局一致性、认知地图稳定性）而非纯行为成功率——SLAM 的核心产出物（一致的空间地图）仍是空间智能的参照抽象；与 C07 的 Oracle 结果互证：地图既是充分的也是被认可的度量单位。这是评测语言层面的证据，不直接证明系统应部署 SLAM。",
+   "summary": "认知地图被采用为空间隐藏结构的规范表征：地图式显式表征仍是空间能力的度量基准语言",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "locator": "page 4, Section 2.1 第三组件 Explicit Probing of the Internal Spatial Belief",
+   "source_context": "We require the agent to explicitly represent its spatial belief by probing its cognitive map at any point of exploration. Cognitive maps are structured allocentric representations of space, which is well-established in neuroscience (Tolman, 1948; O’Keefe & Dostrovsky, 1971; Hafting et al., 2005). Thus, we use cognitive maps as the canonical representation of the hidden structure of space.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 4 Section 2.1 第三组件：'We require the agent to explicitly represent...canonical representation of the hidden structure of space.' 为原文连续措辞，跨行处无连字符拆词；claim 中'规范表征'对应原文 'canonical representation'，'结构化、allocentric 的地图式表征'对应 'structured allocentric representations'，'行为成功不能直接揭示内部模型质量'的同段上文（'Behavioral success such as whether the agent finds the chair cannot directly reveal the quality of agent's internal model'）支撑 claim 中评测范式转向的表述；claim 为作者方法论立场的忠实概括，无外推数字。"
+   }
+  },
+  {
+   "card_id": "2602.07055-C10",
+   "claim": "探索行为模式：GPT-5.2 的主动-被动差距源于非系统探索——发现新门即立即跳转检查、当前房间常留未探完，叠加物体遗漏与路径冗余；而表现最好的 Gemini-3 Pro 采用系统性'旋转-扫描'（rotate-and-scan）策略：先扫描周围再转移到新房间——其行为镜像 SCOUT 脚本代理。",
+   "stance": "support",
+   "relation": "强化 C02 的行为层面证据：最优基础模型胜出的路径恰是向经典系统化扫描策略（传统 SLAM/探索管线的 sweep 例程，即 SCOUT 的 visit–sweep–advance）收敛，而非某种超越程序的新探索范式——经典探索策略仍是性能基准与涌现目标。对综述问题：在'探索决策'这一 SLAM 功能内核上，基础模型当前的上界行为是对经典策略的模仿。",
+   "summary": "最优模型 Gemini 的胜出行为恰是镜像 SCOUT 脚本代理的 rotate-and-scan 系统扫描策略；GPT-5.2 则因非系统探索失分",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "locator": "page 10, Section 4 Exploration Pattern 段",
+   "source_context": "For GPT-5.2, the active-passive performance gap stems from unsystematic exploration. Specifically, the agent tends to prioritize any newly discovered door, immediately jumping to inspect it and often leaving the current room partially unexplored. This is compounded by object omission and path redundancy. In contrast, GEMINI-3 PRO adopts a more methodical “rotate-and-scan” strategy, scanning its surroundings before transitioning to new rooms, which is a behavior mirroring the SCOUT proxy agent.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 page 10 Exploration Pattern 段：'For GPT-5.2, the active-passive performance gap...SCOUT proxy agent.' 为原文连续措辞，保留原文弯引号（“rotate-and-scan”），跨行处无连字符拆词；claim 中'发现新门即跳转、当前房间留未探完、物体遗漏与路径冗余'分别对应原文 'prioritize any newly discovered door, immediately jumping to inspect it''leaving the current room partially unexplored''object omission and path redundancy'，'行为镜像 SCOUT'对应原文 'a behavior mirroring the SCOUT proxy agent'，均为忠实转述；SCOUT 的 visit–sweep–advance 例程描述由 page 23 Appendix A.1 逐字核对支撑 relation 的类比。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Thinking in Space: How Multimodal Large Language Models See, Remember, and Recall Spaces (VSI-Bench)",
+   "arxiv_id": "",
+   "role": "被动认知地图基准的谱系对照：本文批评其与同类'仍是非具身的（remains disembodied），智能体只在预收集轨迹上推理'（page 15 Related Work），从而确立主动探索评测缺口"
+  },
+  {
+   "title": "Spatial Mental Modeling from Limited Views (MindCube)",
+   "arxiv_id": "",
+   "role": "布局预测增强多视角推理的先例（page 15 Related Work 引用），同属'显式地图/布局作为空间推理中间表征'的证据脉络"
+  },
+  {
+   "title": "EXCALIBUR: Encouraging and Evaluating Embodied Exploration",
+   "arxiv_id": "",
+   "role": "任务无关探索的 RL 路线先例；本文批评其 RL 训练导致 goal leakage 且把地图隐式编码进策略权重（page 15），凸显零样本基础模型评测定位"
+  },
+  {
+   "title": "Active and passive contributions to spatial learning (Chrastil & Warren, 2012/2013)",
+   "arxiv_id": "",
+   "role": "认知科学基础：主动探索产生显著更好的空间理解（page 1 Introduction 引用），本文主动-被动对照设计的理论出处"
+  },
+  {
+   "title": "Cognitive maps in rats and men (Tolman, 1948)",
+   "arxiv_id": "",
+   "role": "认知地图概念源头（page 4）：'结构化 allocentric 空间表征'的神经科学正当性依据，本文探测表征的理论根基"
+  },
+  {
+   "title": "Beliefs about beliefs (Wimmer & Perner, 1983) 与 Spatial belief revision (Knauff et al., 2013)",
+   "arxiv_id": "",
+   "role": "False Belief 范式与空间信念修正的心理学出处（page 4、page 13），Belief Inertia 实验设计的来源"
+  },
+  {
+   "title": "The development of spatial representations of large-scale environments (Siegel & White, 1975) / A new framework for understanding the acquisition of spatial knowledge (Montello, 1998)",
+   "arxiv_id": "",
+   "role": "Route/Survey 双级空间知识框架（page 4、page 15）：下游任务套件（Belief on Route / Belief on Survey）的分类学依据"
+  }
+ ],
+ "notes": "stance 分布与总体判断：(1) 本文是'基础模型派能力审计'的镜像证据——不评测 SLAM，而是评测零样本基础模型能否承担 SLAM 的功能内核（主动探索-信念构建-修正-利用），结论是当前三环节全部失败：C01（主动采集塌陷 0.57→0.46）、C04（已验证事实被覆写、空间记忆退化）、C05+C06（环境变化后朝向惯性 51-69%、识别 F1 14-24%）。(2) 架构层面最有力的推论来自 C07：Oracle 地图 ≈95% vs 自主构建 vision 20-52%——'显式空间基础设施+基础模型推理'的混合架构是数据支持方向，纯隐式替代不成立；C09 从评测语言层面佐证（认知地图仍是规范表征）。(3) C03（conditional）定位瓶颈在感知-几何层而非推理层：text 符号输入下推理已强（被动 86.5-90.4%），提示'几何前端+模型推理'分工。(4) C08（limit）校准证据强度：外化有损，隐式信念可能被探测低估——但模型无法可靠外化/调用隐式信念本身即操作能力缺失。(5) C02+C10：程序化探索（SCOUT 9 步 vs 模型 ≥14 步）与最优模型向经典扫描策略收敛，共同支撑'经典探索策略仍是基准'。(6) 与第4篇（2511.13719 数据缩放立场文）构成正反面：后者主张数据缩放培育空间智能，本文提供该路线当前能力基线（零样本 vision 被动 43-61%、主动 29-57%），并显示即便 Oracle 消融也只证明'模型会用地图'而非'模型能建地图'。(7) 证据边界：仿真网格+抽象动作（JumpTo/Query），无连续控制与真实感知噪声，无混合架构系统级基线——对'具身系统是否需要 SLAM'的推断需经 C07 消融外推，外推强度中等。"
+}

@@ -3,7 +3,7 @@ id: EA-MODEL
 title: 模型与预训练
 type: topic-card
 domain: embodied-ai
-updated: 2026-08-07
+updated: 2026-08-22
 source:
   - id: S-EA-QUESTIONS
     status: retired
@@ -45,14 +45,18 @@ source:
   - id: RUN-ACT-ROBOTWIN-20260807
     file: ../../evidence/literature-review-act及动作分块策略在robotwin-2.0中的接入-训练与闭环评测-20260807/evidence.jsonl
     locator: EA-ACTRT-2026-0001..0015
-tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, hierarchical-world-model, sparse-future, latent-planning, action-fidelity, action-chunking, adaptive-execution-horizon, act, robotwin, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain]
-aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, 分层世界模型, 稀疏未来, 世界模型权限阶梯, latent planning, Action Chunking Transformer, 自适应执行视界, RoboTwin 2.0, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练]
+  - id: RUN-BRAIN-YEAR-20260822
+    file: ../../evidence/literature-review-近一年类脑模型的发展-20260822/evidence.jsonl
+    locator: EA-BRAIN-2026-0001..0121
+tags: [embodied-ai, model, pretraining, vla, reactive-vla, world-model, hierarchical-world-model, sparse-future, latent-planning, action-fidelity, action-chunking, adaptive-execution-horizon, act, robotwin, rt-x, octo, openvla, sim2real, ego-centric, contamination, poisoning, backdoor, supply-chain, brain-inspired, spiking-neural-network, snn, neuromorphic, organoid-intelligence]
+aliases: [机器人基础模型, Unified Model, VLA, 反应式VLA, VLA—世界模型融合栈, 分层世界模型, 稀疏未来, 世界模型权限阶梯, latent planning, Action Chunking Transformer, 自适应执行视界, RoboTwin 2.0, Octo, OpenVLA, RT-X, 预训练, 微调, 模型供应链, 持久后门, 数据投毒, Ego-centric预训练, 类脑模型, 脉冲神经网络, 脉冲大模型, SpikingBrain, SpikeLLM, 神经形态计算]
 load_when:
   - 问题涉及统一机器人模型、VLA、开源模型泛化、预训练有效性或 Sim2Real
   - 问题涉及基模型污染、VLA 后门、干净微调能否清除污染、检查点继承或世界模型生成风险
   - 问题涉及“VLA 已死”、反应式策略、世界模型当立、动作后果预演或策略—动态—控制分层
   - 问题涉及 H-WM、StructVLA、BadWAM、稀疏未来、动作—想象同步或世界模型权限分配
   - 问题涉及 ACT、action chunking、RoboTwin 2.0、多任务双臂策略或动作块执行视界
+  - 问题涉及类脑模型、脉冲神经网络(SNN)、脉冲大模型、神经形态芯片、能耗折算口径或器官智能
 confidence: working
 ---
 
@@ -101,6 +105,10 @@ confidence: working
 - action chunk 的 prediction horizon 不等于 execution horizon；固定执行长度会把重规划变成任务无关的周期调度，部署接口必须允许执行前缀与重新观测独立配置。
 - 自适应执行可读取运动相位、动作熵、去噪方差、学习式 continuation head 或未来—现实误差，但这些信号都是条件性风险代理，不能替代基础策略能力。
 - 跨块闭环既需要新观测，也可能需要动作更新后的循环场景先验；低频世界规划与高频短块执行可以异步分层。
+- 类脑模型过去一年第一次跨入大模型规模（SpikingBrain 76B 参数、非 NVIDIA 集群训练），但实现形态是 ANN-to-SNN 转换式持续预训练寄生在成熟 ANN 生态上，不是从零替代；76B 版与基座差距基本闭合，代价是拼接长文本数据带来的长上下文天花板和部署编码约 2 个点的损失。
+- 免乘法/全二值脉冲推理（SDLLM、BiSpikCLM）在同等位宽下对强基座的退化远小于常规量化，但同规模绝对精度仍与 BitNet/OmniQuant 相当，主贡献在能耗口径而非精度超越。
+- 多模态与具身脉冲化（SpikeMLLM、SpikeVLA）的“近无损”依赖特定组件组合，且不同模态对时间步的敏感度不同；具身场景低层闭环控制有可见退化（跟踪误差近两倍），神经形态芯片上的验证全部缺失。
+- 类脑模型论文的能耗优势数字几乎全部来自“突触操作数×单位能耗系数”的折算口径（45nm/28nm 仿真），不是流片实测；GPU 上仿真 SNN 反而更慢更耗电，兑现能耗承诺以真实神经形态硬件部署为前置条件。
 
 ## 指标与检核
 
@@ -149,6 +157,7 @@ confidence: working
 - RUN-VLA-BREAKTHROUGH-20260719：`EA-VLABREAK-2026-0001..0005` 支持低频逻辑、潜在视觉子目标和稀疏里程碑未来；`0006..0007` 支持 action fidelity 安全边界。其余复用事件将结构化未来与 VLA—世界模型融合栈连接起来。
 - RUN-MULTIMODAL-TRAINING-20260720：`EA-TWM-READ-0001..0014`, `EA-ALIGN-READ-0001..0015`, `EA-VLABREAK-2026-0001..0007` 支持按功能/时标分层的多模态模型接口；该结论为跨 run synthesis，并未新增论文级 event。
 - RUN-ACT-ROBOTWIN-20260807：`EA-ACTRT-2026-0001..0015` 覆盖 ACT 多任务/几何/离散动作表示、固定与自适应执行视界、循环场景状态、异步世界动作模型和 RoboTwin 2.0 闭环评测边界。
+- RUN-BRAIN-YEAR-20260822：`EA-BRAIN-2026-0001..0121` 覆盖脉冲大模型规模化（SpikingBrain/NeuronSpark）、免乘法与二值脉冲推理（SDLLM/BiSpikCLM）、多模态与具身脉冲化（SpikeMLLM/SpikeVLA）、神经形态系统与器官智能路线，以及能耗折算口径的系统性边界。
 
 ## 待补问题
 
@@ -162,3 +171,5 @@ confidence: working
 - 建立训练期教师、离线排序、在线预演、直接控制和安全裁决的世界模型权限晋级门禁。
 - 建立结构化/稀疏未来相对稠密视频 rollout 的规划价值、延迟与动作忠实对照。
 - 建立原始 ACT、语言/专家 ACT、固定视界与自适应视界在相同数据、策略调用和墙钟预算下的 RoboTwin 2.0 对照。
+- 建立脉冲模型能耗的实测口径模板：区分突触操作折算、综合工具估计与流片实测，并注明 GPU 对照配置。
+- 补充神经形态芯片上验证脉冲大模型的公开证据（当前止于仿真和 GPU）。

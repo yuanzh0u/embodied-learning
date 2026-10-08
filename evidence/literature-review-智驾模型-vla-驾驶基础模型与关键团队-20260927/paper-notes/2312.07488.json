@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2312.07488",
+    "title": "LMDrive: Closed-Loop End-to-End Driving with Large Language Models",
+    "published": "2023-12-12",
+    "url": "https://arxiv.org/abs/2312.07488",
+    "versioned_id": "2312.07488v2",
+    "authors": [
+      "Hao Shao",
+      "Yuxuan Hu",
+      "Letian Wang",
+      "Steven L. Waslander",
+      "Yu Liu",
+      "Hongsheng Li"
+    ]
+  },
+  "review": {
+    "question": "怎样用自然语言指令控制闭环驾驶？",
+    "topic_ids": [
+      "EA-MODEL",
+      "EA-ALIGN",
+      "EA-EVAL"
+    ],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "accepted",
+    "paper_type": "method",
+    "relevance": {
+      "decision": "include",
+      "reason": "怎样用自然语言指令控制闭环驾驶？"
+    },
+    "sections_read": [
+      {
+        "locator": "3 Dataset generation",
+        "role": "problem",
+        "purpose": "确认研究问题"
+      },
+      {
+        "locator": "4 LMDrive methodology; 4.1 Vision encoder; 4.2 LLM for instruction-following auto driving; 4.3 Training details",
+        "role": "method-or-design",
+        "purpose": "阅读技术机制与训练接口"
+      },
+      {
+        "locator": "5 LangAuto Benchmark; 6.1 Experiment Setup; 6.2 Quantitative Results",
+        "role": "results-or-analysis",
+        "purpose": "核对实验、消融及适用范围"
+      },
+      {
+        "locator": "7 Conclusion",
+        "role": "conclusion-or-limitations",
+        "purpose": "核对结论和限制"
+      }
+    ],
+    "sections_skipped": [
+      {
+        "locator": "未列入阅读记录的其他参考文献及附录细节",
+        "reason": "scoping 问题驱动阅读；完整正文已恢复，但未声称逐项复核全部图表和引用"
+      }
+    ]
+  },
+  "research_question": "怎样用自然语言指令控制闭环驾驶？",
+  "contributions": [
+    "ResNet 相机与 PointPillars LiDAR 经 BEV decoder 和 Q-Former 接 LLaMA 系骨干，MLP 预测路点及指令完成标志，PID 输出控制；先视觉预训练再训练连接模块。"
+  ],
+  "method": {
+    "summary": "ResNet 相机与 PointPillars LiDAR 经 BEV decoder 和 Q-Former 接 LLaMA 系骨干，MLP 预测路点及指令完成标志，PID 输出控制；先视觉预训练再训练连接模块。",
+    "assumptions": [
+      "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。"
+    ]
+  },
+  "study_context": {
+    "datasets": [
+      "CARLA",
+      "LangAuto"
+    ],
+    "tasks": [
+      "怎样用自然语言指令控制闭环驾驶？"
+    ],
+    "embodiments": [
+      "autonomous vehicle"
+    ],
+    "sample_or_scale": "以原文实验设置为准；本笔记不把日志数据等同于实车闭环"
+  },
+  "evaluation": {
+    "design": "LangAuto 普通、notice 和连续指令闭环；语言骨干、Q-Former 和视觉预训练消融。",
+    "baselines": [
+      "随机初始化与预训练骨干在同数据下比较，仍不能隔离全部预训练数据因素。"
+    ],
+    "metrics": [
+      "原文任务对应指标，禁止跨协议排行"
+    ],
+    "ablations": [
+      "LangAuto 普通、notice 和连续指令闭环；语言骨干、Q-Former 和视觉预训练消融。"
+    ]
+  },
+  "findings": [
+    {
+      "finding": "LMDrive 将语言指令、相机和 LiDAR 特征映射为路点及指令完成标志，再由 PID 执行。",
+      "scope": "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。",
+      "locator": "4.2 LLM for instruction-following auto driving"
+    },
+    {
+      "finding": "LMDrive 的连续多句指令比单句指令更困难，实验中的驾驶分数与路线完成率下降。",
+      "scope": "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。",
+      "locator": "6.2 Quantitative Results"
+    }
+  ],
+  "limitations": {
+    "author_status": "not-found",
+    "author_stated": [],
+    "reader_inferred": [
+      {
+        "boundary": "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。",
+        "basis": "LangAuto 普通、notice 和连续指令闭环；语言骨干、Q-Former 和视觉预训练消融。"
+      }
+    ]
+  },
+  "transfer_boundary": "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。",
+  "critical_appraisal": {
+    "design_strengths": [
+      "LangAuto 普通、notice 和连续指令闭环；语言骨干、Q-Former 和视觉预训练消融。"
+    ],
+    "design_risks": [
+      "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。"
+    ],
+    "baseline_fairness": "随机初始化与预训练骨干在同数据下比较，仍不能隔离全部预训练数据因素。",
+    "metric_validity": "验证类型与指标限定为：LangAuto 普通、notice 和连续指令闭环；语言骨干、Q-Former 和视觉预训练消融。",
+    "reproducibility": "公开基准和实现入口可追溯；未复跑。",
+    "external_validity": "仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2312.07488-C01",
+      "claim": "LMDrive 将语言指令、相机和 LiDAR 特征映射为路点及指令完成标志，再由 PID 执行。",
+      "stance": "support",
+      "relation": "怎样用自然语言指令控制闭环驾驶？",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "原文执行链明确不是语言 token 直接驱动转向执行器。",
+      "locator": "4.2 LLM for instruction-following auto driving",
+      "source_context": "use two PID controllers for latitudinal and longitudinal control",
+      "evidence_type": "method",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "原文执行链明确不是语言 token 直接驱动转向执行器。 适用边界：仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。"
+      }
+    },
+    {
+      "card_id": "2312.07488-C02",
+      "claim": "LMDrive 的连续多句指令比单句指令更困难，实验中的驾驶分数与路线完成率下降。",
+      "stance": "conditional",
+      "relation": "怎样用自然语言指令控制闭环驾驶？",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "结论限制到 LangAuto-Sequential 的组合指令设置。",
+      "locator": "6.2 Quantitative Results",
+      "source_context": "have a drop in the driving score and route completion ratio",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "结论限制到 LangAuto-Sequential 的组合指令设置。 适用边界：仿真驾驶，不是实车泛化证明；自然语言导航任务与固定目标点规划不能直接排行。"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "Agent read and manually checked the listed original sections; script only serializes those judgments.",
+  "review_display": {
+    "name": "LMDrive",
+    "core": false,
+    "stack": {}
+  }
+}

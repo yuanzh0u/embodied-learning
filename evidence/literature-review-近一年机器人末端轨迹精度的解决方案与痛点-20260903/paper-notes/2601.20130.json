@@ -1,0 +1,483 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2601.20130",
+  "title": "Real-Time Robot Execution with Masked Action Chunking",
+  "published": "2026-01-27",
+  "url": "https://arxiv.org/abs/2601.20130",
+  "authors": [
+   "Haoxuan Wang",
+   "Gengyu Zhang",
+   "Yan Yan",
+   "Yuzhang Shang",
+   "Ramana Rao Kompella",
+   "Gaowen Liu"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "本族'延迟感知训练适配'分支核心文献（ICLR 2026）：论文把异步推理下动作分块的执行失败分解为块间不连续与块内不一致两个痛点，并提出 REMAC 用掩码动作分块（延迟条件前缀掩码 + 自条件课程 + 残差对齐）+ 前缀保留采样在预训练策略上学习修正，零额外推理延迟。附 Kinetix 12 任务延迟扫描、Franka 真机三任务（含收紧夹爪的精细抓放）、延迟注入鲁棒性与运动学平滑度证据，且可与测试时方法（RTC/BID）叠加——对本综述的方案族对比（训练侧 vs 执行侧）与方法组合性论证价值高。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "获取实时性痛点（VLA 推理延迟 vs 控制周期）、异步推理两挑战与本文定位（训练时适配 vs 测试时修正）"
+   },
+   {
+    "locator": "2.2 Execution Strategies for Chunked Policies",
+    "role": "relevant-core",
+    "purpose": "定位与 TE/BID/RTC 三类测试时执行方法的关系及各自缺陷（启发式/额外延迟）"
+   },
+   {
+    "locator": "3 Preliminaries",
+    "role": "method-or-design",
+    "purpose": "理解动作分块/执行时域/推理延迟 d 的形式化、流匹配策略定义与块间不连续/块内不一致的机制根源"
+   },
+   {
+    "locator": "4.1 Masked Action Chunking",
+    "role": "method-or-design",
+    "purpose": "理解前缀掩码 m_d=1[τ≥d]、自条件课程（式4）、残差对齐 L_Δ 与总目标（式6）的设计"
+   },
+   {
+    "locator": "4.2 Prefix-Preserved Sampling",
+    "role": "method-or-design",
+    "purpose": "理解推理期用已执行动作初始化并保留重叠段的采样管线（式7）如何强化块间连续性"
+   },
+   {
+    "locator": "4.3 Implementation Details",
+    "role": "data-or-setting",
+    "purpose": "获取 LoRA（≤1.5% 参数、训练后合并零开销）、掩码覆盖调度（q_max=4, q_min=0）与部署框架细节"
+   },
+   {
+    "locator": "5.1 Kinetix Environment",
+    "role": "results-or-analysis",
+    "purpose": "提取仿真主结果（全延迟设置胜出）与组件消融（Table 1）、课程调度对比（Figure 3）、与测试时方法组合（Table 2）"
+   },
+   {
+    "locator": "5.2 Real-World Environment",
+    "role": "results-or-analysis",
+    "purpose": "提取 Franka 真机设置（15Hz、π_0、端到端延迟 122-140ms）与 Table 3 完成度、延迟注入（Figure 4）与运动学平滑度（Figure 5）结果"
+   },
+   {
+    "locator": "6 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "核对结论表述（两挑战、无额外延迟、更快完成）"
+   },
+   {
+    "locator": "E.3 Data-Efficiency of REMAC",
+    "role": "appendix-or-supplement",
+    "purpose": "提取低数据量（30 条轨迹）下性能保持的证据（Table 4）"
+   },
+   {
+    "locator": "E.4 Effect of REMAC on Generalizability",
+    "role": "appendix-or-supplement",
+    "purpose": "核对 REMAC 仅 LoRA 动作专家、不损害基模型泛化（含 π_0.5 OOD 保持）的声明"
+   },
+   {
+    "locator": "E.5 Application to Other Policy Classes",
+    "role": "appendix-or-supplement",
+    "purpose": "获取 REMAC 扩展到 Transformer ACT 的双臂任务证据（Table 5/6）"
+   },
+   {
+    "locator": "F Robustness to Varying Delay Conditions",
+    "role": "appendix-or-supplement",
+    "purpose": "获取噪声/尖峰延迟下 REMAC 仍超过准确延迟下 RTC 的证据（Table 7）与离散化鲁棒性论证"
+   },
+   {
+    "locator": "G Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "提取作者自述局限：需预设最大推理延迟、微调数据需求"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.1 VLA and Action Chunking; References",
+    "reason": "背景与引用列表，仅用于核对核心引用出处，无综述问题所需证据"
+   },
+   {
+    "locator": "A Hardware Setup; B Scheduling Function Variants; C Task Examples; D Per-Task Simulation Results",
+    "reason": "硬件图示、调度函数变体图、任务截图与逐任务消融图（Figure 6-9），关键数值已在正文/附录 E-F 提取，图像细节无需逐字核读"
+   }
+  ]
+ },
+ "research_question": "论文自问：异步推理（执行当前块的同时预测下一块）实现实时控制后，为什么朴素集成仍导致执行失败？除已知的块间不连续外，块内不一致（延迟期间执行的前缀动作基于旧观测）如何形式化，以及能否通过训练时适配（而非引入额外延迟的测试时修正）让预训练分块策略在任意推理延迟下保持可靠？",
+ "contributions": [
+  "识别并形式化'块内不一致'这一被忽视的失败模式：推理延迟 d 期间执行的前 d 个动作来自上一个块 A_{t-h}（基于 o_{t-h} 而非 o_t），造成块内感知-动作失配，与块间不连续共同解释异步推理的性能退化",
+  "提出 REMAC：通过掩码动作分块在预训练流匹配策略上学习修正——延迟条件前缀掩码限制监督到可执行段、自条件课程（真值与自预测混合退火）对齐训练与测试分布、残差对齐项 L_Δ 显式建模相对预训练策略的修正量",
+  "提出前缀保留采样：推理期用已执行动作初始化并保留重叠段、仅合成剩余部分，强化块间连续性；LoRA（≤1.5% 参数）训练后合并进主干，不引入任何额外推理延迟",
+  "仿真（Kinetix 12 任务，d=0-4 全设置胜出，d=4 时 0.779 vs 朴素异步 0.451）+ 真机（Franka 三难度精细抓放任务全部最高完成度）+ 延迟注入（+75/150ms 仍全胜）+ 运动学分析（速度/加速度最平稳）的完整验证，并证明可与 BID/RTC 等测试时方法叠加、可扩展到 ACT 架构"
+ ],
+ "method": {
+  "summary": "REMAC 是针对异步推理的延迟感知后训练适配：把预训练流匹配策略 v_π(A_t|o_t) 适配为延迟条件策略 v̂_π(A_t|o_t,d)。训练侧三组件：(1) 前缀掩码 m_d=1[τ≥d]（d 从收缩区间均匀采样）把流匹配监督限制在可执行段，让单一模型覆盖全延迟谱，缓解块内不一致；(2) 自条件课程 Â_t=γA_t+sg((1-γ)Ã_t)（γ~Bernoulli(σ)，σ 从 1 退火到 0）用预训练策略自身预测替代部分真值输入，缓解曝光偏置并模拟测试时条件；(3) 残差对齐 L_Δ 使学到的修正对齐'预训练预测到真值'的残差。总损失 L=λ_m L_m+λ_Δ L_Δ（λ=0.01）。推理侧前缀保留采样：初始动作态不再从高斯先验采样，而用上一块已执行动作填充，积分过程中保留重叠段、仅合成剩余部分（式7），强化块间连续性。实现上用 LoRA（仿真 rank 4 全线性层；真机 rank 8 仅动作专家）适配，训练后合并进主干，推理零额外开销；部署时机器人侧用近期最大实测延迟作为 d 的估计。",
+  "assumptions": [
+   "推理延迟可用离散量 d=⌊δ/Δt⌋ 刻画且需预先设定上界（训练掩码覆盖的延迟范围），实际延迟超界可能意外失败",
+   "骨干为流匹配（或结构类似的扩散/Transformer ACT）动作分块策略，可通过 LoRA 低秩适配（把变换视为分布调整而非重学策略）",
+   "存在少量微调演示数据（真机 200 条轨迹，附录显示 30 条亦接近）",
+   "推理延迟可在部署时在线估计（取近期窗口最大值）并传给策略"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "Kinetix 仿真：12 个高动态随机环境，RPO 二值奖励训练专家策略后生成演示，流匹配模仿学习（预测时域 P=8）",
+   "真机：自采集 200 条轨迹（附录 E.3 另测 30 条），Franka Research 3 + DROID 设置，夹爪触觉传感器禁用并收窄夹持范围以强制精细控制"
+  ],
+  "tasks": [
+   "仿真：Kinetix 12 类物理控制任务（延迟 d=0-4，执行时域在 max{1,d} 到 9-d 内取值）",
+   "真机：Grasp-Easy（黄瓜等简单物体）/ Grasp-Medium / Grasp-Hard（魔方边长仅比夹爪开口小 1cm，需精确控制），放置到盘或碗；阶段制评分（接近-抓取提升-移动-放置四步）"
+  ],
+  "embodiments": [
+   "仿真：Kinetix 虚构形态（flow-matching 策略）",
+   "真机：Franka Research 3 单臂 7-DoF + 平行夹爪（DROID 设置），π_0 骨干（P=50，memory-efficient 变体），15Hz 控制（Δt≈67ms），执行时域 h=8，端到端延迟约 122-140ms（d=2 或 3）",
+   "附录 E.5：ALOHA 类双臂 ACT 任务（Transfer Cube/Insert Box）"
+  ],
+  "sample_or_scale": "仿真：12 任务 × 延迟 0-4 × 各执行时域设置取平均；真机：每任务每方法 30 次试验、每次上限 300 步，共约 6 小时机器人执行；延迟鲁棒性：+75ms/+150ms 注入与噪声/尖峰延迟模式；数据效率：200 vs 30 条轨迹各 10 次评估"
+ },
+ "evaluation": {
+  "design": "三层：(1) Kinetix 延迟扫描主对比（d=0-4 各执行时域平均），与朴素异步及两类测试时 SOTA（BID/RTC）同协议对比；(2) Franka 真机三难度精细抓放（收紧夹爪开口强制精确执行），对比同步推理/朴素异步/TE/RTC 四基线，含 +75/+150ms 延迟注入与 15 次成功回合的速度/加速度运动学分析；(3) 消融：组件逐加（LoRA→前缀掩码→课程→L_Δ）、课程两极端对照、q_max/q_min 敏感性、掩码嵌入变体、与测试时方法组合、ACT 架构迁移、噪声/尖峰延迟鲁棒性、数据量（200 vs 30）",
+  "baselines": [
+   "同步推理（执行完整个块再等待新动作，真机广泛默认）",
+   "朴素异步（Naive Async，尽可能频繁采样排队最新动作）",
+   "Temporal Ensembling（TE，重叠动作加权平均；仿真中甚至落后于朴素异步故被省略）",
+   "BID（双向解码，测试时候选拒绝采样；真机因算力/时间开销过大被省略）",
+   "RTC（测试时 inpainting + 梯度修正，SOTA 基线，但引入额外 55-64ms 延迟）",
+   "消融内部基线：+LoRA-only（无训练范式改动）"
+  ],
+  "metrics": [
+   "Kinetix 求解率（solve rate）与平均执行时间（步数）",
+   "真机阶段制完成度（四子任务离散得分平均）",
+   "平均机器人速度与加速度曲线（15 次成功回合，平滑度/稳定性证据）",
+   "延迟注入下完成度（+0/+75/+150ms）"
+  ],
+  "ablations": [
+   "组件消融（Table 1）：Naive → +LoRA → +前缀掩码 → +自条件课程 → +L_Δ 逐级提升",
+   "课程调度对照（Figure 3）：纯真值（曝光偏置）vs 纯自条件（早期不稳定）vs 课程退火",
+   "与测试时方法组合（Table 2）：+BID/+RTC 在高延迟下进一步增益",
+   "掩码覆盖 q_max/q_min 敏感性（Figure 10a，不敏感，q_max=4/q_min=0）与掩码嵌入变体（Figure 10b，非关键）",
+   "ACT 架构迁移（Table 5/6）、噪声/尖峰延迟鲁棒性（Table 7）、数据量 200 vs 30（Table 4）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "实时性痛点定量：同步推理要求 δ<Δt（d=0）实际不可达——50Hz 控制（Δt=20ms）下 π_0 仅动作生成就在 RTX 4090 上需 76ms，加预处理/IO/网络更高；真机 15Hz 下端到端延迟约 122-140ms（d=2 或 3）。同步推理受此根本约束，产生块间急动转换与执行时间延长",
+   "scope": "π_0 VLA、RTX 4090、50Hz/15Hz 控制设定",
+   "locator": "3 Preliminaries; 5.2 Real-World Environment"
+  },
+  {
+   "finding": "失败模式分解：异步推理的执行失败由两个因素构成——(1) 块间不连续：连续两块可能来自不同潜在专家模式，块边界切换产生大跳变（既有问题）；(2) 块内不一致：延迟 d 期间执行的前 d 个动作继承自上一块（基于 o_{t-h}），对当前状态次优，造成块内感知-动作失配（本文新识别）",
+   "scope": "异步推理 + 动作分块的通用机制分析（P=3, h=2, d=1 示例）",
+   "locator": "3 Preliminaries, challenges ❶❷"
+  },
+  {
+   "finding": "Kinetix 仿真：REMAC 在全部延迟设置（d=0-4）上超过朴素异步、BID 与 RTC，延迟越大优势越明显（d=4 时组件消融中 Naive 0.451 → REMAC 0.779）；同时平均执行时间更短（更快完成任务）。组件消融显示 LoRA 单独加入无增益（0.428@d=4，反而略低于 Naive），增益来自掩码分块训练范式本身",
+   "scope": "12 个 Kinetix 环境，P=8，每延迟取各执行时域平均",
+   "locator": "5.1 Kinetix Environment, Table 1 / Figure 2"
+  },
+  {
+   "finding": "真机（Franka，π_0，收紧夹爪强制精细控制）：REMAC 三难度任务完成度全部最高——Grasp-Easy 0.903（次优 0.825）、Grasp-Medium 0.943（次优 TE 0.868）、Grasp-Hard 0.812（次优 RTC 0.753）；同步推理频繁停顿致掉落与定位不准，朴素异步/TE 易过早或过晚抓放，RTC 受其额外延迟拖累",
+   "scope": "Franka Research 3 三任务，每方法 30 trials，阶段制评分",
+   "locator": "5.2 Real-World Environment, Table 3"
+  },
+  {
+   "finding": "运动学平滑度证据（本综述直接相关）：150ms 注入延迟下对 15 次成功回合的平均速度/加速度分析显示，同步推理产生突发性周期运动学变化，异步方法更平滑，其中 REMAC 动力学最稳定、突发变化最少，且任务完成更快",
+   "scope": "Grasp-Hard，150ms 注入延迟，15 次成功回合",
+   "locator": "5.2 Real-World Environment, Figure 5"
+  },
+  {
+   "finding": "延迟鲁棒性：注入额外 75ms/150ms 延迟（总延迟 d=3-5）后 REMAC 仍全胜基线；有趣反转是延迟增大时朴素异步相对变好（更长执行时域减少块切换频率），而 RTC 显著退化（其测试时修正在高延迟下有反效果）。附录 F 进一步显示噪声/尖峰延迟下 REMAC 仍超过准确延迟下的 RTC",
+   "scope": "真机 Grasp-Hard 延迟注入 + 仿真噪声/尖峰延迟（Table 7）",
+   "locator": "5.2, Figure 4; Appendix F, Table 7"
+  },
+  {
+   "finding": "组合性与可扩展性：REMAC 只改骨干策略，可与测试时方法叠加（+BID/+RTC 在高延迟下进一步小增益，d=4 时 0.779→0.791）；可迁移到 Transformer ACT（双臂 Transfer Cube/Insert Box 上持续胜过朴素异步与 LoRA-only）；对 π_0.5 应用不损害其 OOD 能力；30 条轨迹即接近 200 条的性能（0.900/0.905/0.810 vs 0.910/0.936/0.820）",
+   "scope": "Kinetix（组合）、ACT 双臂任务（迁移）、π_0/π_0.5 真机（泛化保持）、低数据量（Table 4）",
+   "locator": "5.1 Table 2; Appendix E.3-E.5"
+  },
+  {
+   "finding": "作者自述局限：(1) 需预先指定最大推理延迟以保证优化覆盖全部可能延迟，实际执行延迟超界可能意外失败；(2) 掩码微调可能需要可观的微调数据，在数据采集昂贵的场景限制实用性",
+   "scope": "作者判断（附录 G）",
+   "locator": "G Limitations"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "需预先设定最大推理延迟上界：训练掩码覆盖的延迟范围有限，实际延迟超过该界时可能发生意外失败",
+    "locator": "G Limitations"
+   },
+   {
+    "limitation": "掩码微调可能需要大量微调数据，在数据采集昂贵或受限的场景下限制实用性",
+    "locator": "G Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "证据集中于 Kinetix 虚构形态仿真与单一 Franka 桌面抓放域（收紧夹爪的自设任务），未覆盖双臂/移动操作/接触丰富任务；真机仅 3 任务 × 30 trials，无统计显著性报告",
+    "basis": "5.1-5.2 节实验范围；附录 E.5 的 ACT 双臂结果仅在仿真"
+   },
+   {
+    "boundary": "延迟上界依赖（作者亦承认）在延迟剧烈波动的真实网络（如远程部署、算力竞争）下是硬约束：附录 F 虽显示对 ±1-2 步延迟误估计鲁棒，但 d 超出训练覆盖（q_max=4）的行为未系统评估",
+    "basis": "G Limitations + 附录 F 仅测试 {d-1,d,d+1,d+2} 内的误估计"
+   },
+   {
+    "boundary": "运动学平滑度证据为定性/曲线级（Figure 5 速度加速度曲线、'fewer abrupt changes'），未给出 jerk 或离散平滑度指标的数值对比，无法与其他论文的平滑度量化直接对表",
+    "basis": "5.2 节 Figure 5 分析段落无量化平滑度数值"
+   },
+   {
+    "boundary": "附录 E.3 存在文本与表格不一致：正文称'每任务 10 条演示'而 Table 4 标注 #Traj=30，低数据量结论的具体口径需谨慎引用",
+    "basis": "E.3 节正文 'using only 10 demonstrations per task' vs Table 4 行标注 '30'"
+   }
+  ]
+ },
+ "transfer_boundary": "证据边界：流匹配（及结构类似的扩散/ACT）动作分块策略、可 LoRA 适配的骨干、延迟可在线估计且不超预设上界、少量微调演示可得（30-200 条）。核心增益在延迟 d≥1 的异步设置下成立；对延迟恒为零的理想同步部署、非分块策略、或延迟剧烈超过训练覆盖范围的场景无证据。平滑度结论基于速度/加速度曲线的定性对比，非 jerk 类数值指标。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "把异步推理失败机制分解为块间不连续+块内不一致并分别给出对应组件（掩码分块/自条件课程 vs 前缀保留采样），机制-组件映射清晰",
+   "LoRA-only 消融排除'参数增加'的替代解释，组件逐加消融完整",
+   "延迟扫描（d=0-4）+ 真机延迟注入（+75/150ms）+ 噪声/尖峰延迟三重压力测试，鲁棒性评估在同类工作中罕见",
+   "真机任务设计有针对性（收窄夹爪开口强制精细控制），阶段制评分提供部分进度信息",
+   "与测试时方法的组合实验（+BID/+RTC）直接回答'训练侧与执行侧是否正交'这一方案族问题"
+  ],
+  "design_risks": [
+   "真机基线数有限：BID 因算力被排除、TE 在真机仅一列；无统计显著性/置信区间（30 trials）",
+   "运动学平滑度为曲线级定性证据，无 jerk/AFR 类数值指标，跨论文可比性弱",
+   "Kinetix 为虚构形态 2D 物理 任务，与真机操作域差距大，仿真结论的迁移性有限",
+   "延迟上界预设是部署硬约束，论文未评估超界行为（作者承认）",
+   "附录 E.3 文本（10 条演示）与 Table 4（#Traj=30）口径不一致，低数据结论需谨慎"
+  ],
+  "baseline_fairness": "所有方法共享同一微调基线模型（附录 E.4 明确 REMAC 只在其上 LoRA 动作专家），仿真协议沿用 RTC 设定，对比公平；RTC 的额外 55-64ms 延迟是其方法固有代价且被如实报告，但 BID 在真机缺席使'训练侧适配优于测试时采样'的结论略打折扣。",
+  "metric_validity": "Kinetix 求解率+执行时间与真机阶段制完成度均为任务级指标，能反映延迟鲁棒性；速度/加速度曲线是平滑度的合理定性代理但缺数值化（无 jerk/方差统计），本综述引用其平滑度结论时应注明为曲线级证据。",
+  "reproducibility": "骨干、LoRA 配置（rank 4/8、插入位置）、损失权重（λ=0.01）、调度细节（q_max=4/q_min=0、分段线性退火）、延迟估计策略（近期窗口最大值）与部署框架（gRPC 远程推理）披露完整；项目页有视频；但未见代码发布声明，Kinetix 专家数据生成流程复现成本中等。",
+  "external_validity": "双域验证（Kinetix 仿真 + Franka 真机）加架构迁移（ACT）与骨干迁移（π_0/π_0.5）覆盖面较好；但任务域窄（桌面抓放）、真机单臂单一设置，对双臂协同、移动操作、高动态接触任务无证据；延迟上界预设限制长尾延迟场景的外推。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2601.20130-C01",
+   "claim": "VLA 分块策略的实时同步控制实际不可达：同步推理要求推理延迟小于控制周期（δ<Δt 即 d=0），而 50Hz 控制（Δt=20ms）下 π_0 仅动作生成就需 76ms（RTX 4090），真机 15Hz 下端到端延迟约 122-140ms（有效延迟 d=2 或 3）——同步推理因此产生块间急动转换与执行时间延长，这是异步推理范式的动机，也是末端轨迹不连续的系统性根源之一。",
+   "stance": "limit",
+   "relation": "支撑综述中'推理延迟导致末端轨迹不连续/抖动'的痛点命题：延迟把执行的动作与最新观测解耦，是分块执行层方案要处理的物理约束。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3 节论证同步推理的实时条件 δ<Δt 不可达并给出 π_0 在 RTX 4090 上 76ms 的动作生成延迟；5.2 节给出真机 15Hz 下端到端延迟 122-140ms（VLA 76-80ms + 网络 34-40ms + 处理 10-20ms），对应有效延迟 d=2 或 3。",
+   "locator": "3 Preliminaries, synchronous inference paragraph",
+   "source_context": "For synchronous inference to achieve real-time execution, the condition δ < ∆t (i.e., d = 0) must hold, which is practically unattainable. For example, with a 50 Hz control frequency (∆t = 20 ms) and π 0 (Black et al., 2024) as the VLA model, action generation alone requires 76 ms on an NVIDIA RTX 4090 GPU, with additional overhead from preprocessing, disk I/O, and network transmission further increasing latency.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "inference latency vs. controller sampling period (ms)",
+    "value_or_direction": "π 0 action generation alone requires 76 ms on RTX 4090 vs. 20 ms control period at 50 Hz; real-world end-to-end delay roughly 122–140ms at 15 Hz",
+    "comparator": "VLA inference latency vs. controller sampling period ∆t",
+    "task_or_sample": "π 0 on NVIDIA RTX 4090; Franka real-world deployment at 15 Hz",
+    "locator": "3 Preliminaries; 5.2 Real-World Environment"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 3 节（50Hz/20ms/76ms/RTX 4090）与 5.2 节（15Hz≈67ms、VLA 76-80ms、网络 34-40ms、处理 10-20ms、合计约 122-140ms、d=2 或 3）数值一致；主张限定在 π_0 与所述硬件，未外推其他模型。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C02",
+   "claim": "论文识别出异步推理下被忽视的第二失败模式'块内不一致'：给定当前感知 o_t，最优执行块应对应 A_t，但在推理延迟 d 与执行时域 h 下，实际执行的前 d 个动作继承自上一块 A_{t-h}（基于旧观测 o_{t-h}），这些前缀动作对当前状态次优，在块内造成感知-动作失配——与块间不连续（跨块潜在模式切换跳变）共同构成异步执行的两大性能退化源。",
+   "stance": "limit",
+   "relation": "支撑综述中'动作分块执行层痛点分类'命题：轨迹精度问题不仅来自块边界不连续，还来自延迟期间执行的动作与当前感知错位，这解释了为何纯边界平滑类方案（TE 等）不足以解决执行失败。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "3 节用 P=3, h=2, d=1 的示例形式化两个挑战：块间不连续源于连续块可能来自不同潜在专家模式；块内不一致源于延迟期间执行的前缀动作以 o_{t-h} 为条件，对基于 o_t 的当前状态次优。",
+   "locator": "3 Preliminaries, intra-chunk inconsistency definition",
+   "source_context": "Given perception o t , the optimal executed chunk should fully correspond to A t . However, under inference delay d with execution horizon h, the first d actions executed are instead taken from A t−h . This results in intra-chunk inconsistency, where these inherited prefix actions become suboptimal for the current state, because they were conditioned on o t−h rather than o t , creating a perception–action mismatch within the chunk.",
+   "evidence_type": "method-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 3 节块内不一致定义段（含 P=3, h=2, d=1 示例引用）与摘要表述（'the robot’s executed action chunk partially misaligns with its current perception'）一致；主张是论文对失败模式的理论刻画，措辞未超出原文。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C03",
+   "claim": "REMAC 通过掩码动作分块在预训练策略上学习修正性调整（使策略在'意图动作与实际执行失配'下保持鲁棒），并用前缀保留采样强化块间连续性，整体不引入任何额外推理延迟（LoRA 训练后合并进主干）。",
+   "stance": "support",
+   "relation": "支撑综述中'训练侧延迟感知适配'方案族的核心机制命题：把延迟鲁棒性训练进策略本身而非依赖测试时修正，与执行层/测试时方案（RTC/BID/TE/PACE）构成正交分支。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要声明 REMAC 学习对预训练策略的修正（掩码动作分块）并引入前缀保留采样强化块间连续性，且不产生额外延迟；4 节给出三组件（前缀掩码 m_d=1[τ≥d]、自条件课程、残差对齐 L_Δ）与式 7 的保留重叠段采样，4.3 节说明 LoRA 训练后合并故推理零开销。",
+   "locator": "Abstract; 4 Methodology (4.1-4.3)",
+   "source_context": "To address this, we propose REMAC, which learns corrective adjustments on the pretrained policy through masked action chunking, enabling the policy to remain resilient under mismatches between intended ac- tions and actual execution during asynchronous inference. In addition, we intro- duce a prefix-preserved sampling procedure to reinforce inter-chunk continuity. Overall, our method delivers more reliable policies without incurring additional latency.",
+   "evidence_type": "method-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对摘要方法段（该引文物理位于提取文本的 ABSTRACT 节，故定位器第一片段为 Abstract；'4 Methodology (4.1-4.3)'为方法细节的补充指向）；与 4.1 掩码定义（式2）、4.2 前缀保留采样（式7）、4.3 'LoRA modules can be further merged into the backbone model layers, such that no additional time cost is introduced' 一致；'无额外延迟'为作者声明且与 RTC 的 55-64ms 额外延迟形成对照，无夸大。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C04",
+   "claim": "Kinetix 12 任务组件消融（延迟 d=0-4）证明增益来自掩码分块训练范式而非参数增加：仅加 LoRA 无性能增益（d=4 时 0.428 甚至低于朴素异步的 0.451），逐级加入前缀掩码（0.636）、自条件课程（0.710）后完整 REMAC 达 0.779；且 REMAC 在全部延迟设置上超过朴素异步、BID 与 RTC，延迟越大优势越大。",
+   "stance": "support",
+   "relation": "支撑综述中'训练侧适配方案族的量化效果与机制归因'命题：各组件可分离贡献，掩码分块是主增益来源。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节 Table 1 报告组件逐加消融：Naive 0.828/0.702/0.639/0.525/0.451（d=0..4），+LoRA 0.825/0.710/0.630/0.510/0.428，+前缀掩码 0.863/0.825/0.752/0.729/0.636，+课程 0.848/0.837/0.805/0.762/0.710，完整方法 0.888/0.879/0.859/0.817/0.779；正文明确 LoRA-only 无增益说明有效性不能归因于参数增加。",
+   "locator": "5.1 Kinetix Environment, Table 1",
+   "source_context": "Table 1 reports the contribution of each component in our method. First, adding LoRA alone—without modifying the training paradigm—yields no performance gain, indicating that the effectiveness of our approach cannot be attributed merely to the increase in parameters. In contrast, progressively incorporating the components described in Sec. 4.1 leads to consistent improvements, with the full method achieving the highest overall success rate.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Kinetix solve rate (12 tasks) under inference delays d = 0 to 4",
+    "value_or_direction": "Naive 0.451 at d = 4; + LoRA 0.428; + prefix masking 0.636; + self-conditioned curriculum 0.710; full REMAC 0.779; at d = 0: Naive 0.828 vs REMAC 0.888",
+    "comparator": "component ablation: naive async vs. LoRA-only vs. full REMAC",
+    "task_or_sample": "12 Kinetix environments, prediction horizon 8, delays d = 0 to 4, averaged over execution horizon settings",
+    "locator": "5.1 Kinetix Environment, Table 1 / Figure 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 5.1 节 Table 1 五行数值（0.828→0.888 @d=0；0.451→0.779 @d=4）与正文消融解读逐值一致；Figure 2 平均曲线显示全延迟胜出 BID/RTC 与正文 'consistently outperforms all baselines across all delay settings' 相符。主张限定 Kinetix 仿真协议。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C05",
+   "claim": "Franka 真机（π_0 骨干、夹爪开口收窄强制精细控制、15Hz、端到端延迟 d=2-3）三难度抓放任务上，REMAC 完成度全部最高：Grasp-Easy 0.903（次优 0.825）、Grasp-Medium 0.943（次优 TE 0.868）、Grasp-Hard 0.812（次优 RTC 0.753）；定性上同步推理频繁停顿导致掉落与定位不准，朴素异步/TE 易过早或过晚抓放，RTC 受自身额外延迟拖累。",
+   "stance": "support",
+   "relation": "支撑综述中'延迟感知训练适配的真机量化效果'命题：在真实延迟（而非仿真注入）下仍全面胜出测试时 SOTA。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节 Table 3 报告四基线与本文方法的平均完成进度（阶段制四步得分）：Sync 0.805/0.718/0.670，Naive 0.825/0.825/0.460，TE 0.825/0.868/0.717，RTC 0.823/0.848/0.753，Ours 0.903/0.943/0.812；正文给出各基线失败模式的定性归因。",
+   "locator": "5.2 Real-World Environment, Table 3",
+   "source_context": "Results. Table 3 reports the average completion progress for each task, showing that our method achieves higher completion rates across all tasks. During execution, synchronous inference produces frequent pauses, often leading to unintended object drops and inaccurate localization. Asynchronous baselines generate smoother trajectories without pronounced jerkiness. However, Naive Async and Temporal Ensembling remain prone to premature or delayed grasping and placement. In contrast, RTC suffers from the additional inference delay it introduces.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average completion progress (stage-based, 4 sub-task steps, 30 trials per task)",
+    "value_or_direction": "Grasp-Easy 0.903 vs Sync 0.805 / Naive 0.825 / TE 0.825 / RTC 0.823; Grasp-Medium 0.943 vs TE 0.868; Grasp-Hard 0.812 vs RTC 0.753",
+    "comparator": "REMAC vs. synchronous, naive async, temporal ensembling, RTC",
+    "task_or_sample": "Franka Research 3 grasp-and-place tasks (Grasp-Easy/Medium/Hard), π 0 backbone, 30 trials per method, 300-step cap",
+    "locator": "5.2 Real-World Environment, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 5.2 节 Table 3 全部数值与正文归因描述一致；任务设置（Franka Research 3、夹爪收窄、15Hz、30 trials、阶段制四步评分）与 5.2 节 Setup/Task Design 段一致。主张限定该真机设置与 π_0 骨干。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C06",
+   "claim": "运动学平滑度证据：150ms 注入延迟下对 15 次成功回合的平均速度与加速度分析显示，同步推理产生突发性、周期性的运动学变化，异步推理方法整体更平滑，其中 REMAC 动力学最稳定、突发变化最少，同时任务完成更快——即训练侧延迟适配不仅提升完成度也直接改善末端运动的平稳性。",
+   "stance": "support",
+   "relation": "直接支撑综述中'方案对末端轨迹平滑度的改善'命题：这是本文对速度/加速度曲线的量化对比结论（曲线级证据，无 jerk 数值）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节 Figure 5 在 Grasp-Hard、150ms 注入延迟、全部策略成功的回合上对比任务进度与平均运动学：同步推理呈周期性突变，异步方法平滑，本文方法最稳定且完成更快。",
+   "locator": "5.2 Real-World Environment, Figure 5",
+   "source_context": "Quantitatively, analysis of average robot velocity and acceleration over 15 trials shows that synchronous inference produces abrupt, periodic kinematic changes, whereas asynchronous inference methods yield smoother trajectories. Among these, our method achieves the most stable dynamics with fewer abrupt changes, highlighting both speed and stability.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "average robot velocity and acceleration over 15 trials",
+    "value_or_direction": "REMAC most stable dynamics with fewer abrupt changes vs. synchronous (abrupt, periodic changes) and other async baselines",
+    "comparator": "REMAC vs. synchronous inference and RTC under 150 ms injected delay",
+    "task_or_sample": "Grasp-Hard, 15 successful rollouts, 150 ms injected delay",
+    "locator": "5.2 Real-World Environment, Figure 5"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 5.2 节 Figure 5 分析段（15 trials、abrupt periodic、most stable、fewer abrupt changes）；注意该结论为速度/加速度曲线级对比，论文未给出 jerk 类数值指标，主张措辞已限定为曲线级证据。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C07",
+   "claim": "延迟鲁棒性：注入额外 75ms/150ms 延迟（模拟慢硬件/慢网络部署，总有效延迟 d=3-5）后，REMAC 仍持续超过所有基线，显示训练侧延迟适配对延迟水平变化的鲁棒性。",
+   "stance": "support",
+   "relation": "支撑综述中'训练侧延迟适配方案族的适用条件与鲁棒性'命题：真实部署的延迟波动（慢硬件/慢网络）不侵蚀其增益。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节 Figure 4 在 Grasp-Hard 上报告 +0/+75/+150ms 注入延迟的结果：REMAC 在总延迟 3-5 下仍全胜；紧随其后正文进一步给出机制性反转——延迟增大时朴素异步相对变好（更长执行时域减少块切换）、RTC 显著退化（见 C10 卡）。附录 Table 7 显示噪声/尖峰延迟下 REMAC 仍超过准确延迟下的 RTC。",
+   "locator": "5.2 Real-World Environment, Figure 4",
+   "source_context": "Figure 4 reports results with additional latency injections of 75ms and 150ms, simulating deploy- ment under slower hardware and network conditions. Even with total inference delays of 3 − 5, our method consistently outperforms all baselines, demonstrating robustness to varying delay levels.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "completion progress under injected latency",
+    "value_or_direction": "REMAC outperforms all baselines even with total inference delays of 3 to 5; RTC degrades while Naive Async comparatively improves",
+    "comparator": "REMAC vs. Sync, Naive, TE, RTC under delay injections of 75ms and 150ms",
+    "task_or_sample": "Grasp-Hard with additional latency injections of 75ms and 150ms (Franka, π 0)",
+    "locator": "5.2 Real-World Environment, Figure 4; Appendix F, Table 7"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对 5.2 节 Figure 4 段落（75ms/150ms、延迟 3-5、全胜、Naive 相对变好与 RTC 退化的归因句）；附录 F Table 7 数值（如 d=4：Ours+噪声 0.757 vs RTC 准确 0.588）支持更强的鲁棒性结论。主张限定注入延迟实验设置。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C08",
+   "claim": "REMAC 与测试时方法正交可组合：因其只修改骨干策略，可与 BID/RTC 叠加且在高延迟下进一步增益（d=4 时 0.779→+RTC 0.791），证明训练侧适配与测试时修正是互补而非竞争关系，REMAC 可作为异步执行的更强骨干。",
+   "stance": "support",
+   "relation": "支撑综述中'方案族组合性'命题：训练侧延迟适配与执行层/测试时方法（本族 PACE 等）可叠加使用，方案族边界不是互斥的。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.1 节 Table 2 报告组合结果：Ours 0.888/0.879/0.859/0.817/0.779，+BID 0.888/0.880/0.862/0.821/0.781，+RTC 0.888/0.879/0.864/0.826/0.791；正文说明增益虽小但一致，高延迟下更大。",
+   "locator": "5.1 Kinetix Environment, Table 2",
+   "source_context": "Our method can further be integrated with other test-time approaches such as BID and RTC, since it only modifies the backbone policy. Table 2 shows that, although the improvements are modest, integration consistently provides additional performance gains across delay settings, with larger improvements observed under higher delays. This demonstrates both the compatibility of our approach with existing test-time strategies and its potential as a plug-and-play method.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Kinetix solve rate when combined with test-time methods",
+    "value_or_direction": "Ours 0.779 at d = 4; + BID 0.781; + RTC 0.791; gains modest but consistent, larger under higher delays",
+    "comparator": "REMAC alone vs. REMAC + BID vs. REMAC + RTC",
+    "task_or_sample": "12 Kinetix environments, delays d = 0 to 4",
+    "locator": "5.1 Kinetix Environment, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对 5.1 Kinetix Environment 节 Table 2（Integration with test-time methods）三行数值（d=0..4：Ours/+BID/+RTC = 0.888/0.888/0.888、0.879/0.880/0.879、0.859/0.862/0.864、0.817/0.821/0.826、0.779/0.781/0.791）与正文\"增益小但一致、高延迟更大\"一致。提取文本中该内容位于 5.1 KINETIX ENVIRONMENT 标题下（\"Ablations and Analysis\" 为该节内段落引导语而非标题），故定位器写为 5.1 Kinetix Environment, Table 2。主张限定 Kinetix 设置。"
+   }
+  },
+  {
+   "card_id": "2601.20130-C09",
+   "claim": "作者自述两条局限：(1) 需预先指定最大推理延迟以保证优化覆盖全部可能延迟，实际执行延迟超过该界时可能发生意外失败；(2) 掩码微调可能需要可观的微调数据，在数据采集昂贵或受限的场景下限制实用性（尽管附录 E.3 显示 30 条轨迹已接近 200 条的性能）。",
+   "stance": "limit",
+   "relation": "支撑综述中'延迟感知方案的未解痛点'命题：延迟上界预设是部署硬约束，数据需求虽低但非零，两者界定该方案族的适用边界。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "附录 G 明确列出两条局限：最大推理延迟需预先设定（超界可能意外失败）与微调数据需求可能可观。附录 E.3 的低数据实验（Table 4：30 条轨迹 0.900/0.905/0.810 vs 200 条 0.910/0.936/0.820）部分缓解第二条，但正文与表格的演示数口径（10 vs 30）存在不一致。",
+   "locator": "G Limitations",
+   "source_context": "Our method is not without limitations. First, it requires specifying a maximum inference delay in advance to ensure that the optimization process covers the full range of possible delays. If the actual delay during execution exceeds this bound, unexpected failure may occur. Second, the approach may demand a substantial amount of finetuning data for masked finetuning, which could limit practicality in settings where data collection is costly or constrained.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对附录 G 两句局限原文；'30 条轨迹接近 200 条性能'来自附录 E.3 Table 4（注意正文写 10 条演示而表格标 #Traj=30，已在 reader_inferred 中标注该不一致）。主张为作者自述边界的忠实转述。"
+   }
+  }
+ ],
+ "core_citations": [
+  "2410.24164",
+  "2506.07339",
+  "2408.17355",
+  "2304.13705",
+  "2303.04137",
+  "2504.16054"
+ ],
+ "notes": "家族定位：本篇属于'训练侧延迟感知适配'分支——通过掩码动作分块把延迟鲁棒性训练进策略（LoRA 后训练），与执行层测试时方法（RTC/BID/TE、PACE）正交且可叠加（Table 2）。对本综述的独特价值：(1) 把异步执行失败机制拆成块间不连续+块内不一致，为'分块抖动机制根源'提供比单纯边界不连续更完整的分类；(2) 给出 VLA 推理延迟 vs 控制周期的硬数字（76ms vs 20ms@50Hz；122-140ms@15Hz）；(3) 延迟注入实验揭示方案族反转规律（高延迟下朴素异步相对变好、RTC 退化），是跨方案选型的重要边界条件；(4) 与 PACE（2606.00537）同引用 RTC/π_0 生态，PACE 解决'执行多少步'、REMAC 解决'延迟下执行的块本身不可靠'，两者互补可组合。引用注意：平滑度证据为速度/加速度曲线级（无 jerk 数值）；附录 E.3 文本与表格数据口径不一致（10 vs 30 条）；延迟上界需预设。"
+}

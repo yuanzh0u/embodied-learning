@@ -1,0 +1,328 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.06033",
+  "title": "RealDexUMI: A Wearable Universal Manipulation Interface for Dexterous Robot Learning",
+  "published": "2026-06-04",
+  "url": "https://arxiv.org/abs/2606.06033",
+  "authors": [
+   "Chaoyi Xu",
+   "Yixuan Jiang",
+   "Jiahui Huan",
+   "Yuhui Fu",
+   "Haoyu Zhou",
+   "Weitian Yuan",
+   "Jiayi Yu",
+   "Wanpeng Zhang",
+   "Haoqi Yuan",
+   "Zongqing Lu"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "RealDexUMI 用共享灵巧手末端模块+掌侧同构手套彻底绕开手部重定向误差，并把 6-DoF 追踪位姿仅用于 hand-frame 相对动作标签——直接回应追踪精度要求如何随动作表示设计而变化；state-as-action 消融量化标签保真度对可用性的影响。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "deployable dexterity 的问题定义：重定向/embodiment 转换会损失可部署灵巧性。"
+   },
+   {
+    "locator": "2 Related Work",
+    "role": "relevant-core",
+    "purpose": "Table 1 各演示接口对比；对 DexUMI（外骨骼接触中介、状态而非命令、依赖视觉修补）的批评定位。"
+   },
+   {
+    "locator": "3 RealDexUMI",
+    "role": "method-or-design",
+    "purpose": "共享末端模块、6 主动 DoF 手、磁编码器同构手套（命令空间直采）、演示采集流与 action-state correspondence。"
+   },
+   {
+    "locator": "4 Policy Learning and Deployment",
+    "role": "method-or-design",
+    "purpose": "4.1 追踪位姿仅用于 hand-frame 相对动作标签、绝对位姿不进观测；4.2 跨本体部署仅换 IK 与底层控制器。"
+   },
+   {
+    "locator": "5 Experiments",
+    "role": "results-or-analysis",
+    "purpose": "Table 2 主结果与消融（88.75%/70.00%/51.25%）、Table 3 跨本体、5.3 采集端接口对比（AVP/Manus）。"
+   },
+   {
+    "locator": "6 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "感知局部化与 DoF/重量/可控性权衡。"
+   },
+   {
+    "locator": "7 Conclusion",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论。"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "A 手套磁编码器与标定、B 数据流与 latest-sample 同步（6-DoF 位姿 100Hz 仅作标签）、C 评估协议、D 训练细节、F 采集接口对比协议。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，不含独立证据内容。"
+   }
+  ]
+ },
+ "research_question": "如何让可穿戴 robot-free 采集接口同时保持可部署灵巧性（deployable dexterity）——即演示中的手动作、接触、触觉与观测在部署端可执行且分布一致？",
+ "contributions": [
+  "共享灵巧末端模块（6 主动 DoF 手 + 手内相机 + 指尖触觉阵列）：采集与部署使用同一硬件，实现 zero-gap 末端数据。",
+  "掌侧同构遥操作手套：6 个 AS5600L 磁编码器直接采集部署手命令空间中的可执行命令，免重定向。",
+  "6-DoF 追踪位姿仅用于构造 hand-frame 相对动作标签（∆T = T_t^{-1} T_{t+k}），绝对位姿不进策略观测，从而摆脱采集帧-机器人基座帧对齐假设。",
+  "8 个真实任务平均成功率 88.75%（ACT），跨 Franka FR3/RealMan RM65/PND Adam-U 三本体重部署不重新训练。"
+ ],
+ "method": {
+  "summary": "采集：操作者佩戴共享末端模块，用掌侧同构手套（磁编码器→线性映射到手的命令范围）直接下达可执行手命令；记录时间对齐的手命令、手部状态、手内 RGB、指尖触觉与 6-DoF 追踪位姿。标签：追踪位姿经固定外参转换到 hand 参考系后构造相对位姿标签；手命令直接作标签（保留 action-state correspondence）。部署：同一手模块装上机器人臂，策略预测 hand-frame 相对动作与手命令，由机器人侧 IK+底层控制器实现。",
+  "assumptions": [
+   "追踪器与手模块刚性连接，固定外参已知。",
+   "相对位姿标签对全局坐标系的常值偏移不变（∆T = T_t^{-1}T_{t+k} 消去基座帧依赖）。",
+   "手套磁编码器读数经开机参考位姿标定后线性映射到手命令范围即足够精确。",
+   "采集时的接触由部署手本身完成，因此接触几何与触觉分布与部署一致。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "100+ 小时演示，8+ 灵巧任务，每任务 200+ episodes"
+  ],
+  "tasks": [
+   "Cube pick-and-place",
+   "Multi-object grasping",
+   "Plug insertion",
+   "Cap twisting",
+   "Tea picking with tool",
+   "Drawer stowing",
+   "Egg carton handling",
+   "Bimanual package scanning"
+  ],
+  "embodiments": [
+   "Franka FR3（主评估）",
+   "RealMan RM65",
+   "PND Adam-U（跨本体部署）",
+   "RealDexUMI 6 主动 DoF 灵巧手模块"
+  ],
+  "sample_or_scale": "策略评估：8 任务 × 20 次真实机器人试验；跨本体：2 任务 × 3 本体 × 20 次 = 120 次；采集对比：同操作者每接口 10 分钟练习后评 2 任务。"
+ },
+ "evaluation": {
+  "design": "全任务成功率（20 次/任务）；单因子消融（去触觉、state-as-action 标签）；跨本体不重训练部署；采集端接口对比（AVP 臂手遥操作、Manus 手套重定向、徒手参考）。",
+  "baselines": [
+   "state-as-action 监督变体",
+   "w/o tactile 变体",
+   "Diffusion Policy 后端（Table 7, 63.75%）",
+   "AVP-based arm-hand teleoperation",
+   "Manus-glove retargeting"
+  ],
+  "metrics": [
+   "全任务成功率 [0,1]（20 次试验）",
+   "采集成功率与完成时间（Fig. 8）",
+   "动作预测 L1 loss（训练诊断）"
+  ],
+  "ablations": [
+   "w/o tactile（88.75%→70.00%）",
+   "state-as-action（→51.25%）",
+   "ACT vs Diffusion Policy 后端"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "6-DoF 追踪位姿仅用于构造 hand-frame 相对动作标签，绝对位姿不进入策略观测，策略从局部视觉/触觉/手部状态预测末端运动而非记忆全局位姿。",
+   "scope": "RealDexUMI 策略接口设计",
+   "locator": "4.1 Policy Interface"
+  },
+  {
+   "finding": "动作标签用可执行手命令（而非测量手部状态）时平均成功率 88.75%，换成 state-as-action 降至 51.25%，去触觉降至 70.00%。",
+   "scope": "8 任务 × 20 次试验，ACT 后端",
+   "locator": "5.1 Policies Learned from RealDexUMI Demonstrations, Table 2"
+  },
+  {
+   "finding": "Manus 手套重定向基线在 cap twisting 成功但在依赖精确指尖捏取的 tea picking 上急剧下降，说明丰富的人手运动在需要重定向到机器人手时并不充分。",
+   "scope": "采集端接口对比，同操作者两任务",
+   "locator": "5.3 Collection-Time Dexterity"
+  },
+  {
+   "finding": "作者指认 FastUMI-100k 与 TouchGuide 通过启发式坐标对齐把演示轨迹映射到机器人执行帧，该做法把采集绑定到预定义结构化工作空间与部署时基座帧。",
+   "scope": "对既有 UMI 族系统的批评（4.1）",
+   "locator": "4.1 Policy Interface"
+  },
+  {
+   "finding": "6-DoF 追踪器型号与精度全文未报告；其位姿经固定外参转换到 hand 参考系，100Hz 记录且仅用于标签（附录 B.1）。",
+   "scope": "RealDexUMI 系统描述",
+   "locator": "4.1 Policy Interface; Appendix"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "传感以局部（手内）为主，限制需要物体搜索、长程规划或任务进度推理的任务；加入 ego/全局视角并保持采集-部署对齐仍具挑战。",
+    "locator": "6 Limitations"
+   },
+   {
+    "limitation": "6 主动 DoF 手在灵巧性、重量与可穿戴可控性之间存在权衡，未覆盖更高 DoF 灵巧手的能力。",
+    "locator": "6 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "6-DoF 追踪器的型号、精度与漂移特性全文未报告；相对标签虽消去全局帧依赖，但追踪噪声/短时漂移仍直接进入相对位姿标签，其影响未量化。",
+    "basis": "3.4/4.1/附录 B 仅说明追踪位姿用途与固定外参转换，无任何精度指标。"
+   },
+   {
+    "boundary": "同构手套的线性映射+开机参考标定假定关节读数-命令映射稳定；与 DexUMI 报告的机器人手回差/重启漂移相类比，该映射的长期稳定性未验证。",
+    "basis": "附录 A.3 的标定协议为每次采集前的参考位姿记录，无重复性实验。"
+   },
+   {
+    "boundary": "所有策略评估使用同一 RealDexUMI 手模块（zero-gap 的前提是共享硬件）；结论不覆盖'采集手与部署手不同'的情形。",
+    "basis": "5 Experiments 明确部署在 Franka FR3 上使用与采集相同的末端模块。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于采集与部署共享同一灵巧手模块、以 hand-frame 相对动作为策略接口的 robot-free 灵巧操作；末端全局轨迹精度依赖未标定的 6-DoF 追踪器（仅影响相对标签）；需要全局绝对轨迹精度、跨不同手型迁移或长程全局推理的场景超出验证范围。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "用共享末端模块从硬件上消除观测/接触/命令的采集-部署分布差，是'同构性要求'的最强工程解。",
+   "state-as-action 消融直接量化了标签保真度（可执行命令 vs 测量状态）对可用性的影响（-37.5pp）。",
+   "latest-sample 同步协议避免了外插，时间对齐策略显式声明（附录 B.2）。"
+  ],
+  "design_risks": [
+   "6-DoF 追踪器完全未标定，末端轨迹标签的绝对精度不可审计。",
+   "Table 1 的'遥操作复杂度'来自 20 人主观问卷（附录 G），非性能指标。",
+   "采集对比仅 2 任务、单操作者、10 分钟练习，统计效力有限。"
+  ],
+  "baseline_fairness": "消融共享观测/动作接口与训练配置；Manus 与 AVP 基线由同一操作者执行且练习时间相同；但 DP 后端'未充分调参'，仅作兼容性测试。",
+  "metric_validity": "全任务成功率为部署直接相关指标；长程任务另报累计子目标完成度作失败诊断且明确不当作独立试验平均，口径严谨。",
+  "reproducibility": "承诺发布数据集；附录给出流速率（RGB 30Hz/触觉 20Hz/手状态 100Hz/手套命令 200Hz/位姿 100Hz）与训练超参；但追踪器型号、磁编码器映射误差未给。",
+  "external_validity": "限于单一自研手模块与桌面任务；全局感知缺失场景（搜索/长程）由作者自行排除；跨本体证据限于固定基座机械臂。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.06033-C01",
+   "claim": "RealDexUMI 把 6-DoF 追踪位姿仅用于构造 hand-frame 相对动作标签（∆T_{t,k}=T_t^{-1}T_{t+k}），绝对位姿不进入策略观测，使策略从局部视觉、触觉与手部状态预测末端运动，而非记忆采集特定的全局位姿——从设计上放宽了对全局追踪帧精度与采集-部署坐标对齐的要求。",
+   "stance": "conditional",
+   "relation": "回答'追踪精度要求如何被动作表示设计调节'：相对化标签使全局坐标系误差/对齐误差在标签构造中消去，追踪精度只需保证局部相对运动保真；这是降低手部追踪精度门槛的表示级缓解手段。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.1 明确绝对位姿不进观测、仅用 T_t 构造相对标签，并给出不记忆全局位姿的动机；附录 B.1 确认 6-DoF 位姿流（100Hz）仅作动作标签。",
+   "locator": "4.1 Policy Interface",
+   "source_context": "only to construct hand-frame relative action labels, so the policy predicts end-effector motion from local visual, tactile, and hand-state cues rather than memorizing a collection-specific global pose.",
+   "evidence_type": "system-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 4.1，且与 3.4'tracker poses used only to construct hand-frame relative motion labels'及附录 B.1 一致；卡面限于设计声明，未声称实测精度收益。"
+   }
+  },
+  {
+   "card_id": "2606.06033-C02",
+   "claim": "RealDexUMI 作者指认 FastUMI-100k 与 TouchGuide 等先前系统通过启发式坐标对齐把演示轨迹映射到机器人执行帧，认为该做法把演示硬编码到预定义结构化工作空间、并把采集绑定到部署时的机器人基座帧，与非结构化场景下的 robot-free 采集不兼容。",
+   "stance": "limit",
+   "relation": "为'采集端轨迹到本体末端轨迹的坐标转换'这一传播路径提供批评性证据：依赖全局帧对齐的 UMI 类系统把工作空间假设引入数据，限制其在非结构化环境的适用性。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "4.1 在论证相对标签动机时点名 FastUMI[25]（即 FastUMI-100k）与 TouchGuide[50] 的启发式坐标对齐并给出三点批评；该陈述是对他文的概括，需结合被引原文核实。",
+   "locator": "4.1 Policy Interface",
+   "source_context": "Prior systems such as FastUMI [25] and TouchGuide [50] map demonstration trajectories into robot execution frames through heuristic coordinate alignment. This alignment hard-codes demonstrations to a predefined structured workspace and ties data collection to a deployment-time robot base frame.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 4.1；卡面以'作者指认'措辞保留其对被引工作的概括性质，未当作本文实验结论。"
+   }
+  },
+  {
+   "card_id": "2606.06033-C03",
+   "claim": "动作标签保真度显著影响可部署性：8 任务平均全任务成功率从可执行手命令标签的 88.75% 降到 state-as-action（以测量手部状态作标签）的 51.25%，去触觉变体为 70.00%；差距在需要维持/恢复接触的任务上最大。",
+   "stance": "support",
+   "relation": "量化'手部轨迹/动作标签的表示保真度→部署端可用性'：命令-状态对应（action-state correspondence）缺失会使成功率下降 37.5pp，说明标签层面的精度（可执行命令 vs 事后状态）比传感精度本身更直接决定数据可用性。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table 2 给出三行完整消融（88.75/70.00/51.25），5.1 正文解释 state-as-action 在维持/恢复接触任务上恶化最明显。",
+   "locator": "5.1 Policies Learned from RealDexUMI Demonstrations (Table 2)",
+   "source_context": "RealDexUMI 1.00 1.00 0.85 1.00 0.80 0.85 0.70 0.90 88.75%\nw/o tactile 0.90 1.00 0.45 0.80 0.55 0.70 0.60 0.60 70.00%\nState-as-action 0.65 0.85 0.30 0.35 0.20 0.45 0.60 0.70 51.25%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "full-task success rate (Table 2, Avg over 8 tasks)",
+    "value_or_direction": "88.75% → 51.25% (State-as-action); 70.00% (w/o tactile)",
+    "comparator": "executable hand-command labels vs state-as-action labels vs w/o tactile",
+    "task_or_sample": "8 个真实机器人任务（Cube/Multi-obj/Plug/Cap/Tea/Drawer/Egg/Bimanual），每任务 20 次试验，ACT 后端",
+    "locator": "5.1 Policies Learned from RealDexUMI Demonstrations (Table 2)"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "三行表格数据与 Table 2 逐字一致，Avg 列与 5.1 正文'88.75%→70.00%'陈述一致；卡面结论限于 ACT 后端与 20 次/任务协议。"
+   }
+  },
+  {
+   "card_id": "2606.06033-C04",
+   "claim": "在采集端接口对比中，Manus 手套重定向基线在 cap twisting 上成功，但在依赖精确指尖捏取的 tea picking（用镊子）上表现急剧下降；作者据此指出：丰富的人手运动本身在必须重定向到机器人手时并不充分。",
+   "stance": "limit",
+   "relation": "为'手部检测/重定向精度瓶颈'提供对照证据：动捕手套方案能捕获丰富手部运动，但重定向到机器人手时在精细指尖任务上失效——误差来自跨运动学映射而非采集质量。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.3 报告 Manus 基线两任务的反差表现并给出'must be retargeted to a robot hand'的归因；Fig. 8 给出逐方法成功次数（同操作者、10 分钟练习后评估）。",
+   "locator": "5.3 Collection-Time Dexterity",
+   "source_context": "However, its performance drops sharply on tea picking, where tweezer use depends on precise fingertip pinching. This contrast shows that rich human-hand motion alone is insufficient when it must be retargeted to a robot hand.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 5.3；Fig. 8 的逐方法成功计数在提取文本中仅作图内数字出现、无法与任务列严格对应，故卡面保持定性，不引用具体次数。"
+   }
+  },
+  {
+   "card_id": "2606.06033-C05",
+   "claim": "RealDexUMI 的末端位姿真值来源未被精度标定：一个刚性安装于手模块的 6-DoF 追踪器经固定外参转换到预定义 hand 参考系（100Hz 记录，仅用于构造相对动作标签），但全文未给出追踪器型号、绝对精度或与独立真值的对比。",
+   "stance": "gap",
+   "relation": "与 FastUMI（动捕标定 T265 达 10.5-36mm）形成对照：该系统的相对标签设计规避了全局精度审计需求，但也使'追踪误差对相对标签的影响'无法从论文内部量化——是综述中'真值精度透明度'维度的缺口证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.1 说明追踪器刚性安装与固定外参转换；附录 B.1 给出 100Hz 记录与仅作标签的用途；通读全文（含附录 A 手套、B 同步、D 训练）未见追踪器型号或精度数据。",
+   "locator": "4.1 Policy Interface",
+   "source_context": "The 6-DoF tracker is rigidly mounted to the hand module, and its pose is converted to a predefined hand reference frame through a fixed transform.",
+   "evidence_type": "system-description",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字出自 4.1；'型号与精度未报告'经全文核对（附录 A/B/D 均无），缺口结论成立。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Liu et al., FastUMI-100k, arXiv:2510.08022, 2025（C02 中被指认使用启发式坐标对齐的先前系统）",
+  "Xu et al., DexUMI, CoRL 2025（2.2 中被批评为接触由外骨骼中介、记录状态而非命令、依赖视觉修补的前任系统）"
+ ],
+ "notes": "RealDexUMI 对本综述的核心贡献是把'手部追踪精度'问题转化为'标签表示'问题：相对位姿标签+可执行手命令标签使系统对全局追踪精度与坐标对齐的依赖最小化，代价是共享硬件绑定。其 state-as-action 消融（-37.5pp）是'标签保真度即数据可用性'的强证据。追踪器精度未标定与 FastUMI 的动捕标定形成方法论对照。"
+}

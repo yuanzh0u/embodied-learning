@@ -1,0 +1,681 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2510.08022",
+  "title": "FastUMI-100K: Advancing Data-driven Robotic Manipulation with a Large-scale UMI-style Dataset",
+  "published": "2025-10",
+  "url": "https://arxiv.org/abs/2510.08022",
+  "authors": [
+   {
+    "name": "Kehui Liu"
+   },
+   {
+    "name": "Zhongjie Jia"
+   },
+   {
+    "name": "Yang Li"
+   },
+   {
+    "name": "Zhaxizhuoma"
+   },
+   {
+    "name": "Pengan Chen"
+   },
+   {
+    "name": "Song Liu"
+   },
+   {
+    "name": "Xin Liu"
+   },
+   {
+    "name": "Pingrui Zhang"
+   },
+   {
+    "name": "Haoming Song"
+   },
+   {
+    "name": "Xinyi Ye"
+   },
+   {
+    "name": "Nieqing Cao"
+   },
+   {
+    "name": "Zhigang Wang"
+   },
+   {
+    "name": "Jia Zeng"
+   },
+   {
+    "name": "Dong Wang"
+   },
+   {
+    "name": "Yan Ding"
+   },
+   {
+    "name": "Bin Zhao"
+   },
+   {
+    "name": "Xuelong Li"
+   }
+  ]
+ },
+ "review": {
+  "question": "近一年鱼眼镜头（含全景/环视/超广角相机）在具身智能领域的应用方式、效果与局限是什么？哪些任务获益、哪些受限？",
+  "topic_ids": [
+   "EA-SENSOR",
+   "EA-HARDWARE"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "dataset",
+  "relevance": {
+   "decision": "include",
+   "reason": "UMI 系腕装鱼眼接口规模化的代表证据：(1) 把'多视角腕装鱼眼图像'列为 100K+ 轨迹数据集的三大模态之一（与末端状态、文本标注并列），是鱼眼相机作为采集接口从单系统走向数据基础设施的直接证据；(2) 给出'鱼眼视角与常规 RGB 等效'的作者主张（π0 微调 9 短程任务 73.33%-93.33%），是综述问题'哪些任务获益'的量化答案；(3) 从数据集侧独立发现腕鱼眼第一人称视角的长程局限（Heat Food 后续阶段 0%：相似观测混淆+缺第三人称全局视角），与 ActiveUMI 的受控相机对照实验（腕-only 26% vs +头相机 70%）形成两条独立证据链的汇合。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1-2, Abstract and I Introduction",
+    "role": "problem",
+    "purpose": "确认问题定义：遥操作数据在规模/轨迹平滑度/跨本体适配上的限制，UMI 系手持采集（T265 替代 GoPro VIO+SLAM）为中间道路，FastUMI-100K 以 100K+ 轨迹/600 小时/54 任务规模化该范式。"
+   },
+   {
+    "locator": "page 2, II Related Work (II.A Sensor-enhanced Interface Dataset, II.B Large-Scale Data in Policy Learning)",
+    "role": "relevant-core",
+    "purpose": "定位 UMI→FastUMI 谱系：Fast-UMI 保留腕部鱼眼视角+T265 直接记录 6-DoF 末端位姿（避免重型离线 SLAM）；UMI 系手持数据集保留部署侧腕视角、本质硬件解耦；对照 RoboNet/BridgeData V2/DROID/OXE/AgiBot 大数据集格局。"
+   },
+   {
+    "locator": "page 3-4, III Data Collection and Processing (III.A Hardware Design, III.B Data Collection Pipeline, III.C Multi-Device Multi-Sensor Alignment, III.D Data Annotation)",
+    "role": "method-or-design",
+    "purpose": "精读采集设计：T265 跟踪与 GoPro 鱼眼视觉的职能分离、双臂 2×T265+2×GoPro@20Hz、三阶段采集流水线（实时鱼眼可视化监控丢帧/漂移、速度异常检测自动删除漂移轨迹）、ROS 近似时间同步亚毫秒对齐（最大误差 1/120 秒）、双层文本标注（GPT-4o 子任务预标注+人工校验、RT-H 式运动级；自中心坐标系迫使目标位置式语言）。"
+   },
+   {
+    "locator": "page 4-6, IV Dataset Analysis (IV.A Task Types, IV.B Objects, IV.C Task Horizon, IV.D Flexibility and Human-like Motion)",
+    "role": "data-or-setting",
+    "purpose": "核对数据集构成：54 任务六分类（基础/复合/铰接/柔性/精细/双臂协作）、数百物体跨 7 大类、轨迹 6-25 秒（120-500 帧@20Hz）、采集效率为遥操作 1/5（衣物折叠 10s vs AgiBot 50s）、与 AgiBot 的速度分布对比（类人运动特性）。"
+   },
+   {
+    "locator": "page 6-8, V Experimental Evaluation (V.A Single-task Imitation Learning, V.B Cross-platform Deployment, V.C Fine-tuning on VLA Large Models)",
+    "role": "results-or-analysis",
+    "purpose": "核对四张表：Table I DP 七子任务双平台 33.33%-66.67%；Table II ACT 变体 joint vs TCP（源自 FastUMI）；Table III π0-base 九短程任务 73.33%-93.33%（鱼眼等效性主张的实证基础）；Table IV 长程 staged 成功率（Make Sandwich 100→73.33、Wash Clothes 93.33→60、Heat Food 100→0→0 与相似观测/缺第三人称视角归因）；跨平台免微调迁移与 Wash Clothes 超出 Xarm6 工作空间的边界盒过滤。"
+   },
+   {
+    "locator": "page 8, VI Conclusion and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认结论主张（三类基线高成功率、免微调跨平台、π0 兼容）与未来工作（双臂协作扩展、UMI 数据与常规数据 VLA 融合训练）；长程局限（相似观测+第一人称腕视角）已在 V.C 末尾讨论。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "page 8-9, References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表，仅按需核对核心引文（UMI [20]、FastUMI [21]、π0 [1]、AgiBot [11]、RT-H [31]、Diffusion Policy [32]、ACT [33]）条目。"
+   }
+  ]
+ },
+ "research_question": "腕装鱼眼相机作为 UMI 系大规模数据采集的核心视觉模态：应用方式（多视角腕装鱼眼+末端状态+双层文本标注的多模态数据集构成、T265/GoPro 职能分离、双臂 2×2 配置）、效果（鱼眼视角与常规 RGB 的等效性主张及 DP/ACT/π0 三类基线实证、采集效率红利、跨本体免微调迁移）、局限（长程任务相似第一人称观测混淆推断且缺第三人称全局视角、自中心坐标系约束标注语言、人手轨迹超出小工作空间平台）。",
+ "contributions": [
+  "FastUMI-100K 数据集：100K+ 轨迹（600 小时交互数据，含 FastUMI 先行数据集）、54 类任务、数百种真实场景物体、5 个标准化家庭环境，模态含末端状态、多视角腕装鱼眼图像与 15,000 条双层文本标注。",
+  "双臂 FastUMI 采集系统：模块化硬件解耦设计+集成轻量跟踪（T265），双夹爪末端各集成一枚 T265 与一枚 GoPro 鱼眼相机，20Hz 同步记录，单臂/双臂统一采集。",
+  "工程化采集流水线：三阶段流程（任务设计与参考时间→实时鱼眼图像+T265 轨迹可视化监控→线/角速度异常检测自动删除 SLAM 漂移轨迹）+ ROS 时钟多传感器亚毫秒对齐（最大误差 1/120 秒）。",
+  "双层文本标注系统：GPT-4o 子任务预标注+GUI 人工校验、RT-H 式运动级语义单元，且因第一人称视频自中心坐标系采用目标位置式语言（规避相对方位歧义）。",
+  "三类基线实证：DP（7 子任务双平台）、ACT 变体（joint vs TCP）、π0-base 微调（9 短程+3 长程 staged 评测，每任务 15 次重复），并验证免微调跨平台迁移与 VLA 兼容性。"
+ ],
+ "method": {
+  "summary": "FastUMI-100K 用 FastUMI 手持设备做规模化人本演示采集：轨迹跟踪由 RealSense T265 承担、视觉由腕装 GoPro 鱼眼相机承担（高分辨率广角鱼眼 RGB，跟踪与视觉职能在硬件层分离，无 SLAM 后处理）；双臂系统在两夹爪末端各集成一枚 T265+一枚 GoPro 鱼眼，经 ROS 统一时钟与近似时间同步器对齐（GoPro 60Hz、T265 200Hz，最大对齐误差 1/120 秒，视频帧降采样至 20Hz 与最近 T265 位姿匹配，亚毫秒精度）。采集组织：10 名采集员+3 名技术支持分 5 组并行，5 个标准化环境；质量保障靠实时可视化（GoPro 鱼眼图像+T265 轨迹，监控丢帧/漂移）与采集后速度异常检测（相邻点线/角速度超限判为 SLAM 漂移，自动标记删除）。标注：子任务级（GPT-4o 分割+人工关键帧匹配，因自中心坐标系用目标位置式语言）+运动级（RT-H 式：相对平移/旋转/夹爪开合→语义单元），共 15,000 条，跨样本交叉验证。评测：DP/ACT 单任务模仿学习（Xarm6+Flexiv Rizon4 双平台）、跨平台免微调迁移（仅末端坐标系映射，工作空间边界盒过滤）、π0-base 微调（9 短程任务+3 长程任务 staged 连续成功率记录）。",
+  "assumptions": [
+   "T265 直接记录 6-DoF 末端位姿足以替代 SLAM，且腕装鱼眼视角在采集端与部署端一致即可支撑策略学习（无需额外视角）。",
+   "鱼眼畸变图像可直接被策略消费：全文未讨论去畸变或畸变对标定的影响（作者隐含假设策略对畸变鲁棒或畸变无损）。",
+   "自中心坐标系下目标位置式标注（放弃相对方位语言）足以支撑语言条件策略训练。",
+   "长程任务可拆解为短程子任务序列，且子任务级 staged 成功率能刻画长程能力。",
+   "人手演示的运动特性（速度、平滑度）是机械臂策略的合意目标（类人运动假设）。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "FastUMI-100K（自建）：100K+ 轨迹/600 小时/54 任务/数百物体/5 环境/15,000 文本标注，含 FastUMI 先行数据集",
+   "AgiBot World Colosseo（对比）：遥操作式大规模数据集，采集耗时与运动特性对照（衣物折叠 50s vs FastUMI 10s）"
+  ],
+  "tasks": [
+   "采集侧 54 任务六分类：基础抓放/复合（平移+旋转）/铰接（门、抽屉）/柔性物体（织物）/精细（倒水、按键）/双臂协作（移锅上灶）",
+   "评测 16 任务：DP 7 子任务（放置生菜/面包、放叉入筷笼、开微波炉门、倒水、放鞋、放衣入洗衣机）；π0 9 短程任务（Open Drawer/Roaster/Container、Rearrange Coke、Unplug Charger、Pick Bear/Lid/Cup、Hotdog in Roaster）+3 长程任务（Make Sandwich、Wash Clothes、Heat Food）",
+   "轨迹时长 6-25 秒（120-500 帧@20Hz，原始 60Hz 降采样）"
+  ],
+  "embodiments": [
+   "采集：人手持单臂/双臂 FastUMI（每臂 T265+GoPro 鱼眼，指尖即插即用转接件）",
+   "部署：Xarm6 与 Flexiv Rizon4（不同品牌与结构），π0-base 为 VLA 基座"
+  ],
+  "sample_or_scale": "100K+ 轨迹；评测每任务 15 次重复；10 名采集员（20-24 岁）+3 名技术支持，5 组并行"
+ },
+ "evaluation": {
+  "design": "三段评估：(1) 单任务模仿学习——DP 在 7 个子任务×2 平台（Table I），ACT 变体 joint vs TCP 对比（Table II，数据源自 FastUMI 先行工作）；(2) 跨平台部署——单任务 DP 模型免微调迁移到 Xarm6/Flexiv Rizon4，仅调末端坐标系映射，工作空间外轨迹用三维边界盒过滤（V.B）；(3) VLA 微调——π0-base 上 9 个短程任务（Table III）与 3 个长程任务的分阶段连续成功率记录（Table IV），每任务 15 次重复。",
+  "baselines": [
+   "Diffusion Policy（最基础基线，验证数据可靠性）",
+   "ACT 四变体：joint / Smooth-ACT / PoseACT（绝对）/ PoseACT（相对）——Table II 源自 FastUMI",
+   "π0-base（VLA 基座微调）",
+   "AgiBot 数据（效率与运动特性的外部对照，非策略基线）"
+  ],
+  "metrics": [
+   "单任务/子任务成功率（每任务 15 次重复）",
+   "长程任务分阶段成功率（staged 连续记录）",
+   "采集耗时倍率（vs 遥操作/裸手）与轨迹时长分布",
+   "平均线速度/角速度分布（vs AgiBot，类人运动特性）"
+  ],
+  "ablations": [
+   "动作表征消融：joint vs TCP 位姿（Table II，外部数据）",
+   "跨平台迁移消融：同一 DP 模型在两平台的表现（Table I 双平台列）",
+   "工作空间过滤：边界盒过滤前后跨平台可行性（Wash Clothes 案例）",
+   "注：本文无鱼眼 vs 常规 RGB 相机的受控消融——等效性结论引 FastUMI 先行工作"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "鱼眼模态规模化：FastUMI-100K 把'多视角腕装鱼眼图像'列为 100K+ 轨迹数据集三大模态之一（与末端状态、文本标注并列），鱼眼相机从单系统采集接口升级为数据基础设施的核心视觉通道。",
+   "scope": "数据集构成",
+   "locator": "page 1, Abstract"
+  },
+  {
+   "finding": "硬件职能分离：跟踪由 T265 承担、视觉由 GoPro 鱼眼承担，双臂系统 2×T265+2×GoPro@20Hz——鱼眼只做纯视觉观察，规避了鱼眼畸变损害视觉跟踪的问题（与 exUMI 的 ArUco 失败教训同构）。",
+   "scope": "采集硬件设计",
+   "locator": "page 3, Section III.A"
+  },
+  {
+   "finding": "鱼眼等效性主张（核心获益证据）：π0-base 在 9 个短程任务上微调后各类任务均获高成功率（73.33%-93.33%），作者主张鱼眼视角与常规 RGB 同样能捕捉物体空间状态与更丰富上下文；但该等效性无本文受控消融，结论引 FastUMI。",
+   "scope": "短程任务效果",
+   "locator": "page 7, Section V.C and Table III"
+  },
+  {
+   "finding": "长程失效模式（核心受限证据）：Heat Food 任务第一阶段开微波炉门 100%，但第二阶段相似观测（推门 vs 抓面包）导致局部失败，后续阶段全部 0%；作者归因于数据集无固定第三人称全局视角+第一人称腕视角下跨阶段观测不可区分。",
+   "scope": "长程任务效果",
+   "locator": "page 7, Section V.C and Table IV"
+  },
+  {
+   "finding": "长程阶段衰减：Make Sandwich 100%→73.33%、Wash Clothes 93.33%→60.00%（推理错误累积的渐进衰减），与 Heat Food 的骤降形成两种失效形态。",
+   "scope": "长程任务效果",
+   "locator": "page 7, Table IV"
+  },
+  {
+   "finding": "基础策略下中等可用：DP 在 7 子任务上 33.33%-66.67%，铰接（开微波炉门 66.67%）与旋转（倒水 66.67%）最高、柔性物体（放衣入机 33.33%）最低——任务类型调制鱼眼数据的策略收益。",
+   "scope": "单任务模仿学习",
+   "locator": "page 6, Table I"
+  },
+  {
+   "finding": "跨本体免微调：DP 模型仅靠末端坐标系映射即迁移到不同品牌/结构的两平台；代价是人手轨迹可能超出小工作空间平台可达范围（Wash Clothes 完全超出 Xarm6），需边界盒过滤。",
+   "scope": "跨平台部署",
+   "locator": "page 7, Section V.B"
+  },
+  {
+   "finding": "效率红利：同等任务采集耗时仅为遥操作 1/5（衣物折叠 10s vs AgiBot 50s），轨迹 6-25 秒信息密度更高——腕装鱼眼手持接口的效率是 100K 规模在人力上可行的前提。",
+   "scope": "采集效率",
+   "locator": "page 5, Section IV.C"
+  },
+  {
+   "finding": "标注语言受视角约束：因第一人称视频用自中心坐标系，子任务标注用目标位置式语言（move towards the cup）而非相对方位（move left towards the cup）——鱼眼第一人称特性级联到文本标注层。",
+   "scope": "标注协议",
+   "locator": "page 4, Section III.D.1"
+  },
+  {
+   "finding": "工程基础：双臂四传感器（2×GoPro 60Hz+2×T265 200Hz）经 ROS 近似时间同步实现亚毫秒对齐（最大误差 1/120 秒，降采样 20Hz）；采集中 GoPro 鱼眼图像+T265 轨迹实时可视化用于监控丢帧/漂移，采集后速度异常检测自动删除漂移轨迹。",
+   "scope": "多传感器工程",
+   "locator": "page 3-4, Sections III.B-III.C"
+  },
+  {
+   "finding": "动作表征调制收益：TCP 位姿 ACT 显著优于 joint ACT（Pick Bear 20%→80%、Sweep Trash 6.67%→60%，Table II 源自 FastUMI）——UMI 系数据配末端状态表征才能兑现跨本体优势。",
+   "scope": "动作表征",
+   "locator": "page 6, Table II"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "长程任务的全局状态缺失：数据集不提供固定第三人称视角的全局状态信息，轨迹不同阶段的相似视觉观测会影响模型推断，对依赖第一人称腕视角的模型影响尤甚；作者预期未来纳入更丰富历史与时序信息的 VLA 模型可克服该局限。",
+    "locator": "page 7, Section V.C"
+   },
+   {
+    "limitation": "Heat Food 阶段间局部失败：从开微波炉门过渡到抓面包时模型在相似观测间混淆，导致剩余动作无法执行（放入面包 0%、关门 0%）。",
+    "locator": "page 7, Section V.C and Table IV"
+   },
+   {
+    "limitation": "长程第二阶段精度因推理错误累积而下降（Make Sandwich、Wash Clothes）。",
+    "locator": "page 7, Section V.C"
+   },
+   {
+    "limitation": "人手采集数据可能超出小工作空间机械臂的可达范围（Wash Clothes 完全超出 Xarm6 工作空间），需按目标机器人额定工作空间构建三维边界盒过滤越界轨迹。",
+    "locator": "page 7, Section V.B"
+   },
+   {
+    "limitation": "未来工作方向：扩展双臂协作操作、实现更快更灵巧灵活的类人运动、UMI 式数据与常规数据在 VLA 上的融合训练以支撑更复杂的长程任务推理。",
+    "locator": "page 8, Section VI"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "相机规格与畸变处理完全未披露：仅'高分辨率、广角鱼眼 RGB（GoPro 鱼眼相机）'与'多视角腕装鱼眼图像'两处描述，无 FoV 度数、分辨率、畸变模型、去畸变流程；无法判断策略消费原始畸变图像还是校正图像，也无法与其它鱼眼系统（UMI/exUMI/ActiveUMI）做光学层定量比较。",
+    "basis": "page 3 Section III.A 与 page 2 Fig. 1 仅有上述两处相机描述；通读全文 9 页无 distortion/undistortion/FoV 表述。"
+   },
+   {
+    "boundary": "鱼眼等效性主张缺乏本文受控实验：π0 九短程任务高成功率只证明鱼眼数据可用，不证明与常规 RGB 等效；'equally capable'的等效结论实际引 FastUMI 先行工作，本文未做同任务鱼眼 vs 常规相机的对照。",
+    "basis": "page 7 V.C 'This aligns with the findings in FastUMI'——等效性依据是引文而非本文实验。"
+   },
+   {
+    "boundary": "统计功效有限：每任务 15 次重复，成功率粒度 6.67%，无方差/置信区间报告；Table I/III 中 6-13 个百分点的任务间差异不可靠。",
+    "basis": "page 6 V 'Each task is repeated 15 times'；各表无方差列。"
+   },
+   {
+    "boundary": "评测覆盖缺口：16 个评测任务对 54 个采集任务覆盖率约 30%，长程 staged 评测仅 3 任务；柔性/精细类在长程评测中缺席（Heat Food/Make Sandwich/Wash Clothes 均为刚性物体为主）。",
+    "basis": "page 6 Fig. 5（16 任务）与 page 7 Table III/IV 对照 page 2/4 的 54 任务声明。"
+   },
+   {
+    "boundary": "跨平台结论的双平台局限：Table I 双平台任务多为单臂子任务，双臂协作任务未展示跨平台迁移；Wash Clothes 在 Xarm6 上因工作空间失败说明'免微调跨本体'有硬边界。",
+    "basis": "page 7 V.B 仅报告 Make Sandwich/Place Tableware/Heat Food 四个子任务的跨平台实验。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用：(a) 需要 UMI 系大规模真机演示数据的策略训练/微调——π0-base 微调 9 短程任务 73.33%-93.33%，DP 基线 33.33%-66.67% 可用；(b) 腕装鱼眼视角一致的平台间免微调跨本体迁移（仅末端坐标系映射），适配套接指尖转接件的夹爪；(c) 语言条件策略训练（15,000 条双层标注，但语言须为目标位置式）。受限/不适用：(a) 需要全局状态或第三人称视角的长程多阶段任务——相似阶段观测不可区分，Heat Food 后续阶段 0%、其余长程任务阶段衰减 13-33 个百分点；(b) 依赖相对方位描述的任务（自中心坐标系使相对位置语言歧义）；(c) 小工作空间平台（人手轨迹越界需边界盒过滤，Wash Clothes 对 Xarm6 完全不可行）；(d) 与其它鱼眼系统的光学层比较（无 FoV/畸变参数）。对综述的接口：本文从'数据集侧'独立复现了 ActiveUMI 从'受控实验侧'发现的同一结论——腕装鱼眼宽视野对短程任务足够、对长程多阶段任务结构性不足，缺的是视角多样性而非视野宽度；同时把 exUMI 的教训（视觉跟踪职能迁出鱼眼）固化为 T265 硬件方案并推至 100K 规模。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "规模与多样性真实：100K+ 轨迹/54 任务/数百物体/单双臂/5 环境，为 UMI 系最大规模公开级数据集（承诺开源），稀缺性高。",
+   "评估维度较全：三类基线（DP/ACT/π0）+双平台+免微调跨本体+VLA 兼容，覆盖从单任务模仿到基础模型微调的谱系。",
+   "长程任务分阶段连续成功率记录（staged recording）有效暴露失效位置（Heat Food 第二阶段骤降），评测协议优于整体成功率。",
+   "采集工程化程度高：实时可视化监控+速度异常过滤+ROS 亚毫秒对齐+三阶段流水线，质量保障机制可直接复用。"
+  ],
+  "design_risks": [
+   "核心的鱼眼等效性主张（'equally capable as RGB'）无本文受控消融支撑，实际依据是 FastUMI 引文；π0 高成功率与'等效'之间缺少同任务常规 RGB 对照。",
+   "每任务 15 trials 统计功效低（6.67% 粒度），无方差/置信区间；Table I/III 的任务间小差异不可靠。",
+   "Table II（ACT 变体）直接引自 FastUMI 先行工作而非本文新实验，与本文数据集的关系需读者自行区分。",
+   "长程 staged 评测仅 3 任务、16 评测任务对 54 采集任务覆盖约 30%；柔性物体在长程评测中缺席，而它恰是 DP 下最弱类别（33.33%）。",
+   "相机规格（FoV/分辨率/畸变处理）与标定流程未披露，复现与跨系统比较困难。"
+  ],
+  "baseline_fairness": "DP/ACT/π0 均为标准实现的代表基线且共享本文数据；跨平台对照共享训练模型与流程，仅调坐标系映射，对照干净；但鱼眼 vs 常规 RGB 的等效性对照完全缺失（以引文替代），且 Table II 为外部数据——两条关键主张的证据都不是本文受控实验。",
+  "metric_validity": "成功率（15 trials）是部署效用指标但样本量小；分阶段成功率对长程失效定位有效；采集耗时倍率与速度分布对比（vs AgiBot）是数据系统层的有效操作性指标；'信息密度更高'的主张无量化指标支撑（仅轨迹时长对比）。",
+  "reproducibility": "承诺开源代码与数据（GitHub）；硬件为商用件（T265+GoPro 鱼眼）+3D 打印指尖转接件，采购门槛低；但相机参数、内外参标定流程、边界盒过滤阈值、速度异常阈值均未给出，复现采集质量需逆向工程。",
+  "external_validity": "5 个标准化家庭环境+数百日常物体的 in-the-wild 程度高于实验室遥操作数据集，且速度分布更接近真人操作；但环境数（5）与采集者多样性（10 人、20-24 岁、专职团队）有限，结论对工业/室外/高风险场景外推未验证；类人运动特性对低成本机械臂的可执行性（逆动力学要求）是隐含部署门槛。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2510.08022-C01",
+   "claim": "FastUMI-100K 是 UMI 系大规模多模态演示数据集：包含 100K+ 演示轨迹，覆盖代表性家庭环境、54 类任务与数百种物体；多模态流包括末端状态、多视角腕装鱼眼图像与文本标注，每条轨迹 120-500 帧。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：腕装鱼眼相机已从单篇系统的采集接口升级为十万级规模数据集的核心视觉模态——鱼眼图像与末端状态、文本标注并列为三大模态之一，是'鱼眼作为采集接口规模化'的最直接证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "摘要逐字给出 100K+ 轨迹、54 任务、数百物体、三类模态（end-effector states、multi-view wrist-mounted fisheye images、textual annotations）与 120-500 帧轨迹长度；正文补充折合 600 小时交互数据、5 个标准化环境（Introduction，page 1）。",
+   "locator": "page 1, Abstract",
+   "source_context": "Specifically, FastUMI-100K contains over 100K+ demonstration trajectories collected across representative household environ- ments, covering 54 tasks and hundreds of object types. Our dataset integrates multimodal streams, including end-effector states, multi-view wrist-mounted fisheye images and textual annotations.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "数据集规模与模态构成",
+    "value_or_direction": "100K+ 轨迹、54 任务、数百物体、每轨迹 120-500 帧（正文：600 小时交互数据）",
+    "comparator": "文中称规模与多样性显著超越现有 UMI 系数据集",
+    "task_or_sample": "单臂+双臂家庭环境人本演示采集",
+    "locator": "page 1, Abstract and Introduction"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 1 摘要逐字给出 100K+ demonstration trajectories、54 tasks、hundreds of object types、end-effector states、multi-view wrist-mounted fisheye images、textual annotations、120 到 500 帧；600 小时在 page 1 Introduction（'equivalent to 600 hours of interactive data'），已核对存在但不在本卡 context 内，claim 未引用该数字以保持 context 完全蕴含。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C02",
+   "claim": "FastUMI-100K 采集硬件延续 FastUMI 协议：轨迹跟踪由 RealSense T265 承担，高分辨率、广角鱼眼 RGB 图像由 GoPro 鱼眼相机采集——跟踪与视觉职能在硬件层分离，鱼眼相机仅承担视觉观察职能。",
+   "stance": "support",
+   "relation": "支持命题（应用方式）：UMI 系规模化采集中的鱼眼角色定位为纯视觉通道——位姿跟踪交给专用传感器 T265，从系统设计层规避鱼眼畸变损害视觉跟踪的风险（与 exUMI 用磁编码器替代 ArUco 的失败教训同构）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III.A 首句给出 T265 tracking 与 GoPro fisheye cameras 的分工；同节后文给出双臂系统配置（两枚 T265+两枚 GoPro 鱼眼集成于两夹爪末端，20Hz 同步记录）。",
+   "locator": "page 3, Section III.A Hardware Design",
+   "source_context": "Following the protocols established in FastUMI, we use the RealSense T265 for trajectory tracking, while high- resolution, wide-angle fisheye RGB images are captured using GoPro fisheye cameras.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "双臂系统传感器配置",
+    "value_or_direction": "两枚 GoPro 鱼眼相机+两枚 T265 传感器，20Hz 同步采样",
+    "comparator": "单臂 FastUMI（一 GoPro+一 T265）",
+    "task_or_sample": "双臂 FastUMI 多模态数据采集（Figure 2(a)）",
+    "locator": "page 3, Section III.A Hardware Design"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 III.A 首句逐字给出 T265 for trajectory tracking 与 GoPro fisheye cameras 采集 high-resolution, wide-angle fisheye RGB；双臂句 'In this system, two T265 cameras and two GoPro fisheye cameras ... 20Hz sampling frequency' 同页同节（图 2(a) 段），作为 quantitative 补充；'职能分离'是对两句分工的字面归纳（tracking 用 T265、视觉用 GoPro），非引申。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C03",
+   "claim": "作者核心主张：在九个短程任务上用 FastUMI-100K 微调 π0-base 后，每种操作类型都取得高成功率，表明鱼眼视角与现有数据集中常用的常规 RGB 图像同样能捕捉物体空间状态与更丰富的上下文信息；该结论与 FastUMI 先行工作一致（末端安装的鱼眼镜头与多视角相机设置性能相当）。",
+   "stance": "support",
+   "relation": "支持命题（效果/获益）：鱼眼第一人称视角对短程操作任务'足够好'的正面主张——作者把 π0 九任务高成功率（Table III：73.33%-93.33%）解读为鱼眼视角与常规 RGB 等效；注意该等效性结论引 FastUMI 而非本文受控实验（见 C14 批判边界）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section V.C 先陈述九个短程任务的实验设置，再给出'equally capable'主张与 FastUMI 结论对齐；Table III（page 7）报告各任务成功率：Open Drawer 80.00%、Open Roaster 86.67%、Open Container 73.33%、Rearrange Coke 93.33%、Unplug Charger 93.33%、Pick Bear/Lid/Cup 80.00/80.00/93.33%、Hotdog in Roaster 80.00%。",
+   "locator": "page 7, Section V.C Fine-tuning on VLA Large Models (Table III)",
+   "source_context": "As shown in Table III, we first selected nine short-horizon tasks from different manipulation types for experimentation. Each type of task achieved a high success rate, indicating that the fisheye perspective is equally capable of capturing the spatial state of objects and richer contextual information as compared to the commonly used RGB images in existing datasets. This aligns with the findings in FastUMI, where fisheye lenses installed on the end-effector and multi-view camera setups demonstrated comparable performance.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "π0-base 微调短程任务成功率",
+    "value_or_direction": "73.33%-93.33%（九任务：80.00/86.67/73.33/93.33/93.33/80.00/80.00/93.33/80.00）",
+    "comparator": "鱼眼腕视角数据微调 vs 常规 RGB 数据集预训练基线（作者主张等效，无本文对照实验）",
+    "task_or_sample": "π0-base，Xarm6，九个短程任务，每任务 15 次重复",
+    "locator": "page 7, Table III"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V.C 逐字给出 nine short-horizon tasks、Each type of task achieved a high success rate、fisheye perspective is equally capable of capturing the spatial state of objects and richer contextual information、as compared to the commonly used RGB images、aligns with the findings in FastUMI；Table III 数字（80.00/86.67/73.33/93.33/93.33/80.00-80.00-93.33/80.00）逐字核对无误；claim 的数字范围仅出现在 quantitative，正文 claim 保持'高成功率'以维持 context 蕴含；'等效主张引 FastUMI 而非本文实验'由 context 末句 This aligns with the findings in FastUMI 直接支撑。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C04",
+   "claim": "长程任务失效模式：Heat Food 任务第一阶段成功率很高（开微波炉门 100.00%），但过渡到第二阶段时模型在相似观测之间发生局部失败（推微波炉门 vs 抓面包），导致剩余动作全部无法执行（放入面包 0.00%、关门 0.00%）；作者归因：数据集不提供固定第三人称视角的全局状态信息，轨迹不同阶段的相似视觉观测会影响模型推断，对依赖第一人称腕视角的模型影响尤甚。",
+   "stance": "limit",
+   "relation": "限定命题（核心受限证据）：腕装鱼眼第一人称视角在长程多阶段任务上的结构性局限——跨阶段相似观测不可区分且缺少全局状态消歧源，造成 0% 连锁失败；与 ActiveUMI 受控实验（腕鱼眼-only 26% vs +头相机 70%）从数据集侧独立汇合同一结论：缺的是视角多样性而非视野宽度。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section V.C 报告 Heat Food 三阶段 staged 成功率并给出失效机理（相似观测局部失败+无第三人称全局视角）；Table IV 逐字给出 100.00%/0.00%/0.00%；作者预期纳入更丰富历史与时序信息的未来 VLA 可克服该局限。",
+   "locator": "page 7, Section V.C Fine-tuning on VLA Large Models (Table IV)",
+   "source_context": "Interestingly, for the Heat Food task, the success rate is high in the first stage. However, during the transition to the second stage, the model encounter a local failure between similar observations, such as pushing the microwave door open and grabbing the bread. As a result, the model is unable to proceed with the remaining actions. Since the dataset does not provide a fixed third-person perspective for global state information, the presence of similar visual observations across different stages of a trajectory can impact model inference, especially for models relying on first-person wrist perspectives.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "长程任务分阶段成功率（Heat Food）",
+    "value_or_direction": "开微波炉门 100.00% → 放入面包 0.00% → 关微波炉门 0.00%（骤降型连锁失败）",
+    "comparator": "同任务内阶段间对比；对照 Make Sandwich 100.00%→73.33%、Wash Clothes 93.33%→60.00% 的渐进衰减",
+    "task_or_sample": "π0-base 微调，Flexiv Rizon4，每任务 15 次重复",
+    "locator": "page 7, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V.C 逐字给出 the model encounter a local failure between similar observations, such as pushing the microwave door open and grabbing the bread、unable to proceed with the remaining actions、does not provide a fixed third-person perspective for global state information、similar visual observations across different stages、especially for models relying on first-person wrist perspectives（原文语法误用 encounter，按原样保留在 context）；Table IV 逐字 100.00%/0.00%/0.00%；'0% 连锁失败'是对 unable to proceed+Table IV 数字的忠实概括；对比任务数字（73.33/60.00）在 Table IV 同页可见。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C05",
+   "claim": "DP 基线在 7 个子任务、两个平台上的成功率为 33.33%-66.67%：铰接类开微波炉门（双平台 66.67%）与旋转类倒水（66.67%，Xarm6）最高，柔性物体放衣入洗衣机（33.33%，Flexiv）与放叉入筷笼（33.33%，Xarm6）最低——鱼眼采集数据在基础扩散策略下达到中等可用水平，任务类型调制收益。",
+   "stance": "conditional",
+   "relation": "条件支持（效果）：腕装鱼眼采集数据可支撑基础策略学习（33%-67% 可用区间），但非无条件获益——铰接/旋转类获益较大，柔性物体与精细放置类最弱；该区间同时给出 UMI 系鱼眼数据在弱基线下的下界参考。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table I 报告 DP 在 Make Sandwich（两子任务）、Place Tableware、Heat Food、Pour Water、Storage Shoes、Wash Clothes 上的双平台成功率；正文（page 6 V.A）说明因 DP 长程能力受限将长程任务拆为独立子任务验证，并称'即使最基础的基线模型，数据依然可靠'。",
+   "locator": "page 6, Table I",
+   "source_context": "Task Sub-Task Description Manipulation Type Platform Successful Rate of DP Make Sandwich Place the lettuce leaves on the plate Pick-Place & Rotation Flexiv Rizon4 60.00% Xarm6 53.33% Place the bread slices on the plate Pick-Place & Rotation Flexiv Rizon4 60.00% Xarm6 60.00% Place Tableware Place the fork into the chopstick holder Pick-Place & Rotation Flexiv Rizon4 40.00% Xarm6 33.33% Heat Food Open the microwave door Hinged Flexiv Rizon4 66.67% Xarm6 66.67% Pour Water Pour the water from the bottle into the cup Rotation Xarm6 66.67% Storage Shoes Place the shoe in the open cabinet Pick-Place Xarm6 40.00% Wash Clothes Place the clothes into the washing machine Pick-Place & Rotation Flexiv Rizon4 33.33%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "单任务 DP 成功率（双子任务×双平台）",
+    "value_or_direction": "33.33%-66.67%（放生菜 60.00/53.33、放面包 60.00/60.00、放叉 40.00/33.33、开微波炉门 66.67/66.67、倒水 66.67、放鞋 40.00、放衣入机 33.33）",
+    "comparator": "任务类型间对比：hinged 66.67% vs flexible 33.33%；平台间 Flexiv Rizon4 vs Xarm6",
+    "task_or_sample": "Diffusion Policy，Flexiv Rizon4+Xarm6，每任务 15 次重复",
+    "locator": "page 6, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table I 文本层逐字给出全部 7 子任务×平台数字（60.00/53.33、60.00/60.00、40.00/33.33、66.67/66.67、66.67、40.00、33.33），任务名、Manipulation Type（Pick-Place & Rotation/Hinged/Rotation/Pick-Place）与平台列一致；'中等可用/任务类型调制'为对数字区间的描述性概括，未超出表格内容。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C06",
+   "claim": "跨平台迁移设置：单任务 Diffusion Policy 模型迁移到两个品牌与结构均不同的机器人平台（Xarm6、Flexiv Rizon4）执行相同任务时，不对目标机器人做任何额外微调，仅调整末端坐标系的映射。",
+   "stance": "support",
+   "relation": "支持命题（获益）：腕装鱼眼+末端状态的 embodiment-agnostic 设计兑现跨本体收益——视觉（鱼眼腕视角）与动作（末端位姿）均不依赖特定机体，使 UMI 系数据可在异构平台间免微调复用，这是鱼眼接口规模化数据的复用价值证据。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section V.B 描述跨本体评估实验设计：同一 DP 模型迁移至 Xarm6 与 Flexiv Rizon4，无额外微调、仅末端坐标系映射；Table I 双平台列给出迁移后成功率（如开微波炉门双平台同为 66.67%）。",
+   "locator": "page 7, Section V.B Cross-platform Deployment",
+   "source_context": "During the transfer process, no additional fine-tuning is applied to the target robots, with only the coordinate system mapping of the end-effector being adjusted.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "跨平台迁移的微调需求",
+    "value_or_direction": "0 额外微调，仅末端坐标系映射调整",
+    "comparator": "Xarm6 与 Flexiv Rizon4（不同品牌与结构）之间互迁",
+    "task_or_sample": "单任务 DP 模型，Make Sandwich/Place Tableware/Heat Food 四个子任务",
+    "locator": "page 7, Section V.B"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V.B 逐字给出 no additional fine-tuning is applied to the target robots, with only the coordinate system mapping of the end-effector being adjusted；前句给出两平台（Xarm6、Flexiv Rizon4）与 different brands and structures；claim 未包含具体成功率数字（数字在 Table I，page 6），保持 context 完全蕴含。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C07",
+   "claim": "跨本体硬边界：由于 FastUMI 数据不受特定机器人本体物理限制约束，人手采集的轨迹可能超出小工作空间机械臂的可达范围；Wash Clothes 任务完全超出 Xarm6 平台工作空间导致无法执行；缓解方案是按目标机器人额定工作空间构建三维边界盒，过滤主体越界的轨迹。",
+   "stance": "limit",
+   "relation": "限定命题（受限）：腕装鱼眼+手持范式'人手可达即数据可达'的自由度是双刃剑——数据侧不受本体约束的代价是部署侧工作空间失配，需要按平台过滤数据补偿；这是 UMI 系鱼眼接口跨本体迁移的工程边界（本体几何边界，非视觉边界）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section V.B 报告跨平台实验中发现的工作空间失配问题、边界盒过滤方案与 Wash Clothes 完全越界案例；Table I 显示 Wash Clothes 仅在 Flexiv Rizon4 上评测（33.33%），Xarm6 缺席与此一致。",
+   "locator": "page 7, Section V.B Cross-platform Deployment",
+   "source_context": "We found that since data collected by FastUMI is not constrained by the physical limitations of any specific robotic embodiment, human-collected data may exceed the manipulation range of robotic arms with smaller workspaces. To address this issue, when filtering data, a three-dimensional bounding box can be constructed based on the rated workspace of the target robot. If the main part of a trajectory exceeds the predefined bounding box, it is considered outside the physical reach of the robotic arm and should be filtered out. For example, the task Wash Clothes is completely beyond the workspace of the Xarm6 platform, thus preventing successful manipu- lation.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "工作空间失配案例",
+    "value_or_direction": "Wash Clothes 任务完全超出 Xarm6 工作空间（无法执行）",
+    "comparator": "Flexiv Rizon4 可执行（DP 33.33%，Table I，page 6）",
+    "task_or_sample": "跨平台迁移实验，Make Sandwich/Place Tableware/Heat Food 四个子任务",
+    "locator": "page 7, Section V.B"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V.B 逐字给出 not constrained by the physical limitations of any specific robotic embodiment、may exceed the manipulation range of robotic arms with smaller workspaces、three-dimensional bounding box、Wash Clothes is completely beyond the workspace of the Xarm6 platform；Flexiv 侧 33.33% 在 page 6 Table I（quantitative 标注双 locator），token 在两页均可见。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C08",
+   "claim": "采集效率：同一操作任务的采集耗时仅为遥操作式采集方法的 1/5；衣物折叠任务在 AgiBot（遥操作）中耗时 50 秒，FastUMI 仅 10 秒——手持直接操作的效率红利使 100K 级采集在人力上可行。",
+   "stance": "support",
+   "relation": "支持命题（应用方式的前提条件）：腕装鱼眼手持接口保留了裸手操作的自然速度（无遥操作动作延迟与冗余指令传输），采集效率 5 倍于遥操作是鱼眼接口得以规模化的经济学基础——没有该效率就没有 100K 级鱼眼数据集。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section IV.C 给出 1/5 总体倍率与衣物折叠案例（AgiBot 50s vs FastUMI 10s）；同节报告轨迹时长 6-25 秒（120-500 帧），并主张因消除动作延迟与冗余指令传输，信息密度高于遥操作数据。",
+   "locator": "page 5, Section IV.C Diversity of Task Horizon",
+   "source_context": "For the same manipulation task, the time required for this scheme is only one-fifth of that using the teleoperation-based collection method. For example, the time spent on the clothes folding task in AgiBot [11] is 50 seconds, while FastUMI completes the same task in only 10 seconds.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "单任务采集耗时",
+    "value_or_direction": "总体为遥操作的 1/5；衣物折叠 FastUMI 10 秒 vs AgiBot 50 秒",
+    "comparator": "FastUMI 手持采集 vs AgiBot 遥操作采集",
+    "task_or_sample": "54 任务家庭环境采集；轨迹 6-25 秒/120-500 帧@20Hz",
+    "locator": "page 5, Section IV.C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 IV.C 逐字给出 only one-fifth of that using the teleoperation-based collection method、clothes folding task in AgiBot [11] is 50 seconds, while FastUMI completes the same task in only 10 seconds；轨迹时长 6-25 秒（120 to 500 frames）在同节前文（quantitative 引用）；'信息密度更高'主张在同节 but 不在本卡 context，故仅入 summary 未入 claim。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C09",
+   "claim": "标注语言受鱼眼第一人称视角约束：因第一人称视角视频使用自中心（self-centered）坐标系，子任务级标注主要描述目标位置（如 move towards the cup）而非相对位置关系（如 move left towards the cup），以降低标注歧义——鱼眼第一人称特性从图像层级联到文本标注层，塑造了数据集的标注规范。",
+   "stance": "support",
+   "relation": "支持命题（应用方式的下游约束）：腕装鱼眼的视角特性不仅决定图像，还决定语言接口——相对方位词在自中心系中歧义，标注协议被迫采用目标位置式语言；这为语言条件策略的训练数据划定了语言边界（依赖相对方位指令的任务不适配）。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III.D.1 说明子任务级标注的坐标系适配策略；同节末尾报告双层标注体系共提供 15,000 条文本标注（GPT-4o 预标注+人工分割交叉校验；运动级标注基于 RT-H 范式）。",
+   "locator": "page 4, Section III.D.1 Subtask-Level Annotation",
+   "source_context": "Because the first-person perspective video uses a self- centered coordinate system, the subtask-level annotations primarily focus on describing the target position (e.g., move towards the cup) rather than relative position relation- ships (e.g., move left towards the cup) to reduce ambiguity in the annotations.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "文本标注规模",
+    "value_or_direction": "共 15,000 条双层标注（子任务级+运动级）",
+    "comparator": "子任务级（GPT-4o 预标注+人工 GUI 校验）与运动级（RT-H 式语义单元）双层体系",
+    "task_or_sample": "100K+ 轨迹全量，跨样本交叉验证",
+    "locator": "page 4, Section III.D"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 III.D.1 逐字给出 first-person perspective video uses a self-centered coordinate system、primarily focus on describing the target position (e.g., move towards the cup) rather than relative position relation- ships (e.g., move left towards the cup)、to reduce ambiguity in the annotations；15,000 条在同节 III.D.2 末尾（a total of 15,000 textual annotations are provided），同页可见，作为 quantitative 补充；'级联到标注层'是对该设计约束的字面概括。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C10",
+   "claim": "多传感器时间对齐：最大对齐误差设为 GoPro 采样周期的一半（1/120 秒）；每个夹爪的视频帧均匀降采样至 20Hz 并与时间上最接近的 T265 位姿数据匹配；该方案最终实现双臂多传感器数据的亚毫秒级对齐精度。",
+   "stance": "support",
+   "relation": "支持命题（规模化的工程前提）：双臂鱼眼图像流（GoPro）与位姿流（T265）的融合工程基础——亚毫秒对齐使 100K 级腕装鱼眼图像-动作配对数据可用于下游策略学习；没有该对齐精度，鱼眼视觉与末端动作的配对质量无法支撑策略训练。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III.C（跨 page 3-4）描述对齐策略：ROS 统一时钟+近似时间同步器，四传感器（两 GoPro 60Hz+两 T265 200Hz，page 3），RGB 话题按时间戳近似同步、视频帧降采样 20Hz 匹配最近位姿，最终亚毫秒精度。",
+   "locator": "page 4, Section III.C Multi-Device Multi-Sensor Alignment",
+   "source_context": "The maximum alignment error is set to half the GoPro sampling period (i.e., 1/120 seconds). Simultaneously, video frames from each gripper are uniformly downsampled to 20Hz and matched with the closest T265 pose data in time. This approach ultimately achieves sub-millisecond precision in the alignment of dual- arm multi-sensor data, providing a stable and synchronized dataset for downstream learning tasks.",
+   "evidence_type": "author-statement",
+   "quantitative": {
+    "metric": "多传感器对齐精度",
+    "value_or_direction": "亚毫秒（sub-millisecond）；最大对齐误差 1/120 秒；降采样至 20Hz",
+    "comparator": "双臂四传感器配置（两 GoPro 60Hz+两 T265 200Hz，page 3）vs 单臂两传感器",
+    "task_or_sample": "双臂多模态数据流（RGB+位姿）时间对齐",
+    "locator": "page 4, Section III.C"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 III.C 逐字给出 maximum alignment error is set to half the GoPro sampling period (i.e., 1/120 seconds)、uniformly downsampled to 20Hz、matched with the closest T265 pose data in time、sub-millisecond precision in the alignment of dual- arm multi-sensor data；四传感器与采样率（two GoPro cameras at 60Hz and two T265 sensors at 200Hz）在 page 3 同节，作为 quantitative 补充并标注页码。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C11",
+   "claim": "采集过程质量监控以鱼眼图像为主通道：GoPro 鱼眼图像与 T265 相机轨迹的实时可视化显示在计算机上，使操作者能监控丢帧与轨迹漂移等潜在问题——腕装鱼眼流兼任采集质量保障的人机接口，而不仅是策略训练数据。",
+   "stance": "support",
+   "relation": "支持命题（应用方式的扩展角色）：腕装鱼眼图像在采集系统中具有双重职能——下游（策略训练数据）与上游（操作者实时质量监控通道）；这解释了为何选择鱼眼而非常规窄角相机做腕视角：宽视野使丢帧/漂移等异常在画面中更可见。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section III.B.2（During Data Collection）描述实时可视化监控；同节 III.B.3（Post-Data Collection）补充自动化过滤：通过计算相邻轨迹点间线速度与角速度识别可能导致 SLAM 漂移的操作异常，异常轨迹自动标记无效并删除。",
+   "locator": "page 3, Section III.B.2 During Data Collection",
+   "source_context": "In parallel, real-time visualization of the GoPro fisheye images and T265 camera trajectories is displayed on the computer, enabling the operator to monitor potential issues such as frame drops or trajectory drift during data collection.",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 3 III.B.2 逐字给出 real-time visualization of the GoPro fisheye images and T265 camera trajectories、monitor potential issues such as frame drops or trajectory drift during data collection；claim 限于实时可视化职能；速度异常过滤在 III.B.3（By calculating the linear and angular velocities ... automatically marked as invalid and deleted，同页），仅入 summary 未入 claim；'宽视野使异常更可见'是 relation 层的解读性说明，未写入 claim。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C12",
+   "claim": "动作表征对比（Table II，数据源自 FastUMI 先行工作）：TCP（工具中心点）位姿表征的 ACT 变体显著优于关节空间 ACT——Pick Bear 从 20.00%（ACT）升至 80.00%（PoseACT 绝对），Sweep Trash 从 6.67% 升至 60.00%（PoseACT 相对）。",
+   "stance": "conditional",
+   "relation": "条件支持（获益的表征条件）：UMI 系腕装鱼眼数据的收益依赖动作表征选择——鱼眼视角+末端 TCP 位姿的组合才能兑现跨本体复用优势，关节空间表征会浪费 embodiment-agnostic 特性；正文（page 7 V.A）解读为 TCP 位姿能稳健捕捉轨迹形状与动态特征。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "Table II 给出四变体两任务成功率（ACT/Smooth-ACT/PoseACT 绝对/相对）；page 7 V.A 说明该表源自 FastUMI 先行工作 [21]，并解读 TCP 位姿对轨迹形状与动态特征的稳健捕捉、UMI 系数据（独立于机器人本体、使用末端状态）允许更细致表征真实操作的灵巧性与类人运动特征。",
+   "locator": "page 6, Table II",
+   "source_context": "Joint TCP Task ACT Smooth-ACT PoseACT (Absolute) PoseACT (Relative) Pick Bear 20.00% 60.00% 80.00% 73.33% Sweep Trash 6.67% 26.67% 53.33% 60.00%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "ACT 变体成功率",
+    "value_or_direction": "Pick Bear: 20.00%→60.00%→80.00%→73.33%；Sweep Trash: 6.67%→26.67%→53.33%→60.00%（joint ACT→Smooth-ACT→PoseACT 绝对→PoseACT 相对）",
+    "comparator": "joint ACT vs Smooth-ACT vs PoseACT（绝对 TCP）vs PoseACT（相对 TCP）",
+    "task_or_sample": "Pick Bear 与 Sweep Trash 两任务，数据源自 FastUMI 数据集（引文 [21]）",
+    "locator": "page 6, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Table II 文本层逐字给出 Pick Bear 20.00% 60.00% 80.00% 73.33% 与 Sweep Trash 6.67% 26.67% 53.33% 60.00% 及四列变体名；'源自 FastUMI'由 page 7 V.A 'Table II, sourced from the pioneering work FastUMI [21]' 支撑（claim_basis 取 cited-work）；TCP 解读句在同段，仅入 summary。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C13",
+   "claim": "长程任务的阶段间衰减：Make Sandwich 与 Wash Clothes 任务第一阶段成功率高，第二阶段因推理错误累积出现精度下降（Table IV：Make Sandwich 100.00%→73.33%，Wash Clothes 93.33%→60.00%）——与 Heat Food 的骤降（C04）构成两种长程失效形态。",
+   "stance": "limit",
+   "relation": "限定命题（受限的量化梯度）：腕装鱼眼单视角策略在长程任务上呈阶段间性能衰减（错误累积型 13-33 个百分点），且不同任务衰减形态不同（渐进 vs 骤降连锁）——鱼眼第一人称视角无法提供跨阶段的稳定状态锚点，阶段越多衰减越深。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section V.C 报告两任务的 staged 成功率衰减并归因于推理错误累积；Table IV 逐字给出 Make Sandwich（放生菜 100.00%、放面包 73.33%）与 Wash Clothes（抓衣入机 93.33%、关门 60.00%）的分阶段数字。",
+   "locator": "page 7, Section V.C Fine-tuning on VLA Large Models (Table IV)",
+   "source_context": "As shown in Table IV, for the tasks Make Sandwich and Wash Clothes, the first stage shows high success rates, followed by a slight decline in accuracy during the second stage due to the accumulation of inference errors.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "长程任务分阶段成功率",
+    "value_or_direction": "Make Sandwich 100.00%→73.33%（-26.67pp）；Wash Clothes 93.33%→60.00%（-33.33pp）",
+    "comparator": "阶段 1 vs 阶段 2；骤降对照 Heat Food 100.00%→0.00%（C04）",
+    "task_or_sample": "π0-base 微调，Flexiv Rizon4，每任务 15 次重复",
+    "locator": "page 7, Table IV"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 V.C 逐字给出 the first stage shows high success rates, followed by a slight decline in accuracy during the second stage due to the accumulation of inference errors；Table IV 逐字给出 100.00%/73.33% 与 93.33%/60.00%；Heat Food 100.00%→0.00% 对照数字同表；'两种失效形态'为对三任务数字形态的描述性归纳（渐进 vs 骤降），未引申机制。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C14",
+   "claim": "规格披露缺口（读者推断）：论文对鱼眼相机的全部描述仅为'高分辨率、广角鱼眼 RGB 图像（GoPro 鱼眼相机）'与'多视角腕装鱼眼图像'，未披露视场角数值、分辨率、畸变模型或去畸变处理流程；全文 9 页无任何鱼眼畸变处理或相机标定细节——无法判断策略消费的是原始畸变图像还是校正图像，也无法与其它鱼眼系统（UMI/exUMI/ActiveUMI）做光学层定量比较。",
+   "stance": "gap",
+   "relation": "gap：鱼眼接口规格不透明是 UMI 系数据集论文的通病（exUMI、ActiveUMI 同样未披露 FoV），使'鱼眼 vs 常规 RGB 等效'（C03）类主张无法在光学层归因——等效可能来自任务对畸变不敏感，而非鱼眼无损；该缺口阻断跨系统比较与畸变影响的机制分析。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "以 page 2 Fig. 1 caption 与 page 3 III.A 的全部相机描述为证据基础：两处描述均无量化规格；'未披露规格/无畸变处理讨论'是对全文的缺失性观察（absence-in-source），'无法定量比较'为读者推断。",
+   "locator": "page 2, Figure 1 caption; page 3, Section III.A Hardware Design",
+   "source_context": "FastUMI-100K integrates multimodal data streams, including single-arm and dual-arm trajectories, multi-view wrist-mounted fisheye image, and fine-grained textual annotations.",
+   "evidence_type": "absence-in-source",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 Fig. 1 caption 逐字给出 multi-view wrist-mounted fisheye image；page 3 III.A 仅有 high-resolution, wide-angle fisheye RGB images ... GoPro fisheye cameras（C02 context）；通读 9 页全文确认无 FoV 度数、分辨率、畸变模型、undistortion/distortion correction 表述与相机标定流程；confidence 标注 inference、claim_basis 标注 reader-inference，因'无法比较/无法判断消费形式'为读者基于文本缺失的推断而非作者陈述。"
+   }
+  },
+  {
+   "card_id": "2510.08022-C15",
+   "claim": "UMI 系范式定位：Fast-UMI 通过把手持硬件与机器人末端解耦、保留腕部鱼眼视角（retaining the wrist fisheye view）、用 RealSense T265 直接记录 6-DoF 末端位姿，来提升采集吞吐与跨本体迁移，避免重型离线 SLAM 与固定动作捕捉设施。",
+   "stance": "support",
+   "relation": "支持命题（接口常量）：腕装鱼眼视角是 UMI→FastUMI→FastUMI-100K 一脉相承的接口常量——三代系统都保留'部署侧腕视角'作为采集-部署共享的视觉接口，变化的只是跟踪方案（SLAM→T265）；page 2 II.B 进一步把'保留部署腕视角+无实验室基础设施的平滑低延迟末端状态+本质硬件解耦'总结为 UMI 系数据集的复用优势。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "Related Work II.A 描述 Fast-UMI（同组先前工作，引文 [21]）的设计要点；II.B 把 UMI 系手持数据集的互补优势总结为保留部署腕视角、平滑低延迟末端状态与硬件解耦带来的复用潜力。",
+   "locator": "page 2, Section II.A Sensor-enhanced Interface Dataset",
+   "source_context": "Building on this paradigm, Fast-UMI in- creases throughput and cross-embodiment transfer by decou- pling handheld hardware from robot end-effectors, retaining the wrist fisheye view, and directly logging 6-DoF end- effector poses with RealSense T265—avoiding heavy offline SLAM or fixed motion-capture infrastructure",
+   "evidence_type": "author-statement",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 2 II.A 逐字给出 retaining the wrist fisheye view、directly logging 6-DoF end-effector poses with RealSense T265、avoiding heavy offline SLAM or fixed motion-capture infrastructure；claim 的其余部分（解耦、吞吐、跨本体迁移）均在该句内；II.B 的复用优势总结（preserve the deployment wrist viewpoint 等）在 relation 层引用未入 claim，以维持 context 完全蕴含；Fast-UMI 为同组先前工作，作者转述，confidence 取 citation-supported。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "title": "Universal Manipulation Interface: In-The-Wild Robot Teaching Without In-The-Wild Robots",
+   "arxiv_id": "2402.10329",
+   "reason": "UMI 基座范式（引文 [20]）：腕装相机+embodiment-agnostic 策略接口的原点，FastUMI-100K 的'腕鱼眼视角常量'由此继承。"
+  },
+  {
+   "title": "FastUMI: A Scalable and Hardware-Independent Universal Manipulation Interface with Dataset",
+   "arxiv_id": "2409.19499",
+   "reason": "直接前身（引文 [21]，同组先前工作）：T265 替代 SLAM、保留腕鱼眼视角；本文 Table II 数据与'鱼眼等效'结论均引此工作。"
+  },
+  {
+   "title": "π0: A Vision-Language-Action Flow Model for General Robot Control",
+   "arxiv_id": "2410.24164",
+   "reason": "VLA 微调基座（引文 [1]）：九短程任务 73.33%-93.33% 与三长程任务 staged 评测的载体。"
+  },
+  {
+   "title": "AgiBot World Colosseo: A Large-scale Manipulation Platform for Scalable and Intelligent Embodied Systems",
+   "arxiv_id": "2503.06669",
+   "reason": "遥操作式大数据集对照（引文 [11]）：采集耗时（50s vs 10s）与运动特性对比的参照系。"
+  },
+  {
+   "title": "RT-H: Action Hierarchies Using Language",
+   "arxiv_id": "2403.01823",
+   "reason": "运动级标注范式来源（引文 [31]）：相对平移/旋转/夹爪开合→语义单元的标注协议。"
+  },
+  {
+   "title": "Diffusion Policy: Visuomotor Policy Learning via Action Diffusion",
+   "arxiv_id": "2303.04137",
+   "reason": "单任务模仿学习基线（引文 [32]）：七子任务双平台 33.33%-66.67% 的策略载体。"
+  }
+ ],
+ "notes": "与鱼眼综述的接口：本文是'腕装鱼眼从系统接口到数据基础设施'的规模化证据，与另两篇 UMI 系论文构成三角验证。(1) 接口常量：UMI→FastUMI→FastUMI-100K 三代都保留'部署侧腕鱼眼视角'作为采集-部署共享视觉接口（C15），变化的只是跟踪方案（SLAM→T265）；exUMI 从失败教训侧（ArUco 在鱼眼畸变+遮挡下 ~10% 数据损失）、本文从工程方案侧（T265 硬件跟踪）共同证实'鱼眼做纯视觉、跟踪迁出'是 UMI 系的收敛设计。(2) 获益侧：短程任务上鱼眼视角'与常规 RGB 等效'的作者主张（C03）+π0 73.33%-93.33% 实证；DP 基线 33.33%-66.67%（C05）给出下界；效率 1/5 遥操作（C08）解释了为何鱼眼手持接口能撑起 100K 规模。(3) 受限侧：与 ActiveUMI 的受控相机对照（腕鱼眼-only 26% vs 主动头视角 70%）独立汇合——本文从数据集侧发现同一结构问题：长程任务相似第一人称观测混淆推断、缺第三人称全局视角（C04 Heat Food 100→0→0），且衰减有两形态（渐进累积 C13 vs 骤降 C04）；额外贡献 ActiveUMI 没有的发现：自中心坐标系级联约束标注语言（C09 目标位置式 vs 相对方位式）、人手轨迹与小工作空间平台的失配（C07）。(4) 批判要点：鱼眼等效性主张是引文背书而非本文受控实验（C03/C14），'equally capable'应读作'短程任务上未观察到劣势'；相机规格不披露使光学层归因不可能。版本注：v1（2025-10-09），8 页正文+1 页参考文献，ICRA 格式；GitHub 开源承诺待兑现（链接已给出）。"
+}

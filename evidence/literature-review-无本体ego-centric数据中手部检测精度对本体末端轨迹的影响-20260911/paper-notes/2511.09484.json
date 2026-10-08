@@ -1,0 +1,299 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2511.09484",
+  "title": "SPIDER: Scalable Physics-Informed Dexterous Retargeting",
+  "published": "2025-11-12",
+  "url": "https://arxiv.org/abs/2511.09484",
+  "authors": [
+   "Chaoyi Pan",
+   "Changhao Wang",
+   "Haozhi Qi",
+   "Zixi Liu",
+   "Homanga Bharadhwaj",
+   "Akash Sharma",
+   "Tingfan Wu",
+   "Guanya Shi",
+   "Jitendra Malik",
+   "Francois Hogan"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "直接面向'含噪重建演示→可行机器人轨迹'的物理重定向框架：接触过滤器与 min-max 鲁棒化是针对检测/重建误差的显式缓解机制，4.1 节展示单 RGB 视频（HaMeR+FoundationPose）噪声输入的端到端修正执行，消融给出运动学重定向近乎零成功率的对照。"
+  },
+  "sections_read": [
+   {
+    "locator": "1 Introduction",
+    "role": "problem",
+    "purpose": "确认问题：重建演示含噪、缺力/接触信息，直接运动学迁移不可行"
+   },
+   {
+    "locator": "2 Physics-based Retargeting with Sampling; 2.1; 2.2; 2.3; 2.4; 2.5",
+    "role": "method-or-design",
+    "purpose": "理解采样优化、虚拟接触引导、针对含噪接触的接触过滤、min-max 轨迹鲁棒化与数据增强"
+   },
+   {
+    "locator": "3 Performance Evaluation; 3.1; 3.2; 3.3; 3.4",
+    "role": "results-or-analysis",
+    "purpose": "提取消融成功率（Table 1）、全数据集成功率（Table 2）、与 ManipTrans/DexMachina/GMR 的对比与任务成功阈值定义"
+   },
+   {
+    "locator": "4 Applications; 4.1 Retargeting from Single RGB Camera; 4.2 Retargeting for RL Policy Training",
+    "role": "results-or-analysis",
+    "purpose": "单 RGB 视频噪声输入管线与 RL 下游应用证据"
+   },
+   {
+    "locator": "6 Conclusion and Future Work",
+    "role": "conclusion-or-limitations",
+    "purpose": "作者对重建数据质量依赖的局限性声明"
+   },
+   {
+    "locator": "Appendix",
+    "role": "appendix-or-supplement",
+    "purpose": "预处理（MANO 21D 关键点、IK、50 Hz 重采样与 10 Hz 低通滤波）与超参"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "5 Related Work",
+    "role": "relevant-core",
+    "reason": "相关工作综述，与证据提取关系间接，仅浏览"
+   },
+   {
+    "locator": "References",
+    "role": "appendix-or-supplement",
+    "reason": "参考文献列表不逐条精读"
+   }
+  ]
+ },
+ "research_question": "如何高效、可靠地把仅运动学的人类演示（含噪、缺力/接触信息）转换为动力学可行且接触正确的机器人轨迹，并扩展到多本体、多数据集？",
+ "contributions": [
+  "提出 SPIDER：基于并行物理仿真的采样式物理重定向框架，跨 6 数据集、9 种机器人本体、两类任务域",
+  "提出虚拟接触引导（curriculum 式松弛的虚拟约束）降低接触模式歧义，并配接触过滤器抵御含噪/不稳定接触",
+  "生成并发布 262 episodes、800 小时、2.4M 帧、5 种灵巧手 × 103 物体的动力学可行数据集",
+  "支持轨迹鲁棒化直接真机部署、物理感知数据增强与 RL 残差策略训练"
+ ],
+ "method": {
+  "summary": "将物理重定向形式化为以人类参考轨迹为目标的受约束最优控制问题，用带退火采样核的采样优化器（类 MPPI+DIAL-MPC）在并行物理仿真中直接优化控制序列；虚拟接触引导在初期用虚拟约束把物体'粘'到目标接触点并逐步松弛；接触过滤器剔除持续过短或漂移过大的不稳定接触；min-max 目标在有界动力学参数集上做悲观鲁棒化。",
+  "assumptions": [
+   "输入为运动学参考（人手由 MANO 参数给出 21D 关键点：3D 指尖位置+6D 手腕位姿）与物体位姿轨迹",
+   "场景可在物理仿真中建模",
+   "接触指示由参考相对位置阈值 ε_contact 判定",
+   "预处理：轨迹重采样到 50 Hz 并做 10 Hz 低通滤波"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "GigaHands",
+   "Oakink",
+   "ARCTIC（灵巧手，共 1262 episodes、2.4M 帧、103 物体）",
+   "LAFAN1",
+   "AMASS",
+   "OMOMO（人形机器人）",
+   "单 RGB 视频（Trellis 重建 + HaMeR 手姿 + FoundationPose 物位姿）"
+  ],
+  "tasks": [
+   "双手灵巧操作（转灯泡、小勺、吉他、拔充电器、倒杯等）",
+   "人形机器人全身控制（跑、搬箱）",
+   "RL 残差策略训练"
+  ],
+  "embodiments": [
+   "Allegro",
+   "XHand",
+   "Inspire",
+   "Ability",
+   "Schunk",
+   "Unitree G1/H1-2",
+   "Fourier N1",
+   "Booster T1",
+   "Franka Panda + Allegro（真机）"
+  ],
+  "sample_or_scale": "消融：7 个 Oakink 任务 + 3 条 GigaHands 轨迹 × 5 种子；全量：Oakink 1022 + GigaHands 756 轨迹；真机 4 个任务"
+ },
+ "evaluation": {
+  "design": "消融比较运动学重定向/普通采样/退火采样/退火+接触引导四档；全数据集成功率；与 ManipTrans、DexMachina、GMR 做参考级对比；真机开环执行验证",
+  "baselines": [
+   "运动学重定向（指尖 IK）",
+   "vanilla Sampling (MPPI)",
+   "退火核采样（类 DIAL-MPC）",
+   "ManipTrans（RL）",
+   "DexMachina（RL）",
+   "GMR（运动学人形重定向）"
+  ],
+  "metrics": [
+   "任务成功率（E_rot<0.5 rad 且 E_pos<0.1 m）",
+   "物体位置/旋转跟踪误差",
+   "生成 FPS",
+   "人形关节/骨盆位置/方向误差"
+  ],
+  "ablations": [
+   "退火核",
+   "虚拟接触引导",
+   "（2.4/2.5 的鲁棒化与增强未做独立数值消融）"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "带退火核与虚拟接触引导的采样在所有机器人-数据集组合上成功率最高，比仅退火核高 ~18%；纯运动学重定向成功率仅 0.0-0.13",
+   "scope": "Oakink 7 任务 + GigaHands 3 轨迹 × 5 种子 × 5 种手",
+   "locator": "3.2 Ablation Study"
+  },
+  {
+   "finding": "单 RGB 视频管线（Trellis 重建 + HaMeR 手姿 + FoundationPose 物位姿）输出比数据集更 noisy 的运动；SPIDER 的物理 grounding 修正噪声、伪影与穿透后轨迹可直接真机执行（倒杯、装螺栓）",
+   "scope": "单手操作任务真机验证，定性结果",
+   "locator": "4.1 Retargeting from Single RGB Camera"
+  },
+  {
+   "finding": "min-max 鲁棒化针对未知/误设动力学与重建噪声（物体 mesh 估计误差、位姿估计误差），在有界参数集上优化最坏情形代价",
+   "scope": "仿真到真机迁移",
+   "locator": "2.4 Trajectory Robustification"
+  },
+  {
+   "finding": "OMOMO 案例中，动作捕捉误差使原始参考运动与物体错位、缺失接触；直接用原始人类运动训练的 RL 策略无法抓物，SPIDER 修正接触后策略收敛更快且物体跟踪更好",
+   "scope": "人形机器人 RL 训练",
+   "locator": "4.2 Retargeting for RL Policy Training"
+  },
+  {
+   "finding": "预处理将轨迹重采样到 50 Hz 并做 10 Hz 低通滤波；IK 初始猜测用 3D 指尖位置+6D 手腕位姿（手腕旋转项权重 0.1）",
+   "scope": "数据预处理管线",
+   "locator": "Appendix"
+  },
+  {
+   "finding": "作者承认 SPIDER 性能依赖重建的 3D 人-物交互数据质量，含噪 mesh 与运动会产生退化轨迹",
+   "scope": "方法边界",
+   "locator": "6 Conclusion and Future Work"
+  },
+  {
+   "finding": "全量数据生成：Oakink 成功率 0.413-0.479、GigaHands 0.706-0.879（因手而异）；Oakink 物体常预被抓取，成功取决于精确初始接触构型",
+   "scope": "1022+756 轨迹",
+   "locator": "3.3 Dexterous Manipulation Retargeting Results"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "SPIDER 的性能依赖重建的 3D 人-物交互数据质量；含噪 mesh 与运动会产生退化的轨迹",
+    "locator": "6 Conclusion and Future Work"
+   },
+   {
+    "limitation": "在更复杂的 ARCTIC 操作上落后于 DexMachina（42.0% vs 67.1%），优势主要在生成速度",
+    "locator": "3.3 Dexterous Manipulation Retargeting Results"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "4.1 的单 RGB 验证仅定性展示两个任务，未量化 HaMeR 手姿估计误差与最终轨迹误差的关系；'可执行'结论不能推出任意噪声水平下均可行",
+    "basis": "4.1 节仅有 figure 9 定性展示与文字陈述，无数值指标"
+   },
+   {
+    "boundary": "接触过滤阈值 t_c,min、d_c,max 与接触判定阈值 ε_contact 的具体取值未在正文/附录给出，无法据此复现'多 noisy 算不稳定'的边界",
+    "basis": "2.3 节仅给出符号定义，附录 A.2 超参表未包含这些阈值"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于可将场景建模进物理仿真、且有人类运动学参考与物体位姿轨迹的离线重定向；对 ego-centric 视频，其结论以单 RGB（非第一人称）验证为限，接触过滤与鲁棒化能吸收部分检测/重建噪声，但性能仍随重建质量退化，噪声-轨迹误差的定量关系未建立。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "跨 6 数据集 9 本体的大规模统一评估",
+   "消融把退火核与接触引导的贡献分离",
+   "任务成功阈值（E_pos<0.1 m, E_rot<0.5 rad）明确定义并与 ManipTrans/DexMachina 一致"
+  ],
+  "design_risks": [
+   "真机执行为开环且仅定性展示",
+   "未做手部/物体位姿噪声的受控注入实验，噪声鲁棒性主要靠设计与个案展示",
+   "接触过滤等关键阈值未报告取值",
+   "与 RL 基线的比较作者自述仅为参考（产物形态不同）"
+  ],
+  "baseline_fairness": "消融内部公平（同管线逐档加组件）；与 ManipTrans/DexMachina 的跨方法比较作者明确限定为参考级（采样控制序列 vs RL 策略）；GMR 对比同人形数据集",
+  "metric_validity": "以物体运动跟踪误差与任务成功为主指标符合作者'目的是移动物体而非精确复现手姿'的论点；但未直接报告手部末端轨迹精度指标",
+  "reproducibility": "超参（H=1.2 s、N=1024、退火参数等）与仿真器配置公开，完整数据生成管线承诺发布；部分阈值（t_c,min、d_c,max、ε_contact）缺失",
+  "external_validity": "仿真结论跨 9 本体较广；真机仅 Franka+Allegro 四任务开环执行；单 RGB 验证非 ego-centric 视角"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2511.09484-C01",
+   "claim": "为抵御含噪/不稳定接触的演示，SPIDER 用接触过滤器检测不稳定交互：接触持续时间短于 t_c,min 或接触点漂移超过 d_c,max 时判定为不稳定并禁用对应虚拟约束，使只有可靠接触参与引导，防止含噪演示带偏优化。",
+   "stance": "conditional",
+   "relation": "缓解手段（接触级）：对上游检测/追踪噪声造成的接触抖动与漂移，在约束层做选择性松弛而非无差别强制执行，阻断噪声经虚拟接触引导传入机器人轨迹。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "2.3 节'Robustness against imperfect reference contact'明确：虚拟约束应选择性松弛，接触过滤器按时长阈值 t_c,min 与漂移阈值 d_c,max 判定不稳定接触并禁用其约束。",
+   "locator": "2.3 Virtual Contact Guidance",
+   "source_context": "contact filter that detects unstable\ninteractions: if a contact duration is shorter than t\nc,min \nor if the contact point drifts more than d\nc,max\nduring that period, the contact is classified as unstable and the corresponding virtual constraint is disabled.\n5\n\nThis implementation ensures that only reliable contacts contribute to guidance, thereby preventing noisy\ndemonstrations from biasing the optimization process.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 2.3 节末尾两段；claim 完整复述过滤器机制与目的，未编造阈值数值（原文未给）。"
+   }
+  },
+  {
+   "card_id": "2511.09484-C02",
+   "claim": "SPIDER 展示从单 RGB 视频（Trellis 重建 + HaMeR 手部姿态估计 + FoundationPose 物体 6D 位姿跟踪）出发的重定向：因遮挡与分辨率限制，人与物体运动比数据集更 noisy，经物理 grounding 修正噪声、伪影与穿透后，轨迹可直接在物理机器人上执行（倒杯、装螺栓）。",
+   "stance": "support",
+   "relation": "支持'物理 grounding 可吸收 robot-free 视频手部/物体位姿噪声并恢复可执行轨迹'：视觉检测误差主要表现为噪声、伪影与穿透，物理约束将其修正到可执行水平（定性证据）。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "4.1 节描述完整管线与结论：单 RGB 输入运动更 noisy，需要更强物理 grounding；作者报告噪声/伪影/穿透被修正且轨迹直接真机执行。结果为定性展示（figure 9），无数值指标。",
+   "locator": "4.1 Retargeting from Single RGB Camera",
+   "source_context": "The pipeline consists of: (1) 3D mesh\nreconstruction with Trellis (Xiang et al., 2025),\n(2) hand pose estimation with HAMER (Pavlakos\net al., 2024) to obtain MANO parameters, and (3)\nobject pose tracking with FoundationPose (Wen\net al., 2024) for 6D trajectories. Due to the occlu-\nsion and limited resolution, the human and object\nmotion are more noisy than the dataset, which\nrequires more robust physics grounding. As shown\nin figure 9, we validate on single-hand manipula-\ntion tasks like pouring with a cup and installing\na bolt. Real-world noise, artifacts, and penetra-\ntions are corrected through physics grounding in\nSPIDER, and the retargeted trajectories are directly\nexecutable on physical robots.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字来自 4.1 节；claim 明确标注为定性证据并列出管线三组件（Trellis/HaMeR/FoundationPose），未声称任何成功率或误差数值。"
+   }
+  },
+  {
+   "card_id": "2511.09484-C03",
+   "claim": "在 Oakink 7 个双手任务与 GigaHands 3 条轨迹（5 种灵巧手、5 个种子）上，纯运动学重定向（指尖 IK）成功率仅 0.0-0.13，普通采样 0.23-0.64，退火核采样 0.43-1.00，退火核+虚拟接触引导达 0.45-1.00，比仅退火核平均高约 18%。",
+   "stance": "support",
+   "relation": "量化误差传播：缺少物理 grounding 与接触引导时，人类演示直接运动学迁移近乎全部失败（成功率≤0.13），即上游演示的形态/接触误差未经物理修正会几乎全部转化为任务失败。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.2 节 Table 1 给出四档方法在 10 个机器人-数据集组合上的成功率（运动学 0.0-0.13，全方法 0.45-1.00），Key Findings 报告全方法在所有组合上最高、比仅退火核高 ~18%。",
+   "locator": "3.2 Ablation Study",
+   "source_context": "Key results are presented in table 1, where sampling equipped with an annealed kernel and\nvirtual contact guidance consistently achieves the highest success rates across all robot–dataset combinations,\noutperforming the annealed-kernel-only version by ∼ 18%.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "retargeting success rate",
+    "value_or_direction": "kinematic 0.0-0.13; vanilla sampling 0.23-0.64; annealed 0.43-1.00; annealed+contact guidance 0.45-1.00 (about +18% over annealed-only)",
+    "comparator": "kinematic fingertip-IK retargeting and MPPI-style vanilla sampling",
+    "task_or_sample": "7 Oakink bimanual tasks + 3 GigaHands trajectories, 5 robot hands, 5 seeds",
+    "locator": "3.2 Ablation Study"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "数值区间逐一核对于 Table 1 各行（Oakink 运动学列 0.13/0.13/0.10/0.0/0.10，GigaHands 全 0.0；全方法列 0.54/0.85/0.45/0.53/0.77 与 0.80/1.00/0.93/1.00/1.00）与 Key Findings 的 ~18% 陈述；claim 限定于消融设置。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "ID 段预算（6 篇共 15 个事件 ID）下仅投影 3 张核心卡；2.4 min-max 鲁棒化、4.2 mocap 缺失接触修正、附录 50 Hz/10 Hz 预处理滤波、结论质量依赖声明等保留在 findings/limitations，如追加 ID 可补投影。"
+}

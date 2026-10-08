@@ -1,0 +1,339 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.03533",
+  "title": "Recursive Learning of Feedforward and Compliance Compensation Parameters for Precision Motion Systems",
+  "published": "2026-06-02",
+  "url": "https://arxiv.org/abs/2606.03533",
+  "authors": [
+   "M. Wind",
+   "J. Pierssens",
+   "R. Beerens",
+   "V. Dolk",
+   "T. van Keulen"
+  ]
+ },
+ "review": {
+  "question": "近一年（2025-09至2026-08）解决机器人末端执行器轨迹精度的方案与痛点：方案族、核心机制、量化效果、适用条件与未解痛点",
+  "topic_ids": [
+   "EA-TRAJ",
+   "EA-ALIGN",
+   "EA-EVAL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "属于控制层方案族（经典自适应/递归学习前馈+柔顺补偿）：在工业精密运动系统上量化了伺服轨迹误差改善与各误差源贡献分解，直接回答综述问题中的核心机制、量化效果、适用条件与未解痛点。"
+  },
+  "sections_read": [
+   {
+    "locator": "1. INTRODUCTION",
+    "role": "problem",
+    "purpose": "定位问题背景（近似逆前馈受时变/位置相关行为限制）与三条贡献"
+   },
+   {
+    "locator": "2. SYSTEM DESCRIPTION",
+    "role": "method-or-design",
+    "purpose": "系统模型（质量+粘性摩擦+静态柔顺+柔性动力学）与控制结构总览"
+   },
+   {
+    "locator": "2.3 Compliance compensation",
+    "role": "method-or-design",
+    "purpose": "柔顺补偿作用于测量路径（修正伺服误差）而非输入路径的机制与参数耦合来源"
+   },
+   {
+    "locator": "3. LEARNING FRAMEWORK",
+    "role": "method-or-design",
+    "purpose": "工具变量+滑动窗递归学习框架：预测器模型、缩放因子与慢速自适应律"
+   },
+   {
+    "locator": "4. COUPLING IN THE PARAMETERS AND MULTIVARIATE REGRESSION",
+    "role": "method-or-design",
+    "purpose": "回归量非正交性分析与多变量回归闭式解"
+   },
+   {
+    "locator": "4.1 Univariate regression",
+    "role": "method-or-design",
+    "purpose": "单变量回归因回归量非正交而无法解耦的证明"
+   },
+   {
+    "locator": "4.2 Multivariate regression",
+    "role": "method-or-design",
+    "purpose": "多变量回归闭式解及在线矩阵求逆的代价"
+   },
+   {
+    "locator": "5. EXPERIMENTAL CASE STUDY",
+    "role": "data-or-setting",
+    "purpose": "实验设计总览：D1（逐参数学习）、D2（单变量/多变量回归对照）与仿真 Ds"
+   },
+   {
+    "locator": "5.1 System description and setting",
+    "role": "data-or-setting",
+    "purpose": "晶圆台系统（两正交梁驱动、x 方向、粘性摩擦与 y 位置相关柔顺）与 500 次点到点运动设置"
+   },
+   {
+    "locator": "5.2 Experimental results",
+    "role": "results-or-analysis",
+    "purpose": "伺服误差改善因子 7、参数贡献分解与参数耦合的实验结果"
+   },
+   {
+    "locator": "6. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论（多变量回归降低耦合）与未来工作（无名义调参的柔顺补偿学习）"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "REFERENCES",
+    "reason": "参考文献列表，仅用于追溯背景，不属于六遍精读范围"
+   }
+  ]
+ },
+ "research_question": "在具有时变与位置相关动力学（粘性摩擦、质量、柔顺）的精密运动系统上，如何利用在线数据同时递归学习前馈与柔顺补偿参数以最小化伺服跟踪误差，并消除参数间耦合？",
+ "contributions": [
+  "将滑动窗工具变量前馈参数学习框架（Van Keulen et al. 2023）扩展为同时递归学习柔顺补偿参数",
+  "提出多变量回归形式以抵消参数耦合（尤其速度-加加速度前馈与加速度-柔顺补偿间的耦合）",
+  "在先进工业计量检测机（晶圆台）上完成仿真与实验双重验证"
+ ],
+ "method": {
+  "summary": "在有限滑动窗内以工具变量（由近似控制系统生成的近似伺服误差）构造与真实伺服误差相关而与测量噪声不相关的回归量，闭式解出参数失配估计，再经慢速自适应律（时间尺度分离）在线更新四个参数：速度/加速度/加加速度前馈（作用于输入路径）与柔顺补偿（作用于测量路径，抵消加速段准静态变形）；以多变量回归（滑动窗 4x4 矩阵求逆）同时估计全部参数，隐式处理参数耦合。",
+  "assumptions": [
+   "参考轨迹为四阶导数有界、端点一/三/四阶导数为零的非零点到点序列（Assumption 1）",
+   "存在名义离线标定参数（含质量估计与 y 位置相关柔顺查找表）作为学习起点",
+   "可构造近似系统与灵敏度模型以生成工具变量",
+   "自适应增益足够小，使参数在滑动窗内近似常数（时间尺度分离）"
+  ]
+ },
+ "study_context": {
+  "datasets": [],
+  "tasks": [
+   "晶圆套刻（overlay）计量：500 次 (x,y) 点到点定位运动，参考轨迹满足 Assumption 1"
+  ],
+  "embodiments": [
+   "半导体计量检测系统晶圆台（两正交梁驱动、载片台，仅 x 方向单自由度控制，含粘性摩擦与 y 位置相关柔顺）"
+  ],
+  "sample_or_scale": "单台工业设备上的两组实验（D1 逐参数学习、D2 回归形式对照）与一个非共置双质量仿真；无多平台或多任务扩展"
+ },
+ "evaluation": {
+  "design": "仿真（非共置质量-弹簧-阻尼双质量系统 Ds）加工业实验两组：D1 以收敛后伺服误差累积功率谱密度对比不同参数集，D2 对照单变量与多变量回归的参数收敛与耦合；辅以特定三次运动的伺服误差时域曲线",
+  "baselines": [
+   "仅名义离线标定参数（现行工程实践，学习参数 theta=0）",
+   "部分参数集（仅速度/仅加速度/仅柔顺补偿等逐参数消融）",
+   "单变量回归形式的学习框架（Van Keulen et al. 2023 原形式）"
+  ],
+  "metrics": [
+   "收敛后伺服误差累积功率谱密度（Fig. 6）",
+   "伺服误差时域序列（特定三次运动，Fig. 5/7）",
+   "参数收敛轨迹（theta_v/theta_a/theta_j/theta_cc，Fig. 8/9）",
+   "伺服误差改善因子与各参数贡献占比"
+  ],
+  "ablations": [
+   "逐参数纳入 vs 全部四参数纳入学习",
+   "单变量回归 vs 多变量回归",
+   "仿真 Ds vs 工业实验 D1/D2"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "四个参数（速度/加速度/加加速度前馈与柔顺补偿）全部纳入递归学习后，实验 D1 的伺服误差改善因子为 7（以参数收敛后累积功率谱密度表征）",
+   "scope": "工业计量检测系统晶圆台 x 方向、500 次点到点运动",
+   "locator": "5.2 Experimental results"
+  },
+  {
+   "finding": "收益的参数贡献分解：速度前馈 92.5%、加速度前馈 6.5%、柔顺补偿 1%，加加速度前馈贡献可忽略；在线柔顺学习的边际收益受良好名义标定限制",
+   "scope": "实验 D1（名义柔顺补偿已先验调好的设置）",
+   "locator": "5.2 Experimental results"
+  },
+  {
+   "finding": "多变量回归显著降低参数耦合（尤其速度-加速度耦合与加速度-柔顺耦合），而单变量回归在这两对参数上出现明显耦合",
+   "scope": "仿真 Ds 与实验 D2",
+   "locator": "5.2 Experimental results"
+  },
+  {
+   "finding": "回归量在滑动窗上非正交（除非以窗长为周期），因此单变量回归无法解耦为独立标量估计，这是引入多变量回归的必要性来源",
+   "scope": "理论分析（Assumption 1 下）",
+   "locator": "4.1 Univariate regression"
+  },
+  {
+   "finding": "多变量回归以在线计算 4x4 矩阵求逆为代价换取更优的参数估计性质",
+   "scope": "方法设计权衡（作者陈述）",
+   "locator": "4.2 Multivariate regression"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "无名义调参的柔顺补偿学习及其收敛性质是未来工作，尚未验证；当前框架依赖离线标定的名义参数",
+    "locator": "6. CONCLUSION"
+   },
+   {
+    "limitation": "实验中加速度与柔顺补偿间的耦合不如仿真中明显，作者推测（most likely）由相对较高的自适应增益导致，属不确定归因",
+    "locator": "5.2 Experimental results"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "结论仅覆盖 x 方向单自由度、点到点扫描类运动且已有高质量名义模型的工业平台；对多自由度机械臂末端轨迹、接触任务或无线索标定的新平台未验证",
+    "basis": "5.1 节明确只考虑 x 方向；5.2 节依赖先验调好的 y 位置相关柔顺查找表"
+   },
+   {
+    "boundary": "改善因子 7 中 92.5% 来自速度前馈，不宜将该量化外推为'在线柔顺补偿学习普遍带来大幅收益'",
+    "basis": "5.2 节贡献分解及名义柔顺补偿已接近真实值的解释"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于具备点到点参考轨迹、已有名义模型/离线标定（质量与位置相关柔顺）并可加装滑动窗参数学习的工业精密运动系统；对无名义标定、非点到点轨迹或多自由度机械臂接触场景的迁移未验证。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "在工业实物系统（晶圆台计量机）而非仅仿真上验证",
+   "逐参数消融（速度/加速度/加加速度/柔顺分别纳入）加单变量/多变量回归对照，能定位收益来源",
+   "用工具变量处理回归量与测量噪声相关导致的估计偏差，机制明确"
+  ],
+  "design_risks": [
+   "摘要称'数量级（order-of-magnitude）改善'而正文报告因子 7，措辞强于实测",
+   "实验仅 x 方向单自由度，且未报告统计重复次数或置信区间",
+   "基线限于同框架内的消融与现行工程实践，未与 snap 前馈等其他补偿结构对比"
+  ],
+  "baseline_fairness": "基线（名义参数、部分参数集、单变量回归）均为同一框架内的消融，公平但范围窄，未覆盖替代补偿结构。",
+  "metric_validity": "以收敛后累积伺服误差功率谱密度为主指标，符合精密运动领域惯例，直接对应轨迹精度；但改善因子为单次实验结果，无统计不确定性。",
+  "reproducibility": "算法推导（预测器、闭式解、自适应律）完整可复现；但依赖工业专有设备与手调滤波器/增益/查找表，外部难以完整复现。",
+  "external_validity": "结论绑定于点到点运动、时变/位置相关柔顺的平板类工业平台；对机器人臂末端轨迹精度的迁移属类比推断而非实验验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.03533-C01",
+   "claim": "在工业计量检测系统晶圆台（x 方向、500 次点到点运动）的实验 D1 中，将速度/加速度/加加速度前馈与柔顺补偿四个参数全部纳入递归学习后，参数收敛后的伺服误差（以累积功率谱密度表征）改善因子为 7。",
+   "stance": "support",
+   "relation": "支撑综述命题'经典控制层方案（递归/自适应前馈学习）可在真实工业平台上大幅降低轨迹跟踪误差'的量化效果。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节实验结果原文明确陈述'all parameters are included'时伺服误差改善因子为 7，并以 Fig. 6 的收敛后累积功率谱密度对比为依据。",
+   "locator": "5.2 Experimental results",
+   "source_context": "in terms of the cumulative power spectral density of the servo error for different parameter sets after parameter convergence. Observe that the servo error is improved by a factor of 7 when all parameters are included",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "servo error (cumulative power spectral density, after parameter convergence)",
+    "value_or_direction": "improved by a factor of 7",
+    "comparator": "nominal parameter sets without learning (state of practice)",
+    "task_or_sample": "500 point-to-point moves on industrial wafer-stage metrology system, x-direction (experiment D1)",
+    "locator": "Fig. 6, 5.2 Experimental results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 5.2 节原文'improved by a factor of 7 when all parameters are included'，指标为参数收敛后伺服误差累积功率谱密度（Fig. 6），卡中范围限定（实验D1、晶圆台x方向、500次点到点运动）与 5.1 节设置一致，未泛化到其他平台。"
+   }
+  },
+  {
+   "card_id": "2606.03533-C02",
+   "claim": "在同一实验 D1 中，学习收益的参数贡献分解为：速度前馈 92.5%、加速度前馈 6.5%、柔顺补偿 1%，加加速度前馈贡献可忽略（该设置下）。",
+   "stance": "support",
+   "relation": "支撑综述中'不同误差源贡献差异大、摩擦相关的速度项主导该类精密平台轨迹误差'的机制性命题。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节给出各补偿参数的量化贡献占比（92.5%/6.5%/1%），并明确 jerk 前馈在该设置下贡献可忽略，原文限定'for the setting considered'。",
+   "locator": "5.2 Experimental results",
+   "source_context": "in the learning framework. The individual contributions for the velocity, acceleration and compliance compensa- tion contribute to 92.5%, 6.5%, 1%, respectively, where the contribution of jerk feedforward is negligible for the setting considered.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "share of servo-error improvement attributable to each learned parameter",
+    "value_or_direction": "velocity 92.5%, acceleration 6.5%, compliance 1%, jerk negligible",
+    "comparator": "relative contribution among learned parameters",
+    "task_or_sample": "experiment D1, industrial wafer-stage metrology system, 500 point-to-point moves",
+    "locator": "5.2 Experimental results"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "逐字核对了 5.2 节贡献分解句：'contribute to 92.5%, 6.5%, 1%, respectively'依次对应 velocity/acceleration/compliance，'negligible'对应 jerk feedforward，且原文带'for the setting considered'的范围限定，卡中已保留。"
+   }
+  },
+  {
+   "card_id": "2606.03533-C03",
+   "claim": "在实验中，在线柔顺补偿学习的额外收益有限：总体性能提升主要归因于速度前馈，原因是事先调定的 y 位置相关名义柔顺补偿已接近真实柔顺，限制了在线自适应可获得的额外改善。",
+   "stance": "limit",
+   "relation": "限制综述中'在线/递归学习柔顺补偿本身能带来大幅轨迹精度提升'一类主张：当名义标定已足够好时，在线柔顺学习的边际收益很小（约 1%），与'大幅收益'的主张冲突。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "作者在 5.2 节明确解释实验收益主要来自速度前馈，并归因于名义柔顺补偿已接近真实值，从而限制了在线自适应的额外改善空间。",
+   "locator": "5.2 Experimental results",
+   "source_context": "In the experimental results D 1 , the over- all performance gain is primarily attributed to velocity feedforward. This can be explained by the fact that the a priori tuned y-position-dependent nominal compliance compensation ˆγ 0 (y) is already close to the true compliance, thereby limiting the additional improvement achievable through online adaptation.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 5.2 节原文：'primarily attributed to velocity feedforward'与'a priori tuned ... is already close to the true compliance, thereby limiting the additional improvement achievable through online adaptation'，卡的因果解释与原文一致且限定在实验 D1 范围内。"
+   }
+  },
+  {
+   "card_id": "2606.03533-C04",
+   "claim": "采用多变量回归同时估计四个参数可显著降低参数耦合，尤其是速度-加加速度耦合；加速度-柔顺耦合在仿真中明显、实验中较不显著，作者推测因自适应增益相对较高。",
+   "stance": "support",
+   "relation": "支撑综述命题'多参数前馈学习方案需处理参数耦合（本例用多变量回归），否则估计互相干扰'的核心机制。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "5.2 节实验 D2 与仿真 Ds 显示单变量回归下出现速度-加速度与加速度-柔顺耦合，改用多变量回归后耦合显著降低；结论节重申这一发现。",
+   "locator": "5.2 Experimental results",
+   "source_context": "The coupling between acceleration and compliance compensa- tion is also clearly visible in Fig. 8, yet less prominent in Fig. 9, most likely due to relatively high adaptation gains. By adopting multivariate regression as proposed in (20) the coupling between parameters, especially seen in velocity and jerk coupling, has been significantly reduced.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 5.2 节原文'multivariate regression ... coupling ... has been significantly reduced'（针对实验D2），以及加速度-柔顺耦合'less prominent in Fig. 9, most likely due to relatively high adaptation gains'的作者推测语气，卡中对应部分已注明为推测。"
+   }
+  },
+  {
+   "card_id": "2606.03533-C05",
+   "claim": "多变量回归相对单变量回归获得更优参数估计性质的代价是必须在线计算（4x4）矩阵逆。",
+   "stance": "conditional",
+   "relation": "为综述的'适用条件/计算开销'维度提供该方案族的成本证据：多参数联合估计以在线矩阵求逆为代价。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.2 节原文明确陈述多变量回归带来更优参数估计性质，代价是需在线计算矩阵逆，这是作者陈述的设计权衡。",
+   "locator": "4.2 Multivariate regression",
+   "source_context": "By considering the linear combination of all regressors Φ simultaneously, parameter coupling is implicitly taken into account. This results in superior parameter estimation properties, at the cost of having to compute a matrix inverse online.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 4.2 节原文：'This results in superior parameter estimation properties, at the cost of having to compute a matrix inverse online.'，卡中主张为该句的忠实转述，未添加量化数字。"
+   }
+  },
+  {
+   "card_id": "2606.03533-C06",
+   "claim": "无名义调参的柔顺补偿学习及其收敛性质被作者列为未来工作：当前框架仍依赖离线标定名义参数（含 y 位置相关柔顺查找表），该依赖带来的手工调参成本与未验证的收敛性是作者承认的开放问题。",
+   "stance": "gap",
+   "relation": "支撑综述的未解痛点维度：控制层学习方案仍依赖人工标定的名义模型起点，无标称条件下的收敛性未验证。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "结论节明确将'learning compliance compensation without nominal tuning to verify convergence properties, potentially reducing manual tuning effort'列为未来工作，说明当前版本未解决该问题。",
+   "locator": "6. CONCLUSION",
+   "source_context": "Re- sults show that a multivariate regression reduces param- eter coupling, predominantly between velocity and jerk feedforward, and between acceleration feedforward and compliance compensation. Future work will focus on learn- ing compliance compensation without nominal tuning to verify convergence properties, potentially reducing manual tuning effort.",
+   "evidence_type": "author-judgment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "核对了 6. CONCLUSION 原文的 Future work 句：'learning compliance compensation without nominal tuning to verify convergence properties, potentially reducing manual tuning effort'；卡中'当前依赖名义参数'的依据是 5.2 节使用离线标定 theta_nom 与柔顺查找表的设置，属原文可entail的范围。"
+   }
+  }
+ ],
+ "core_citations": [],
+ "notes": "注意摘要'order-of-magnitude improvement'与正文'factor of 7'的措辞差（7 略小于一个数量级）；且实验收益 92.5% 来自速度前馈，在线柔顺学习边际收益小。本文学科归属为精密运动控制（IFAC 社区），与机器人末端轨迹精度问题同构但本体为晶圆台。"
+}

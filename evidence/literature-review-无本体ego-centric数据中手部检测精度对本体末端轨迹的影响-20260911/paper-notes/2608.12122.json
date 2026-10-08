@@ -1,0 +1,349 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2608.12122",
+  "title": "HandEdit: A Unified Benchmark for Egocentric Human-to-Robot Dexterous Hand Image Editing",
+  "published": "2026-08-12",
+  "url": "https://arxiv.org/abs/2608.12122",
+  "authors": [
+   "Zhenjie Yang",
+   "Xingyu Jiao",
+   "Guopeng Zhong",
+   "Shuzhe Yang",
+   "Shi Che",
+   "Chao Wu",
+   "Chenyu Jiang",
+   "Dong-Jie Zhang",
+   "Yideng Zhang",
+   "Zheng Zhang",
+   "Muyun Jiang",
+   "Haisheng Su",
+   "Shuang Jin",
+   "Donghang Zhang",
+   "Chao Yang",
+   "Li Chen",
+   "Hong-Yang Li",
+   "Zuxuan Wu",
+   "Yu-Gang Jiang",
+   "Xiaosong Jia",
+   "Junchi Yan"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "benchmark",
+  "relevance": {
+   "decision": "include",
+   "reason": "大型 URDF 条件 ego 人手→机器人灵巧手编辑基准：其 pseudo-GT 数据管线（分割→修复→MANO/3D 姿态重定向→虚拟基座+IK→渲染合成→和谐化）逐阶段设自动+人工 QC 闸，附录 B 给出具体剔除阈值（指尖/腕误差>50mm、接触距离>20mm）与失败归因（重定向占未保留帧 63.46%），直接回答综述问题的误差来源、可接受阈值与缓解手段；基准结果进一步揭示交互保持是视频转换路线最薄弱环节。"
+  },
+  "sections_read": [
+   {
+    "locator": "preamble",
+    "role": "problem",
+    "purpose": "标题、作者、规模标签（200M edits / 300K clips / 26 embodiments）确认论文定位"
+   },
+   {
+    "locator": "Abstract",
+    "role": "problem",
+    "purpose": "摘要、Section 1 Introduction 与 Section 2 Related Work（html-flat 结构中均归入该段）：ego 人视频的规模优势 vs 外观/几何/运动学/交互模式的本体差距"
+   },
+   {
+    "locator": "Abstract (Sections 3.1-3.3)",
+    "role": "method-or-design",
+    "purpose": "数据策展管线（SAM3 分割、ProPainter 修复、MANO/3D 姿态重定向、相机相对虚拟基座+IK、渲染合成）、数据集构成与双赛道基准设计"
+   },
+   {
+    "locator": "Background (Sections 3.4-3.5)",
+    "role": "method-or-design",
+    "purpose": "多维评测指标（generic similarity / VLM judge / embodiment-aware）与和谐化后处理"
+   },
+   {
+    "locator": "Background (Section 4)",
+    "role": "results-or-analysis",
+    "purpose": "11 个编辑模型双赛道结果与四条关键观察（removal 易、interaction 难；VLM 不充分；感知质量≠任务成功）"
+   },
+   {
+    "locator": "Background (Section 5)",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：基准定位与对策略预训练数据的意义"
+   },
+   {
+    "locator": "References (Appendix A-B)",
+    "role": "appendix-or-supplement",
+    "purpose": "URDF 清单、源数据集细节、QC 标准（Table S3）、失败归因拆解（Table S5）、虚拟基座搜索与 IK 细节"
+   },
+   {
+    "locator": "Background (Appendix C-G)",
+    "role": "appendix-or-supplement",
+    "purpose": "VLM 评分协议、被评模型清单、人评设计与一致性、局限性与 broader impacts"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "References (reference list)",
+    "role": "relevant-core",
+    "reason": "参考文献列表，仅按需回查引用编号"
+   },
+   {
+    "locator": "Background (Appendix H)",
+    "role": "appendix-or-supplement",
+    "reason": "仅图 S4 编辑示例可视化，无额外可提取证据"
+   }
+  ]
+ },
+ "research_question": "如何构建大规模、本体感知（URDF 条件）的 ego-centric 人手/臂→机器人灵巧手图像编辑数据集与统一评测基准，以系统衡量现有编辑模型在本体保真、交互保持与场景一致上的能力？",
+ "contributions": [
+  "提出 HandEdit 数据集：从 5 个公开 ego 手物数据集（EgoDex/ARCTIC/OakInk2/HOI4D/HO-Cap）经跨本体重定向、渲染与人工质控构建 200M 图像级编辑实例，覆盖 26 个目标 URDF（13 纯手 + 13 臂手）",
+  "建立首个 URDF 条件的双赛道（Hand-only / Hand-Arm）灵巧手编辑基准，支持跨本体系统比较",
+  "设计 generic similarity + VLM judgment + embodiment-aware 的多维评测套件，评测 11 个商用/开源编辑器并以 5 人盲评验证指标一致性"
+ ],
+ "method": {
+  "summary": "数据管线：SAM3 分割人手/臂区域并移除→ProPainter 视频修复被遮挡背景→源序列 MANO 或 3D 手部姿态经混合模式粗对齐+位置式精调重定向到目标 URDF→对臂手本体定义相机相对虚拟基座（27 候选网格，经 IK 可行性/关节限位/碰撞/轨迹质量过滤，人工从前三名中选一个，全不可信则剔除整段）→在匹配 ego 视角下渲染并合成回场景→Harmonizer 轻量和谐化；每个阶段的中间输出经自动检查与人工筛查，失败者剔除。评测：双赛道各 1K 图×13 本体，11 模型在原生条件接口与固定模板下跑 generic similarity（PSNR/SSIM/LPIPS/FID）、GPT-4o VLM 评分（SC/PQ）与 embodiment-aware 指标（removal/structural fidelity/ID fidelity/interaction），并与 2,860 输出×5 标注者的盲评 MOS 做一致性（Fleiss κ 0.554-0.586）。",
+  "assumptions": [
+   "虚拟基座采用直立安装假设，相机相对且整段序列固定",
+   "源数据集提供的手部姿态标注（MANO 或 3D pose）质量足以支撑跨本体重定向",
+   "和谐化后的合成图（pseudo-GT）可作为相似度评测的参考，尽管其并非真实机器人观测"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "EgoDex（约 90M 帧/338K clips，占 90.7%）",
+   "ARCTIC（2.1M 帧/339 序列）",
+   "OakInk2（4.01M 帧/627 序列）",
+   "HOI4D（2.4M 帧/4K 序列）",
+   "HO-Cap（656K 帧/64 序列）"
+  ],
+  "tasks": [
+   "Hand-only 编辑赛道（局部手部替换）",
+   "Hand-Arm 编辑赛道（手+前臂/全臂替换）"
+  ],
+  "embodiments": [
+   "26 个目标 URDF：13 纯手（Ability, Allegro, DexHand021, Leap, OrcaHand, Revo2, RH56DFX, RH5DG2, RoHand, Schunk SVH, Shadow, Sharpa, Wuji）+ 13 臂手（Jaka/KUKA/Panda/RM65/RM75/UR5/xArm 配灵巧手）"
+  ],
+  "sample_or_scale": "200M 图像级编辑实例（300K+ clips、600+ 场景、1.1K+ 物体、400+ 任务）；测试集每赛道 1K 图×13 本体；人评 2,860 个编辑输出×5 标注者=42,900 个评分"
+ },
+ "evaluation": {
+  "design": "双赛道 URDF 条件编辑基准；pseudo-GT 为完整管线（含和谐化）输出；商用 API 模型在同一评测期用默认配置以减少版本漂移，开源模型用官方 checkpoint 与标准化推理设置；指令模板分赛道固定",
+  "baselines": [
+   "GPT-Image-2",
+   "GPT-Image-1.5",
+   "Nano-Banana",
+   "Nano-Banana-2",
+   "FLUX-Kontext-Max",
+   "FLUX-2-Pro",
+   "Seedream-4.5",
+   "Qwen-Image-Edit-2511",
+   "FireRed-Image-Edit-1.1",
+   "OmniGen2",
+   "Hunyuan-Image-3.0"
+  ],
+  "metrics": [
+   "PSNR/SSIM/LPIPS/FID（full/BG/ROI）",
+   "VLM judge（SC/PQ，GPT-4o，min 聚合）",
+   "embodiment-aware：Removal / Structural Fidelity / ID Fidelity / Interaction",
+   "人评 MOS 三轴（本体正确性/场景与交互保持/真实感）"
+  ],
+  "ablations": [
+   "无显式消融实验；VLM 评分与 embodiment-aware 指标的分离现象充当指标互补性的间接检验；人评-指标一致性（κ 0.554-0.586）充当指标有效性验证"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "pseudo-GT 管线逐阶段设 QC 闸：分割要求 SAM3 置信度≥0.75；手部重定向剔除标准为指尖/腕误差>50mm、接触距离>20mm、接触丢失、交互状态错误、严重穿透；IK/虚拟基座剔除标准为关键帧 IK 失败、关节限位违反、碰撞、轨迹不连续、前三名候选全不可信",
+   "scope": "HandEdit 数据管线设计（附录 B.1 Table S3）",
+   "locator": "Appendix B.1 Quality Control, Table S3"
+  },
+  {
+   "finding": "失败归因：ARCTIC run 整体未保留率约 33%；在 5,000 个均匀抽样的未保留帧中，手部重定向是主导失败源（3,173/5,000，63.46%），其后为分割（18.54%）、背景修复（11.72%）、渲染/合成（6.28%）",
+   "scope": "ARCTIC 源数据集的 pseudo-GT 生成过程（附录 B.2 Table S5）；作者注明该分布不可外推到其他源数据集",
+   "locator": "Appendix B.2 Failure Breakdown, Table S5"
+  },
+  {
+   "finding": "基准结果：人手可移除性（Hand-only removal 0.904-0.955）远易于交互保持（interaction 0.266-0.703），结构/身份保真模型间差距同样大；最强基线 GPT-Image-2 的 interaction 也仅 0.703",
+   "scope": "11 个编辑模型、双赛道各 1K×13 测试集",
+   "locator": "Background (Section 4.2, Tables 3-6)"
+  },
+  {
+   "finding": "VLM 评分与 embodiment-aware 指标出现分离：GPT-Image-1.5 VLM 最高但结构保真与交互保持非最优；FireRed 感知质量（PQ）最高但 SC 与 embodied 指标低——感知真实感不代表编辑任务成功",
+   "scope": "Hand-only/Hand-Arm 双赛道",
+   "locator": "Background (Section 4.2)"
+  },
+  {
+   "finding": "作者自述局限：物理上无法获得像素对齐的人-机器人图像对（人手与目标本体无法占据相同构型），pseudo-GT 与真实机器人观测在细粒度外观与接触动力学上存在残余差距；HandEdit 面向预训练/中训练数据，不替代真实机器人示教",
+   "scope": "整个数据集定位",
+   "locator": "Appendix G Limitations and Broader Impacts"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "无法通过物理采集获得像素对齐的人-机器人配对数据（人手与目标机器人本体不能占据相同构型）；编辑得到的 pseudo-reference 与真实机器人观测在细粒度外观和接触动力学上保留差距",
+    "locator": "Appendix G Limitations and Broader Impacts"
+   },
+   {
+    "limitation": "HandEdit 旨在为预训练/中训练提供可扩展数据、减少后续阶段所需真实机器人数据量，不能替代真实机器人示教",
+    "locator": "Appendix G Limitations and Broader Impacts"
+   },
+   {
+    "limitation": "失败归因（Table S5）仅描述 ARCTIC 被拒帧，不度量保留样本中的残余误差，也不覆盖其他源数据集的失败分布",
+    "locator": "Appendix B.2 Failure Breakdown"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "pseudo-GT 的手部轨迹精度继承上游源数据集 MANO/3D 姿态估计的残差；管线 QC 只剔除超限灾难性失败，未报告保留样本的残余腕部/指尖误差分布，因此本文不能回答阈值内残余检测误差与最终轨迹精度的关系",
+    "basis": "Section 3.1 以 MANO/3D hand pose 为重定向输入；附录 B.2 明示 Table S5 不度量保留样本残余误差"
+   },
+   {
+    "boundary": "基准评测的是图像级编辑质量而非下游策略成功率；从编辑质量到重定向轨迹可用性的链路是假设而非实测",
+    "basis": "Section 4 全部评测为图像级指标（generic/VLM/embodiment-aware），无策略训练或轨迹精度实验"
+   },
+   {
+    "boundary": "帧源 90.7% 来自 EgoDex 桌面场景，失败归因又仅覆盖 ARCTIC；QC 阈值（50mm/20mm）的设定依据未给出灵敏度分析，直接迁移到其他场景或本体需自行校准",
+    "basis": "图 S1 数据构成与附录 B.2 的覆盖声明；附录 B.1 仅列阈值数值无论证"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于 ego-centric 人手/臂画面到 26 种灵巧手/臂手 URDF 的图像级编辑质量评测与数据生成。其管线化 QC 设计（分阶段阈值剔除、虚拟基座搜索+人工兜底、和谐化后处理）可迁移为无本体视频→机器人数据管线的误差控制范式；附录 B 的 50mm/20mm 剔除阈值是该类管线中罕见的具体可接受阈值实例。但编辑质量分数不能替代下游策略成功率，保留样本的残余轨迹误差不可从本文推出。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "首个 URDF 条件的 embodied 编辑基准：26 个本体、双赛道、200M 实例，规模与本体覆盖远超此前编辑基准",
+   "多维指标体系（generic + VLM + embodiment-aware）并用 42,900 个人评评分验证一致性，避免单一指标误导",
+   "pseudo-GT 管线逐阶段自动+人工 QC，并对失败做归因拆解（附录 B），工程透明度高于同类数据工作"
+  ],
+  "design_risks": [
+   "pseudo-GT 由管线合成而非真实机器人观测，相似度指标相对 pseudo-GT 计算，存在循环参照风险（作者自承外观/接触动力学残余差距）",
+   "失败归因仅基于 ARCTIC 一个源数据集且作者明确不外推；其他四个源（占 97.9% 帧）的失败分布未知",
+   "商用 API 模型按默认配置评测，提示词未针对各模型调优，部分低分可能来自接口不适配而非能力上限"
+  ],
+  "baseline_fairness": "11 个模型在相同测试集（每赛道 1K 图×13 本体）、固定指令模板与各自原生条件接口下评测；商用 API 集中在同一评测期以减少版本漂移；开源模型用官方 checkpoint。在此协议下公平性合理，残余不公平主要来自接口差异而非数据或指标偏倚。",
+  "metric_validity": "embodiment-aware 指标与人评三轴的 Fleiss κ 0.554-0.586，属中等一致性；VLM 评分与 embodied 指标的分离被作者明确分析，指标间互补性论证充分。但所有相似度指标的参照物是合成 pseudo-GT，其绝对值上限受 pseudo-GT 自身质量约束。",
+  "reproducibility": "首页声明公开项目页、完整代码与数据集；附录给出 URDF 清单、QC 阈值、VLM/人评提示词与评分协议。不可复现环节：商用 API 模型版本漂移、虚拟基座的人工序列级选择、以及 EgoDex 等源数据的许可约束（CC-by-NC-ND）。",
+  "external_validity": "帧源以 EgoDex 桌面场景为主（90.7%），对移动端、户外、强动态场景的外推未知；编辑模型能力随版本快速变化，榜单时效性强；结论限定在图像编辑质量层，不直接蕴含策略学习收益。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2608.12122-C01",
+   "claim": "HandEdit 的 200M 规模 pseudo-GT 数据管线对分割、背景修复、手部重定向、IK 与虚拟基座放置、渲染/合成、和谐化每个阶段的中间输出施加自动检查与人工筛查，未通过阶段标准的样本被剔除，只有保留的和谐化输出才作为评测参考集——ego 视频→机器人数据管线的误差控制是分阶段设闸而非末端总检。",
+   "stance": "support",
+   "relation": "回答综述问题的'缓解手段'：在无本体 ego 视频转机器人数据的管线中，逐阶段自动检查+人工筛查+失败剔除是控制手部姿态/重定向误差传播的主流工程做法，本卡给出该做法在百万级规模管线中的具体实例化。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 末段明确描述六个阶段的中间输出均经自动检查与人工筛查，失败者剔除，保留的和谐化输出构成评测用 pseudo-GT 参考集；附录 B 进一步给出各阶段具体标准。",
+   "locator": "Abstract / Section 3.1 Data Curation Pipeline",
+   "source_context": "Automatic checks and human screening are applied to intermediate outputs from segmentation, background restoration, retargeting, IK and virtual-base placement, rendering/compositing, and harmonization. Samples that fail the stage-specific criteria are excluded, and the retained harmonized outputs constitute the pseudo-GT reference set used for similarity-based evaluation.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Section 3.1 末段原文逐句支持六阶段 QC+剔除+pseudo-GT 参考集的叙述；附录 B.1 Table S3 与 B.3 给出阶段标准与执行细节佐证。卡断言限于管线设计描述，未声称具体阈值数值（阈值见 note findings，因 extraction 分段结构无法通过 audit 定位，未单独成卡）。"
+   }
+  },
+  {
+   "card_id": "2608.12122-C02",
+   "claim": "实体机器人基座在 ego-centric 人类视频中不可观测，HandEdit 因此对每个源序列×目标本体定义相机相对的虚拟基座并在整段序列保持固定；候选基座经 IK 可行性、关节限位、碰撞与轨迹质量评估，人工从前三名有效序列级方案中挑选，全部不可信时整段序列被剔除——基座不可观性是 ego 视频重定向到臂手系统时特有的结构性误差源。",
+   "stance": "conditional",
+   "relation": "回答'误差来源'：无本体 ego 视频缺少机器人基座参照，手腕→TCP 映射与基座放置只能依赖直立安装假设与相机相对虚拟基座，这是 ego-centric 路线相对遥操作/动觉示教特有的重定向不确定性；搜索+人工兜底+整段剔除是其缓解手段，成立条件是接受该假设。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.1 臂手段：基座不可观测→定义相机相对虚拟基座并整段固定；候选经 IK 可行性/关节限位/碰撞/轨迹质量评估；人工选前三名之一，全不可信则剔除序列。",
+   "locator": "Abstract / Section 3.1 Data Curation Pipeline",
+   "source_context": "Because the physical robot base is not observable in egocentric human videos, we define a camera-relative virtual base for each source sequence and target embodiment and keep it fixed throughout the sequence.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字给出基座不可观测→虚拟基座的核心断言；同段后续原文（'Candidate bases are evaluated over the sequence using IK feasibility, joint limits, collision checks, and trajectory quality. A human operator selects one of the top-three valid sequence-level solutions, and the sequence is excluded if none is plausible.'）支持卡中评估与剔除部分。卡断言未超出臂手本体场景。"
+   }
+  },
+  {
+   "card_id": "2608.12122-C03",
+   "claim": "在 11 个代表性编辑模型的 Hand-only 评测中，人手可移除性（removal 0.904-0.955）显著高于交互保持（interaction 0.266-0.703），结构保真与身份保真的模型间差距也更大；最强基线 GPT-Image-2 的 interaction 也仅 0.703——ego 人手画面转机器人画面时，保持物理可信的手物交互比去掉人手难得多。",
+   "stance": "support",
+   "relation": "回答'可用性'维度：视频转换/重定向路线中交互几何是最薄弱环节——即便手部区域外观替换成功，接触与交互一致性仍大幅失真，预示这类数据直接用于策略学习时在接触密集任务上的可用性风险。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Section 4.2 关键观察原文+Table 4 数值：Hand-only 赛道 11 模型 removal 列 0.904-0.955、interaction 列 0.266-0.703；作者概括为'移除源人手相对容易，生成本体并保持交互是基准的主要难点'。",
+   "locator": "Background / Section 4.2 Benchmark Results and In-depth Analysis",
+   "source_context": "Most models obtain relatively high human-hand removal scores, suggesting that removing the source human hand is comparatively easier. In contrast, structural fidelity, ID fidelity, and interaction preservation show larger performance gaps across models.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "embodiment-aware metrics (Hand-only track, Table 4)",
+    "value_or_direction": "interaction 0.266-0.703 远低于 removal 0.904-0.955",
+    "comparator": "11 个编辑模型横向比较；GPT-Image-2 取得最高 interaction 0.703",
+    "task_or_sample": "Hand-only 测试集 1K 图像×13 个目标本体，图像级评分",
+    "locator": "Background / Section 4.2 Benchmark Results and In-depth Analysis"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Section 4.2 原文给出定性概括；Table 4 的 11 行数值（removal 最小 0.904 最大 0.955，interaction 最小 0.266 最大 0.703）逐一核对支持区间断言；卡断言限定 Hand-only 赛道与图像级指标，未外推到策略性能。"
+   }
+  },
+  {
+   "card_id": "2608.12122-C04",
+   "claim": "由于渲染的机器人前景与修复的背景分开处理，初始合成图在颜色、光照、对比度、纹理或边界外观上可能不匹配，使插入的机器人在视觉上脱离环境；HandEdit 因此在管线末端追加轻量和谐化模块（约 20MB 的 Harmonizer，在 1 万张自然 ego 手部图像上自监督训练）——重定向+渲染链路即使几何正确，仍残留外观层误差，需要专门后处理。",
+   "stance": "conditional",
+   "relation": "回答'误差来源与传播路径'：ego→机器人画面转换的误差不仅来自手部姿态/重定向几何，还来自合成阶段的光照/纹理/边界失配；该误差进入 pseudo-GT 并作为下游训练监督与评测参考，属于管线内生的二级误差。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Section 3.5 首段给出前景/背景分治导致外观失配的机制描述，随后给出 Harmonizer 的训练与推理设置（1 万张自监督、推理时用机器人 mask 定位细化区域、不改变关节构型/腕姿态/物体状态/交互几何）。",
+   "locator": "Background / Section 3.5 Harmonization Post-processing",
+   "source_context": "Because the foreground and background are processed separately, the initial composite may contain mismatches in color, illumination, contrast, texture, or boundary appearance, making the inserted robot look visually detached from its surroundings.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "Section 3.5 原文逐句支持外观失配机制；Harmonizer 规模（∼20 MB）与 10,000 张训练图像在同段后文明确给出。卡断言限于外观层误差，未声称其影响轨迹几何。"
+   }
+  },
+  {
+   "card_id": "2608.12122-C05",
+   "claim": "HandEdit 的重定向以源数据集的 MANO 或 3D 手部姿态估计为输入，其 pseudo-GT 轨迹精度继承上游手部姿态估计的残差；管线的阶段 QC 只剔除超限的灾难性失败，未报告保留样本的残余腕部/指尖误差分布，因此该基准不能回答'可接受阈值内的残余手部检测误差如何影响最终轨迹精度'。",
+   "stance": "gap",
+   "relation": "指出对综述问题的覆盖缺口：本文提供了剔除阈值与失败归因的工程实践（见 note findings 中附录 B 数值），但阈值内保留样本的残余误差未量化，检测精度→轨迹精度的剂量-响应关系仍需专门评测。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "前提 1：Section 3.1 以 MANO/3D hand pose 为重定向输入，其精度取决于上游数据集标注链。前提 2：附录 B.2 明示 Table S5 只描述被拒帧、不度量保留样本残余误差。推断：保留集残余轨迹误差未知，阈值内的精度-可用性关系不在本文评测空间。削弱条件：若上游数据集（如 HO-Cap 的 MoCap 级标注）姿态误差可忽略，则该缺口对高标注质量子集不成立。",
+   "locator": "Abstract / Section 3.1 Data Curation Pipeline",
+   "source_context": "For dexterous hands, we convert the MANO [66] or 3D hand pose into robot joint states",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "source_context 逐字给出重定向输入为 MANO/3D 姿态；附录 B.2 原文（'Table S5 describes rejected ARCTIC frames and does not measure residual errors among retained samples'）支持'残余误差未度量'的推断前提；推断性质已用 confidence=inference 与 claim_basis=reader-inference 标注，并给出削弱条件。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref_key": "15",
+   "citation": "R. Hoque, P. Huang, D. J. Yoon, M. Sivapurapu, and J. Zhang, EgoDex: Learning dexterous manipulation from large-scale egocentric video, arXiv:2505.11709, 2025",
+   "reason": "HandEdit 90.7% 的帧来自 EgoDex，其手部姿态估计链路决定 pseudo-GT 的上游误差水平；也是本综述 run 的另一篇精读对象"
+  }
+ ],
+ "notes": "重要：附录 B 的 QC 阈值（指尖/腕误差>50mm、接触距离>20mm 剔除）与失败归因（重定向占未保留帧 63.46%、整体未保留率约 33%）是对综述问题最直接的阈值/误差源定量证据，但 extraction 的 html-flat 分段把附录内容切进重复的 'Background' 段，audit 的 section 定位器解析到首个同名段，导致该区间的 source_context 无法通过定位校验，故未单独成卡投影；数值完整保留在 findings[0]/findings[1]，综述写作引用时应回查原文附录 B。"
+}

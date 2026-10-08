@@ -1,0 +1,316 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2606.14879",
+  "title": "VANDERER: Map-Free Exploration using Future-Aware and Visual-Curiosity-Guided Diffusion Policy",
+  "published": "2026-06-12",
+  "url": "https://arxiv.org/abs/2606.14879",
+  "authors": [
+   "Venkata Naren Devarakonda",
+   "Raktim Gautam Goswami",
+   "Prashanth Krishnamurthy",
+   "Farshad Khorrami"
+  ]
+ },
+ "review": {
+  "question": "近一年SLAM技术在具身智能领域是否发挥核心作用？在具身数据采集、操作、导航、空间推理各环节，SLAM是不可或缺的基础设施，还是正被端到端基础模型、世界模型或隐式空间记忆替代？",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "pdf",
+  "method": "pdf-text",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "method",
+  "relevance": {
+   "decision": "include",
+   "reason": "无图探索的代表性'替代论'论文：明确主张去掉占用地图/定位依赖，仅用单目 RGB + 扩散策略 + 世界模型好奇心引导做探索；同时其内部机制（MASt3R 几何匹配、仿真真值网格评测）暴露了替代路线对几何技术栈与真值地图基础设施的隐性依赖。"
+  },
+  "sections_read": [
+   {
+    "locator": "page 1",
+    "role": "problem",
+    "purpose": "摘要+引言：传统探索依赖占用地图与精确定位（GPS/IMU/深度/LiDAR），传感器受限场景难以为之；提出无图探索问题"
+   },
+   {
+    "locator": "page 2",
+    "role": "relevant-core",
+    "purpose": "相关工作：建图式探索（frontier/采样式）与学习式探索（RL好奇心/扩散策略）两条路线的分野"
+   },
+   {
+    "locator": "pages 3-4",
+    "role": "method-or-design",
+    "purpose": "方法：VCM 好奇心模块（NWM 预测未来状态 + MASt3R 快速互惠匹配算新颖性）+ CEM 引导扩散策略噪声分布"
+   },
+   {
+    "locator": "page 5",
+    "role": "data-or-setting",
+    "purpose": "实验设置：CARLA 五镇、车辆+单目相机、训练/微调协议、评测指标（Area/APL/PF）、三个基线"
+   },
+   {
+    "locator": "pages 5-7",
+    "role": "results-or-analysis",
+    "purpose": "结果：Table I 五镇全面领先；Fig.6/7 引导 vs 贪心 vs 随机对比；Table II 组件消融"
+   },
+   {
+    "locator": "page 8",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论：视觉好奇心是传感器受限环境下驱动探索的有力指标；无自述局限节"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "pages 8-9",
+    "reason": "references-only: 参考文献页"
+   }
+  ]
+ },
+ "research_question": "不建占用地图、不用里程计/全局定位，仅凭单目 RGB 能否实现高效环境探索？视觉新颖性能否替代几何覆盖作为探索驱动信号？",
+ "contributions": [
+  "无图探索端到端框架：视觉好奇心模块（VCM）引导预训练扩散策略，仅用单目图像输入",
+  "好奇心引导机制：NWM 世界模型预测候选动作的未来状态，新颖性成本经 CEM 更新扩散噪声分布（推理期优化，无需专门探索专家数据）",
+  "CARLA 五镇实验：探索面积较 NoMaD 平均多 13.4%，策略失败率 0.046%（NoMaD 0.278%）"
+ ],
+ "method": {
+  "summary": "单目 RGB 输入经冻结 VAE 编码为 patch 级 latent 状态，上下文 transformer 生成条件向量；扩散策略（UNet，DDPM）从噪声分布采样 N 个候选动作序列（相对 x,y 位移，yaw 由 arctan 推得）；Navigation World Model（NWM，微调 55 epochs）自回归预测各候选的未来 latent 状态；好奇心成本 = 预测末状态与历史状态数据库（时间下采样）的最小 MASt3R 快速互惠匹配距离（top-250 patch 对平均欧氏距离）；CEM 迭代 L 轮更新噪声分布均值，每 P 步重置为标准高斯以防漂移；低层 PID 控制器执行 waypoint，每约 1 秒重规划。",
+  "assumptions": [
+   "环境中存在足够视觉差异，视觉新颖性可代理几何覆盖（作者明示为 hypothesis）",
+   "扩散策略的训练数据（CARLA BasicAgent 无碰撞轨迹）覆盖安全行为先验",
+   "执行层面有可靠低层控制器（PID）完成 waypoint 跟踪"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "CARLA 仿真器五个 town 环境（实验时移除路灯杆简化场景）",
+   "训练数据：BasicAgent 生成的随机 waypoint 无碰撞轨迹"
+  ],
+  "tasks": [
+   "无图自主探索（city-scale 室外，车辆本体）"
+  ],
+  "embodiments": [
+   "CARLA 仿真车辆 + 单目 ego 相机（无 LiDAR/IMU/GPS/深度）"
+  ],
+  "sample_or_scale": "5 镇 × 3 随机种子；扩散策略 L40s 单卡训练 100 epochs + 每镇微调 20 epochs；NWM small 微调 55 epochs"
+ },
+ "evaluation": {
+  "design": "固定仿真步数下比较总覆盖面积（16m² 网格离散化）、APL（面积/路径长）与策略失败率（碰撞次数/策略调用次数）",
+  "baselines": [
+   "NoMaD（RGB-only 扩散策略，同等微调）",
+   "NoMaD*（作者改造版：VAE 编码器替换 EfficientNet）",
+   "DP-RND（RND 内在奖励选择扩散候选）",
+   "贪心选择基线（最高 VCM 分直接执行，无引导）",
+   "随机选择基线"
+  ],
+  "metrics": [
+   "Total Area (m²)",
+   "APL (Area per Path Length, m)",
+   "PF (policy failure 率)"
+  ],
+  "ablations": [
+   "去扩散策略（换高斯采样+CEM）",
+   "去快速互惠匹配（换逐 patch L2）",
+   "引导 vs 贪心 vs 随机选择"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "VANDERER 在五个 town 的 Area 与 APL 上全部领先（APL 3.12/2.79/3.65/4.36/3.93），较 NoMaD 平均多探索 13.4% 面积，策略失败率 0.046% 低于 NoMaD 的 0.278%",
+   "scope": "CARLA 五镇 × 3 种子，单目 RGB",
+   "locator": "page 5, Table I; page 1"
+  },
+  {
+   "finding": "好奇心引导优于贪心选择与随机选择：贪心策略在路口多路径场景震荡、在已探索区域陷入循环，APL 有时低于随机策略；引导通过保留采样随机性避免该失败模式",
+   "scope": "全部五镇随步数变化的 APL 曲线",
+   "locator": "pages 6-7, Fig. 6-7"
+  },
+  {
+   "finding": "组件消融（Town 1）：去掉扩散策略（Area 7072/APL 1.845/PF 4.35%）与去掉互惠匹配（11248/2.856）均显著劣于完整方法（12299/3.120/0.03%）；无扩散先验时执行时间约 4 倍",
+   "scope": "Town 1 × 3 起始位姿",
+   "locator": "page 7, Table II"
+  }
+ ],
+ "limitations": {
+  "author_status": "not-found",
+  "author_stated": [],
+  "reader_inferred": [
+   {
+    "boundary": "纯仿真验证（CARLA，且实验时移除路灯杆），无真机实验、无真实城市部署；仿真到现实的视觉域差距未评估",
+    "basis": "Sec IV-A 实验设置"
+   },
+   {
+    "boundary": "探索评测本身依赖仿真器的全局真值俯视网格图（16m² 离散化）——'无图'方法的覆盖度量在现实部署中不可得，需要外部建图/定位基础设施或替代度量",
+    "basis": "Sec IV-A Evaluation Metric"
+   },
+   {
+    "boundary": "扩散策略按镇微调 20 epochs、NWM 在五镇联合数据上微调——评测为同域设定，跨环境零样本泛化未测试（尽管基线同等待遇，公平性成立但泛化主张未建立）",
+    "basis": "Sec IV-A Training Settings"
+   },
+   {
+    "boundary": "视觉新颖性≈几何覆盖的核心假设仅在'视觉差异充分'环境成立；走廊/雪地/夜间等弱纹理或视觉重复场景中该代理信号预期失效，论文未测试此类场景",
+    "basis": "Sec III-A Curiosity-Based Cost Function 的 hypothesis 措辞"
+   },
+   {
+    "boundary": "摘要宣称'视觉与几何好奇心在室外环境中存在直接相关性'，但正文未见专门的量化相关性实验，该主张的证据强度弱于其表述",
+    "basis": "摘要 vs 正文实验范围"
+   }
+  ]
+ },
+ "transfer_boundary": "结论适用于：仿真城市户外环境、单目相机、有可靠低层控制器的车辆本体、训练分布内的城镇。不适用于：真机部署、弱纹理/视觉重复环境、无 PID 级低层控制的平台、跨域零样本设定；探索覆盖的度量依赖仿真器真值地图。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "对所有基线保持同等假设/数据/微调待遇，对比公平性控制好",
+   "消融完整：引导机制、扩散先验、互惠匹配三组件分别验证",
+   "随步数演化的 APL 曲线揭示贪心策略的循环失败模式，分析有洞察"
+  ],
+  "design_risks": [
+   "覆盖度量依赖仿真真值俯视图，'无图探索'的方法论主张与其评测基础设施之间存在张力",
+   "摘要级主张（视觉-几何好奇心直接相关）超出正文实验证据",
+   "按镇微调削弱了'免专门探索数据'贡献的泛化面——推理期优化与训练期微调并存"
+  ],
+  "baseline_fairness": "NoMaD/DP-RND 均在相同数据上微调相同 epochs；NoMaD* 是作者为修复碰撞问题改造的变体（VAE 替换 EfficientNet），改造动机已说明。基线不含任何建图式探索方法（frontier/采样式）——无图路线与建图路线未直接对比，只比较了无图路线内部方案。",
+  "metric_validity": "APL（面积/路径长）合理控制路径长差异；但覆盖面积以仿真真值网格计算，现实不可直接迁移；PF 以碰撞率代理安全性，未报告严重度。",
+  "reproducibility": "项目网站公开；训练超参（batch 256、100 epochs、每镇 20 epochs、NWM 55 epochs）与 CEM 设置披露较全；CARLA 镇名与种子数给出，但路灯移除等场景改动的复现细节依赖代码。",
+  "external_validity": "CARLA 城市 + 车辆本体的仿真结果；具身智能常见的室内/腿式/机械臂场景未涉及；单目 RGB 设定本身有价值，但结论外推到真实传感器噪声与域差距未验证。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2606.14879-C01",
+   "claim": "VANDERER 证明仅用单目 RGB（无占用地图、无 LiDAR/IMU/GPS、无显式定位）的探索可行且优于最强 RGB 基线：在 CARLA 五镇上较 NoMaD 平均多探索 13.4% 面积",
+   "stance": "limit",
+   "relation": "限制'SLAM/显式建图对探索不可或缺'的强主张：在仿真城市环境、同域微调设定下，隐式视觉记忆（历史状态数据库）+ 世界模型预测可以替代全局地图驱动探索",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "摘要与 Table I：VANDERER 五镇 Area/APL 全面领先 NoMaD（13.4% 面积增益），且策略失败率 0.046% 远低于 NoMaD 0.278%。方法全程不构建占用地图，新颖性由预测末状态与历史观测数据库的匹配距离度量。",
+   "locator": "page 1",
+   "source_context": "Evaluated across diverse simulated environments, VANDERER consistently outperforms established baselines, exploring an average of 13.4% more area than NoMaD [1].",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "探索面积增益（Total Area, m²）",
+    "value_or_direction": "较 NoMaD 平均 +13.4%；五镇 APL 3.12/2.79/3.65/4.36/3.93 均为第一",
+    "comparator": "VANDERER vs NoMaD / NoMaD* / DP-RND（三个无图基线）",
+    "task_or_sample": "CARLA 五个 town × 3 随机种子，单目 RGB 车辆探索",
+    "locator": "page 5, Table I"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "摘要原句逐字出现（含 13.4% 与 NoMaD 引用）；Table I 五镇完整数值支持 Area/APL 全面领先；方法节确认无占用地图构建。注意基线全部是无图方法，未与建图式探索直接对比——claim 措辞限定为'优于最强 RGB 基线'。"
+   }
+  },
+  {
+   "card_id": "2606.14879-C02",
+   "claim": "VANDERER 的探索评测指标依赖仿真器的全局真值俯视地图（按 16m² 网格离散化计算覆盖面积）——'无图'方法的性能度量本身需要外部建图基础设施，该度量在真实部署中不可得",
+   "stance": "conditional",
+   "relation": "对'SLAM 被替代'的判断给出条件边界：替代路线的能力证明依赖仿真真值；在现实中评估或使用无图探索，仍需要某种形式的全局几何参照（SLAM 或其等价物）",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec IV-A Evaluation Metric 原文：'we discretize the top-down maps of each town into a grid of 16m2 cells. Total coverage is calculated by summing the area of all unique cells visited'。评测管线的地图来自仿真器，非 agent 自建；论文全程无真机实验。",
+   "locator": "page 5",
+   "source_context": "we discretize the top-down maps of each town into a grid of 16m 2 cells. Total coverage is calculated by summing the area of all unique cells visited over a fixed number of simulation steps.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 5 评测指标定义原句逐字出现（'16m²' 在 PDF 提取中为 '16m 2' 上标断行形态，source_context 保留该形态以匹配原文）；全文确认真机实验缺失，度量对仿真真值地图的依赖是方法设计客观事实。"
+   }
+  },
+  {
+   "card_id": "2606.14879-C03",
+   "claim": "视觉新颖性代理几何覆盖是显式假设：作者明示'在视觉差异充分的环境中，最大化视觉新颖性能有效最大化环境覆盖'——该代理在弱纹理或视觉重复环境中预期失效，且论文未测试此类场景",
+   "stance": "conditional",
+   "relation": "为'隐式视觉记忆替代显式地图'划定适用条件：替代仅在环境视觉差异充分时成立；SLAM 的几何度量无此前提，这是两条路线的本质能力差",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "Sec III-A 原文使用 'we hypothesize that...' 措辞；摘要进一步宣称视觉-几何好奇心直接相关，但正文无专门相关性实验。实验环境为视觉特征多样的 CARLA 城镇，全部在假设成立域内。",
+   "locator": "page 4",
+   "source_context": "we hypoth- esize that in environments with sufficient visual variance, maximizing visual novelty effectively maximizes environ- mental coverage.",
+   "evidence_type": "claim",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 原句逐字出现（'hypothesize' 与 'environmental' 均被跨行连字符打断为 'hypoth-/esize'、'environ-/mental'，source_context 保留断行形态）；全文搜索 'geometric curiosity' 仅出现于摘要，无正文量化实验。"
+   }
+  },
+  {
+   "card_id": "2606.14879-C04",
+   "claim": "无图探索路线内部仍消费几何基础模型：VANDERER 的新颖性度量使用 MASt3R 的快速互惠匹配做 patch 级几何对应，且消融显示去掉该几何匹配模块后 Area 从 12299 降至 11248（APL 3.120→2.856）",
+   "stance": "support",
+   "relation": "支持'SLAM 技术栈以几何基础模型形式被吸收进替代路线'：无图方法的核心新颖性评估依赖 DUSt3R/MASt3R 家族（SLAM 社区同一技术栈）的几何对应能力，是融合而非纯替代",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Sec III-A：MASt3R fast reciprocal matching 建立 patch 一一对应，相似度 D 取 top-250 最远对应 patch 对的平均欧氏距离；Table II 消融：w/o fast reciprocal matching（换逐 patch L2）Area 11248/APL 2.856 vs 完整方法 12299/3.120，且作者论证互惠匹配'有效解释几何变化'（跨视角同一区域）。",
+   "locator": "page 4",
+   "source_context": "we utilize MASt3R’s [34] fast reciprocal matching on patch-level features (Algorithm. 1).",
+   "evidence_type": "system",
+   "quantitative": {
+    "metric": "Total Area (m²) / APL (m)，Town 1 三种子均值",
+    "value_or_direction": "w/o fast reciprocal matching: Area 11248, APL 2.856；Ours: Area 12299, APL 3.120（消融损失约 8.5% 面积）",
+    "comparator": "MASt3R 快速互惠匹配 vs 逐 patch L2 直接比较",
+    "task_or_sample": "CARLA Town 1 × 3 起始位姿",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 4 MASt3R 引用原句逐字出现（撇号为 Unicode ’，与原文一致）；Table II（page 7）给出两组消融完整数值；page 7 消融讨论确认互惠匹配 'effectively accounts for these geometric variances'。"
+   }
+  },
+  {
+   "card_id": "2606.14879-C05",
+   "claim": "扩散策略先验对无图探索不可或缺：去掉扩散策略（改高斯采样+CEM）后 Area 从 12299 骤降至 7072（APL 3.120→1.845，PF 0.03%→4.35%），执行时间约 4 倍——学习到的动作先验是该方法可行的前提",
+   "stance": "support",
+   "relation": "支持'学习式替代路线依赖强先验'：无图探索的可行性建立在预训练扩散策略的世界知识之上，而非从零的通用空间推理；这限定了替代路线对大规模先验数据的依赖",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "Table II 第二行消融；作者分析：无强先验时'单步优化得次优动作且频繁碰撞，多步优化则计算不可行'，故约 4 倍执行时间。训练数据为 CARLA BasicAgent 无碰撞轨迹（每镇微调 20 epochs）。",
+   "locator": "page 7",
+   "source_context": "Ablat- ing this component introduces a fundamental trade- off: a single optimization step (faster computation) yields suboptimal actions and frequent collisions, while increasing optimization iterations renders the method computationally impractical.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "Total Area (m²) / APL (m) / PF (%)，Town 1 三种子均值",
+    "value_or_direction": "w/o diffusion policy: Area 7072, APL 1.845, PF 4.35%；Ours: Area 12299, APL 3.120, PF 0.03%；执行时间约 4×",
+    "comparator": "扩散策略先验 + CEM vs 纯高斯采样 + CEM",
+    "task_or_sample": "CARLA Town 1 × 3 起始位姿",
+    "locator": "page 7, Table II"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "page 7 消融分析原句逐字出现（'Ablating' 与 'trade-off' 被跨行连字符打断，source_context 保留断行形态）；Table II 完整数值一致；4× 执行时间见于同段末句。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "ref": "NoMaD: Goal-masked diffusion policies for navigation and exploration (ICRA 2024)",
+   "why": "最强基线与框架基础",
+   "locator": "page 1, ref [1]"
+  },
+  {
+   "ref": "Navigation World Models (Bar et al.)",
+   "why": "VCM 的未来状态预测器",
+   "locator": "page 3, ref [8]"
+  },
+  {
+   "ref": "MASt3R (Leroy et al.)",
+   "why": "好奇心度量的几何互惠匹配",
+   "locator": "page 4, ref [34]"
+  },
+  {
+   "ref": "Yamauchi frontier-based exploration (1997)",
+   "why": "建图式探索路线的代表被引",
+   "locator": "page 1, ref [2]"
+  }
+ ],
+ "notes": "替代论的典型样本：方法层面真正做到了不建图、不用里程计（探索驱动完全由视觉新颖性+世界模型想象提供），但三个隐性依赖值得综述强调——(1) 评测覆盖度需要仿真真值地图；(2) 新颖性度量内部用 MASt3R 几何匹配（SLAM 同源技术栈）；(3) 每镇微调 20 epochs。IEEE 会议短文（9页），无局限节、无真机实验，证据边界明显。"
+}

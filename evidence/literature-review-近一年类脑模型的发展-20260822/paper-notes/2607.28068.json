@@ -1,0 +1,342 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2607.28068",
+  "title": "Stimulus-Evoked Network Dynamics in Human Cortical Organoids: From a Graph-Computational Framework to Repeated-Stimulation Depression",
+  "published": "2026-07-30T11:45:16Z",
+  "url": "https://arxiv.org/abs/2607.28068",
+  "authors": [
+   "Esmaeil S. Nadimi",
+   "Vinay C. Gogineni",
+   "Jan-Matthias Braun",
+   "Martin Røssel Larsen",
+   "Victoria Blanes-Vidal",
+   "Helle Bogetofte Barnkob"
+  ]
+ },
+ "review": {
+  "question": "近一年类脑模型(脉冲大模型、SNN、类脑架构、器官智能等)取得了哪些实质进展,各路线的验证强度与边界是什么?",
+  "topic_ids": [
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-latexml",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "empirical",
+  "relevance": {
+   "decision": "include",
+   "reason": "器官智能路线中罕见的'框架+负结果+发育匹配对照'完整实证:证明局灶刺激下类器官诱发反应为近同步爆发且重复刺激导致抑郁,为类器官计算能力主张划出清晰边界。"
+  },
+  "sections_read": [
+   {
+    "locator": "1.1 Biological neural networks as perturbation-accessible computational systems",
+    "role": "problem",
+    "purpose": "确认问题:类器官活动是否反映结构化分布式计算而非自发同步。"
+   },
+   {
+    "locator": "1.2 A graph-computational framework for evoked propagation",
+    "role": "method-or-design",
+    "purpose": "理解图计算框架:刺激条件化功能图、图约束动力学与消息传递定理。"
+   },
+   {
+    "locator": "2.1 Preparations, stimulation protocol, and recordings",
+    "role": "data-or-setting",
+    "purpose": "确认三个类器官、HD-MEA 刺激几何与纵向设计(2 重复刺激 + 1 单刺激对照)。"
+   },
+   {
+    "locator": "3.1 The evoked response is a near-synchronous network burst, not a propagating wave",
+    "role": "results-or-analysis",
+    "purpose": "核查'近同步爆发、无可测传播'的核心负结果及其对指标套件的推论。"
+   },
+   {
+    "locator": "3.2 Repeated stimulation depresses the evoked response across days",
+    "role": "results-or-analysis",
+    "purpose": "核查表 2 跨天响应/基线比与对照分离。"
+   },
+   {
+    "locator": "3.5 The responding network spatially contracts with repeated stimulation",
+    "role": "results-or-analysis",
+    "purpose": "核查表 3 响应电极数与阵列占比的收缩效应。"
+   },
+   {
+    "locator": "4.7 Limitations",
+    "role": "conclusion-or-limitations",
+    "purpose": "收集作者自述局限:样本量、异常记录与协议适用范围。"
+   },
+   {
+    "locator": "5 Conclusions",
+    "role": "conclusion-or-limitations",
+    "purpose": "确认最终定位:抑郁由刺激历史而非成熟驱动。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "2.2-2.7 Methods 方程细节",
+    "reason": "采样率校正、图构建与指标方程的推导细节,其输出已在结果节核实,综述只需结论层。"
+   },
+   {
+    "locator": "4.2-4.5, 4.8 Discussion 机制解释与未来工作",
+    "reason": "候选机制为解释性讨论,不承担定量证据;未来工作为展望。"
+   }
+  ]
+ },
+ "research_question": "人类皮层类器官在局灶电刺激下的诱发反应是否表现出可测的多跳传播与结构化计算?重复日刺激对网络是增强、抑郁还是仅跟踪发育成熟?",
+ "contributions": [
+  "完整实现并实测了一套图计算框架(刺激条件化功能图、图约束 GNN 系统辨识、生物消息传递定理、图级指标套件)用于量化类器官诱发传播",
+  "报告关键负结果:诱发反应是近同步全网络爆发而非向外传播波,传播/整合深度指标不适用,且每日连通性图在可用试验数下不可靠估计",
+  "用发育匹配、刺激naïve对照解开'重复刺激效应 vs 发育成熟'的混淆,证明第 7 天抑郁由刺激历史驱动",
+  "分离保留的首试响应容量与退化的会话内耐力,并识别独立于量级的会话内去同步化"
+ ],
+ "method": {
+  "summary": "在三个皮层类器官的纵向 HD-MEA 记录上,先从文件元数据恢复真实采样率并从群体放电率数据中恢复刺激起始时间,再构建刺激条件化功能图与图约束 GNN 动力学模型,用生物消息传递定理把整合深度与可观测传播深度绑定。实测发现诱发反应不外向传播后,将读出重构为同步性、响应群体规模、空间范围与总体相干性,并用一个发育匹配、第 7 天才首次刺激的对照类器官分离刺激历史与成熟效应。",
+  "assumptions": [
+   "刺激时间可从数据中无标记恢复(MAD 阈值 + 周期网格拟合,经逐试验检验验证)",
+   "发育匹配对照可替代大样本随机化来解耦年龄与刺激史",
+   "近同步爆发下同步性/群体规模读出比传播类图指标更有效"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "三个皮层类器官的纵向 HD-MEA 记录(HD-MEA 标识 552/613/612,3Brain 阵列)"
+  ],
+  "tasks": [
+   "局灶双相电刺激(垂直电极列,每会话 10 次刺激、固定刺激间隔)",
+   "跨天设计:552/613 在 D1-D4+D7 重复刺激;612 在 D1 自发记录、D7 首次刺激(单刺激对照)"
+  ],
+  "embodiments": [],
+  "sample_or_scale": "3 个类器官(2 重复刺激 + 1 对照);每会话 10 次试验"
+ },
+ "evaluation": {
+  "design": "无 ML 基线的神经科学实验:边显著性用 trial-shuffle 置换零假设(FDR 校正);跨天效应用发育匹配单刺激对照做因果分离;读出包括会话级响应/基线比、响应电极数与阵列占比、峰潜伏期-距离斜率、去趋势总体相干性(PR/PC1)与会话内量级/同步性斜率。",
+  "baselines": [
+   "发育匹配、刺激naïve单刺激对照类器官 612(D7 首次刺激)",
+   "各器官自身 D1 基线与全阵列规模"
+  ],
+  "metrics": [
+   "会话级诱发响应/基线比(表 2)",
+   "响应电极数与阵列占比(表 3)",
+   "峰潜伏期-距离斜率(传播检验)",
+   "去趋势总体相干性(PR/PC1)",
+   "会话内量级斜率与同步性斜率(独立去同步化)"
+  ],
+  "ablations": [
+   "线性去趋势 vs 丢弃首试两种图统计变体的稳健性对比",
+   "首试响应 vs 会话均值的分离分析"
+  ]
+ },
+ "findings": [
+  {
+   "finding": "诱发反应是快速、近同步的全网络爆发而非向外传播波(峰潜伏期-距离无可测斜率),因此传播/整合深度类图指标不适用于这些记录",
+   "scope": "三个类器官、局灶单点刺激协议",
+   "locator": "3.1 The evoked response is a near-synchronous network burst, not a propagating wave"
+  },
+  {
+   "finding": "重复刺激类器官 D7 会话级响应/基线比降至 206(552)与 268(613),而同龄首次刺激对照为 1914(数据集中最强),证明 D7 抑郁由刺激历史而非成熟驱动",
+   "scope": "表 2,纵向 D1-D7",
+   "locator": "3.2 Repeated stimulation depresses the evoked response across days"
+  },
+  {
+   "finding": "响应网络空间收缩:两个重复刺激类器官响应电极占比分别从 94%-99% 与 42%-100% 崩塌到 D7 的 9.5%(384 电极)与 12%(486 电极),对照为 3788 电极/93%",
+   "scope": "表 3,阵列占比",
+   "locator": "3.5 The responding network spatially contracts with repeated stimulation"
+  },
+  {
+   "finding": "跨天抑郁反映会话内耐力退化而非容量丧失:首试响应量级相对保留而会话均值塌缩;对照首次会话即出现量级抑郁但无显著去同步,提示快速会话内抑郁是内在的、跨天成分才随刺激史累积",
+   "scope": "3.3/3.4 分离分析(作者标注为小样本下的 hypothesis)",
+   "locator": "3.3 Across-day depression reflects loss of within-session endurance, not capacity"
+  },
+  {
+   "finding": "每日连通性图在每会话 10 次试验下不可靠估计(置换阈值近空图、两种去趋势变体在密度/模块度/最大连通分量上分歧),故不报告边级图统计",
+   "scope": "全部类器官与天",
+   "locator": "3.6 Per-day connectivity graphs were evaluated but are not reliable at"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "设计仅含两个重复刺激类器官与一个单刺激对照,结论是可复现、对照支持的观察而非群体级统计主张,刺激史-成熟分离依赖单个对照",
+    "locator": "4.7 Limitations"
+   },
+   {
+    "limitation": "一个类器官的 D3/D4 记录异常(D3 活动为数据集最低、两个 D4 记录截断至 8-9 个可用试验),其中间轨迹需谨慎解读",
+    "locator": "4.7 Limitations"
+   },
+   {
+    "limitation": "因诱发反应为近同步爆发,本研究不能也不意图裁决其他刺激协议下类器官是否支持结构化多跳计算,仅表明局灶单点协议下无可测传播",
+    "locator": "4.7 Limitations"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "负结果限于局灶单列电极、双相刺激协议;不能外推为'类器官不具备结构化计算能力',更不能据此否定学习/闭环刺激范式下的可能性",
+    "basis": "4.7 Limitations 明确限定 'under the focal, single-site protocol used here'"
+   },
+   {
+    "boundary": "n=3 且未报告供体/批次信息,类器官间异质性未量化;把 93% vs 9.5%/12% 读作稳健效应量会高估证据强度",
+    "basis": "2.1 仅给出三个 HD-MEA 标识,4.7 自述无群体级统计"
+   }
+  ]
+ },
+ "transfer_boundary": "结论仅适用于'局灶单点双相刺激 + HD-MEA 记录的皮层类器官'实验范式:不能推广到多点/闭环/学习范式的类器官计算能力,也不能当作类器官智能'学习与记忆'能力的证据——本文只测了诱发反应的抑郁与收缩,且全部定量结论建立在 3 个类器官上。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "发育匹配、刺激naïve对照解开重复刺激与发育成熟的混淆,是该领域少见的因果设计",
+   "如实报告负结果并重构读出指标,方法透明度高",
+   "刺激时间从数据恢复并经逐试验检验验证",
+   "容量/耐力分离与会话内/跨天分离为机制解释提供约束"
+  ],
+  "design_risks": [
+   "n=3(2+1)无群体统计,对照仅一个",
+   "一个类器官 D3/D4 数据异常且 D4 记录截断",
+   "原框架的多跳传播预期与实测不符,多数图指标被弃用",
+   "LaTeX 数学数值在 HTML 提取中部分丢失,定量复核需对照原表格"
+  ],
+  "baseline_fairness": "对照为发育匹配同龄类器官且共享刺激几何,比较公平;但对照仅一个、批次异质性未控制,分离结论强度受限。",
+  "metric_validity": "响应/基线比与响应电极占比对时间恢复误差敏感,作者以逐试验检验与稳健阈值缓解;同步性去趋势指标合理,但原始传播类指标在实测中被证明不适用。",
+  "reproducibility": "方法节给出电极 ID、刺激几何与全部方程,可复现性较好;未见公开代码或数据链接声明。",
+  "external_validity": "单一实验室、单一局灶刺激协议、三个类器官;外推到其他类器官制备或其他'类器官智能'主张(如学习任务表现)证据不足。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2607.28068-C01",
+   "claim": "在三个皮层类器官的纵向 HD-MEA 记录上,校正采样率与刺激时间后发现:诱发反应是快速、近同步的全网络爆发而非向外传播波,峰潜伏期-距离无可测斜率,因此传播/整合深度类图指标(含消息传递定理检验)不适用于此类数据。",
+   "stance": "support",
+   "relation": "为综述问题提供器官智能路线的关键负结果:局灶刺激下类器官未见结构化多跳传播,'类器官已具备分布式计算'主张在该协议下不成立。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.1 节直接检验定理 1 前提,结论为近同步爆发,原指标套件大多不适用(3.8)。",
+   "locator": "3.1 The evoked response is a near-synchronous network burst, not a propagating wave",
+   "source_context": "The evoked response was a near-synchronous, network-wide burst, not an outward-propagating wave. Hence (Eq. ( 13 )) did not index a real spreading process, and (Eq. ( 11 )), (Eq. ( 12 )), and the test were not applicable to these recordings.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "3.1 节原句逐字核对:'near-synchronous, network-wide burst, not an outward-propagating wave' 与指标不适用表述直接支撑本主张;摘要与结论重申同一结论。斜率具体数值(=0)在提取文本中因数学渲染丢失,故主张措辞用'无可测斜率'而非具体数字。"
+   }
+  },
+  {
+   "card_id": "2607.28068-C02",
+   "claim": "重复日刺激使响应网络空间收缩:两个重复刺激类器官的响应电极阵列占比分别从 D1-D4 的 94%/99%/99%/99% 与 42%/72%/14%/100% 崩塌到 D7 的 9.5%(384 电极)与 12%(486 电极),而同龄首次刺激对照响应 3788 电极、占阵列 93%。",
+   "stance": "support",
+   "relation": "支持'重复刺激重塑类器官网络'的进展主张,并给出器官智能实验中少见的对照验证量化效应。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 3 给出三类器官逐日响应电极数与阵列占比;对照 93% 与重复刺激 9.5%/12% 形成最清晰的对照分离。",
+   "locator": "3.5 The responding network spatially contracts with repeated stimulation",
+   "source_context": "Table 3: Responsive-electrode count and array fraction across days. Organoid D1 D2 D3 D4 D7 552 responsive 3852 4020 4037 4005 384 (% array) 94% 99% 99% 99% 9.5% 613 responsive 1711 2932 574 4048 486 (% array) 42% 72% 14% 100% 12% 612 control responsive — — — — 3788 (% array) — — — — 93%",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "responsive electrode count and % array fraction",
+    "value_or_direction": "94% 99% 99% 99% to 9.5% (384); 42% 72% 14% 100% to 12% (486); control 93% (3788)",
+    "comparator": "single-stimulation control organoid 612 at day 7",
+    "task_or_sample": "three cortical organoids, longitudinal HD-MEA, days 1-7",
+    "locator": "3.5 The responding network spatially contracts with repeated stimulation, Table 3"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 3 全部数字(3852/4020/4037/4005/384、94%-9.5%、1711/2932/574/4048/486、42%-12%、3788、93%)在 3.5 节表面文本逐字核对一致;主张仅引用该表数字,未引用提取中丢失的比值文本。"
+   }
+  },
+  {
+   "card_id": "2607.28068-C03",
+   "claim": "会话级诱发响应/基线比显示重复刺激类器官在 D7 强度大幅下降(552: D1 1123→D7 206;613: D1 487→D7 268),而同龄刺激naïve对照产生数据集中最强反应(1914),证明 D7 抑郁由重复刺激历史而非发育成熟驱动。",
+   "stance": "support",
+   "relation": "支持'纵向设计中刺激史与成熟混淆必须用对照解开'的方法学主张,是该文对器官智能实验设计的核心贡献。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "表 2 给出三类器官逐日响应/基线比;对照 D7 的 1914 为全集最强,直接反证成熟解释。",
+   "locator": "3.2 Repeated stimulation depresses the evoked response across days",
+   "source_context": "Table 2: Session-level evoked response strength (response/baseline ratio). Organoid D1 D2 D3 D4 D7 552 (repeated) 1123 1411 1802 1450 206 613 (repeated) 487 897 230 1128 268 612 (single-stim control) — — — — 1914 The single-stimulation control isolates stimulation history from age.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "session-level evoked response strength (response/baseline ratio)",
+    "value_or_direction": "D7: 206 (552) and 268 (613) vs control 1914; D1: 1123 and 487",
+    "comparator": "developmentally-matched single-stim control organoid 612",
+    "task_or_sample": "Table 2, longitudinal stimulation days 1-7, three organoids",
+    "locator": "3.2 Repeated stimulation depresses the evoked response across days, Table 2"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "表 2 数字(1123/1411/1802/1450/206、487/897/230/1128/268、1914)与'对照分离刺激史与年龄'句子均在 3.2 节逐字核对;'由刺激历史驱动'的因果措辞与节内 'driven by repeated-stimulation history rather than maturation' 一致。"
+   }
+  },
+  {
+   "card_id": "2607.28068-C04",
+   "claim": "跨天抑郁反映会话内耐力退化而非响应容量丧失:首试响应量级相对保留而会话均值塌缩;且刺激naïve对照在首次会话即出现强量级抑郁但无显著去同步,而重复刺激器官出现去同步——作者自己将其标为小样本下的 hypothesis,快速会话内抑郁是内在的、跨天成分才随刺激史累积。",
+   "stance": "conditional",
+   "relation": "限定'重复刺激抑郁=类器官可塑性学习证据'的解读:容量/耐力分离与去同步-刺激史关联仍是小样本条件性解释,不能直接读作学习机制确证。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.3 给出容量-耐力分离;3.4 给出量级抑郁与去同步的解离及对照证据,作者明示 hypothesis、given small n。",
+   "locator": "3.3 Across-day depression reflects loss of within-session endurance, not capacity",
+   "source_context": "The network’s capacity to mount a strong initial daily response was largely preserved; however, the ability to sustain responses across the session was degraded.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "容量保留/耐力退化的表述为 3.3 节原句;去同步-刺激史关联及'内在 vs 累积'机制措辞出自 3.4 节 'The stimulation-naïve control showed strong magnitude depression but no significant desynchronization...suggesting (hypothesis, given small n)',故 stance 取 conditional 以匹配作者自己的限定。"
+   }
+  },
+  {
+   "card_id": "2607.28068-C05",
+   "claim": "边界:设计仅含两个重复刺激类器官与一个单刺激对照,结论属'可复现、对照支持的观察'而非群体级统计主张;且该研究不能裁决其他刺激协议下类器官是否支持结构化多跳计算——仅表明局灶单点协议下无可测传播。",
+   "stance": "limit",
+   "relation": "为器官智能路线设定验证强度边界:单实验室 n=3 的对照实验不足以支撑群体级能力主张,综述引用时应降级为个案级证据。",
+   "confidence": "direct",
+   "claim_basis": "author-claim",
+   "summary": "4.7 节作者直陈样本局限与协议适用范围。",
+   "locator": "4.7 Limitations",
+   "source_context": "The design comprises two repeatedly-stimulated organoids and a single single-stimulation control; findings are therefore reproducible, control-supported observations rather than population-level statistical claims, and the control-based dissociation of stimulation history from maturation rests on one control organoid.",
+   "evidence_type": "experiment",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文为 4.7 节原句;协议范围限定见同节 'under the focal, single-site protocol used here',两处共同支撑本边界主张的措辞与范围。"
+   }
+  },
+  {
+   "card_id": "2607.28068-C06",
+   "claim": "每日刺激条件化功能图在每会话仅 10 次试验的条件下不可靠估计:置换阈值接近空图,两种去趋势变体在密度、模块度、最大连通分量上分歧显著,作者因此不报告边级图统计——这是对把图论指标直接套用于类器官数据的方法学警示。",
+   "stance": "limit",
+   "relation": "限定'类器官功能图/图指标可作为器官智能计算证据'的路线:在典型每日刺激试验数下边级连通性结论不可靠,需更高试验数或网络级读出。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "3.6 节报告图构建被完整执行但不可靠,属负结果;摘要称其有方法学后果。",
+   "locator": "3.6 Per-day connectivity graphs were evaluated but are not reliable at",
+   "source_context": "We therefore do not report edge-level graph statistics as primary results; and the robust network-level conclusions rest on (Eq. ( 20 )) and (Eq. ( 23 )). This is a limitation of trial count, not of the construction, as the graphs were built and evaluated for every organoid and day.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "edge-level graph statistics (density, modularity, largest component)",
+    "value_or_direction": "not reliably estimable; near-empty thresholded graphs",
+    "comparator": "trial-shuffle permutation null",
+    "task_or_sample": "per-day functional graphs for every organoid and day",
+    "locator": "3.6 Per-day connectivity graphs were evaluated but are not reliable at"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "'不报告边级图统计'与'试验数局限而非构造局限'均为 3.6 节原句;密度/模块度/最大连通分量与置换零假设词 token 出现在同节,支撑定量字段的度量名与比较对象;试验数 10 出自 2.1 与 3.7('at ten trials')。"
+   }
+  }
+ ],
+ "core_citations": [
+  "Zucker & Regehr (2002), Short-Term Synaptic Plasticity, Annual Review of Physiology(突触抑郁机制对照)",
+  "Poli, Pastore & Massobrio (2015), Functional connectivity in in vitro neuronal assemblies, Frontiers in Neural Circuits(体外培养功能连通性方法)"
+ ],
+ "notes": "作者团队来自南丹麦大学(University of Southern Denmark)等机构,投稿分类 q-bio.NC + cs.AI,是'器官智能'子路线中罕见的把完整框架实测、负结果与对照实验一并报告的工作;其价值主要在为类器官计算能力主张划定协议级与样本级边界,而非宣称新能力。"
+}

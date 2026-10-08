@@ -499,7 +499,10 @@ class SnapshotArxivSearch:
                 file_handle.write(rendered + "\n")
         else:
             print(rendered)
-        return 0
+        # Local import mirrors with_date_filter above (avoids load-time coupling).
+        from embodied_learning.search.arxiv import report_partial_batch  # noqa: E402
+
+        return report_partial_batch(query_results)
 
 
 def _sort_key(paper: dict[str, Any]) -> str:

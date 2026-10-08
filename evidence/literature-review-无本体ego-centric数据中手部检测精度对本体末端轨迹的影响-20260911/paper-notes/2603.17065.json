@@ -1,0 +1,333 @@
+{
+ "schema_version": 1,
+ "paper": {
+  "arxiv_id": "2603.17065",
+  "title": "TeleDex: Accessible Dexterous Teleoperation",
+  "published": "2026-03-20",
+  "url": "https://arxiv.org/abs/2603.17065",
+  "authors": [
+   "Omar Rayyan",
+   "Maximilian Gilles",
+   "Yuchen Cui"
+  ]
+ },
+ "review": {
+  "question": "无本体 ego-centric 数据中，手部检测/追踪精度如何影响重定向后机器人本体末端轨迹的精度与可用性？误差来源、传播路径、可接受阈值与缓解手段是什么？",
+  "topic_ids": [
+   "EA-DATA",
+   "EA-XEMBODIMENT",
+   "EA-SENSOR",
+   "EA-MODEL"
+  ],
+  "mode": "scoping"
+ },
+ "extraction": {
+  "source_format": "html",
+  "method": "html-flat",
+  "quality": "high",
+  "full_text_available": true,
+  "ocr_pages": [],
+  "visual_validation": "not-required"
+ },
+ "reading": {
+  "status": "accepted",
+  "paper_type": "system",
+  "relevance": {
+   "decision": "include",
+   "reason": "手机 ARKit 6-DoF 腕部位姿 + 前置相机 21 点手部关键点作为追踪源，代表『消费级 ego 视觉追踪→重定向→末端控制』路线；其对 AnyTeleop 固定外置相机方案的批评（遮挡/视角/深度歧义/腕部深度噪声）与腕戴式设计缓解手段直接命中综述的误差来源与缓解问题。"
+  },
+  "sections_read": [
+   {
+    "locator": "I. INTRODUCTION",
+    "role": "problem",
+    "purpose": "问题定位：部署态数据采集需要低门槛遥操作接口；手机作为被低估的追踪/输入设备。"
+   },
+   {
+    "locator": "II. RELATED WORKS",
+    "role": "relevant-core",
+    "purpose": "遥操作接口谱系对比（Table I）与手机方案定位。"
+   },
+   {
+    "locator": "C. Dexterous Hand Teleoperation",
+    "role": "relevant-core",
+    "purpose": "对 AnyTeleop 类固定外置相机手部追踪的误差来源分析（遮挡、视角、深度歧义、腕部深度噪声）。"
+   },
+   {
+    "locator": "III. SYSTEM OVERVIEW",
+    "role": "method-or-design",
+    "purpose": "两种模式架构：手持 6-DoF 与腕戴 21 点手部追踪。"
+   },
+   {
+    "locator": "A. Basic Hand-held Setting",
+    "role": "method-or-design",
+    "purpose": "ARKit 设备位姿→相对运动→末端命令的坐标变换链。"
+   },
+   {
+    "locator": "B. Wrist-Mounted Setting",
+    "role": "method-or-design",
+    "purpose": "腕戴手机刚性安装、前置相机手部关键点估计与 Dex-Retarget 重定向；相机随手移动的缓解设计。"
+   },
+   {
+    "locator": "IV. EXPERIMENTAL EVALUATION",
+    "role": "results-or-analysis",
+    "purpose": "RQ1/RQ2 设计与三平台设置。"
+   },
+   {
+    "locator": "B. RQ1: Efficiency of Collecting Demonstrations",
+    "role": "results-or-analysis",
+    "purpose": "采集效率用户研究（5 人×225 episodes）对比 SpaceMouse/键盘。"
+   },
+   {
+    "locator": "C. RQ2: Intuitive Dexterous Teleoperation",
+    "role": "results-or-analysis",
+    "purpose": "真实灵巧平台 3 任务完成时间 vs 人类 oracle（Table II）。"
+   },
+   {
+    "locator": "D. Complex Manipulation Experiments",
+    "role": "results-or-analysis",
+    "purpose": "动态/精细任务（接物、守门、绕线）的定性追踪表现陈述。"
+   },
+   {
+    "locator": "E. Policy Training",
+    "role": "results-or-analysis",
+    "purpose": "120 条演示训练 BC 策略达 80% 成功率的下游可用性证据。"
+   },
+   {
+    "locator": "V. CONCLUSION",
+    "role": "conclusion-or-limitations",
+    "purpose": "结论与 limitation（腕戴重量疲劳）。"
+   }
+  ],
+  "sections_skipped": [
+   {
+    "locator": "A. Scaling Robotics Data; B. Phone-based Teleoperation Systems",
+    "role": "relevant-core",
+    "reason": "背景性综述段落，与手部追踪精度问题仅间接相关，略读。"
+   },
+   {
+    "locator": "C. TeleDex App and Python API; F. Third-party Evaluations",
+    "role": "method-or-design",
+    "reason": "软件工程与第三方部署清单，不含追踪精度证据，略读。"
+   }
+  ]
+ },
+ "research_question": "如何用消费级手机（无外部追踪基础设施）实现可达、直观的灵巧手+机械臂遥操作，以支持部署态的高效演示采集？",
+ "contributions": [
+  "开源手机遥操作系统（iOS App + Python 库）：ARKit 6-DoF 腕部位姿 + 21-DoF 手部关键点流式传输。",
+  "3D 打印腕戴接口：前置相机随手移动，支持手指级追踪并集成 Dex-Retarget 适配任意 URDF 灵巧手。",
+  "MuJoCo 原生集成与多平台（xArm7/RealMan/MolmoSpaces）验证；120 条演示训练简单 BC 达 80% 成功率。"
+ ],
+ "method": {
+  "summary": "手持模式：ARKit 输出手机 6-DoF 位姿，经复位参考与固定对齐变换映射为末端相对运动命令（带可选位置缩放）。腕戴模式：手机刚性固定于手腕，前置相机估计 21 个手部关键点，手机位姿经固定手-机变换得到腕部位姿控制手臂，关键点经 Dex-Retarget 重定向到多指灵巧手；相机随手移动避免固定外置相机的视野/遮挡约束。",
+  "assumptions": [
+   "ARKit 设备位姿追踪（VIO）在操作速度下足够准确且低延迟（全文未给出定量误差）。",
+   "手机前置相机的手部关键点估计在腕戴视角下可靠（未报告关键点精度或丢帧率）。",
+   "手-机固定偏置变换 P_T_H 在安装后保持恒定。"
+  ]
+ },
+ "study_context": {
+  "datasets": [
+   "MolmoSpaces-Bench（仿真采集效率研究）",
+   "120 条 MuJoCo 水果抓取放置演示"
+  ],
+  "tasks": [
+   "MS-Pick / MS-Open（仿真效率）",
+   "多形状抓放、钢琴按键、开蛋盒（真实灵巧任务）",
+   "接物、守门、绕线（动态/精细演示）",
+   "香蕉+橙子顺序抓放（策略训练）"
+  ],
+  "embodiments": [
+   "xArm7 + 平行夹爪",
+   "RealMan 移动操作臂 + OYMotion 多指灵巧手",
+   "MolmoSpaces 仿真 DROID"
+  ],
+  "sample_or_scale": "RQ1：5 参与者 × 3 设备 × 15 episodes = 225 episodes；RQ2：7 名无经验参与者；策略评估 20 episodes。"
+ },
+ "evaluation": {
+  "design": "RQ1 仿真用户研究（时间限制 30s，成功=举起>5cm 或开合>15% 关节行程）；RQ2 真实灵巧平台用户研究（完成时间 vs 人类 oracle 速度）；动态任务定性演示；120 演示 BC 策略训练验证；第三方部署清单。",
+  "baselines": [
+   "SpaceMouse（3Dconnexion）",
+   "键盘",
+   "人类直接操作 oracle（policy-aware 速度）"
+  ],
+  "metrics": [
+   "单次成功平均耗时",
+   "成功试验完成时间 mean±std",
+   "BC 策略成功率"
+  ],
+  "ablations": []
+ },
+ "findings": [
+  {
+   "finding": "RQ1：TeleDex 在两个仿真任务上的单次成功耗时均低于 SpaceMouse 与键盘（数值以图呈现）。",
+   "scope": "MolmoSpaces-Bench，5 参与者 225 episodes",
+   "locator": "B. RQ1: Efficiency of Collecting Demonstrations, Figure 6"
+  },
+  {
+   "finding": "RQ2：全部 7 名无经验参与者经 2 分钟熟悉后完成所有灵巧任务；TeleDex 完成时间（抓放 74.0±39.0s、钢琴 75.8±19.7s、蛋盒 18.7±6.6s）约为人类 oracle（23/21/7s）的 3 倍。",
+   "scope": "RealMan + 灵巧手，成功试验均值",
+   "locator": "C. RQ2: Intuitive Dexterous Teleoperation, Table II"
+  },
+  {
+   "finding": "动态任务（接物/守门/绕线）中操作者实时完成精细纠正动作，定性声称『无可见追踪漂移或失控』，但全文无任何追踪精度定量测量。",
+   "scope": "xArm7 演示任务，无数值指标",
+   "locator": "D. Complex Manipulation Experiments"
+  },
+  {
+   "finding": "120 条 TeleDex 演示训练的简单 CNN+MLP 行为克隆策略达 80%（16/20）成功率。",
+   "scope": "MuJoCo 仿真单任务",
+   "locator": "E. Policy Training"
+  }
+ ],
+ "limitations": {
+  "author_status": "found",
+  "author_stated": [
+   {
+    "limitation": "腕戴配置长期使用会因手机重量导致用户疲劳；未来考虑更轻硬件、替代安装方式或共享自主。",
+    "locator": "V. CONCLUSION"
+   }
+  ],
+  "reader_inferred": [
+   {
+    "boundary": "全文未量化 ARKit 腕部位姿或手部关键点的追踪误差/延迟/丢帧率，『低延迟』『无追踪漂移』均为定性声称；无法据此判断该追踪源可支撑的末端轨迹精度等级。",
+    "basis": "通读全文（含 IV 全部小节）：评估指标仅为任务耗时与成功率，无任何位姿误差或频率测量。"
+   },
+   {
+    "boundary": "策略验证仅覆盖仿真单任务与简单 BC 基线，『演示质量足够』的结论不能外推到真实世界接触密集任务或更强策略架构。",
+    "basis": "E. Policy Training 明确在 MuJoCo 仿真任务、无数据增强、无任务特定架构修改的 vanilla CNN+MLP 设置下进行。"
+   }
+  ]
+ },
+ "transfer_boundary": "适用于：低门槛、部署态的臂+灵巧手遥操作与快速数据采集，追踪精度要求为任务级成功而非毫米级轨迹保真。不适用于：需要定量手部追踪精度保证的场景（论文未提供）；高速动态操作的精度声明仅有定性证据；真实世界下游策略验证缺失。",
+ "critical_appraisal": {
+  "design_strengths": [
+   "腕戴相机设计针对固定外置相机的遮挡/视野约束给出清晰的工程缓解，设计动机与竞品缺陷（AnyTeleop）对应明确。",
+   "多平台部署（含第三方）与开源发布提升了系统的可及性证据强度。"
+  ],
+  "design_risks": [
+   "无任何追踪精度/延迟的定量测量，核心卖点『low-latency』『accurate』缺乏仪器级验证。",
+   "RQ1 的数值仅以图呈现（Figure 6），未报告具体均值/方差；Table II 人类 oracle 行无标准差。",
+   "用户研究样本小（5/7 人），且 RQ1 参与者对基线设备有先验经验而对 TeleDex 无，存在对新界面的学习偏置（作者已披露）。"
+  ],
+  "baseline_fairness": "RQ1 接口顺序随机化并披露参与者的经验不对称，公平性中等；RQ2 的人类 oracle 是速度参照而非严格对照（不同本体）。",
+  "metric_validity": "完成时间与任务成功率是可用性代理，不度量追踪误差或末端轨迹保真度；对综述问题只能提供误差来源的定性映射与缺失证据（gap）定位。",
+  "reproducibility": "App Store 应用 + pip 包 + 3D 打印件，开放程度高；但无追踪精度的测试协议可复现。",
+  "external_validity": "结论限于 iPhone/ARKit 生态与任务级精度需求；对手部追踪误差敏感的高精度装配类任务外推无支撑。"
+ },
+ "evidence_cards": [
+  {
+   "card_id": "2603.17065-C01",
+   "claim": "TeleDex 作者指出：AnyTeleop 类依赖固定外置相机的视觉手部姿态估计对遮挡、视角变化与深度歧义敏感（按其自身 limitation），且其腕部位姿由图像深度线索推断而非直接 6-DoF 传感，在快速运动与接触密集交互中会引入噪声。",
+   "stance": "support",
+   "relation": "支持『误差来源』枚举：固定外置相机 ego/exo 视觉手部追踪的误差以遮挡敏感性、视角依赖、深度歧义与腕部深度噪声四种形态进入追踪→重定向链。",
+   "confidence": "citation-supported",
+   "claim_basis": "cited-work",
+   "summary": "II.C 段先引 AnyTeleop 自身 limitation 说明固定外置相机方案的三种敏感性，再以作者分析指出腕部位姿来自深度线索的噪声风险。",
+   "locator": "C. Dexterous Hand Teleoperation",
+   "source_context": "While effective, such approaches rely on camera- based hand pose estimation from a fixed external viewpoint, making them sensitive to occlusions, viewpoint changes, and depth ambiguity as outlined in their limitations. Moreover, wrist pose is inferred from image-based depth cues rather than direct 6-DoF sensing, which can introduce noise during fast motions and contact-rich interactions.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 II.C（camera- based 跨行断词按原文保留）；遮挡/视角/深度歧义部分被原文明确归于 AnyTeleop 的 limitations（cited-work），腕部噪声句为本文作者分析，合并陈述未夸大任何一方。"
+   }
+  },
+  {
+   "card_id": "2603.17065-C02",
+   "claim": "TeleDex 的腕戴式设计将手机前置相机刚性固定在操作者手臂上，相机随手部一起移动，使操作者无需保持手部处于固定相机视野内，从而缓解固定外置相机方案的视野约束与遮挡问题。",
+   "stance": "support",
+   "relation": "支持『缓解手段：追踪相机与手共动（腕戴/头戴 ego 视角）可降低固定视角视觉追踪的丢踪与遮挡』——与 ego-centric 采集设备的设计逻辑一致。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "III.B 段逐字对比固定外置相机方案（手须保持在视野内、位姿由深度线索推断）与腕戴共动方案的自由活动能力。",
+   "locator": "B. Wrist-Mounted Setting",
+   "source_context": "Unlike external camera-based approaches, where the user must ensure their hand remains within the field of view of a fixed camera since the pose is inferred from image-based depth cues, the arm-mounted configuration allows the operator to move freely because the camera moves together with the hand.",
+   "evidence_type": "method-design",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 III.B；claim 仅复述该设计对比，未声称其消除所有追踪误差（自遮挡在腕戴视角仍可能存在，作者未讨论）。"
+   }
+  },
+  {
+   "card_id": "2603.17065-C03",
+   "claim": "用 TeleDex 采集的 120 条仿真演示训练无任务特定修改的 vanilla CNN+MLP 行为克隆策略，在水果顺序抓放任务上 20 次评估达 80%（16/20）成功率，作者据此认为 TeleDex 演示质量足以支持模仿学习。",
+   "stance": "conditional",
+   "relation": "条件性支持『手机级追踪源采集的轨迹对下游 BC 可用』：可用性在仿真单任务+简单策略下成立，但缺乏真实世界与强基线验证，不能外推为普遍结论。",
+   "confidence": "direct",
+   "claim_basis": "reported-result",
+   "summary": "IV.E 报告 120 条演示、RGB+本体感知观测、vanilla CNN+MLP、80%（16/20）成功率及作者的充分性结论。",
+   "locator": "E. Policy Training",
+   "source_context": "The trained policy achieves a success rate of 80% (16/20) over 20 evaluation episodes, demonstrating that demonstrations collected with TeleDex are of sufficient quality to enable effective imitation learning, even with a simple baseline model and a relatively modest dataset size.",
+   "evidence_type": "experiment",
+   "quantitative": {
+    "metric": "behavioral cloning success rate 行为克隆策略成功率",
+    "value_or_direction": "80% (16/20)",
+    "comparator": "none (single configuration, vanilla CNN+MLP baseline) 无对照",
+    "task_or_sample": "MuJoCo simulated sequential banana+orange pick-and-place, 120 teleoperated demos, 20 evaluation episodes",
+    "locator": "E. Policy Training"
+   },
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "80%（16/20）与 120 条演示逐字见于 IV.E；claim 保留了作者『simple baseline/modest dataset』的限定语，条件性圈定在仿真单任务设置内。"
+   }
+  },
+  {
+   "card_id": "2603.17065-C04",
+   "claim": "TeleDex 全文未提供手部关键点或腕部位姿追踪的定量精度/延迟/丢帧测量：动态任务（接物、守门、绕线）仅以『无可见追踪漂移或失控』的定性观察作为追踪质量证据。",
+   "stance": "gap",
+   "relation": "标记证据缺口：消费级手机追踪源的精度对末端轨迹的影响在该文中不可判定——任务级成功不能替代位姿误差测量，综述的『可接受阈值』问题在此无数据支撑。",
+   "confidence": "inference",
+   "claim_basis": "reader-inference",
+   "summary": "IV.D 的定性声称是全文最接近追踪质量的陈述；通读 IV 全部小节与 V，所有定量指标均为任务耗时/成功率，无位姿误差、追踪频率或丢帧统计。",
+   "locator": "D. Complex Manipulation Experiments",
+   "source_context": "Across all scenarios, operators were able to successfully complete the tasks via performing fine-grained corrective motions in real time, without observable tracking drift or loss of control.",
+   "evidence_type": "analysis",
+   "quantitative": false,
+   "verification": {
+    "status": "passed",
+    "checked_against": "full-text",
+    "rationale": "引文逐字匹配 IV.D；『无定量测量』的推断基于对 IV.A-F 与 V 的完整阅读：RQ1 指标为 time-per-success、RQ2 为完成时间、E 为策略成功率，均无追踪精度量；该推断可被任何一处遗漏的精度实验推翻，但全文检索未见。"
+   }
+  }
+ ],
+ "core_citations": [
+  {
+   "arxiv_id": null,
+   "reference": "[9] Y. Qin et al. AnyTeleop: A general vision-based dexterous robot arm-hand teleoperation system. RSS 2023.",
+   "reason": "C01 的误差来源归因依赖 AnyTeleop 自述 limitation；Dex-Retarget 亦来自该工作。"
+  }
+ ],
+ "tables": [
+  {
+   "table_id": "T2",
+   "caption": "Completion Time (s) on Successful Trials (mean±std)",
+   "section": "C. RQ2: Intuitive Dexterous Teleoperation",
+   "rows": [
+    [
+     "Method",
+     "Pick and Place",
+     "Piano Keys Press",
+     "Eggs Container"
+    ],
+    [
+     "Human (policy-aware speed)",
+     "23",
+     "21",
+     "7"
+    ],
+    [
+     "TeleDex",
+     "74.0 ± 39.0",
+     "75.8 ± 19.7",
+     "18.7 ± 6.6"
+    ]
+   ],
+   "usage": "作者用该表对比 TeleDex 与人类直接操作的演示速度，量化接口引入的效率差距。"
+  }
+ ],
+ "notes": "对综述问题的定位：代表『消费级 ego 视觉追踪』路线（手机 ARKit + 前置相机关键点）。价值在 II.C 对固定外置相机方案的误差来源枚举与腕戴缓解设计；主要缺口是完全没有追踪精度定量数据——所有证据停在任务级。"
+}

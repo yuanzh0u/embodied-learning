@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "paper": {
+    "arxiv_id": "2605.08567",
+    "title": "ACWM-Phys: Investigating Generalized Physical Interaction in Action-Conditioned Video World Models",
+    "published": "2026-05-09",
+    "url": "https://arxiv.org/abs/2605.08567",
+    "authors": ["Haotian Xue", "Yipu Chen", "Liqian Ma", "Zelin Zhao", "Lama Moukheiber", "Yuchen Zhu", "Yongxin Chen"]
+  },
+  "review": {
+    "question": "近两年（2024-08 至 2026-08）Diffusion Transformer（DiT）在视频生成与世界模型方向的：能力如何演进、向世界模型转型的机制、物理/时序/实体一致性等限制、评测方法与基准、部署/加速、以及 action-conditioned 世界模型与具身交叉。每篇关注其为该综述提供的证据。",
+    "topic_ids": ["EA-4D", "EA-EVAL", "EA-MODEL"],
+    "mode": "scoping"
+  },
+  "extraction": {
+    "source_format": "html",
+    "method": "html-latexml",
+    "quality": "high",
+    "full_text_available": true,
+    "ocr_pages": [],
+    "visual_validation": "not-required"
+  },
+  "reading": {
+    "status": "evidence-ready",
+    "paper_type": "benchmark",
+    "relevance": {
+      "decision": "include",
+      "reason": "直接针对 action-conditioned 视频世界模型与具身交叉综述点：提出 ACWM-Phys 基准（8 环境、4 类物理交互、InD/OoD 协议）与 ACWM-DiT（latent video DiT 基线，WanVAE + AdaLN 动作条件），给出物理/时序一致性限制与泛化边界证据。"
+    },
+    "sections_read": [
+      {"locator": "1 Introduction", "role": "problem", "purpose": "研究问题：现有 action-conditioned world models 及基准物理多样性不足（egocentric 导航或窄机器人 pick-place），rich physical interactions 未被评估"},
+      {"locator": "2 Related Works", "role": "problem", "purpose": "综述现有 ACWM（Genie-3 导航、Vid2World/BridgeV2W/WoVR 操作等）覆盖局限"},
+      {"locator": "3 Background", "role": "method-or-design", "purpose": "video diffusion / flow matching 在压缩 latent 空间的设定，DiT denoiser"},
+      {"locator": "4.1 ACWM-Phys: A Benchmark Suite for Rich Physical Interactions", "role": "method-or-design", "purpose": "ACWM-Phys 基准：8 环境 4 类物理交互，15k 轨迹，InD/OoD 协议"},
+      {"locator": "4.1.1 Categories of Physical Interactions", "role": "method-or-design", "purpose": "四类物理交互任务的 action 空间定义（刚体/可变形/粒子/运动学）"},
+      {"locator": "4.1.2 In-Distribution and Out-of-Distribution Evaluation Protocols", "role": "method-or-design", "purpose": "受控物理相关分布偏移 + InD/OoD 评测协议与 M-MSE 指标"},
+      {"locator": "4.2 ACWM-DiT: An Action-Conditioned Video Diffusion Transformer in Latent Space", "role": "method-or-design", "purpose": "ACWM-DiT 架构：frozen WanVAE、双向 DiT、动作经 MLP+strided conv → AdaLN 条件"},
+      {"locator": "5.1 Main Results", "role": "results-or-analysis", "purpose": "8 环境 InD/OoD 主结果（MSE/M-MSE/SSIM/PSNR）"},
+      {"locator": "5.2 Ablation Studies", "role": "results-or-analysis", "purpose": "模型规模/动作条件机制/latent 表述/数据量/动作维度消融"},
+      {"locator": "6 Conclusion and Limitation", "role": "conclusion-or-limitations", "purpose": "结论与作者自述限制（非实时、sim-only）"}
+    ],
+    "sections_skipped": []
+  },
+  "research_question": "ACWMs（diffusion 视频世界模型）能否在刚体、可变形、粒子、运动学四类物理交互上既能 InD 预测又能 OoD 泛化？OoD 泛化差距由什么驱动？为据此判断生成式视频世界模型是否学习了底层物理而非依赖视觉外观统计。",
+  "contributions": [
+    "ACWM-Phys：首个横跨四类物理交互机制（刚体/可变形/粒子/运动学）的 action-conditioned 世界模型基准，8 个仿真环境，受控 InD/OoD 协议，>15k 轨迹",
+    "ACWM-DiT：基于 frozen Wan 2.1 causal VAE + bidirectional DiT 骨干 + AdaLN 动作条件的 latent video diffusion transformer 基线",
+    "发现：OoD 泛化由有效任务复杂度而非物理类别驱动；模型依赖视觉外观统计而非内部化物理定律，高维控制/接触丰富形变/复杂关节运动下降最大",
+    "消融洞见：cross-attention 对高维动作条件更优（低维无益）、时间感知 causal VAE 优于逐帧 encoder、更大动作空间更难学习但可提升泛化"
+  ],
+  "method": {
+    "summary": "ACWM-Phys 是受控仿真基准：8 个机器人仿真环境分属刚体（Push Cube/Stack Cube）、可变形（Push Rope/Cloth Move）、粒子（Push Sand/Pour Water）、运动学（Robot Arm/Reacher）四类物理交互，每类 2 任务，提供 InD 训练/测试与按物理轴的 OoD 测试分裂。基线 ACWM-DiT：视频经 frozen Wan 2.1 causal video VAE（时空压缩、16 通道 latent）编码，frozen WanVAE，bidirectional (非因果) DiT 骨干（spatial+temporal self-attention、RoPE），动作由 MLP+stride-3 1D conv 下采样到 latent 时序分辨率后经 AdaLN 注入每层；flow matching + Gaussian envelope（中心 step 500）训练，1000 train steps / 50 inference steps。",
+    "assumptions": [
+      "frozen pretrained causal VAE 提供足够的时间压缩表示（temporal compression），耦合相邻帧",
+      "bidirectional（非因果）模型可在生成时双向注意干净 context 与 noisy future token",
+      "仿真可精确复现分布偏移、无传感器噪声，OoD gap 可干净测量"
+    ]
+  },
+  "study_context": {
+    "datasets": ["ACWM-Phys（自建仿真数据集，8 环境，14,706 train / 750 InD test / 750 OoD test，约 15k 轨迹）"],
+    "tasks": ["Push Cube", "Stack Cube", "Push Rope", "Cloth Move", "Push Sand", "Pour Water", "Robot Arm", "Reacher"],
+    "embodiments": ["Franka Panda（7-DoF）", "2-link MuJoCo arm", "circular pusher", "pole pusher", "board pusher", "dual-arm clamp", "cup with spring-damper"],
+    "sample_or_scale": "8 env; action dim 2-7; horizon 50-300; 4 physics categories"
+  },
+  "evaluation": {
+    "design": "每个环境 InD 训练，同时评测 InD 测试与按物理轴的 OoD 测试（object count、workspace、rope/cloth size、particle count、water level、goal region）；报告 MSE、SSIM、PSNR，并引入 Masked-MSE (M-MSE) 只对实变区域加权以突出运动相关误差。",
+    "baselines": ["无外部 action-conditioned 基线；ACWM-DiT-S 自身作为基准，对 DiT-S/M/L 与不同条件机制做内部对照（sanity：相对 InD baseline 报告退步）"],
+    "metrics": ["MSE", "Masked-MSE (M-MSE)", "SSIM", "PSNR"],
+    "ablations": ["模型规模（DiT-S/M/L）", "action-conditioning 机制（AdaLN vs cross-attention）", "latent 表述（Wan 2.1 causal VAE vs FLUX frame-independent VAE）", "训练数据量（100%/50%/25%）", "动作维度（Cloth Move 3→8-DoF；Push Cube 单→双 pusher）"]
+  },
+  "findings": [
+    {"finding": "OoD 泛化由有效任务复杂度而非物理类别驱动：低维、几何结构明确的任务（Push Cube/Reacher）泛化好，高-DoF 运动学（Robot Arm）与接触丰富形变（Cloth Move）下降最大，说明模型依赖视觉外观统计而非学习底层物理", "scope": "8 个 ACWM-Phys 环境的 InD/OoD", "locator": "1 Introduction; 5.1 Main Results; 6 Conclusion"},
+    {"finding": "ACWM-DiT-S 在四类物理上均取得强 InD 表现，简单重复动力学近完美（Push Rope M-MSE 2.61/SSIM 0.988；Reacher M-MSE 5.63/SSIM 0.992），而 Stack Cube/Cloth Move 挑战最大", "scope": "ACWM-DiT-S，100k steps，50 inference steps", "locator": "5.1 Main Results; Table 1"},
+    {"finding": "最大的 InD→OoD 恶化出现在 Cloth Move（M-MSE 63.68→93.67）与 Robot Arm（M-MSE 13.45→53.80），可变形接触与高维运动学对分布偏移最脆弱", "scope": "ACWM-Phys OoD test", "locator": "5.1 Main Results; Table 1"},
+    {"finding": "cross-attention 动作条件对高维动作（Robot Arm）显著优（InD MSE 0.691 vs AdaLN 1.434），对低维（Push Cube/Push Rope）无益或略差；时间感知 causal VAE（WanVAE）全场景优于逐帧 FLUX VAE", "scope": "4 环境的 action-conditioning 消融与 2 环境的 latent formulation 消融", "locator": "5.2 Ablation Studies; Table 3; Table 4"},
+    {"finding": "更大动作空间更难学习但可提供更丰富控制信号提升泛化（Cloth Move 3-DoF→8-DoF 提升 OoD），而 Push Cube 加第二个 pusher 提升复杂度却不带来信息收益", "scope": "Cloth Move 与 Push Cube 动作维度消融", "locator": "5.2 Ablation Studies; Table 7"}
+  ],
+  "limitations": {
+    "author_status": "found",
+    "author_stated": [
+      {"limitation": "ACWM-DiT 非为实时渲染设计：作为双向扩散模型，视觉预测质量高但推理慢；未来需 autoregressive diffusion forcing / self-forcing 支持实时 world-model rollout", "locator": "6 Conclusion and Limitation"},
+      {"limitation": "ACWM-Phys 建于仿真，能控制 OoD 但没有完全捕捉真实物理/传感/机器人交互复杂度；弥合需 sim-to-real、更真实 sim 或真实环境演示数据", "locator": "6 Conclusion and Limitation"}
+    ],
+    "reader_inferred": [
+      {"boundary": "ACWM-DiT 的 InD/OoD 证据只约束 synthetic 仿真 + latent bidirectional DiT 这一设置，不迁移到真实 robot 部署、单步/自回归逐帧推理速度或非 DiT 视频世界模型", "basis": "作者自述 sim-only + 非实时；骨干为 DiT"},
+      {"boundary": "OoD 偏移均为按物理轴的受控分布偏移，未覆盖数据分布漂移以外的真实世界噪声/域迁移", "basis": "仿真设定决定"},
+      {"boundary": "AdaLN 与 cross-attention 的相对优劣只在特定 latent DiT + 低帧率 setup 测得，不泛化为通用世界模型架构结论", "basis": "单基线、四任务消融"}
+    ]
+  },
+  "transfer_boundary": "ACWM-Phys 的证据建立于受控仿真的 latent bidirectional DiT 世界模型上，可迁移到'DiT 视频世界模型的物理泛化约束与 action-conditioning 机制设计'综述命题：即说明当前 latent DiT 模型在可变形接触与高维运动学上的 agentic 泛化受限于视觉外观统计，且 action 条件机制（AdaLN/cross-attention）、时间感知 VAE、动作维度会影响其泛化。但不迁移到真实世界部署（sim-only、非实时、双向扩散慢）、其他视频世界模型家族（非 DiT/causal 逐帧），也不提供 DiT 部署/加速（推理步骤 A.5 显示 5-10 步即可，属一个线索）。",
+  "critical_appraisal": {
+    "design_strengths": ["受控可复现的仿真 OoD 偏移 + InD/OoD 双评测，分离插值与泛化", "四类物理交互覆盖，规避 egocentric/narrow manipulation 盲点", "M-MSE 只对运动区域加权，避免静态背景主导", "系统消融（规模/条件机制/latent/数据量/动作维度）"],
+    "design_risks": ["单基线（ACWM-DiT）无外部 action-conditioned 对照，结论强度依赖 self 对照", "表格中参数/部分数值 LaTeX 破坏（如 Cloth Move 行、括号数值），精确数字不可靠地转述", "InD 与 OoD 均为同一仿真，OoD gap 未必代表真实世界泛化困难"],
+    "baseline_fairness": "以 ACWM-DiT 自身 InD 为参照报告 OoD 退步，内部对照公平；但无跨模型基准对比，外部公平性受限",
+    "metric_validity": "MSE/SSIM/PSNR 为视频重建标准指标，M-MSE 增强对动态区域敏感度；指标主要衡量视觉/像素一致性而非物理定律结构，与物理正确性不完全等价",
+    "reproducibility": "仿真+参数化 action 空间+明确训练协议（100k steps, 8 H100）描述清晰，可复现",
+    "external_validity": "外部有效性受限于 synthetic sim、latent DiT 单家族、四类物理在受控环境下的代理"
+  },
+  "evidence_cards": [
+    {
+      "card_id": "2605.08567_C01",
+      "claim": "ACWMs 的 OoD 泛化主要由有效任务复杂度而非物理类别驱动；模型在低维、几何结构明确的任务上泛化良好，在高-DoF 运动学、接触丰富的可变形任务上大幅下降，倾向于捕获视觉外观统计而非内部化底层物理定律。",
+      "stance": "limit",
+      "relation": "限制'action-conditioned 视频世界模型已能物理泛化/内化动力学'的命题：现有 latent DiT 世界模型在外推时依赖外观统计，物理内部化不足",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在贡献点与结论中显式声明该发现：OoD 泛化由有效任务复杂度而非物理类别驱动，模型捕获 visual statistics 而非 physical laws。",
+      "locator": "1 Introduction",
+      "source_context": "We find that OoD generalization is driven primarily by task complexity rather than physics category",
+      "evidence_type": "analysis",
+      "quantitative": {
+        "metric": "OoD 泛化差距驱动因素 (visual-statistics vs physics)",
+        "value_or_direction": "低维几何任务（Push Cube、Reacher）泛化好，高-DoF 运动学（Robot Arm）与接触丰富形变（Cloth Move）泛化差；最高驱动为任务复杂度而非物理类别",
+        "comparator": "低维/几何明确任务 vs 高维/接触丰富任务 的 OoD 表现",
+        "task_or_sample": "8 个 ACWM-Phys 环境的 OoD 分裂",
+        "locator": "1 Introduction"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "该引文为 1 Introduction 逐字连续文本，直接支撑'OoD 泛化由任务复杂度驱动'；'依赖视觉外观而非物理定律'主张在 1 Introduction 与 6 Conclusion 亦以近乎一致表述出现"
+      }
+    },
+    {
+      "card_id": "2605.08567_C02",
+      "claim": "ACWM-DiT-S（latent bidirectional 视频 DiT + AdaLN 动作条件）在所有四类物理交互上取得强 InD 预测：简单、重复动力学近完美（Push Rope、Reacher），而大形变/大前景运动任务（Cloth Move、Stack Cube）InD 误差最高。",
+      "stance": "support",
+      "relation": "支持'DiT 视频世界模型在训练分布内能学习可变形/粒子/运动学等多种物理的视频预测'与'其 latent DiT 设定可作为世界模型基线'的命题",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.1 报告 ACWM-DiT-S 在四类物理上强 InD；简单任务近完美（Push Rope M-MSE 2.61/SSIM 0.988、Reacher M-MSE 5.63/SSIM 0.992），Cloth Move M-MSE 63.68 最高。",
+      "locator": "5.1 Main Results",
+      "source_context": "ACWM-DiT-S achieves strong in-distribution performance across all four physics categories. Environments with simpler, repetitive dynamics achieve the highest fidelity: Push Rope (M-MSE 2.61, SSIM 0.988) and Reacher (M-MSE 5.63, SSIM 0.992) are predicted with near-perfect structural similarity and low motion-region error",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "M-MSE 与 SSIM（InD test）",
+        "value_or_direction": "Push Rope M-MSE 2.61 / SSIM 0.988、Reacher M-MSE 5.63 / SSIM 0.992 近完美；Cloth Move M-MSE 63.68 最高（大形变区域误差大）",
+        "comparator": "8 环境 InD 测试对照",
+        "task_or_sample": "ACWM-DiT-S 在 8 个 ACWM-Phys 环境（100k steps, 50 推理步）",
+        "locator": "5.1 Main Results"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 5.1 结果段，SSIM/M-MSE 数值与 Table 1 一致；支撑 ACWM-DiT 强 InD 且简单动力学近完美的主张"
+      }
+    },
+    {
+      "card_id": "2605.08567_C03",
+      "claim": "最大的 InD→OoD 恶化出现在高维运动学（Robot Arm）与接触丰富的可变形（Cloth Move）任务：两者 M-MSE 大幅上升，显示对分布偏移最脆弱的物理机制是复杂关节运动与 deformable contact。",
+      "stance": "limit",
+      "relation": "量化'action-conditioned 视频世界模型物理/时序一致性'的限制：deformable 与高维 motion 在高保真 InD 之外的最弱外推面",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "Table 1 与 Gauge 一致显示：Cloth Move InD M-MSE 63.68→OoD 93.67、Robot Arm 13.45→53.80，是八环境中退步最大者。",
+      "locator": "5.1 Main Results",
+      "source_context": "Table 1 reports ACWM-DiT-S on all eight ACWM-Phys environments at 100k training steps and 50 inference steps",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "Masked-MSE (InD→OoD 变化)",
+        "value_or_direction": "Cloth Move M-MSE 63.68(InD)→93.67(OoD)、Robot Arm 13.45(InD)→53.80(OoD)，为最大退步；Push Cube/Rope/Reacher 变化小",
+        "comparator": "各环境 InD vs OoD 测试",
+        "task_or_sample": "ACWM-DiT-S 在 8 环境 OoD 分裂",
+        "locator": "5.1 Main Results; Table 1"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "Cloth Move 与 Robot Arm 的 M-MSE 数值在 5.1 的 Table 1 数据行中逐项可查（63.68/93.67、13.45/53.80），支撑此为该两环境 OoD 明显退步的量化主张"
+      }
+    },
+    {
+      "card_id": "2605.08567_C04",
+      "claim": "action-conditioning 机制消融表明：cross-attention 注入动作 token 在动作高维（Robot Arm）时显著优于 AdaLN（InD MSE 0.691 vs 1.434），而在低维任务（Push Cube/Push Rope）无益甚至略差；时间感知的 causal video VAE 全场景优于逐帧独立的 image VAE。",
+      "stance": "support",
+      "relation": "支持'DiT 世界模型架构设计'命题：动作条件的注入机制与 latent 表述（时间压缩与否）对 action-conditioned 泛化有实质影响",
+      "confidence": "direct",
+      "claim_basis": "reported-result",
+      "summary": "5.2 报告 cross-attention 在高维动作（Robot Arm）上更好绑定 joint command 与 articulated motion，对低维无益；并报告 WanVAE（causal, 时间压缩）在 Pour Water/Robot Arm 上均优于 FLUX VAE。",
+      "locator": "5.2 Ablation Studies",
+      "source_context": "cross-attention is most useful when actions are high-dimensional and require structured spatial-temporal grounding",
+      "evidence_type": "experiment",
+      "quantitative": {
+        "metric": "MSE (InD test)",
+        "value_or_direction": "Robot Arm：cross-attention InD MSE 0.691 优于 AdaLN 1.434；Push Cube/Push Rope 二者接近（cross-attn 无益或略差）",
+        "comparator": "AdaLN vs cross-attention 动作条件",
+        "task_or_sample": "4 环境 action-conditioning 消融（Robot Arm 高维、Push Cube/Push Rope 低维）",
+        "locator": "5.2 Ablation Studies; Table 3"
+      },
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 5.2；Robot Arm AdaLN 1.434 与 cross-attn 0.691 的 MSE 在 Table 3 数据行可核验，支撑 cross-attention 对高维动作更优的结论"
+      }
+    },
+    {
+      "card_id": "2605.08567_C05",
+      "claim": "ACWM-Phys 为 8 个环境设计受控、物理相关的 InD/OoD 分布偏移（未折叠的物体数量、workspace 范围、rope/cloth 尺寸、粒子数量、水位、goal 区域），作为 agentic 物理世界模型的评测方法学贡献。",
+      "stance": "support",
+      "relation": "支持'评测方法与基准'命题：在 action-conditioned 世界模型上提供可复现的受控分布偏移评测协议，测量插值 vs 泛化",
+      "confidence": "direct",
+      "claim_basis": "author-claim",
+      "summary": "作者在方法设计部分说明其设计原则：每环境支持一个受控、物理动因的分布偏移，且因为全仿真而精确可复现、无传感器噪声，从而干净测量泛化 gap。",
+      "locator": "4.1.2 In-Distribution and Out-of-Distribution Evaluation Protocols",
+      "source_context": "every environment supports a controlled, physically motivated distribution shift between the InD and OoD splits",
+      "evidence_type": "analysis",
+      "quantitative": false,
+      "verification": {
+        "status": "passed",
+        "checked_against": "full-text",
+        "rationale": "引文逐字取自 4.1.2 设计原则；支持的受控偏移（物体数量/尺寸/水位等）在紧接着的 bullet 与 4.1.1 中列出，命题与原文一致"
+      }
+    }
+  ],
+  "core_citations": [],
+  "notes": "该文打通了 action-conditioned 视频世界模型与物理丰富具身交互的综述口子：既提基准（EA-EVAL）又提 DiT 基线（EA-MODEL）与物理泛化限制。ACWM-DiT 为 latent bidirectional video DiT（frozen WanVAE + AdaLN），是综述'DiT 作为世界模型'的一条直接架构证据。部分表格数值（Cloth Move 行、括号参数量）LaTeX 破坏，定量卡只采用可准确还原的数字。"
+}
