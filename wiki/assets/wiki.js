@@ -2116,34 +2116,77 @@ Canonical: ${absoluteCanonical(topic)}
     nodes.chatProgress.hidden = true;
   }
 
+  // One dialog card per workflow key node. Previously a single .chat-timeline
+  // card was prepended to the top of the message list and its innerHTML was
+  // rewritten on every stage/brief/progress event — one box that kept changing
+  // while the real output sat in scattered pills below it. Each node now owns
+  // its own card holding that node's log lines and 成果简报 (2026-10-08).
+  const workflowNodeCards = new Map();
+
+  function resetWorkflowNodeCards() {
+    workflowNodeCards.clear();
+  }
+
+  function workflowNodeLabel(stage) {
+    return WORKFLOW_STAGES.find(([name]) => name === stage)?.[1] || stage || "工作流";
+  }
+
+  function workflowNodeCard(stage) {
+    const key = stage || "other";
+    const existing = workflowNodeCards.get(key);
+    if (existing && existing.isConnected) return existing;
+    const card = document.createElement("div");
+    card.className = "chat-msg chat-msg-node";
+    const head = document.createElement("div");
+    head.className = "chat-node-head";
+    head.textContent = workflowNodeLabel(key);
+    const body = document.createElement("div");
+    body.className = "chat-node-body";
+    card.appendChild(head);
+    card.appendChild(body);
+    nodes.chatMessages.appendChild(card);
+    workflowNodeCards.set(key, card);
+    chatScrollToBottom(true);
+    return card;
+  }
+
+  function appendNodeLine(stage, text, ts) {
+    const card = workflowNodeCard(stage);
+    const line = document.createElement("p");
+    line.className = "chat-node-line";
+    const clock = formatEventTime(ts);
+    line.textContent = clock ? `[${clock}] ${text}` : text;
+    card.querySelector(".chat-node-body").appendChild(line);
+    chatScrollToBottom(true);
+    return line;
+  }
+
+  function appendNodeBrief(stage, title, lines, ts) {
+    const card = workflowNodeCard(stage);
+    const details = document.createElement("details");
+    details.className = "chat-brief";
+    const summary = document.createElement("summary");
+    const clock = formatEventTime(ts);
+    summary.textContent = `${clock ? `[${clock}] ` : ""}📋 ${title || "成果简报"}`;
+    details.appendChild(summary);
+    const body = document.createElement("ul");
+    body.className = "chat-brief-lines";
+    for (const line of lines || []) {
+      const item = document.createElement("li");
+      item.textContent = line;
+      body.appendChild(item);
+    }
+    details.appendChild(body);
+    card.querySelector(".chat-node-body").appendChild(details);
+    chatScrollToBottom(true);
+    return details;
+  }
+
   function renderTimeline() {
-    let timeline = nodes.chatMessages.querySelector(".chat-timeline");
-    if (!workflowMode()) {
-      timeline?.remove();
-      hideChatProgress();
-      return;
-    }
-    const activeIndex = state.chat.stage === null ? -1 : stageIndex(state.chat.stage);
-    if (!timeline) {
-      timeline = document.createElement("div");
-      timeline.className = "chat-timeline";
-      nodes.chatMessages.prepend(timeline);
-    }
-    timeline.innerHTML = WORKFLOW_STAGES.map(([name, label], index) => {
-      let statusClass = "";
-      let glyph = "⬚";
-      if (state.chat.awaitingInput && index === activeIndex) {
-        statusClass = "is-paused";
-        glyph = "⏸";
-      } else if (index < activeIndex) {
-        statusClass = "is-done";
-        glyph = "✅";
-      } else if (index === activeIndex) {
-        statusClass = "is-active";
-        glyph = "⏳";
-      }
-      return `<span class="chat-stage ${statusClass}">${glyph} ${escapeHtml(label)}</span>`;
-    }).join("");
+    // Removed: the top-of-stream timeline card that was rewritten on every
+    // event. Per-node cards replace it. Clean up any leftover from a replay.
+    nodes.chatMessages.querySelectorAll(".chat-timeline").forEach((node) => node.remove());
+    if (!workflowMode()) hideChatProgress();
   }
 
   function replayWorkflowJournal(events) {
@@ -2151,6 +2194,7 @@ Canonical: ${absoluteCanonical(topic)}
     // SSE conversation dies with the page, so a reload replays the mirrored
     // events through the same handlers that rendered them the first time.
     nodes.chatMessages.innerHTML = "";
+    resetWorkflowNodeCards();
     hideChatProgress();
     let assistantEl = null;
     let renderer = null;
@@ -2217,25 +2261,17 @@ Canonical: ${absoluteCanonical(topic)}
       // detail (counts, pass/fail stats) is the series' summary message.
       hideChatProgress();
       const text = (evt.detail || "").replace(/^ok /, "");
-      if (text) {
-        // Every key workflow node lands in the dialog as a permanent line —
-        // the timeline pills alone leave the user staring at a silent pane
-        // during long driver stages.
-        const label = WORKFLOW_STAGES.find(([name]) => name === evt.stage)?.[1] || evt.stage;
-        appendChatSystemNote(`〔${label}〕${text}`, evt.ts);
-      }
+      if (text) appendNodeLine(evt.stage, text, evt.ts);
       setChatStatus(text ? `${text}…` : undefined);
       return;
     }
     if (evt.type === "brief") {
       // Per-stage results brief (query plan, selected papers, deep-read
       // outcomes…): the work product a reviewer verifies and a debugger
-      // replays, kept as a collapsible block in the dialog.
-      if (evt.stage) {
-        state.chat.stage = evt.stage;
-        renderTimeline();
-      }
-      appendChatBrief(evt.title, evt.lines, evt.ts);
+      // replays. Lands inside its node's card, collapsed by default.
+      if (evt.stage) state.chat.stage = evt.stage;
+      renderTimeline();
+      appendNodeBrief(evt.stage || state.chat.stage, evt.title, evt.lines, evt.ts);
       return;
     }
     if (evt.type === "progress") {
@@ -2249,7 +2285,7 @@ Canonical: ${absoluteCanonical(topic)}
       // (packet build, audits, file writes); Read/Grep noise stays in the
       // status spinner only.
       if (WORKFLOW_LOG_TOOLS.has(evt.tool)) {
-        appendChatSystemNote(`↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`, evt.ts);
+        appendNodeLine(evt.stage || state.chat.stage, `↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`, evt.ts);
       }
       handleChatEvent(evt, renderer);
       return;
@@ -2260,7 +2296,7 @@ Canonical: ${absoluteCanonical(topic)}
       renderTimeline();
       // No outline checkpoint: reaching here means manual stop or exhausted
       // auto-continuation rounds — recovery, not a routine pause for input.
-      appendChatSystemNote(evt.detail || "工作流已暂停。回复「继续」从中断处继续。", evt.ts);
+      appendNodeLine(evt.stage || state.chat.stage, evt.detail || "工作流已暂停。回复「继续」从中断处继续。", evt.ts);
       return;
     }
     if (evt.type === "topic_ready") {
@@ -2270,9 +2306,9 @@ Canonical: ${absoluteCanonical(topic)}
       renderTimeline();
       const title = evt.title || evt.topic_id;
       const note = document.createElement("p");
-      note.className = "chat-system-note";
+      note.className = "chat-node-line";
       note.innerHTML = `综述已发布：<a href="#/topic/${escapeHtml(evt.topic_id)}?version=zhihu">${escapeHtml(title)}</a>`;
-      nodes.chatMessages.appendChild(note);
+      workflowNodeCard("settle").querySelector(".chat-node-body").appendChild(note);
       chatScrollToBottom(true);
       return;
     }
