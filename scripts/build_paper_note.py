@@ -55,6 +55,7 @@ EVIDENCE_TYPES = {"method", "experiment", "dataset", "claim", "analysis"}
 
 from embodied_learning.atomicio import atomic_write_json  # noqa: E402
 from embodied_learning.knowledge import claim_support as auditor  # noqa: E402
+from embodied_learning.knowledge.claim_support import extraction_sections  # noqa: E402
 from embodied_learning.knowledge import paper_note as validator  # noqa: E402
 from embodied_learning import locks  # noqa: E402
 
@@ -74,7 +75,7 @@ def load_json(path: Path) -> Any:
 def resolve_locator(extraction: dict[str, Any], hint: str, quote: str) -> tuple[str, str, bool]:
     """Return (exact_title, surface_text, resolved). Surfaces are searched by
     quote containment: the section whose text contains the quote wins."""
-    sections = extraction.get("sections") or []
+    sections = extraction_sections(extraction) or []
     normalized_quote = normalize(quote)
     if not normalized_quote:
         return "", "", False
@@ -138,7 +139,7 @@ def quote_context(extraction: dict[str, Any], quote: str) -> tuple[str, str, boo
     normalized_quote = normalize(quote)
     if not normalized_quote:
         return "", full_text, False
-    for section in extraction.get("sections") or []:
+    for section in extraction_sections(extraction) or []:
         if not isinstance(section, dict):
             continue
         title = str(section.get("title") or str(section.get("path") or "").split(">")[-1]).strip()
@@ -278,7 +279,7 @@ def assemble_note(
         if not found and hint:
             # Hint-matched section: repair the quote against that surface even
             # when the verbatim containment failed (agent paraphrase).
-            for section in extraction.get("sections") or []:
+            for section in extraction_sections(extraction) or []:
                 if not isinstance(section, dict):
                     continue
                 other = str(section.get("title") or "").strip()
@@ -295,7 +296,7 @@ def assemble_note(
         if found and normalize(title) == "abstract" and hint:
             # Abstract locators are too vague for the validator: re-resolve via
             # the hint against non-abstract sections carrying the quote.
-            for section in extraction.get("sections") or []:
+            for section in extraction_sections(extraction) or []:
                 if not isinstance(section, dict):
                     continue
                 other = str(section.get("title") or "").strip()
@@ -320,7 +321,7 @@ def assemble_note(
             # Validator bans abstract/references locators. Scan body sections
             # one more time with the repaired quote; else drop the card.
             body_hit = False
-            for section in extraction.get("sections") or []:
+            for section in extraction_sections(extraction) or []:
                 if not isinstance(section, dict):
                     continue
                 other = str(section.get("title") or "").strip()
@@ -389,7 +390,7 @@ def assemble_note(
 
             if coverage(title) < 1 / 3:
                 best_title, best_score = title, coverage(title)
-                for section in extraction.get("sections") or []:
+                for section in extraction_sections(extraction) or []:
                     if not isinstance(section, dict):
                         continue
                     candidate_title = str(section.get("title") or "").strip()
@@ -438,7 +439,13 @@ def assemble_note(
         "schema_version": 1,
         "paper": {
             "arxiv_id": arxiv_id,
-            "title": str(extraction.get("title") or ""),
+            # pdf-text extractions carry no `title`; the paper title leads the
+            # full text, so fall back to its first non-empty line rather than
+            # emitting an empty title the validator rejects.
+            "title": str(
+                extraction.get("title")
+                or (auditor.extraction_text(extraction)[0].strip().splitlines() or [""])[0]
+            ).strip(),
             "published": "",
             "url": f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else "",
             "authors": skeleton.get("authors") or [f"{arxiv_id} authors (批量池化未逐人核对)"],
@@ -457,13 +464,13 @@ def assemble_note(
             "visual_validation": "not-required",
         },
         "reading": {
-            "status": "evidence-ready" if cards else "mapped",
+            "status": "evidence-ready" if cards else "map-read",
             "paper_type": paper_type,
             "relevance": {"decision": "include", "reason": str(skeleton.get("relevance_reason") or "批量池化深读。")},
             "sections_read": sections_read,
             "sections_skipped": [
                 {"locator": str(section.get("title") or ""), "reason": "rapid 模式非核心节"}
-                for section in (extraction.get("sections") or [])
+                for section in (extraction_sections(extraction) or [])
                 if str(section.get("title") or "") not in {item["locator"] for item in sections_read}
             ][:6],
         },
@@ -527,13 +534,13 @@ def role_to_locator(role: str, extraction: dict[str, Any]) -> str:
         "conclusion-or-limitations": ("conclusion", "limitation", "summary"),
     }
     keywords = patterns.get(role, ())
-    for section in extraction.get("sections") or []:
+    for section in extraction_sections(extraction) or []:
         if not isinstance(section, dict):
             continue
         label = normalize(section.get("path") or section.get("title"))
         if any(keyword in label for keyword in keywords):
             return str(section.get("title") or "")
-    first = extraction.get("sections") or [{}]
+    first = extraction_sections(extraction) or [{}]
     return str(first[0].get("title") or "Abstract")
 
 

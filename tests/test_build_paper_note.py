@@ -117,6 +117,65 @@ class BuildPaperNoteTest(unittest.TestCase):
         self.assertEqual(note["evidence_cards"], [])
         self.assertTrue(any("Abstract/References" in p for p in problems))
 
+    def test_ligature_laden_pdf_text_still_matches_plain_quotes(self):
+        """PDF text extractors emit Latin ligatures (U+FB01 for "fi"), so a
+        quote typed with plain letters never matched the extracted full text.
+        Regression: card 3 of 2507.15186 failed raw match and passed once the
+        ligature was folded (130 occurrences in that paper)."""
+        skeleton = self.skeleton(cards=[
+            {
+                "claim": "R-Simp is linear for a fixed output size.",
+                "quote": "R-Simp is linear for a fixed output size.",
+                "locator_hint": "Results",
+                "stance": "support",
+                "evidence_type": "quantitative",
+            }
+        ])
+        extraction = dict(self.extraction)
+        extraction["text"] = (
+            "## Results\n\nThus R-Simp is linear for a fi xed output size.\n"
+        ).replace("fi xed", "\ufb01xed")  # force the ligature form
+        note, problems = self.mod.assemble_note(skeleton, extraction, Path("/tmp"))
+        self.assertEqual(len(note["evidence_cards"]), 1)
+        self.assertEqual(note["paper"]["title"].strip() != "", True)
+
+    def test_page_shaped_extraction_resolves_body_quotes(self):
+        """pdf-text extractions carry `pages` and no `sections`. Without a
+        sections normalizer every card died in the "quote only in Abstract"
+        branch because the body rescan over an empty `sections` found nothing
+        (2026-10-09, 2507.15186: 4/4 cards dropped)."""
+        body = "The algorithm simplifies in reverse from coarse to fine, guaranteeing display quality."
+        skeleton = self.skeleton(cards=[
+            {
+                "claim": "Progressive simplification guarantees display quality.",
+                "quote": body,
+                "locator_hint": "Method",
+                "stance": "support",
+                "evidence_type": "method",
+            }
+        ])
+        extraction = {
+            "paper_id": "2507.15186",
+            "available": True,
+            "source_format": "pdf",
+            "extraction_method": "pdf-text",
+            "title": "Model Simplification Through Refinement",
+            "pages": [
+                {"page": 1, "text": "Model Simplification Through Refinement\nAbstract\nWe simplify meshes."},
+                {"page": 2, "text": "Method\n" + body},
+            ],
+            "quality": {"grade": "high"},
+        }
+        note, _problems = self.mod.assemble_note(skeleton, extraction, Path("/tmp"))
+        self.assertEqual(len(note["evidence_cards"]), 1)
+        self.assertNotEqual(note["evidence_cards"][0]["locator"].lower(), "abstract")
+
+    def test_map_read_status_used_when_no_cards(self):
+        """`mapped` is not in the STATUSES vocabulary (map-read is); emitting it
+        made an otherwise valid note schema-invalid."""
+        note, _problems = self.mod.assemble_note(self.skeleton(cards=[]), self.extraction, Path("/tmp"))
+        self.assertEqual(note["reading"]["status"], "map-read")
+
     def test_paraphrased_quote_is_auto_repaired(self):
         # Agent garbles the quote slightly; the assembler must repair it from
         # the section surface so the audit's exact-match gate passes.

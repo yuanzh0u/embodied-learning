@@ -31,8 +31,28 @@ def load_object(path: Path) -> dict[str, Any]:
     return value
 
 
+# PDF text extractors routinely emit Latin ligatures (ﬁ in
+# "Simpliﬁcation"), so a verbatim quote typed with plain letters never matches
+# the extracted full text. Folding them at normalize() time is what makes the
+# quote gate mean "verbatim modulo typography" (2026-10-09: card 3 of
+# 2507.15186 failed raw match and passed once ﬁ was folded — 130 occurrences).
+_LIGATURE_FOLD = {
+    "ﬀ": "ff",
+    "ﬁ": "fi",
+    "ﬂ": "fl",
+    "ﬃ": "ffi",
+    "ﬄ": "ffl",
+    "ﬅ": "st",
+    "ﬆ": "st",
+}
+
+
 def normalize(text: Any) -> str:
-    return " ".join(str(text or "").split()).lower()
+    out = str(text or "")
+    for src, dst in _LIGATURE_FOLD.items():
+        if src in out:
+            out = out.replace(src, dst)
+    return " ".join(out.split()).lower()
 
 
 def meaningful_tokens(text: Any) -> set[str]:
@@ -84,6 +104,12 @@ def locator_variants(fragment: str) -> list[str]:
 
 def _surface_for_section(section: dict[str, Any], full_text: str) -> str | None:
     title = str(section.get("title") or str(section.get("path") or "").split(">")[-1]).strip()
+    # Sections synthesized from pdf-text pages carry their own body and the
+    # flat full text has no `## page N` heading to slice against — take the
+    # section's own text when it has one.
+    own = str(section.get("text") or "")
+    if own.strip():
+        return own
     heading = re.search(rf"(?im)^##\s+{re.escape(title)}\s*$", full_text)
     if not heading:
         return None
@@ -112,8 +138,10 @@ def _hierarchical_match(fragment: str, sections: list[Any]) -> int | None:
 
 
 def section_surfaces(locator: str, full_text: str, extraction: dict[str, Any]) -> list[str]:
-    sections = extraction.get("sections")
-    if not isinstance(sections, list):
+    # Normalized sections (pages synthesize into one section each) so locator
+    # resolution works for pdf-text extractions, not just html-latexml ones.
+    sections = extraction_sections(extraction)
+    if not isinstance(sections, list) or not sections:
         return [full_text]
     fragments = [fragment.strip() for fragment in FRAGMENT_SPLIT_RE.split(locator) if fragment.strip()] or [locator]
     matched: set[int] = set()
@@ -134,6 +162,35 @@ def section_surfaces(locator: str, full_text: str, extraction: dict[str, Any]) -
         if surface and surface not in surfaces:
             surfaces.append(surface)
     return surfaces
+
+
+def extraction_sections(extraction: dict[str, Any]) -> list[Any]:
+    """Section list in the shape the note pipeline expects.
+
+    html-latexml extractions carry ``sections``; pdf-text extractions carry
+    only ``pages``. Both are full-text extractions, so normalizing pages into
+    one section each keeps locator resolution, rapid-role labeling, and
+    body-quote recovery working for PDF-sourced papers. Without this a
+    PDF paper's evidence cards all died in the "quote only in Abstract"
+    branch because the body rescan over an empty ``sections`` found nothing
+    (2026-10-08, 2507.15186: 4/4 cards dropped, note rejected)."""
+    sections = extraction.get("sections")
+    if isinstance(sections, list) and sections:
+        return sections
+    pages = extraction.get("pages")
+    if not isinstance(pages, list):
+        return []
+    out: list[Any] = []
+    for index, page in enumerate(pages, start=1):
+        if not isinstance(page, dict):
+            continue
+        number = page.get("page") or index
+        text = str(page.get("text") or "")
+        if not text.strip():
+            continue
+        label = f"page {number}"
+        out.append({"title": label, "path": label, "text": text, "page": number})
+    return out
 
 
 def locator_surface(
