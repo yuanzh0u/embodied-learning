@@ -254,6 +254,10 @@ def build_report(run_dir: Path) -> dict:
         "topic": manifest.get("topic"),
         "knowledge_ids": manifest.get("knowledge_ids"),
         "review_mode": mode,
+        # What the caller/user actually asked for, stamped by init_run. Kept
+        # separate from `review_mode` (the effective contract) so a drift
+        # between the two is visible without opening logs.
+        "inputs": manifest.get("inputs") or {},
         "style": manifest.get("style"),
         "scope_note": manifest.get("scope_note"),
         "funnel": {
@@ -281,6 +285,15 @@ def render(report: dict, run_dir: Path, scripts_root: Path) -> str:
         f"[run] {report['run']}  status={report['status']}  mode={report['review_mode'] or '—'}"
         + (f"  style={report['style']}（scope_note 已声明）" if report.get("style") else "")
     )
+    inputs = report.get("inputs") or {}
+    requested = inputs.get("requested_review_mode") or inputs.get("review_mode")
+    if requested and requested != report["review_mode"]:
+        lines.append(
+            f"[inputs] 请求模式 {requested} ≠ 生效模式 {report['review_mode']} —— "
+            "以 run.json inputs 为准核对（这正是该被记录下来的漂移）"
+        )
+    if inputs:
+        lines.append(f"[inputs] {json.dumps(inputs, ensure_ascii=False)}")
     read_bits = " / ".join(
         f"{key} {deep_read[key]}"
         for key in ("pass", "needs_review", "failed")

@@ -85,6 +85,28 @@ class InitRunTest(unittest.TestCase):
         manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         self.assertEqual("systematic", manifest["review_mode"])
 
+    def test_inputs_block_records_the_callers_real_choices(self) -> None:
+        """The user's interview answers are stamped under run.json `inputs`
+        separately from the effective fields. Regression: a rapid request ran
+        as scoping and nothing on disk recorded what was chosen (2026-10-09)."""
+        completed = self.run_cli(
+            "--review-mode", "rapid",
+            "--inputs-json",
+            '{"source": "wiki-interview", "requested_review_mode": "rapid", "target_style": "all"}',
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        run_dir = next(self.tmp.glob("literature-review-*-20260709"))
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual("rapid", manifest["review_mode"])
+        self.assertEqual("rapid", manifest["inputs"]["requested_review_mode"])
+        self.assertEqual("wiki-interview", manifest["inputs"]["source"])
+        self.assertEqual("all", manifest["inputs"]["target_style"])
+
+    def test_bad_inputs_json_is_refused(self) -> None:
+        completed = self.run_cli("--inputs-json", "{not json")
+        self.assertEqual(2, completed.returncode)
+        self.assertIn("inputs-json", completed.stderr)
+
     def test_refuses_to_overwrite_without_force(self) -> None:
         first = self.run_cli()
         self.assertEqual(0, first.returncode)

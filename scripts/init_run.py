@@ -41,6 +41,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--date", help="Run date YYYYMMDD for the folder name (default: today).")
     parser.add_argument("--work-dir", default=str(default_kb_root() / "work"), help="Parent directory for the run folder.")
+    parser.add_argument(
+        "--inputs-json",
+        default="",
+        help="JSON object of the caller's real inputs (interview answers: requested "
+        "review_mode, target_style, focus, strategies, seeds, source). Stamped "
+        "verbatim under run.json `inputs` so a later session can see what the "
+        "user actually chose without spelunking logs.",
+    )
     parser.add_argument("--force", action="store_true", help="Overwrite an existing run.json in the target folder.")
     return parser.parse_args()
 
@@ -78,6 +86,23 @@ def main() -> int:
         "files": {},
         "notes": "Created by init_run.py. Flip status to 'settled' only after coverage/saturation, evidence, citation, and editorial gates pass.",
     }
+    # Record the caller's real inputs separately from the EFFECTIVE fields
+    # above. `review_mode` is the contract the run enforces; `inputs` is what
+    # the user actually asked for. When they differ, that drift is itself the
+    # bug we want to see (2026-10-09: a rapid request ran as scoping and the
+    # only trace was a chat-sessions entry that later went missing).
+    inputs: dict = {"source": "cli", "review_mode": args.review_mode}
+    if args.inputs_json:
+        try:
+            parsed = json.loads(args.inputs_json)
+        except json.JSONDecodeError as exc:
+            print(f"--inputs-json is not valid JSON: {exc}", file=sys.stderr)
+            return 2
+        if not isinstance(parsed, dict):
+            print("--inputs-json must be a JSON object", file=sys.stderr)
+            return 2
+        inputs.update({str(k): v for k, v in parsed.items()})
+    manifest["inputs"] = inputs
     # O_EXCL creation instead of check-then-create: two machines (or terminals)
     # starting the same topic+date run must not both "win". Lock root is the KB
     # root (work/ sits directly beneath it) so the same run__<name> lock the

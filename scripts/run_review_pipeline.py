@@ -1154,6 +1154,21 @@ def main(argv: list[str] | None = None) -> int:
             print(f"external candidates file not found: {path}", file=sys.stderr)
             return 2
     run_json_path = run_dir / "run.json"
+    # The manifest's review_mode is the contract the floors/limits are computed
+    # from. A caller passing a different --review-mode silently ran the wrong
+    # depth (2026-10-09: a rapid request was registered scoping). Refuse rather
+    # than let the drift through — the manifest wins, and the caller fixes it.
+    if run_json_path.is_file():
+        try:
+            _existing_mode = str(json.loads(run_json_path.read_text(encoding="utf-8")).get("review_mode") or "")
+        except (OSError, json.JSONDecodeError):
+            _existing_mode = ""
+        if _existing_mode and _existing_mode != args.review_mode:
+            raise SystemExit(
+                f"review_mode drift: run.json says {_existing_mode!r} but --review-mode "
+                f"was {args.review_mode!r}. Fix one of them (run.json `inputs` records "
+                "what the user asked for) and re-run; refusing to guess."
+            )
 
     # Whole-run fail-fast mutual exclusion (the duplicate-launcher hazard:
     # two concurrent drivers on one run truncated registries and downgraded
