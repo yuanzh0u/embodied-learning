@@ -59,6 +59,7 @@ from _article_quality import (  # noqa: E402
     LENGTH_FLOORS,
     LINK_BUDGETS,
     REQUIRED_SECTIONS,
+    RULE_SPECS,
     STRUCTURE_GATES,
 )
 DEFAULT_LOOKBACK_MONTHS = 6
@@ -912,6 +913,26 @@ def render_style_contract() -> list[str]:
             lines.append(f"- 必需节 `{rule}`：{hint}")
         for gate in STRUCTURE_GATES.get(style_key, ()):
             lines.append(f"- 结构门：{gate}")
+        # Every registered rule for this style — sourced from RULE_SPECS, the
+        # same table audit_file() enforces. Rendering a hand-copied subset is
+        # how a gate the writer never saw cost a first-draft rewrite loop
+        # (2026-10-09, chinese-share). Errors first, then warnings.
+        for severity in ("error", "warning"):
+            for rule in RULE_SPECS.values():
+                if rule.severity != severity or not rule.applies_to(style_key):
+                    continue
+                # Section/length/link rules are already spelled out above with
+                # their exact thresholds; don't say them twice.
+                if rule.id in {"memo-length", "zhihu-length", "xiaohongshu-length", "quickread-length"}:
+                    continue
+                if rule.id.startswith(("memo-inline", "memo-superscript", "memo-grouped")):
+                    continue
+                if rule.id in {"unannotated-reading-list", "acronym-load", "long-sentence", "body-citation-load"}:
+                    continue
+                if rule.id in {"insight-count", "quickread-table"}:
+                    continue
+                tag = "" if severity == "error" else "（告警，不阻塞）"
+                lines.append(f"- {rule.spec}{tag}")
         ceiling = LENGTH_CEILINGS.get(style_key)
         lines.append(
             f"- 篇幅：正文至少 {LENGTH_FLOORS[style_key]} 个中文字符"

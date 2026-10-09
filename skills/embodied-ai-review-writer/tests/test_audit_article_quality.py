@@ -727,3 +727,72 @@ GraphReg 用图神经网络直接在动态点云上学习配准特征，端到�
 
 if __name__ == "__main__":
     unittest.main()
+
+class RuleRegistryDriftTest(unittest.TestCase):
+    """RULE_SPECS is the single source of truth: audit_file() enforces it and
+    render_style_contract() renders it into the writing brief. A rule added to
+    one and not the other is exactly how a first-draft rewrite loop happens —
+    the writer is held to a gate it was never shown (2026-10-09: chinese-share
+    was an enforced error gate absent from the brief, costing ~15 edit rounds).
+    """
+
+    def _module(self, name: str):
+        import importlib.util
+        from pathlib import Path as _P
+
+        root = _P(__file__).resolve().parents[3]   # .../skills/<skill>/tests/this.py -> repo root
+        path = root / "skills" / "embodied-ai-review-writer" / "scripts" / name
+        spec = importlib.util.spec_from_file_location(f"drift_{name}", path)
+        assert spec and spec.loader
+        mod = importlib.util.module_from_spec(spec)
+        import sys as _sys
+        _sys.modules[spec.name] = mod  # dataclasses needs the module registered
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_every_emitted_rule_id_is_registered(self):
+        """audit_file() may only emit ids that exist in RULE_SPECS."""
+        import re
+        from pathlib import Path as _P
+
+        quality = self._module("_article_quality.py")
+        src = (_P(quality.__file__)).read_text(encoding="utf-8")
+        emitted = set(re.findall(
+            r'add\(\s*findings,\s*"(?:error|warning)",\s*path,\s*"([a-z0-9-]+)"', src))
+        emitted |= set(re.findall(
+            r'"(?:error|warning)",\s*\n\s*path,\s*\n\s*"([a-z0-9-]+)"', src))
+        self.assertTrue(emitted, "no rule emissions parsed — extractor is stale")
+        self.assertEqual(
+            set(), emitted - set(quality.RULE_SPECS),
+            "audit emits rule ids missing from RULE_SPECS: the writer would be "
+            "held to a gate that is never rendered into the brief",
+        )
+
+    def test_every_registered_rule_is_rendered_into_its_style_contract(self):
+        """An error rule registered for a style must appear in that style's
+        contract block in the writing brief."""
+        quality = self._module("_article_quality.py")
+        packet = self._module("build_review_packet.py")
+        for style_key in ("memo", "zhihu", "xiaohongshu"):
+            text = "\n".join(packet.render_style_contract())
+            missing = [
+                rule.id
+                for rule in quality.RULE_SPECS.values()
+                if rule.severity == "error" and rule.applies_to(style_key)
+                # section/length/link rules are spelled out with exact
+                # thresholds by the style block instead of the spec line
+                and not rule.id.startswith(("memo-inline", "memo-superscript", "memo-grouped"))
+                and rule.id not in {
+                    "memo-length", "zhihu-length", "xiaohongshu-length", "quickread-length",
+                    "unannotated-reading-list", "acronym-load", "long-sentence",
+                    "body-citation-load", "insight-count", "quickread-table",
+                }
+            ]
+            for rule_id in missing:
+                rule = quality.RULE_SPECS[rule_id]
+                self.assertIn(
+                    rule.spec[:24], text,
+                    f"{style_key}: error rule {rule_id} is enforced but its "
+                    "contract line never reaches the writing brief",
+                )
+

@@ -59,6 +59,106 @@ STRUCTURE_GATES: dict[str, tuple[str, ...]] = {
 
 # Chinese-character floors/ceilings and arXiv-link budgets per style: shared
 # by audit_file and build_review_packet's writing-brief contract section.
+# ---- rule registry: the single source of truth --------------------------
+# Every audit rule registers here with the contract line the WRITER is shown.
+# audit_file() emits findings tagged with these ids; render_style_contract()
+# renders the same registry into the writing brief. One edit propagates to
+# both — the point of this table.
+#
+# It exists because the two used to be hand-maintained apart: a newly added
+# error gate (chinese-share) was enforced by the audit but never rendered into
+# the brief, so the writer optimized for the seven rules it could see and then
+# failed on the one it could not (2026-10-09, first-draft churn). A rule id
+# emitted by audit_file() that is missing here, or an error rule here that the
+# contract render skips, is a test failure.
+#
+# `spec` is the Chinese contract line, written as an instruction (not a
+# restatement of the regex): the writer must be able to comply without
+# reverse-engineering the gate. Keep thresholds in sync with the checks below.
+
+
+class RuleSpec:
+    __slots__ = ("id", "severity", "scope", "spec")
+
+    def __init__(self, rule_id: str, severity: str, scope: tuple[str, ...], spec: str):
+        self.id = rule_id
+        self.severity = severity          # "error" | "warning"
+        self.scope = scope                # ("all",) or style keys: memo/zhihu/xiaohongshu/quickread
+        self.spec = spec                  # contract line shown to the writer
+
+    def applies_to(self, style_key: str) -> bool:
+        return "all" in self.scope or style_key in self.scope
+
+
+def _r(rule_id: str, severity: str, scope: tuple[str, ...], spec: str) -> RuleSpec:
+    return RuleSpec(rule_id, severity, scope, spec)
+
+
+_ALL = ("all",)
+_MEMO = ("memo",)
+_ZHIHU = ("zhihu",)
+_XHS = ("xiaohongshu",)
+_QR = ("quickread",)
+
+RULE_SPECS: dict[str, RuleSpec] = {
+    spec.id: spec
+    for spec in (
+        # ---- language / provenance (every style) ----
+        _r("file-exists", "error", _ALL, "成稿文件必须真实写入运行目录根（不是草稿区、不是 .scaffold.md）。"),
+        _r(
+            "chinese-share", "error", _ALL,
+            "可见散文的中文占比至少 65%（按字数；论文标题、arXiv 链接、事件 ID 已从计数中剔除）。"
+            "英文术语首次出现给一句中文释义后改用中文说法，别让专有名词和英文短句把占比拉下去——"
+            "写完自己数一遍再交，这是一票否决。",
+        ),
+        _r("event-ids-in-body", "error", _ALL, "正文不得出现 EA-*/ERR-* 事件 ID；事件锚点只存在于 trace-map 与 evidence-appendix。"),
+        _r("canned-phrase", "error", _ALL, "不得使用脚手架套话（如「本文综述了」「随着…的发展」这类模板句）。"),
+        _r("packet-leak", "error", _ALL, "不得泄入 review-packet / writing-brief / scaffold 的标记、栏目名或内部标题。"),
+        _r("internal-prose", "error", _ALL, "不得出现面向审计/写作过程的内部措辞、stance 标签（support/limit/…）或「证据锚点」这类词。"),
+        _r("internal-reasoning-label", "error", _ALL, "不得留下推理标签（如「论点」「证据」「反例」这类自述式小标题）。"),
+        _r("missing-citation-subject", "error", _ALL, "每处引用必须点明论文主体（谁做的、什么方法），不能只给链接或只给编号。"),
+        _r("generic-citation-anchor", "error", _ALL, "不得用「某研究表明」「相关工作显示」这类无主语引用。"),
+        _r("chatbot-artifact", "error", _ALL, "不得留下对话残留（「好的」「以下是」「希望这对你有帮助」）。"),
+        _r("duplicate-prose", "error", _ALL, "不得整段重复同一句实质性散文；三种风格是三个声音，不是同一份稿子复制。"),
+        _r("empty-reading-note", "error", _ALL, "注释式书目每条都要有一句读者价值注记，不得留空。"),
+        _r("malformed-prose", "error", _ALL, "不得有空引文槽、连续标点（。。，，）或生成残缺的句读。"),
+        _r("placeholder", "error", _ALL, "不得留未替换占位符（TBD、XXX、<待填>、TODO）。"),
+        # ---- memo ----
+        _r("memo-length", "error", _MEMO, "科研备忘录正文至少 1800 个中文字符。"),
+        _r("memo-grouped-citation", "error", _MEMO, "严禁 ^[1,2]^ 这类合并上标；多条引用逐条并列 ^[1]^ ^[2]^。"),
+        _r("memo-inline-arxiv-link", "warning", _MEMO, "正文用上标 ^[n]^ 而非内联 arXiv 链接；arXiv 链接只在文末 References。"),
+        _r("memo-superscript-citations", "warning", _MEMO, "正文至少 5 处上标 ^[n]^ 引用标记（每处一条引用）。"),
+        # ---- zhihu ----
+        _r("zhihu-length", "error", _ZHIHU, "知乎科普正文至少 1000 个中文字符（地板不是上限；过短=过度压缩）。"),
+        _r("unannotated-reading-list", "error", _ZHIHU, "「延伸阅读」每条链接都要附一句读者价值注记，不能是纯书目堆砌。"),
+        _r("acronym-load", "warning", _ZHIHU, "正文领域缩写不超过 5 个，首次出现给一句人话解释。"),
+        _r("long-sentence", "warning", _ZHIHU, "单句不超过 70 个中文字符（长句拆从句，降推断负载）。"),
+        _r("body-citation-load", "warning", _ZHIHU, "正文内嵌引用控制在 3–12 篇；支撑性覆盖挪进「延伸阅读」注记。"),
+        # ---- xiaohongshu ----
+        _r("xiaohongshu-length", "error", _XHS, "小红书正文至少 300 个中文字符，至多 1400。"),
+        _r("insight-count", "error", _XHS, "3–5 个行首 💡 洞察行，且至少一个行首 ⚠️ 注意事项行。"),
+        _r("visible-caveat", "error", _XHS, "至少一条限制/反证必须在正文可见（不能只藏在附录）。"),
+        # ---- quick-read card ----
+        _r("quickread-length", "error", _QR, "速读卡正文至少 300 个中文字符，至多 1400。"),
+        _r("quickread-table", "warning", _QR, "速读卡允许一张要点表，但正文仍须是连贯散文。"),
+        # ---- cross-style / provenance ----
+        _r("source-share", "error", _ALL, "来源行（References/出处行）占比受控：正文必须是论证散文，不是引文清单。"),
+        _r("source-selection", "error", _ALL, "引用源须经选择（代表工作 + 反例），不是把证据集全部罗列。"),
+        _r("citation-density", "warning", _ALL, "引用密度与篇幅匹配；避免一两句一引或通篇无引。"),
+        _r("figures-available", "warning", _ALL, "证据带图而正文未落图时给出解释；可用图表见 brief 的「可用图表」段。"),
+        # ---- tone warnings ----
+        _r("generic-uplift", "warning", _ALL, "不得使用空泛正向断言（「具有重要意义」「前景广阔」）。"),
+        _r("vague-attribution", "warning", _ALL, "不得用「有学者认为」「业内普遍」这类无名权威。"),
+        _r("promotional-prose", "warning", _ALL, "不得使用推广腔（「强烈推荐」「值得关注」）。"),
+        _r("truncation", "warning", _ALL, "可见散文不得出现三点式截断（…）表示未写完。"),
+    )
+}
+
+# Every id audit_file() can emit must be registered above. Kept as a flat
+# tuple so a source-level drift test can compare cheaply.
+RULE_IDS: tuple[str, ...] = tuple(RULE_SPECS)
+
+
 LENGTH_FLOORS = {"memo": 1800, "zhihu": 1000, "quickread": 300, "xiaohongshu": 300}
 # Hard upper warning ceilings; memo has none.
 LENGTH_CEILINGS = {"zhihu": 4500, "quickread": 1400, "xiaohongshu": 1400}
