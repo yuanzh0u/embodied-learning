@@ -260,6 +260,19 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     manifest.setdefault("files", {})
     manifest["files"]["evidence"] = evidence_jsonl.relative_to(run_dir).as_posix()
+    # workflow_version 2 wants the run self-contained: query_plan,
+    # candidate_registry and coverage_report are part of that contract
+    # (check_run_bundle requires all four). finalize used to stamp only
+    # evidence/outputs, so a run that had every file on disk still failed the
+    # bundle gate on three "missing" declarations (2026-10-09). Register
+    # whatever is present; never invent a path.
+    for key, filename in (
+        ("query_plan", "query-plan.json"),
+        ("candidate_registry", "candidate-registry.json"),
+        ("coverage_report", "coverage-report.json"),
+    ):
+        if (run_dir / filename).is_file():
+            manifest["files"][key] = filename
     outputs = deliverables + ([APPENDIX] if (run_dir / APPENDIX).is_file() else [])
     if outputs:
         manifest["files"]["outputs"] = outputs

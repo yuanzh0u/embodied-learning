@@ -102,6 +102,23 @@ class FinalizeRunTest(unittest.TestCase):
         trace.assert_called_once()
         register.assert_called_once()
 
+    def test_stamps_all_workflow_v2_files_keys(self):
+        """workflow_version 2 requires files.query_plan / candidate_registry /
+        coverage_report / evidence so the run is self-contained. finalize used
+        to stamp only evidence+outputs, so a run with every artifact on disk
+        still failed check_run_bundle on three "missing" declarations
+        (2026-10-09)."""
+        (self.run_dir / "query-plan.json").write_text("{}", encoding="utf-8")
+        (self.run_dir / "candidate-registry.json").write_text("{}", encoding="utf-8")
+        (self.run_dir / "coverage-report.json").write_text("{}", encoding="utf-8")
+        code, _run, _register, _trace = self.finalize()
+        self.assertEqual(0, code)
+        files = self.manifest()["files"]
+        self.assertEqual("query-plan.json", files.get("query_plan"))
+        self.assertEqual("candidate-registry.json", files.get("candidate_registry"))
+        self.assertEqual("coverage-report.json", files.get("coverage_report"))
+        self.assertEqual("evidence.jsonl", files.get("evidence"))
+
     def test_declare_gate_exception_writes_manifest_and_notes(self):
         code, run, register, trace = self.finalize(
             "--declare-gate-exception", "cited_paper_floor",
