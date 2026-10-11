@@ -1,5 +1,10 @@
 # Agent Instructions
 
+## 个人协作框架（所有者环境）
+
+个人跨领域职责、执行主机、上下文交接、落盘、同步与验收读取 [Personal Agent Lab 2026-10-11.1](https://github.com/magis-techno/personal-agent-lab/blob/main/docs/operating-model.md)，恢复入口为该仓 README → current → operating-model → 项目登记。本仓继续维护自己的业务事实、架构、研究与工程质量协议；下列项目内部角色不因个人分工收口而删除。该私有入口只适用于所有者的个人协作环境，fork/CI 不依赖它，也不由此获得跨项目执行权限。
+
+
 This repository is a research knowledge base. Optimize for context efficiency and traceability.
 
 ## Loading Order
