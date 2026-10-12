@@ -81,12 +81,23 @@ PACKET_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "build_re
 REVIEW_PACKET_SCRIPT = SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "build_review_packet.py"
 
 REVIEW_MODES = {"rapid", "scoping", "systematic"}
-SCREEN_LIMITS = {"rapid": 24, "scoping": 40, "systematic": 80}
+# Selection strategies already rank/qualify (smart is 宁缺毋滥). This cap is a
+# runaway guard on extraction cost only — it must not cut a quality shortlist
+# (2026-10-10: smart picked 68, cap 48, 20 never even reached extraction).
+SCREEN_LIMITS = {"rapid": 80, "scoping": 120, "systematic": 200}
 # Deep-read throughput is the real review breadth (screening only triages).
-# Sized so the finalize cited-paper floors are reachable even with the
-# observed ~70% skeleton-audit pass rate: rapid 10→≥6, scoping 16→≥10,
-# systematic 40→≥15. An explicit --deep-read-limit overrides the mode default.
-DEEP_READ_LIMITS = {"rapid": 10, "scoping": 16, "systematic": 40}
+# Sized so BOTH paper floors clear at the observed ~70% skeleton-audit pass
+# rate: finalize's cited-paper floor (rapid 6 / scoping 10 / systematic 15)
+# AND coverage's accepted_paper_floor / evidence_floor (8 / 15 / 30). A limit
+# sized only for the cited floor left scoping structurally short — 16
+# deep-reads → ~12 pass, which clears cited 10 but never reaches
+# accepted_paper_floor 15 (2026-10-10: 40 screened → 16 deep-read → 12 pass).
+# When the audited passes still fall short, the driver pulls 候补 from the
+# rest of the scored extraction pool until the evidence floor is met.
+DEEP_READ_LIMITS = {"rapid": 12, "scoping": 22, "systematic": 43}
+# accepted-paper floors (query_plan.REVIEW_MODES[*].evidence_floor) — the
+# 候补 fill loop stops once this many papers have a pass/needs-review note.
+EVIDENCE_FLOORS = {"rapid": 8, "scoping": 15, "systematic": 30}
 SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
 # Deep-read queue selection: keywords is the legacy term-matching screen
 # (screen-candidates); the rest rank the registry by relevance (bm25),
@@ -461,6 +472,222 @@ def build_screening_updates(screening_path: Path, extraction_summary_path: Path)
     return updates
 
 
+def refresh_coverage_inplace(run_dir: Path, coverage_output: Path) -> None:
+    """Recompute coverage-report.json in-process (no subprocess).
+
+    The CLI wrapper (assess-review-coverage) is for stages that want
+    run_stage's skip/force semantics; mid-run refreshes just need the numbers
+    current. Set operations only — cheap enough to run at every stage end and
+    again at finalize."""
+
+    from embodied_learning.search import coverage as coverage_mod
+
+    try:
+        plan = json.loads((run_dir / "query-plan.json").read_text(encoding="utf-8"))
+        registry = json.loads((run_dir / "candidate-registry.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    evidence_paths = []
+    evidence_dir = run_dir / "evidence"
+    if evidence_dir.is_dir():
+        evidence_paths = [
+            path for path in evidence_dir.glob("*.jsonl") if path.name != ABSTRACT_FILENAME
+        ]
+    report = coverage_mod.assess(plan, registry, evidence_paths)
+    coverage_output.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+
+
+def recall_author_queries(papers: list[dict], *, terms: list[str] | str = "", limit: int = 12) -> list[dict]:
+    """Author-recall round: ``au:"Name" AND (topic terms)``.
+
+    Discovery rounds (plan/citation) already pulled these authors' obvious
+    work, so a term-scoped recall re-finds mostly known papers — low
+    new_unique_rate by construction. That makes it a valid saturation TAIL
+    (main's author-recall/title-recall rounds). An unscoped ``au:"Name"`` would
+    instead harvest every paper the author ever wrote (2026-10-10: 0.92
+    new-rate, not a tail). If even a scoped recall lands many new papers, that
+    is a real signal the search was incomplete."""
+
+    from collections import Counter
+
+    counts: Counter = Counter()
+    for paper in papers:
+        for name in paper.get("authors") or []:
+            name = str(name).strip()
+            # "A. Gopinath" initials are noisy; require a full-looking name.
+            if len(name) >= 5 and " " in name and not name.endswith("."):
+                counts[name] += 1
+    scope = _topic_scope_clause(terms)
+    queries = []
+    for index, (name, _count) in enumerate(counts.most_common(limit), start=1):
+        query = f'au:"{name}"' + scope
+        queries.append({"label": f"recall-author-{index}", "query": query})
+    return queries
+
+
+def _topic_scope_clause(terms: list[str] | str, *, limit: int = 4) -> str:
+    """`` AND (all:word OR ...)`` from English retrieval terms — keeps a recall
+    query from becoming an unbounded author harvest. Accepts the terms list
+    (preferred: already Latin-tokenized) or a raw topic string; a pure-Chinese
+    topic yields no Latin tokens and must not silently degrade to unscoped
+    ``au:"Name"`` (2026-10-10: that re-harvested 253 unrelated papers)."""
+
+    if isinstance(terms, str):
+        terms = re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", terms)
+    tokens = [t for t in terms if t and t.lower() not in _RECALL_STOPWORDS]
+    if not tokens:
+        return ""
+    return " AND (" + " OR ".join(f"all:{t}" for t in tokens[:limit]) + ")"
+
+
+def known_works_queries(papers: list[dict], *, seeds: list[str] | None = None, limit: int = 8) -> list[dict]:
+    """Known-works round: exact ``ti:"Full Title"`` for the canon.
+
+    Seeds first, then the earliest/most-central discovered papers. An exact
+    title probe re-finds the paper itself and little else — the most reliable
+    low-novelty round, the one that lets the saturation judge see a converged
+    tail (main's title-recall-5 / browser-fallback were this, both 0.0)."""
+
+    by_id = {}
+    for paper in papers:
+        arxiv_id = str(paper.get("arxiv_id") or "").split("v")[0]
+        if arxiv_id:
+            by_id[arxiv_id] = paper
+    ordered: list[dict] = []
+    for seed in seeds or []:
+        paper = by_id.get(str(seed).split("v")[0])
+        if paper and paper not in ordered:
+            ordered.append(paper)
+    for paper in papers:
+        if len(ordered) >= limit:
+            break
+        if paper not in ordered and str(paper.get("title") or "").strip():
+            ordered.append(paper)
+    queries = []
+    seen: set[str] = set()
+    for paper in ordered:
+        title = str(paper.get("title") or "").strip().replace('"', "")
+        if len(title) < 8 or title.lower() in seen:
+            continue
+        seen.add(title.lower())
+        queries.append({"label": f"known-works-{len(queries) + 1}", "query": f'ti:"{title}"'})
+        if len(queries) >= limit:
+            break
+    return queries
+
+
+def recall_title_queries(papers: list[dict], *, limit: int = 10) -> list[dict]:
+    """Title-recall round: ``ti:"..."`` probes on distinctive title phrases.
+
+    Re-finds the papers we already hold — the definitive low-novelty tail
+    that lets the saturation judge see a converged search (main's
+    title-recall-5 / browser-fallback rounds were exactly this)."""
+
+    seen: set[str] = set()
+    queries = []
+    for paper in papers:
+        title = str(paper.get("title") or "").strip()
+        if len(title) < 12:
+            continue
+        # Distinctive head phrase: drop stopwords, keep the first content words.
+        tokens = [t for t in re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", title) if t.lower() not in _RECALL_STOPWORDS]
+        phrase = " ".join(tokens[:4])
+        if len(phrase) < 8 or phrase.lower() in seen:
+            continue
+        seen.add(phrase.lower())
+        queries.append({"label": f"recall-title-{len(queries) + 1}", "query": f'ti:"{phrase}"'})
+        if len(queries) >= limit:
+            break
+    return queries
+
+
+_RECALL_STOPWORDS = frozenset(
+    "the a an and or of for in on with via using based novel toward towards "
+    "from to by at as is are was were we our it its this that these those".split()
+)
+
+
+def write_round_queries(path: Path, queries: list[dict], *, batch_label: str) -> None:
+    """Write a search-arxiv --query-file for one retrieval round."""
+
+    payload = {
+        "batch": batch_label,
+        "queries": queries,
+        "start_date": "",
+        "end_date": "",
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def inputs_newer_than(output: Path, inputs: list[Path]) -> bool:
+    """True when any input file is newer than the stage output (or the output
+    is missing). A registry built from search round r1 must be rebuilt after a
+    new recall round lands — "outputs present" alone would silently drop the
+    new batch and the saturation judge would never see the tail (2026-10-10)."""
+
+    if not output.is_file():
+        return any(path.is_file() for path in inputs)
+    try:
+        out_mtime = output.stat().st_mtime
+    except OSError:
+        return True
+    for path in inputs:
+        if not path.is_file():
+            continue
+        try:
+            if path.stat().st_mtime > out_mtime:
+                return True
+        except OSError:
+            return True
+    return False
+
+
+def log_gates(coverage_output: Path, label: str) -> None:
+    """Stage-end gate report — cheap set operations, safe to run at every
+    stage and again at finalize (2026-10-10: the numbers were computed
+    mid-run but only surfaced at settle, after the expensive stages).
+
+    Recoverable failures name their remedy so the operator can fix them at
+    the stage that still can, instead of discovering them after writing."""
+
+    try:
+        report = json.loads(coverage_output.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    checks = (report.get("stop_assessment") or {}).get("checks") or {}
+    if not checks:
+        return
+    targets = report.get("targets") or {}
+    observed = report.get("observed") or {}
+    obs_key = {
+        "candidate_floor": "candidate_count",
+        "full_text_floor": "full_text_recovered_count",
+        "accepted_paper_floor": "accepted_evidence_paper_count",
+    }
+    remedy = {
+        "full_text_floor": "抽取重试可补",
+        "accepted_paper_floor": "深读/候补可补",
+        "saturation": "补检索轮次可补",
+        "candidate_floor": "需扩检索",
+        "coverage_dimensions": "需补维度查询",
+    }
+    summary = " · ".join(f"{name}={'过' if ok else '未过'}" for name, ok in checks.items())
+    log(f"[DRIVER-GATES:{label}] {summary}")
+    for name, ok in checks.items():
+        if ok:
+            continue
+        key = obs_key.get(name)
+        counts = ""
+        if key and name in targets:
+            counts = f"（{observed.get(key)}/{targets.get(name)}）"
+        log(f"  未过 {name}{counts} — {remedy.get(name, '需人工判断')}")
+    kind = report.get("saturation_kind")
+    if kind:
+        log(f"  saturation_kind={kind}")
+
+
 def finalize_coverage(run_dir: Path, registry_command: list[str], coverage_output: Path) -> str:
     """Post-deep-read coverage reassessment (idempotent, cheap).
 
@@ -765,17 +992,22 @@ def _audited_note(note_path: Path, audit_path: Path | None = None) -> bool:
         return False
 
 
-def deep_read_order(screened: list[str], seeds: list[str], limit: int) -> list[str]:
-    """Deep-read queue: seeds first, then screening order, truncated to limit.
+def deep_read_order(screened: list[str], seeds: list[str], limit: int | None) -> list[str]:
+    """Deep-read queue: seeds first, then screening order.
 
     Screening is influence-scored, so a just-published seed paper (few
     citations by construction) ranks below the cut — observed in the 20260924
     单目深度估计 run where the seed never got deep-read. Seeds are the user's
     own framing of the topic: force them to the front.
-    """
+
+    ``limit=None`` returns the full scored order (the 候补 waitlist lives past
+    the first ``limit``)."""
 
     seeds = [seed for seed in seeds if seed]
-    return (seeds + [paper_id for paper_id in screened if paper_id not in seeds])[:limit]
+    ordered = seeds + [paper_id for paper_id in screened if paper_id not in seeds]
+    if limit is None:
+        return ordered
+    return ordered[:limit]
 
 
 def _failure_note_path(notes_dir: Path, paper_id: str) -> Path | None:
@@ -823,8 +1055,11 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
         for line in screening_ids.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-    order = deep_read_order(screened, seeds, limit)
+    order = deep_read_order(screened, seeds, limit=None)
+    waitlist = order[limit:]
+    order = order[:limit]
     summary_extra["deep_read_limit"] = limit
+    summary_extra["deep_read_waitlist"] = len(waitlist)
 
     notes_dir = run_dir / "paper-notes"
     notes_dir.mkdir(parents=True, exist_ok=True)
@@ -839,22 +1074,23 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
             )
         )
     ]
+    passed = needs_review = failed = 0
     reused = len(order) - len(todo)
     if reused:
         log(f"[DRIVER] 复用池内已有深读笔记 {reused} 篇")
+        passed += reused  # reused notes already cleared their per-paper audit
+        done = reused
+        outcomes = [
+            (paper_id, "pass", "复用已有深读笔记")
+            for paper_id in order
+            if paper_id not in set(todo)
+        ]
+    else:
+        done = 0
+        outcomes = []
     log(f"[DRIVER] 深读开始：{len(todo)} 篇并行（每批 {args.agents_parallel}）")
-
-    passed = needs_review = failed = 0
-    done = reused  # reused notes count toward the progress bar
-    papers = list(todo)
-    # (paper_id, outcome, note) for the deep-read brief — the list a reviewer
-    # verifies ("which papers made it in?") and the first debugging surface
-    # when the evidence base looks thin.
-    outcomes: list[tuple[str, str, str]] = [
-        (paper_id, "pass", "复用已有深读笔记") for paper_id in order if paper_id not in set(papers)
-    ]
-    for batch_start in range(0, len(papers), args.agents_parallel):
-        chunk = papers[batch_start : batch_start + args.agents_parallel]
+    for batch_start in range(0, len(todo), args.agents_parallel):
+        chunk = todo[batch_start : batch_start + args.agents_parallel]
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunk)) as executor:
             futures = {}
             for paper_id in chunk:
@@ -929,13 +1165,79 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     )
                     outcomes.append((paper_id, "failed", reason))
                     log(f"[PAPER] {paper_id} 深读失败（{outcome}）")
-    summary_extra["deep_read"] = {"total": len(order), "pass": passed, "needs_review": needs_review, "failed": failed}
-    log(stage_line("deep-read", f"{passed} pass / {needs_review} needs-review / {failed} failed（共 {len(order)} 篇）"))
+    # ---- 候补：accepted 不足地板时按评分补读 -----------------------------
+    floor = int(EVIDENCE_FLOORS.get(args.review_mode) or 0)
+    accepted = passed + needs_review
+    filled: list[str] = []
+    if floor and accepted < floor and waitlist:
+        log(
+            f"[DRIVER] 深读通过 {accepted} 篇 < 地板 {floor}，"
+            f"从候补按评分补读（缺 {floor - accepted}，候补 {len(waitlist)} 篇）"
+        )
+        for paper_id in waitlist:
+            if accepted >= floor:
+                break
+            before_pass, before_nr = passed, needs_review
+            # reuse the same per-paper path: skip → agent → copy note → count
+            run_extraction = run_dir / "extractions" / f"{paper_id}.json"
+            if not (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file():
+                reason = "全文未恢复（无 extraction 产物）"
+                if run_extraction.is_file():
+                    try:
+                        payload = json.loads(run_extraction.read_text(encoding="utf-8"))
+                    except (OSError, json.JSONDecodeError):
+                        payload = {}
+                    if str(payload.get("error") or "").strip():
+                        reason = f"全文未恢复（{payload['error']}）"
+                    elif payload.get("available"):
+                        reason = "全文已恢复但未入池（pool-add 失败）"
+                failed += 1
+                filled.append(paper_id)
+                _record_deep_read_failure(notes_dir, paper_id, "no-extraction", reason)
+                outcomes.append((paper_id, "failed", reason))
+                log(f"[PAPER] {paper_id} 候补 {reason}，跳过")
+                continue
+            try:
+                outcome = deep_read_paper(
+                    paper_id, pool_root, cli,
+                    agent_timeout_s=args.agent_timeout,
+                    skeleton_path=run_dir / f"skel-{paper_id}.json",
+                )
+            except Exception as exc:  # noqa: BLE001 — per-paper isolation
+                outcome = "failed"
+                log(f"[PAPER] {paper_id} agent 异常：{exc}")
+            pooled_note = pool_root / f"arxiv-{paper_id}" / "note.json"
+            pooled_audit = pool_root / f"arxiv-{paper_id}" / "note.json.audit.json"
+            if pooled_note.is_file():
+                shutil.copyfile(pooled_note, notes_dir / f"{paper_id}.json")
+                if pooled_audit.is_file():
+                    shutil.copyfile(pooled_audit, notes_dir / f"{paper_id}.audit.json")
+            filled.append(paper_id)
+            if outcome == "pass":
+                passed += 1
+                _clear_deep_read_failure(notes_dir, paper_id)
+                outcomes.append((paper_id, "pass", "候补补读"))
+            elif outcome == "needs-review":
+                needs_review += 1
+                _clear_deep_read_failure(notes_dir, paper_id)
+                outcomes.append((paper_id, "needs-review", "候补补读 · 审计 needs-review（可用）"))
+            else:
+                failed += 1
+                _record_deep_read_failure(notes_dir, paper_id, str(outcome), f"候补补读深读失败（{outcome}）")
+                outcomes.append((paper_id, "failed", f"候补补读深读失败（{outcome}）"))
+            accepted = passed + needs_review
+            log(f"[PAPER] {paper_id} 候补 {outcome}，累计通过 {accepted}/{floor}")
+        log(f"[DRIVER] 候补补读 {len(filled)} 篇，通过合计 {passed + needs_review} / 地板 {floor}")
+    summary_extra["deep_read"] = {"total": len(order) + len(filled), "pass": passed, "needs_review": needs_review, "failed": failed}
+    summary_extra["deep_read_filled"] = filled
+    summary_extra["evidence_floor"] = floor
+    total = len(order) + len(filled)
+    log(stage_line("deep-read", f"{passed} pass / {needs_review} needs-review / {failed} failed（共 {total} 篇）"))
     outcome_rank = {"pass": 0, "needs-review": 1, "failed": 2}
     outcomes.sort(key=lambda item: (outcome_rank.get(item[1], 3), item[0]))
     brief(
         "deep-read",
-        f"精读结果 · {passed} pass / {needs_review} needs-review / {failed} failed（共 {len(order)} 篇）",
+        f"精读结果 · {passed} pass / {needs_review} needs-review / {failed} failed（共 {total} 篇）",
         [
             f"{paper_id}  [{outcome}]" + (f"  {note}" if note else "")
             for paper_id, outcome, note in outcomes
@@ -1457,10 +1759,89 @@ def _main_locked(
         summary_extra["citation_expansion"] = citation_detail
         mark("citation", begun)
 
+        # ---- recall tail rounds (saturation measurement) ----------------
+        # Discovery rounds (plan/citation) can never show diminishing returns
+        # — each is 100% new by construction. The saturation judge needs a
+        # TAIL of low-novelty rounds to measure. Recall rounds re-query
+        # authors/titles already in hand, so they re-find mostly known papers
+        # (main's author-recall / title-recall rounds). Cheap against the
+        # snapshot; skippable when the pool is too thin to recall from.
+        begun = time.monotonic()
+        # The scope clause needs English terms; the selector thread has been
+        # running since before retrieval and is done by now. A pure-Chinese
+        # topic must not silently degrade to unscoped au: harvest.
+        recall_terms, _recall_source = selector.join()
+        if not any(term.isascii() for term in recall_terms):
+            recall_terms = mechanical_terms(args.topic, args.focus)
+        recall_outputs: list[Path] = []
+        discovery_papers: list[dict] = []
+        for source in (arxiv_output, citation_output):
+            if not source.is_file():
+                continue
+            try:
+                payload = json.loads(source.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            for paper in payload.get("papers") or payload.get("candidates") or []:
+                if isinstance(paper, dict):
+                    discovery_papers.append(paper)
+        recall_specs = (
+            (
+                "recall-author",
+                lambda papers: recall_author_queries(papers, terms=recall_terms),
+                "search-recall-author.json",
+            ),
+            ("recall-title", recall_title_queries, "search-recall-title.json"),
+            (
+                "known-works",
+                lambda papers: known_works_queries(papers, seeds=seed_ids),
+                "search-known-works.json",
+            ),
+        )
+        for batch_label, build_queries, filename in recall_specs:
+            queries = build_queries(discovery_papers)
+            if len(queries) < 3:
+                log(f"[DRIVER] {batch_label} 轮跳过（可召回条目不足 3 条）")
+                continue
+            round_output = run_dir / filename
+            round_plan = run_dir / f"query-{batch_label}.json"
+            write_round_queries(round_plan, queries, batch_label=batch_label)
+            recall_cmd = lambda plan=round_plan, out=round_output, label=batch_label: [  # noqa: E731
+                sys.executable, str(HUB_SCRIPTS / "search.py"), "search-arxiv",
+                "--query-file", str(plan),
+                "--start-date", start_date,
+                "--end-date", end_date,
+                "--batch-label", label,
+                *([] if not args.arxiv_snapshot else ["--metadata-snapshot", args.arxiv_snapshot]),
+                "--output", str(out),
+            ]
+            detail = run_stage(
+                batch_label, [round_output], args.force, recall_cmd,
+                soft_exit_codes=frozenset({1}),
+            )
+            if round_output.is_file():
+                recall_outputs.append(round_output)
+                try:
+                    hits = int(json.loads(round_output.read_text(encoding="utf-8")).get("paper_count") or 0)
+                except (OSError, json.JSONDecodeError, ValueError):
+                    hits = 0
+                log(f"[DRIVER] {batch_label} 轮：{len(queries)} 条召回查询，命中 {hits} 篇（{detail}）")
+        summary_extra["recall_rounds"] = [
+            {"batch": label, "queries": len(build_queries(discovery_papers)), "file": name}
+            for label, build_queries, name in recall_specs
+            if (run_dir / name).is_file()
+        ]
+        mark("recall", begun)
+
         # ---- registry ---------------------------------------------------
         begun = time.monotonic()
         log("[DRIVER-PHASE:mining] 候选注册、筛选与全文挖掘")
         registry_output = run_dir / "candidate-registry.json"
+        # Preserve selection/extraction statuses across the rebuild — without
+        # --screening-file every candidate resets to "discovered" and the
+        # full-text floor reads 0 after a recall-triggered registry refresh
+        # (2026-10-10).
+        screening_updates_path = run_dir / "screening-updates.json"
         def registry_cmd():
             command = [
                 sys.executable, str(HUB_SCRIPTS / "search.py"), "build-candidate-registry",
@@ -1472,10 +1853,26 @@ def _main_locked(
                 command += ["--semantic-scholar-result", str(s2_output)]
             if citation_output.is_file():
                 command += ["--citation-result", str(citation_output)]
-            for path in args.external_candidates:
-                command += ["--curated-list-result", str(path)]
+            # Recall tail LAST so the saturation judge's tail window lands on
+            # the low-novelty rounds (batch order = new_unique_rate order).
+            for path in (*recall_outputs, *args.external_candidates):
+                kind = "--search-result" if path in recall_outputs else "--curated-list-result"
+                command += [kind, str(path)]
+            updates = build_screening_updates(
+                run_dir / "screening.json", run_dir / "extraction-summary.json")
+            if updates is not None:
+                screening_updates_path.write_text(
+                    json.dumps({"version": 1, "candidates": updates}, ensure_ascii=False, indent=1) + "\n",
+                    encoding="utf-8",
+                )
+                command += ["--screening-file", str(screening_updates_path)]
             return command
-        run_stage("registry", [registry_output], args.force, registry_cmd)
+        registry_inputs = [p for p in (arxiv_output, citation_output, *recall_outputs) if p]
+        run_stage(
+            "registry", [registry_output],
+            args.force or inputs_newer_than(registry_output, registry_inputs),
+            registry_cmd,
+        )
         mark("registry", begun)
         try:
             registry_size = len(json.loads(registry_output.read_text(encoding="utf-8")).get("candidates") or [])
@@ -1599,9 +1996,16 @@ def _main_locked(
             "--candidate-registry", str(registry_output),
             "--output", str(coverage_output),
         ]
-        run_stage("coverage", [coverage_output], args.force, coverage_cmd)
+        run_stage(
+            "coverage", [coverage_output],
+            args.force or inputs_newer_than(coverage_output, [registry_output]),
+            coverage_cmd,
+        )
         mark("screening", begun)
         coverage = json.loads(coverage_output.read_text(encoding="utf-8"))
+        # Cheap (set ops) — say NOW which floors are already at risk, not at
+        # finalize after the deep-read bill is paid.
+        log_gates(coverage_output, "检索后")
 
         # ---- abstract-tier evidence (positioning-only, before extraction) --
         begun = time.monotonic()
@@ -1655,6 +2059,11 @@ def _main_locked(
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             pass
         pool_seed(summary_extra, screening_ids, run_dir, args)
+        # Refresh coverage in-process so full_text_floor reflects the extraction
+        # result — assess() is set operations only (microseconds), no subprocess,
+        # and HELD papers are still retryable at this point (2026-10-10).
+        refresh_coverage_inplace(run_dir, coverage_output)
+        log_gates(coverage_output, "抽取后")
 
         # ---- reading packets --------------------------------------------
         begun = time.monotonic()
@@ -1700,6 +2109,7 @@ def _main_locked(
             begun = time.monotonic()
             summary_extra["coverage_final"] = finalize_coverage(run_dir, registry_cmd(), coverage_output)
             mark("coverage-final", begun)
+            log_gates(coverage_output, "深读后")
             log(stage_line("coverage-final", summary_extra["coverage_final"]))
 
         # ---- review packet (mechanical refresh over the final evidence set)

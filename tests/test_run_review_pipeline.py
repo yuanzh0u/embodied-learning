@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -285,7 +286,7 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertGreaterEqual(names.count("search-arxiv"), 2)
         self.assertEqual(summary["knowledge_ids"], ["EA-SENSOR"])
         self.assertEqual(summary["candidate_count"], 42)
-        self.assertEqual(summary["screening_limit"], 24)  # rapid
+        self.assertEqual(summary["screening_limit"], 80)  # rapid
         self.assertEqual(summary["selection_strategy"], "smart")
         self.assertIn("smart selected", summary["selection_detail"])
         self.assertEqual(summary["abstract_events"], 0)
@@ -348,7 +349,7 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertIn("--registry", screen)
         self.assertEqual(screen[screen.index("--strategy") + 1], "smart")
         self.assertEqual(screen[screen.index("--topic") + 1], "demo topic ERASOR")
-        self.assertEqual(screen[screen.index("--limit") + 1], "24")
+        self.assertEqual(screen[screen.index("--limit") + 1], "80")
         self.assertIn("--terms", screen)  # English terms augment the bm25/smart query
         self.assertFalse(any("screen-candidates" in " ".join(c) for c in self.commands))
 
@@ -357,16 +358,18 @@ class DriverPipelineTest(unittest.TestCase):
         self.run_driver(self.argv("--no-terms-agent", "--selection-strategy", "keywords"))
         screen = next(c for c in self.commands if "screen-candidates" in " ".join(c))
         self.assertIn("demo", screen[screen.index("--terms") + 1].split(","))
-        self.assertEqual(screen[screen.index("--limit") + 1], "24")
+        self.assertEqual(screen[screen.index("--limit") + 1], "80")
         self.assertFalse(any("select-candidates" in " ".join(c) for c in self.commands))
         scoping = self.run_driver(self.argv("--no-terms-agent", "--review-mode", "scoping"))
-        self.assertEqual(scoping[1]["screening_limit"], 40)
+        self.assertEqual(scoping[1]["screening_limit"], 120)
+        self.assertEqual(self.driver.DEEP_READ_LIMITS, {"rapid": 12, "scoping": 22, "systematic": 43})
+        self.assertEqual(self.driver.EVIDENCE_FLOORS, {"rapid": 8, "scoping": 15, "systematic": 30})
 
     def test_deep_read_limit_defaults_to_mode(self):
         """Deep-read throughput is mode-aware by default (the fixed default 10
         starved scoping reviews down to 7 citable papers in real runs)."""
         self.assertIsNone(self.driver.parse_args(self.argv()).deep_read_limit)
-        self.assertEqual(self.driver.DEEP_READ_LIMITS, {"rapid": 10, "scoping": 16, "systematic": 40})
+        self.assertEqual(self.driver.DEEP_READ_LIMITS, {"rapid": 12, "scoping": 22, "systematic": 43})
 
     def test_deep_read_order_puts_seeds_first(self):
         """Influence-scored screening buries fresh seed papers below the cut;
@@ -378,6 +381,13 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(self.driver.deep_read_order(["a", "b"], ["z"], 2), ["z", "a"])
         # Seed already present is not duplicated.
         self.assertEqual(self.driver.deep_read_order(["a", "b"], ["a"], 2), ["a", "b"])
+
+    def test_deep_read_order_without_limit_is_the_waitlist_pool(self):
+        """limit=None returns the full scored order so the 候补 fill can walk
+        past the first cut in the same ranking (2026-10-10)."""
+        full = self.driver.deep_read_order(["a", "b", "c", "d"], ["c"], limit=None)
+        self.assertEqual(full, ["c", "a", "b", "d"])
+        self.assertEqual(full[2:], ["b", "d"])  # the 候补 tail
 
     def test_projection_stamps_event_scale_into_run_json(self):
         """check_run_bundle requires run.json event_count to match the evidence
@@ -722,6 +732,221 @@ class AbstractEvidenceStageTest(unittest.TestCase):
         )
         manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["abstract_papers"], 0)
+
+
+class StructuralSaturationTest(unittest.TestCase):
+    """Saturation is MEASURED as diminishing returns across rounds — never
+    asserted. Discovery rounds are 100% new by construction; the driver earns
+    a passing verdict by appending low-novelty recall rounds as the tail
+    (2026-10-10: an earlier structural auto-pass just silenced the alarm)."""
+
+    def _plan(self):
+        return {
+            "review_mode": "scoping",
+            "search_targets": {"candidate_floor": 2, "full_text_floor": 1, "accepted_paper_floor": 1},
+            "coverage_dimensions": [],
+            "stopping_rule": {
+                "minimum_batches": 3,
+                "saturation_rounds": 2,
+                "max_new_unique_rate": 0.10,
+            },
+        }
+
+    def _registry(self, batches):
+        return {"candidates": [{"arxiv_id": f"p{i}"} for i in range(20)], "batches": batches}
+
+    def test_discovery_tail_alone_is_not_saturated(self):
+        """Two disjoint discovery rounds cannot show diminishing returns —
+        the judge must NOT call that saturated (the old auto-pass bug)."""
+        from embodied_learning.search import coverage
+
+        plan = self._plan()
+        registry = self._registry([
+            {"batch": "r1", "channel": "arxiv-api", "candidate_ids": [f"a{i}" for i in range(10)]},
+            {"batch": "r2", "channel": "citation-graph", "candidate_ids": [f"c{i}" for i in range(10)]},
+        ])
+        result = coverage.assess(plan, registry, [])
+        self.assertFalse(result["stop_assessment"]["checks"]["saturation"])
+
+    def test_recall_tail_measures_saturation(self):
+        """Discovery → recall tail: the tail re-finds known papers, so its
+        new_unique_rate is low and the judge can honestly pass."""
+        from embodied_learning.search import coverage
+
+        plan = self._plan()
+        registry = self._registry([
+            {"batch": "plan-r1", "channel": "arxiv-api", "candidate_ids": [f"a{i}" for i in range(10)]},
+            {"batch": "citation-seeds", "channel": "citation-graph", "candidate_ids": [f"c{i}" for i in range(10)]},
+            {"batch": "recall-author-r3", "channel": "arxiv-api", "candidate_ids": [f"a{i}" for i in range(6)]},
+            {"batch": "recall-title-r4", "channel": "arxiv-api", "candidate_ids": [f"a{i}" for i in range(4)]},
+        ])
+        result = coverage.assess(plan, registry, [])
+        self.assertTrue(result["stop_assessment"]["checks"]["saturation"])
+        self.assertEqual(result["saturation_kind"], "measured")
+
+    def test_repeat_channel_still_100pct_new_is_not_saturated(self):
+        from embodied_learning.search import coverage
+
+        plan = self._plan()
+        registry = self._registry([
+            {"batch": "r1", "channel": "arxiv-api", "candidate_ids": [f"a{i}" for i in range(10)]},
+            {"batch": "r2", "channel": "arxiv-api", "candidate_ids": [f"b{i}" for i in range(10)]},
+            {"batch": "r3", "channel": "arxiv-api", "candidate_ids": [f"c{i}" for i in range(10)]},
+        ])
+        result = coverage.assess(plan, registry, [])
+        self.assertFalse(result["stop_assessment"]["checks"]["saturation"])
+
+
+class RecallQueryTest(unittest.TestCase):
+    """Recall rounds derive queries mechanically from already-found papers —
+    no agent, cheap, and low-novelty by construction (the saturation tail)."""
+
+    def setUp(self):
+        self.driver = load_driver()
+        self.papers = [
+            {"title": "Reflexion: language agents with verbal reinforcement learning",
+             "authors": ["Noah Shinn", "Federico Cassano", "Shunyu Yao"]},
+            {"title": "Self-Refine: Iterative Refinement with Self-Feedback",
+             "authors": ["Aman Madaan", "Noah Shinn"]},
+            {"title": "SWE-agent: Agent-Computer Interfaces Enable Automated Software Engineering",
+             "authors": ["John Yang", "Noah Shinn"]},
+            {"title": "The AI Scientist",
+             "authors": ["Chris Lu"]},  # short title → title round skips it
+        ]
+
+    def test_author_recall_targets_recurrent_authors(self):
+        queries = self.driver.recall_author_queries(self.papers, limit=5)
+        labels = [q["label"] for q in queries]
+        self.assertEqual(len(queries), 5)  # 6 unique names, cap 5
+        self.assertTrue(all(q["query"].startswith('au:"') for q in queries))
+        self.assertIn("recall-author-1", labels)
+        # Most-represented author first.
+        self.assertIn("Noah Shinn", queries[0]["query"])
+
+    def test_author_recall_scopes_to_topic(self):
+        """An unscoped au: harvests every paper the author ever wrote (0.92
+        new-rate, not a tail). The English-term clause keeps it a recall —
+        and a pure-Chinese topic must still get a scope from the terms list."""
+        queries = self.driver.recall_author_queries(
+            self.papers, terms=["automated", "research", "agents"], limit=3)
+        self.assertIn(" AND (", queries[0]["query"])
+        self.assertIn("all:automated", queries[0]["query"])
+
+    def test_author_recall_chinese_topic_without_terms_is_unscoped(self):
+        """No Latin tokens and no terms list → empty scope (honest), and the
+        caller is expected to pass the English retrieval terms instead."""
+        queries = self.driver.recall_author_queries(self.papers, terms="自动化研究", limit=2)
+        self.assertNotIn(" AND (", queries[0]["query"])
+
+    def test_title_recall_uses_distinctive_phrases(self):
+        queries = self.driver.recall_title_queries(self.papers, limit=5)
+        self.assertGreaterEqual(len(queries), 2)  # "The AI Scientist" is too short
+        self.assertTrue(all(q["query"].startswith('ti:"') for q in queries))
+        # Phrases come from title content words, not stopwords.
+        self.assertNotIn("the ", queries[0]["query"].lower())
+
+    def test_known_works_probes_exact_titles_with_seeds_first(self):
+        """Exact-title probes re-find the paper itself — the reliable
+        low-novelty tail. Seeds are forced to the front."""
+        papers = [
+            {"arxiv_id": "2303.11366", "title": "Reflexion: language agents with verbal reinforcement learning"},
+            {"arxiv_id": "2408.06292", "title": "The AI Scientist: Towards Fully Automated Open-Ended Scientific Discovery"},
+            {"arxiv_id": "2501.04227", "title": "Agent Laboratory: Using LLM Agents as Research Assistants"},
+        ]
+        queries = self.driver.known_works_queries(papers, seeds=["2408.06292"], limit=3)
+        self.assertEqual(len(queries), 3)
+        self.assertIn("The AI Scientist", queries[0]["query"])
+        self.assertTrue(all(q["query"].startswith('ti:"') and q["query"].endswith('"') for q in queries))
+
+    def test_recall_skips_tiny_pools(self):
+        self.assertEqual(self.driver.recall_author_queries([]), [])
+        self.assertEqual(self.driver.recall_title_queries([]), [])
+        self.assertEqual(self.driver.known_works_queries([]), [])
+
+    def test_write_round_queries_labels_the_batch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "q.json"
+            self.driver.write_round_queries(
+                path, [{"label": "x", "query": 'au:"A B"'}], batch_label="recall-author")
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(payload["batch"], "recall-author")
+            self.assertEqual(payload["queries"][0]["query"], 'au:"A B"')
+
+
+class GateReportTest(unittest.TestCase):
+    """log_gates is the stage-end mirror of the finalize gate table: cheap
+    enough to run at every stage boundary and again at settle."""
+
+    def test_log_gates_names_remedy_for_failures(self):
+        driver = load_driver()
+        with tempfile.TemporaryDirectory() as tmp:
+            report = Path(tmp) / "coverage-report.json"
+            report.write_text(json.dumps({
+                "targets": {"candidate_floor": 100, "full_text_floor": 35, "accepted_paper_floor": 15},
+                "observed": {"candidate_count": 465, "full_text_recovered_count": 34, "accepted_evidence_paper_count": 12},
+                "saturation_kind": "measured",
+                "stop_assessment": {"checks": {
+                    "candidate_floor": True,
+                    "full_text_floor": False,
+                    "accepted_paper_floor": False,
+                    "coverage_dimensions": True,
+                    "saturation": True,
+                }},
+            }), encoding="utf-8")
+            with mock.patch.object(driver, "log") as logger:
+                driver.log_gates(report, "抽取后")
+            lines = [str(call.args[0]) for call in logger.call_args_list]
+            joined = "\n".join(lines)
+            self.assertIn("DRIVER-GATES:抽取后", joined)
+            self.assertIn("full_text_floor", joined)
+            self.assertIn("34/35", joined)
+            self.assertIn("抽取重试可补", joined)
+            self.assertIn("saturation_kind=measured", joined)
+            # passing gates are summarized, not listed one-by-one
+            self.assertNotIn("未过 candidate_floor", joined)
+
+    def test_log_gates_silent_on_missing_report(self):
+        driver = load_driver()
+        with mock.patch.object(driver, "log") as logger:
+            driver.log_gates(Path("/nonexistent/coverage-report.json"), "检索后")
+        logger.assert_not_called()
+
+
+class InputsNewerThanTest(unittest.TestCase):
+    """Stages must rebuild when their INPUTS change, not only when outputs
+    are missing — a registry built from r1 must be rebuilt after a recall
+    round lands, or the new batch never reaches the saturation judge."""
+
+    def test_newer_input_triggers_rebuild(self):
+        driver = load_driver()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "registry.json"
+            src = Path(tmp) / "search-recall.json"
+            out.write_text("{}", encoding="utf-8")
+            self.assertFalse(driver.inputs_newer_than(out, [src]))  # src missing
+            src.write_text("{}", encoding="utf-8")
+            os.utime(out, (1, 1))  # output older than input
+            os.utime(src, (9_000_000_000, 9_000_000_000))
+            self.assertTrue(driver.inputs_newer_than(out, [src]))
+
+    def test_older_input_does_not_rebuild(self):
+        driver = load_driver()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "registry.json"
+            src = Path(tmp) / "search-r1.json"
+            src.write_text("{}", encoding="utf-8")
+            out.write_text("{}", encoding="utf-8")
+            os.utime(src, (1, 1))
+            os.utime(out, (9_000_000_000, 9_000_000_000))
+            self.assertFalse(driver.inputs_newer_than(out, [src]))
+
+    def test_missing_output_rebuilds(self):
+        driver = load_driver()
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "registry.json"
+            src = Path(tmp) / "search-r1.json"
+            src.write_text("{}", encoding="utf-8")
+            self.assertTrue(driver.inputs_newer_than(out, [src]))
 
 
 if __name__ == "__main__":

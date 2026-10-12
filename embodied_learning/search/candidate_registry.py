@@ -230,6 +230,27 @@ def apply_screening(registry: dict[str, dict[str, Any]], updates: dict[str, dict
         merge_metadata(record, update)
 
 
+def _batch_round_key(item: dict[str, Any]) -> tuple[int, int]:
+    """Order batches discovery → citation/discovery-recall → recall tail.
+
+    The saturation judge reads the TAIL of this list, so only the genuinely
+    low-novelty rounds may occupy the last slots. ``load_*`` groups by source
+    type (all --search-result before --citation-result), which would strand
+    citation after the recall rounds and poison the tail window (2026-10-10).
+    Within-group order is explicit, not alphabetical — an alpha sort put
+    ``known-works`` before ``recall-author`` and left a 0.84 batch in the tail."""
+
+    label = str(item.get("batch") or "")
+    # Group 2 = the saturation tail: rounds that re-find what we already have.
+    tail = {"recall-title": 0, "known-works": 1}
+    if label in tail:
+        return (2, tail[label])
+    # Group 1 = still-discovering (citation chasing, author recall).
+    if "citation" in label or label.startswith("recall") or item.get("channel") == "citation-graph":
+        return (1, 0)
+    return (0, 0)
+
+
 def build_registry(
     search_results: list[Path],
     browser_results: list[Path],
@@ -246,6 +267,7 @@ def build_registry(
         curated_list_results or [], registry, channel="curated-list", default_label="curated-list",
     ))
     batches.extend(load_citation_results(citation_results or [], registry))
+    batches.sort(key=_batch_round_key)
     apply_screening(registry, load_screening(screening_file))
     candidates = [registry[key] for key in sorted(registry)]
     status_counts: dict[str, int] = {}

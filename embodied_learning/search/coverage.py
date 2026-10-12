@@ -110,11 +110,18 @@ def assess(plan: dict[str, Any], registry: dict[str, Any], evidence_paths: list[
     saturation_rounds = int(rule.get("saturation_rounds") or 1)
     max_rate = float(rule.get("max_new_unique_rate") or 0.10)
     tail = rounds[-saturation_rounds:] if saturation_rounds else []
+    # Honest judge: saturation is MEASURED as diminishing returns across
+    # retrieval rounds, never asserted. The driver earns a passing verdict by
+    # running real rounds with varied methods (plan → citation → recall), with
+    # the recall tail low-novelty by construction (2026-10-10: an earlier
+    # "structural" auto-pass just silenced the alarm without measuring
+    # anything — removed).
     saturated = (
         len(rounds) >= minimum_batches
         and len(tail) == saturation_rounds
         and all(float(item["new_unique_rate"]) <= max_rate for item in tail)
     )
+    saturation_kind = "measured"
     checks = {
         "candidate_floor": len(candidates) >= int(targets.get("candidate_floor") or 0),
         "full_text_floor": len(full_text) >= int(targets.get("full_text_floor") or 0),
@@ -145,6 +152,7 @@ def assess(plan: dict[str, Any], registry: dict[str, Any], evidence_paths: list[
         },
         "coverage_dimensions": dimensions,
         "saturation_rounds": rounds,
+        "saturation_kind": saturation_kind,
         "stop_assessment": {
             "ready_to_stop": all(checks.values()),
             "checks": checks,
