@@ -34,7 +34,7 @@ from init_run import run_folder_name, slugify_topic  # noqa: E402
 from embodied_learning.harness.claude import resolve_cli as agent_cli_available  # noqa: E402
 sys.path.insert(0, str(SCRIPT_DIR.parent))  # repo root, for the embodied_learning package
 from embodied_learning.knowledge import arxiv_reader  # noqa: E402
-from embodied_learning.atomicio import atomic_copy, atomic_write_text  # noqa: E402
+from embodied_learning.atomicio import atomic_copy, atomic_write_json, atomic_write_text  # noqa: E402
 from embodied_learning import locks  # noqa: E402
 import wiki_chat  # noqa: E402
 
@@ -605,16 +605,19 @@ class WikiHandler(SimpleHTTPRequestHandler):
         registry,
         on_delta=None,
         record_user_message: str | None = None,
+        require_existing: bool = False,
     ) -> str:
         """Shared streaming loop for every conversation surface (topic / paper
         chat / workflow): record the user message, forward events (persisting
         session ids and the assistant reply), stop on a closed browser pipe.
         ``on_delta`` lets the workflow extract stage markers; returns the
-        full assistant text."""
+        full assistant text. ``require_existing`` keeps a post-reset cleanup
+        from resurrecting a deleted workspace entry."""
 
         _set_current_chat(turn)
         if record_user_message:
-            registry.append_message(key, "user", record_user_message)
+            registry.append_message(
+                key, "user", record_user_message, require_existing=require_existing)
         assistant_text: list[str] = []
         try:
             for event in turn.events():
@@ -630,7 +633,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
             turn.stop()  # browser tab closed / navigated away
         full_text = "".join(assistant_text)
         if full_text.strip():
-            registry.append_message(key, "assistant", full_text)
+            registry.append_message(
+                key, "assistant", full_text, require_existing=require_existing)
         return full_text
 
     def _handle_chat(self) -> None:
@@ -1523,6 +1527,15 @@ class WikiHandler(SimpleHTTPRequestHandler):
         work_dir = self.kb_root / "work"
         # init_run slug: literature-review-<slug>-<date>; match on the slug part.
         prefix = "literature-review-" + slugify_topic(params["topic"])
+        inputs_payload = {
+            "source": "wiki-interview",
+            "requested_review_mode": params["review_mode"],
+            "target_style": params.get("target_style") or "",
+            "focus": params.get("focus") or "",
+            "search_strategy": params.get("search_strategy") or "",
+            "selection_strategy": params.get("selection_strategy") or "",
+            "seed_arxiv_ids": params.get("seed_arxiv_ids") or "",
+        }
         for candidate in sorted(work_dir.glob(f"{prefix}-*")):
             if not candidate.is_dir() or candidate.name == prefix:
                 continue
@@ -1534,7 +1547,13 @@ class WikiHandler(SimpleHTTPRequestHandler):
             except (OSError, json.JSONDecodeError):
                 continue
             if isinstance(manifest, dict) and manifest.get("status") == "in-progress":
-                return candidate  # resume-from-disk: same topic, any date
+                # Resume-from-disk: same topic, any date. The interview card's
+                # mode is the user's explicit choice for THIS kickoff — when it
+                # differs from what the folder was born with, the manifest must
+                # follow, or the floors silently run at the old depth
+                # (2026-10-09: a rapid request kept running as scoping).
+                self._apply_resume_inputs(candidate_manifest, manifest, params, inputs_payload)
+                return candidate
         run_dir = work_dir / run_folder_name(params["topic"], dt.date.today().strftime("%Y%m%d"))
         manifest_path = run_dir / "run.json"
         if manifest_path.is_file():
@@ -1543,6 +1562,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
             except (OSError, json.JSONDecodeError):
                 manifest = None
             if isinstance(manifest, dict) and manifest.get("status") == "in-progress":
+                self._apply_resume_inputs(manifest_path, manifest, params, inputs_payload)
                 return run_dir  # resume-from-disk: same topic retried today
             raise ChatBadRequest("同名运行目录已存在且已结束，请换一个主题表述或明天再试。")
         command = [
@@ -1554,6 +1574,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
             params["review_mode"],
             "--work-dir",
             str(work_dir),
+            "--inputs-json",
+            json.dumps(inputs_payload, ensure_ascii=False),
             "--force",
         ]
         if params["time_range"]:
@@ -1563,6 +1585,32 @@ class WikiHandler(SimpleHTTPRequestHandler):
             detail = (result.stderr or result.stdout or "").strip()
             raise ChatBadRequest(f"初始化运行目录失败：{detail[:300]}")
         return run_dir
+
+    def _apply_resume_inputs(
+        self, manifest_path: Path, manifest: dict, params: dict, inputs_payload: dict
+    ) -> None:
+        """On resume, keep run.json in step with this kickoff's interview answers.
+        The effective ``review_mode`` must match the request (the floors are
+        computed from it); ``inputs`` always records what the user picked."""
+
+        changed = False
+        requested = str(params.get("review_mode") or "")
+        if requested and manifest.get("review_mode") != requested:
+            manifest.setdefault("notes", [])
+            if isinstance(manifest["notes"], str):
+                manifest["notes"] = [manifest["notes"]]
+            manifest["notes"].append(
+                f"{dt.date.today().isoformat()}: review_mode "
+                f"{manifest.get('review_mode')!r} → {requested!r} on resume "
+                f"(interview card choice for this kickoff)."
+            )
+            manifest["review_mode"] = requested
+            changed = True
+        if manifest.get("inputs") != inputs_payload:
+            manifest["inputs"] = inputs_payload
+            changed = True
+        if changed:
+            atomic_write_json(manifest_path, manifest)
 
     def _snapshot_topic_items(self) -> list[dict]:
         """The published topics of the current snapshot with their
@@ -1619,12 +1667,41 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 fresh.append(item)
         return fresh[0] if len(fresh) == 1 else None
 
+    def _latest_workspace_id(self) -> str | None:
+        """Most recently updated workspace that still points at a live run dir.
+        Recovery for a cleared localStorage ``wiki.workflow.ws`` — the journal
+        under the run dir outlives the browser-side id. Parked/in-progress runs
+        outrank settled ones so a finished survey never steals the restore
+        slot from the run the user was mid-way through (2026-10-09)."""
+
+        best_id = None
+        best_rank = -1
+        best_at = ""
+        data = self.chat_sessions.load()
+        for ws_id, entry in (data.get("workspaces") or {}).items():
+            if not isinstance(entry, dict):
+                continue
+            workflow = entry.get("workflow") or {}
+            run_rel = workflow.get("run_dir") or ""
+            if not run_rel:
+                continue
+            if not (self.kb_root / run_rel / "dialog" / "journal.jsonl").is_file():
+                continue
+            settled = workflow.get("stage") == "settle" and entry.get("topic_id")
+            rank = 0 if settled else (2 if workflow.get("awaiting_input") else 1)
+            updated = str(entry.get("updated_at") or "")
+            if (rank, updated) >= (best_rank, best_at):
+                best_rank, best_at, best_id = rank, updated, ws_id
+        return best_id
+
     def _handle_workflow_state(self) -> None:
         if not self.chat.enabled:
             self._send_json(HTTPStatus.OK, {"enabled": False, "workflow": False})
             return
         query = parse_qs(urlparse(self.path).query)
         raw_ws = (query.get("ws_id") or [""])[0]
+        if not raw_ws and (query.get("latest") or [""])[0] == "1":
+            raw_ws = self._latest_workspace_id() or ""
         if not raw_ws:
             self._send_json(HTTPStatus.OK, {"enabled": True, "workflow": self.workflow_available()})
             return
@@ -1774,12 +1851,14 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 for stage, detail in wiki_chat.extract_stage_markers(text):
                     if stage not in emitted_stages:
                         emitted_stages.add(stage)
-                        registry.set_workflow_state(ws_id, stage=stage, awaiting_input=False)
+                        registry.set_workflow_state(
+                            ws_id, stage=stage, awaiting_input=False, require_existing=True)
                         self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
 
             full_text = self._stream_chat_turn(
                 key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
                 record_user_message=message if entry is not None else None,
+                require_existing=True,
             )
 
             marker_run = wiki_chat.extract_topic_marker(full_text)
@@ -1812,13 +1891,15 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 turn, _ = self._spawn_workflow_turn(continuation, session_id, ws_model)
                 full_text = self._stream_chat_turn(
                     key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
+                    require_existing=True,
                 )
                 marker_run = wiki_chat.extract_topic_marker(full_text)
                 stop_reason = wiki_chat.extract_stop_marker(full_text)
 
             if marker_run:
                 # Settle finished: publish and hand the topic back.
-                registry.set_workflow_state(ws_id, stage="settle", awaiting_input=False)
+                registry.set_workflow_state(
+                    ws_id, stage="settle", awaiting_input=False, require_existing=True)
                 self._write_sse_event({"type": "stage", "stage": "settle", "detail": "已落盘"})
                 try:
                     refresh_snapshot(self.kb_root, self.data_dir)
@@ -1846,7 +1927,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 # recovery path, not a routine outline checkpoint.
                 current_stage = (self.chat_sessions.get_workspace(ws_id) or {}).get("workflow", {}).get("stage")
                 registry.set_workflow_state(
-                    ws_id, stage=current_stage or WORKFLOW_CHECKPOINT_STAGE, awaiting_input=True
+                    ws_id, stage=current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                    awaiting_input=True, require_existing=True,
                 )
                 if stop_reason:
                     # Designed user decision point: the writer reported and
@@ -1950,14 +2032,16 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 if mapped:
                     stage, detail = mapped
                     current_stage = stage
-                    registry.set_workflow_state(ws_id, stage=stage, awaiting_input=False)
+                    registry.set_workflow_state(
+                        ws_id, stage=stage, awaiting_input=False, require_existing=True)
                     self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
                     continue
                 phase = wiki_chat.extract_driver_phase(line)
                 if phase:
                     stage, detail = phase
                     current_stage = stage
-                    registry.set_workflow_state(ws_id, stage=stage, awaiting_input=False)
+                    registry.set_workflow_state(
+                        ws_id, stage=stage, awaiting_input=False, require_existing=True)
                     self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
                     continue
                 progress = wiki_chat.extract_driver_progress(line)

@@ -547,14 +547,23 @@
     if (state.chat.pane === "workflow") {
       // The workflow pane survives on the homepage (switch back via 主题对话).
       setChatTitle("综述工作流");
-      if (state.chat.open) loadWorkflowState();
+      if (state.chat.open) {
+        // loadWorkflowState renders the journal; syncChatPane's renderChatMessages
+        // would first repaint from the (possibly empty) in-memory history and
+        // flash/wipe the dialog. Same loaderWillRender split as switchChatPane.
+        syncPaneChrome();
+        renderTimeline();
+        loadWorkflowState();
+      } else {
+        syncChatPane();
+      }
     } else {
       resetChatView();
       setChatTitle("研究助手");
       nodes.chatInput.disabled = true;
       nodes.chatInput.placeholder = "先选择一个话题，再开始对话。";
+      syncChatPane();
     }
-    syncChatPane();
     renderFieldTree();
     document.title = "Embodied AI Evidence Hub｜具身智能证据知识库";
     const canonical = document.querySelector('link[rel="canonical"]');
@@ -2241,9 +2250,11 @@ Canonical: ${absoluteCanonical(topic)}
       state.chat.awaitingInput = Boolean(payload.awaiting_input);
       if (Array.isArray(payload.journal) && payload.journal.length) {
         replayWorkflowJournal(payload.journal);
-      } else {
+      } else if (state.chat.wsMessages.length) {
         renderChatMessages();
       }
+      // else: nothing to rebuild from — leave the live pane alone rather than
+      // wiping a dialog the server can no longer describe (2026-10-09).
       renderTimeline();
       state.chat.wsSessionId = payload.session_id || null;
       setChatSessionMeta(payload.session_id ? `会话 ${String(payload.session_id).slice(0, 8)} · 可继续追问` : "");
@@ -2283,9 +2294,14 @@ Canonical: ${absoluteCanonical(topic)}
     if (evt.type === "status" && evt.stage === "tool") {
       // Writer-agent activity: Bash/Write/Edit/Task are the visible steps
       // (packet build, audits, file writes); Read/Grep noise stays in the
-      // status spinner only.
+      // status spinner only. Log into the CURRENT workflow stage's card —
+      // evt.stage is the literal "tool" sentinel, not a real node key.
       if (WORKFLOW_LOG_TOOLS.has(evt.tool)) {
-        appendNodeLine(evt.stage || state.chat.stage, `↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`, evt.ts);
+        appendNodeLine(
+          state.chat.stage || "other",
+          `↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`,
+          evt.ts,
+        );
       }
       handleChatEvent(evt, renderer);
       return;
@@ -2383,7 +2399,13 @@ Canonical: ${absoluteCanonical(topic)}
   async function resetWorkflow() {
     if (!state.chat.wsId) return;
     if (state.chat.streaming) abortChat();
-    if (state.chat.messages.length && !window.confirm("重置工作流？当前对话记录将被清空（已产生的运行文件保留在磁盘）。")) return;
+    // Confirm against the WORKFLOW pane's dialog — state.chat.messages is the
+    // topic-chat history and is empty when the workflow was started from the
+    // homepage hero, which used to skip the confirm and wipe the run's
+    // conversation on one mis-click of the ⟳ button (2026-10-09).
+    const hasDialog =
+      state.chat.wsMessages.length > 0 || nodes.chatMessages.childElementCount > 0;
+    if (hasDialog && !window.confirm("重置工作流？当前对话记录将被清空（已产生的运行文件保留在磁盘）。")) return;
     try {
       await fetch("api/workflow/reset", {
         method: "POST",
@@ -2396,6 +2418,7 @@ Canonical: ${absoluteCanonical(topic)}
     setWorkflowSession(null);
     state.chat.stage = null;
     state.chat.awaitingInput = false;
+    state.chat.wsMessages = [];
     state.chat.pane = "topic";
     nodes.chatMessages.innerHTML = "";
     hideChatProgress();
@@ -2565,23 +2588,38 @@ Canonical: ${absoluteCanonical(topic)}
     // Best-effort: if a workflow conversation is parked (checkpoint pause),
     // re-own it after a reload so the user can continue in the panel.
     if (!state.chat.workflowAvailable) return;
-    let wsId = null;
+    let localWs = null;
     try {
-      wsId = localStorage.getItem("wiki.workflow.ws");
+      localWs = localStorage.getItem("wiki.workflow.ws");
     } catch {
-      return;
+      // storage unavailable — fall through to the server-side latest lookup
     }
-    if (!wsId) return;
     try {
-      const response = await fetch(`api/workflow/state?ws_id=${encodeURIComponent(wsId)}`, { cache: "no-store" });
-      const payload = await response.json();
-      if (!response.ok || !payload.ws_id) return;
-      setWorkflowSession(wsId);
+      // Prefer the server's freshest ACTIVE workspace over a stale localStorage
+      // id: the browser may still remember yesterday's finished run while a
+      // newer one is parked (2026-10-09: reopening the wiki showed mesh
+      // simplification instead of the LOD run). localStorage is only a
+      // fallback when the server has nothing to offer.
+      let response = await fetch("api/workflow/state?latest=1", { cache: "no-store" });
+      let payload = await response.json();
+      if ((!response.ok || !payload.ws_id) && localWs) {
+        response = await fetch(
+          `api/workflow/state?ws_id=${encodeURIComponent(localWs)}`, { cache: "no-store" });
+        payload = await response.json();
+      }
+      if (!response.ok || !payload.ws_id) {
+        if (localWs) setWorkflowSession(null); // stale local id
+        return;
+      }
+      setWorkflowSession(payload.ws_id);
       state.chat.stage = payload.stage || null;
       state.chat.awaitingInput = Boolean(payload.awaiting_input);
       state.chat.wsMessages = Array.isArray(payload.messages) ? payload.messages : [];
       state.chat.pane = "workflow";
       setChatTitle("综述工作流");
+      // Chrome (pane buttons, paper bar, placeholder) must follow the pane
+      // switch — init() renders chrome in topic mode before this restore runs.
+      syncPaneChrome();
       nodes.chatInput.disabled = false;
       nodes.chatInput.placeholder = "对大纲提修改意见，或回复「继续」…";
       // The SSE dialog died with the previous page: rebuild it from the

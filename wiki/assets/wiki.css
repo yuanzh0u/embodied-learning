@@ -727,9 +727,15 @@ noscript { position: fixed; z-index: 100; inset: auto 20px 20px; padding: 14px; 
 .chat-session-meta { margin: 0; padding: 8px 20px; color: var(--ink-faint); border-bottom: 1px solid var(--line-soft); font-size: 11.5px; }
 .chat-session-meta:empty { display: none; }
 .chat-paper-bar { display: flex; gap: 8px; padding: 10px 20px; border-bottom: 1px solid var(--line-soft); background: var(--surface-muted); }
+.chat-paper-bar[hidden] { display: none; }
 .chat-paper-bar input { flex: 1; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 13.5px; background: var(--paper); color: var(--ink); }
 .chat-paper-bar input:focus { outline: 2px solid rgba(46, 125, 92, 0.25); border-color: var(--jade); }
 .chat-messages { flex: 1; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; padding: 18px 20px; }
+/* flex-shrink: 0 + min-height: max-content — a column flex parent plus
+   overflow:hidden on .chat-msg-node drops the automatic min-height to 0, so a
+   long workflow journal squashed every node card into one line instead of
+   scrolling (2026-10-09). */
+.chat-messages > * { flex-shrink: 0; min-height: max-content; }
 .chat-msg { max-width: 92%; padding: 10px 14px; border-radius: 14px; font-size: 14.5px; line-height: 1.7; }
 .chat-msg-text { white-space: pre-wrap; word-break: break-word; }
 .chat-msg-user { align-self: flex-end; background: var(--jade-soft); border: 1px solid #cfdcd4; border-bottom-right-radius: 4px; }
@@ -747,6 +753,9 @@ noscript { position: fixed; z-index: 100; inset: auto 20px 20px; padding: 14px; 
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: 14px;
+  /* overflow:hidden zeroes the flex auto min-size — pin a floor so the card
+     can never collapse to a single line (2026-10-09). */
+  min-height: max-content;
 }
 .chat-node-head {
   padding: 8px 14px;
@@ -762,7 +771,9 @@ noscript { position: fixed; z-index: 100; inset: auto 20px 20px; padding: 14px; 
   flex-direction: column;
   gap: 6px;
   padding: 10px 14px;
+  min-height: max-content;
 }
+.chat-node-body > * { flex-shrink: 0; }
 .chat-node-body:empty::after {
   content: "等待输出…";
   color: var(--ink-faint);

@@ -164,6 +164,8 @@ _WORKFLOW_BASE_SYSTEM_PROMPT = (
     "\n\n若指定的运行目录已存在中间产物（extractions/、paper-notes/ 等），从磁盘已有进度继续"
     "（已通过审计的笔记直接复用，不要重读重写），只补缺失部分。"
     "除落盘阶段外只写入 <work-dir> 运行目录；用中文与用户交流。"
+    "面向用户的对话回复里不要使用 markdown 表格（对话框不渲染表格，会坍成一行纯文本）——"
+    "论文清单、门禁对比、漏斗数字一律用编号列表或短段落；成稿文件（*_keyan.md 等）里的表格不受此限。"
 )
 
 _WORKFLOW_AGENT_TAIL = (
@@ -754,6 +756,8 @@ def build_workflow_prompt(
         "精读数量不够时汇报选定的精读论文列表并【立即停轮】（末尾单独一行 [STOP:awaiting-user]，"
         "run 留在 in-progress），等待用户决策：补充信息或扩大综述范围——这是正确终态；"
         "严禁薄审落盘、擅自更换选文策略、删改机械产物、手改 run.json 或继续硬修。"
+        "汇报时用编号列表逐篇给出（篇名/作者/年份/证据构成），不要输出 markdown 表格——"
+        "对话框不渲染表格。"
         "检索通道整体失败同样停轮报告。其余门禁失败（含覆盖/饱和）一律修复重跑，"
         "按门禁消息修法执行，豁免走 --declare-gate-exception 机械入口；"
         "若 pipeline-summary 显示深读有失败篇目，如实说明影响。",
@@ -999,12 +1003,16 @@ class ChatSessionRegistry:
     def _save(self, data: dict) -> None:
         atomic_write_json(self.path, data)
 
-    def _mutate(self, key: str, mutate, *, namespace: str = "topics") -> None:
+    def _mutate(self, key: str, mutate, *, namespace: str = "topics", require_existing: bool = False) -> None:
         with locks.kb_lock(self.lock_root, "wiki-chat-sessions", wait=30):
             data = self.load()
             space = data.setdefault(namespace, {})
             entry = space.get(key)
             if not isinstance(entry, dict):
+                # require_existing: a reset() won the race — do not resurrect a
+                # zombie entry from an in-flight turn's cleanup writes.
+                if require_existing:
+                    return
                 entry = {"messages": []}
                 space[key] = entry
             mutate(entry)
@@ -1012,20 +1020,27 @@ class ChatSessionRegistry:
             self._save(data)
 
     def record_session(self, key: str, session_id: str | None, model: str | None = None) -> None:
-        """Bind the latest claude session id to a topic or workspace key."""
+        """Bind the latest claude session id to a topic or workspace key.
+        ``session_id=None`` with no model clears a stale id (resume failure)."""
 
         namespace = self._namespace_for(key)
-        if not session_id:
-            return
 
         def mutate(entry: dict) -> None:
-            entry["session_id"] = session_id
+            if session_id:
+                entry["session_id"] = session_id
+            else:
+                entry.pop("session_id", None)
             if model:
                 entry["model"] = model
 
-        self._mutate(key, mutate, namespace=namespace)
+        # Clearing a stale id must not create a bare entry; binding a real
+        # session (or a model at kickoff) does.
+        self._mutate(
+            key, mutate, namespace=namespace,
+            require_existing=not (session_id or model),
+        )
 
-    def append_message(self, key: str, role: str, text: str) -> None:
+    def append_message(self, key: str, role: str, text: str, *, require_existing: bool = False) -> None:
         namespace = self._namespace_for(key)
         if not text:
             return
@@ -1036,9 +1051,9 @@ class ChatSessionRegistry:
             )
             del entry["messages"][:-MAX_HISTORY_MESSAGES]
 
-        self._mutate(key, mutate, namespace=namespace)
+        self._mutate(key, mutate, namespace=namespace, require_existing=require_existing)
 
-    def set_workflow_state(self, ws_id: str, **fields) -> None:
+    def set_workflow_state(self, ws_id: str, *, require_existing: bool = False, **fields) -> None:
         """Merge fields into a workspace's ``workflow`` sub-object (stage,
         awaiting_input, run_dir, params, ...)."""
 
@@ -1046,7 +1061,7 @@ class ChatSessionRegistry:
             workflow = entry.setdefault("workflow", {})
             workflow.update(fields)
 
-        self._mutate(ws_id, mutate, namespace="workspaces")
+        self._mutate(ws_id, mutate, namespace="workspaces", require_existing=require_existing)
 
     def link_topic(self, ws_id: str, topic_id: str) -> None:
         def mutate(entry: dict) -> None:
@@ -1055,11 +1070,12 @@ class ChatSessionRegistry:
         self._mutate(ws_id, mutate, namespace="workspaces")
 
     def reset(self, key: str) -> None:
-        data = self.load()
-        space = data.get(self._namespace_for(key), {})
-        if isinstance(space, dict) and key in space:
-            del space[key]
-            self._save(data)
+        with locks.kb_lock(self.lock_root, "wiki-chat-sessions", wait=30):
+            data = self.load()
+            space = data.get(self._namespace_for(key), {})
+            if isinstance(space, dict) and key in space:
+                del space[key]
+                self._save(data)
 
 
 class DialogJournal:

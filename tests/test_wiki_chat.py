@@ -286,6 +286,35 @@ class WorkspaceRegistryTest(unittest.TestCase):
         self.assertIsNone(self.registry.get_workspace("ws-abc123"))
         self.registry.reset("ws-nonexistent")  # no-op, must not raise
 
+    def test_reset_does_not_resurrect_via_late_writes(self):
+        """An in-flight turn's cleanup (append/set_workflow_state) after a
+        reset must not recreate a bare zombie entry — that zombie has no
+        run_dir, so the journal becomes unreachable and a later refresh
+        wipes the dialog (2026-10-09)."""
+        self.registry.set_workflow_state(
+            "ws-live", stage="init", awaiting_input=False,
+            run_dir="work/literature-review-x-20261009", params={"topic": "x"})
+        self.registry.append_message("ws-live", "user", "综述 x")
+        self.registry.reset("ws-live")
+        self.registry.append_message("ws-live", "assistant", "尾巴", require_existing=True)
+        self.registry.set_workflow_state(
+            "ws-live", stage="packet", awaiting_input=True, require_existing=True)
+        self.assertIsNone(self.registry.get_workspace("ws-live"))
+
+    def test_require_existing_still_allows_kickoff_create(self):
+        self.registry.set_workflow_state("ws-new", stage="init")
+        self.registry.append_message("ws-new", "user", "综述 y")
+        entry = self.registry.get_workspace("ws-new")
+        self.assertEqual(entry["workflow"]["stage"], "init")
+        self.assertEqual(entry["messages"][0]["text"], "综述 y")
+
+    def test_record_session_none_clears_without_creating(self):
+        self.registry.record_session("ws-ghost", None)
+        self.assertIsNone(self.registry.get_workspace("ws-ghost"))
+        self.registry.record_session("ws-kept", "s-9")
+        self.registry.record_session("ws-kept", None)
+        self.assertIsNone(self.registry.get_workspace("ws-kept").get("session_id"))
+
     def test_workspace_message_cap(self):
         for index in range(wiki_chat.MAX_HISTORY_MESSAGES + 5):
             self.registry.append_message("ws-cap", "user", f"m{index}")

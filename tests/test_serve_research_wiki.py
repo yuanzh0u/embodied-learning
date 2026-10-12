@@ -433,6 +433,11 @@ class WorkflowEndpointTest(ChatServerHarness):
         manifest = json.loads((run_dirs[0] / "run.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["status"], "in-progress")
         self.assertEqual(manifest["review_mode"], "scoping")
+        # The interview answers are stamped under `inputs` so a later session
+        # can see what the user actually chose (2026-10-09: a rapid request
+        # ran as scoping with no trace).
+        self.assertEqual(manifest["inputs"]["source"], "wiki-interview")
+        self.assertEqual(manifest["inputs"]["requested_review_mode"], "scoping")
         # The kickoff turn carried the workflow system prompt with the
         # placeholder roots substituted (repo checkout → absolute repo paths)
         # and the run dir in the kickoff prompt. (A non-settled kickoff is
@@ -466,6 +471,56 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(entry["workflow"]["stage"], "packet")
         self.assertEqual(entry["workflow"]["run_dir"], f"work/{run_dirs[0].name}")
         return ws_id
+
+    def test_interview_review_mode_lands_in_run_json(self):
+        """The interview card's mode must become run.json's effective
+        review_mode — that field is the floors/limits contract."""
+
+        def script(turn_self, kwargs):
+            turn_self._events = self._checkpoint_turn_events()
+
+        self._seed_turn_factory(script)
+        params = self.params()
+        params["review_mode"] = "rapid"
+        self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": params["topic"], "params": params})
+        )
+        run_dir = next((self.kb_root / "work").glob("literature-review-*"))
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["review_mode"], "rapid")
+        self.assertEqual(manifest["inputs"]["requested_review_mode"], "rapid")
+        self.assertEqual(manifest["inputs"]["source"], "wiki-interview")
+
+    def test_resume_follows_new_interview_mode(self):
+        """A re-kickoff on an in-progress run must adopt the new interview
+        mode, not silently keep the old depth (rapid → scoping drift)."""
+
+        def script(turn_self, kwargs):
+            turn_self._events = self._checkpoint_turn_events()
+
+        self._seed_turn_factory(script)
+        params = self.params()
+        params["review_mode"] = "scoping"
+        self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": params["topic"], "params": params})
+        )
+        run_dir = next((self.kb_root / "work").glob("literature-review-*"))
+        manifest_path = run_dir / "run.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(manifest["review_mode"], "scoping")
+        # Second kickoff, same topic, user now picks rapid: the resume path
+        # must rewrite the manifest before the driver computes its floors.
+        params["review_mode"] = "rapid"
+        handler = object.__new__(server_module.WikiHandler)
+        handler.kb_root = self.kb_root
+        handler._apply_resume_inputs(
+            manifest_path, manifest, params,
+            {"source": "wiki-interview", "requested_review_mode": "rapid"},
+        )
+        updated = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(updated["review_mode"], "rapid")
+        self.assertEqual(updated["inputs"]["requested_review_mode"], "rapid")
+        self.assertTrue(any("rapid" in note for note in updated.get("notes") or []))
 
     def test_invalid_params_rejected(self):
         status, payload, _ = self.request(
@@ -833,6 +888,30 @@ class WorkflowEndpointTest(ChatServerHarness):
         status, payload, _ = self.request("GET", f"/api/workflow/state?ws_id={ws_id}")
         self.assertEqual(status, HTTPStatus.OK)
         self.assertEqual(payload["journal"], records)
+
+    def test_latest_workspace_recovers_journal_without_local_id(self):
+        """A cleared localStorage wiki.workflow.ws must still find the run:
+        ?latest=1 returns the most recent workspace whose run-dir journal
+        exists, so a page reload rebuilds the dialog (2026-10-09)."""
+
+        def script(turn_self, kwargs):
+            turn_self._events = self._checkpoint_turn_events()
+
+        self._seed_turn_factory(script)
+        status, raw, headers = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "主题", "params": self.params()})
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        ws_id = headers.get("X-Workflow-Id")
+        status, payload, _ = self.request("GET", "/api/workflow/state?latest=1")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(payload["ws_id"], ws_id)
+        self.assertTrue(payload["journal"])
+        self.assertEqual(payload["journal"][0]["kind"], "user")
+        # Reset drops the workspace — latest must stop advertising it.
+        self.request("POST", "/api/workflow/reset", {"ws_id": ws_id})
+        status, payload, _ = self.request("GET", "/api/workflow/state?latest=1")
+        self.assertIsNone(payload.get("ws_id"))
 
     def test_second_kickoff_truncates_reused_run_dir_journal(self):
         """A kickoff on an in-progress run reuses its dir but starts a new
