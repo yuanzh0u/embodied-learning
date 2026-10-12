@@ -66,17 +66,7 @@ from pathlib import Path
 
 LOCKS_DIRNAME = ".locks"
 CLAIMS_DIRNAME = ".claims"
-STEAL_SUFFIX = ".steal-"
 STEAL_MARKER_MAX_AGE = 60.0
-# Upper bound for reclaiming a lock whose owner record stays unreadable
-# (0-byte leftover / corrupt content / client-side ghost dentry): live holders
-# write the record within milliseconds of O_EXCL creation, so 60s is generous.
-UNREADABLE_STEAL_GRACE = 60.0
-# Consecutive polls with an unreadable/absent owner record after EEXIST: a
-# live holder writes its record within milliseconds, so a streak this long
-# means the EEXIST is a cache lie (ghost dentry variants) or a leftover —
-# unlink to drop the cached entry and retry.
-UNREADABLE_STREAK_LIMIT = 3
 PROGRESS_EVERY = 10.0
 
 DEFAULT_WAIT = 120.0
@@ -122,13 +112,48 @@ def lock_path(root: Path | str, name: str) -> Path:
     return locks_dir(root) / f"{name}.lock"
 
 
+def _appendable(path: Path) -> bool:
+    """Can we append to this path? A CIFS ghost shows up in readdir but every
+    open fails — the one shape the journal design cannot ride out on the
+    primary name (we only append, so we never make new ghosts; the primary
+    may still be a leftover from the old delete/create mechanism)."""
+
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o644)
+    except OSError:
+        return False
+    else:
+        os.close(fd)
+        return True
+
+
+def journal_path(root: Path | str, name: str) -> Path:
+    """Journal file for ``name``: the canonical one, or ``~1``/``~2``/``~3``
+    when the canonical name is an unkillable ghost. All waiters run the same
+    probe so they land on the same fallback."""
+
+    base = lock_path(root, name)
+    if _appendable(base):
+        return base
+    for index in range(1, 4):
+        alt = base.with_name(f"{base.name}~{index}")
+        if _appendable(alt):
+            print(
+                f"[kb-lock] 锁 {name} 的原路径不可写（CIFS 幽灵 dentry），改用 {alt.name}",
+                file=sys.stderr,
+            )
+            return alt
+    return base
+
+
 def claims_dir(root: Path | str) -> Path:
     return Path(root) / CLAIMS_DIRNAME
 
 
-def _owner_record(name: str, detail: str) -> dict[str, object]:
+def _owner_record(name: str, detail: str, *, op: str = "acquire") -> dict[str, object]:
     now = time.time()
     return {
+        "op": op,
         "name": name,
         "host": socket.gethostname(),
         "pid": os.getpid(),
@@ -140,14 +165,104 @@ def _owner_record(name: str, detail: str) -> dict[str, object]:
     }
 
 
-def read_owner(lock_file: Path | str) -> dict[str, object] | None:
-    """Parse a lock file's owner record; None when absent or unreadable."""
+# ---- append-only lock journal -------------------------------------------
+# CIFS does delete/create/rename badly (ghost dentries that answer EEXIST
+# forever and cannot be unlinked). It appends fine. So the lock file is a
+# NEVER-DELETED journal: every acquire/release is one appended JSON line,
+# and the holder is reconstructed by replaying it. No O_EXCL, no unlink,
+# no rename — the three operations that wedge on a flaky share (2026-10-12).
+# Side benefit: the journal is a complete audit trail of who held the lock.
+
+
+def _journal_events(path: Path) -> list[dict[str, object]]:
+    """Parse the journal, skipping torn/unparseable lines. Each record gets
+    ``_offset`` (its start byte) so a waiter can tell whether a rival appended
+    after its own acquire. A legacy single-JSON-object file (one owner record,
+    no ``op``) is read as a lone ``acquire`` so old locks still resolve."""
 
     try:
-        payload = json.loads(Path(lock_file).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return payload if isinstance(payload, dict) else None
+        raw = path.read_bytes()
+    except OSError:
+        return []
+    if not raw.strip():
+        return []
+    events: list[dict[str, object]] = []
+    offset = 0
+    for line in raw.splitlines(keepends=True):
+        start = offset
+        offset += len(line)
+        text = line.decode("utf-8", errors="replace").strip()
+        if not text:
+            continue
+        try:
+            record = json.loads(text)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(record, dict):
+            continue
+        record = dict(record)
+        record.setdefault("op", "acquire")  # legacy owner record = a lone acquire
+        record["_offset"] = start
+        events.append(record)
+    return events
+
+
+def _current_holder(events: list[dict[str, object]]) -> dict[str, object] | None:
+    """Replay the journal: the holder is the last ``acquire`` with no
+    ``release`` after it. A later ``acquire`` (a stale-steal) takes over."""
+
+    open_claims: dict[str, dict[str, object]] = {}
+    acquires: list[dict[str, object]] = []
+    for record in events:
+        claim_id = str(record.get("claim_id") or "")
+        if not claim_id:
+            continue
+        if record.get("op") == "release":
+            open_claims.pop(claim_id, None)
+            continue
+        open_claims[claim_id] = record
+        acquires.append(record)
+    for record in reversed(acquires):
+        if str(record.get("claim_id")) in open_claims:
+            return record
+    return None
+
+
+def _append_event(path: Path, record: dict[str, object]) -> int:
+    """Append one journal line; return the byte offset it landed at.
+    O_APPEND only — create-once, never unlink. A torn write at most costs
+    one skipped line on the next read."""
+
+    line = (json.dumps(record, ensure_ascii=False) + "\n").encode("utf-8")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o644)
+    try:
+        offset = os.lseek(fd, 0, os.SEEK_END)
+        os.write(fd, line)
+        os.fsync(fd)
+        return offset
+    finally:
+        os.close(fd)
+
+
+def _later_acquire(events: list[dict[str, object]], offset: int, claim_id: str) -> bool:
+    """True when a rival appended an acquire after our byte offset."""
+
+    for record in events:
+        if record.get("op") != "acquire":
+            continue
+        if str(record.get("claim_id")) == claim_id:
+            continue
+        if int(record.get("_offset") or 0) > offset:
+            return True
+    return False
+
+
+def read_owner(lock_file: Path | str) -> dict[str, object] | None:
+    """Current holder reconstructed from the journal; None when unheld."""
+
+    events = _journal_events(Path(lock_file))
+    return _current_holder(events) if events else None
 
 
 def _format_owner(record: dict[str, object] | None) -> str:
@@ -178,34 +293,12 @@ def _record_age(record: dict[str, object] | None, lock_file: Path) -> float:
         return float("inf")
 
 
-def _unreadable_grace(wait: float, stale: float, poll: float) -> float:
-    """How long an unreadable owner record may block a waiter before it is
-    treated as a leftover.
-
-    Bounded by the caller's own patience: a grace longer than ``wait`` would
-    make the waiter time out BEFORE the reclaim can ever fire (the exact trap
-    that hit wiki-publish wait=600 vs stale=1800 and chat-sessions wait=30 vs
-    grace=60). Floor of two polls protects a live holder's record-write
-    window; cap of UNREADABLE_STEAL_GRACE protects against clock skew."""
-    return max(2.0 * poll, min(wait, stale, UNREADABLE_STEAL_GRACE))
 
 
-def _is_ghost_dentry(path: Path) -> bool:
-    """True when ``path`` exists only as a client-cached dying inode.
 
-    Flaky NAS/SMB clients keep a deleted file's dentry cached: ``stat``
-    succeeds (with ``st_nlink == 0`` — impossible for any real file, POSIX
-    guarantees nlink >= 1 while a path reaches the inode), reads return
-    ENOENT, and — the killer — ``O_CREAT|O_EXCL`` gets its EEXIST answered
-    from that cache without ever reaching the server. A waiter locked out by
-    such a ghost must unlink the path once (server answers ENOENT, the
-    client drops the dentry) and retry; waiting never helps.
-    """
 
-    try:
-        return path.stat().st_nlink == 0
-    except OSError:
-        return False
+
+
 
 
 def _holder_dead_locally(record: dict[str, object] | None) -> bool:
@@ -258,68 +351,8 @@ def _is_own_leftover(record: dict[str, object] | None) -> bool:
     )
 
 
-def _install_replacement(lock_file: Path, record: dict[str, object]) -> bool:
-    """Take over ``lock_file`` by renaming our owner record onto it.
-
-    ``os.replace`` is a server-side rename: it reaches the share even when
-    ``O_CREAT|O_EXCL`` keeps answering EEXIST from a client-cached dentry and
-    ``unlink`` leaves that dentry stuck (the flaky-CIFS ghost that made a
-    quick-read card write time out). On success we own the path without a
-    second create race. The steal marker must already be held — otherwise two
-    waiters could both rename and both believe they won.
-    """
-
-    tmp = lock_file.with_name(f".{lock_file.name}.takeover-{uuid.uuid4().hex}")
-    try:
-        tmp.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(tmp, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            fh.write(json.dumps(record, ensure_ascii=False))
-            fh.flush()
-            os.fsync(fh.fileno())
-        os.replace(tmp, lock_file)
-    except OSError:
-        try:
-            tmp.unlink(missing_ok=True)
-        except OSError:
-            pass
-        return False
-    return True
 
 
-def _try_steal(lock_file: Path) -> bool:
-    """Claim the right to steal ``lock_file``; True means we won the race.
-
-    All waiters contend on one fixed marker path (``<lock>.steal``), so only
-    one of them proceeds to unlink the stale lock; the others see the fresh
-    marker and keep polling. A leftover marker older than
-    ``STEAL_MARKER_MAX_AGE`` is itself replaceable (its creator died).
-    """
-
-    marker = lock_file.with_name(lock_file.name + STEAL_SUFFIX)
-    try:
-        marker.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(marker, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
-        os.close(fd)
-    except FileExistsError:
-        try:
-            if time.time() - marker.stat().st_mtime <= STEAL_MARKER_MAX_AGE:
-                return False
-            marker.unlink()
-        except OSError:
-            return False
-        return _try_steal(lock_file)
-    except OSError:
-        return False
-    try:
-        os.unlink(lock_file)  # safe: the O_EXCL marker, not the unlink, gates the race
-    except OSError:
-        pass
-    try:
-        marker.unlink()
-    except OSError:
-        pass
-    return True
 
 
 class _Entry:
@@ -381,13 +414,26 @@ def _exit_registry(key: str, entry: _Entry) -> bool:
 
 
 def _acquire_file_lock(lock_file: Path, record: dict[str, object]) -> None:
-    payload = json.dumps(record, ensure_ascii=False)
-    fd = os.open(lock_file, os.O_WRONLY | os.O_TRUNC, 0o644)
-    try:
-        os.write(fd, payload.encode("utf-8"))
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+    """Append one journal line (see _append_event). Kept as a seam for tests
+    that want to observe the owner record being written."""
+
+    _append_event(Path(lock_file), record)
+
+
+def _holder_relinquished(holder: dict[str, object] | None, *, stale: float, now: float) -> bool:
+    """True when the current holder no longer counts: gone, dead on this host,
+    this process's own leftover, or past the stale TTL."""
+
+    if holder is None:
+        return True
+    if _is_own_leftover(holder):
+        return True
+    if _holder_dead_locally(holder):
+        return True
+    ts = holder.get("ts")
+    if isinstance(ts, (int, float)) and now - float(ts) > stale:
+        return True
+    return False
 
 
 @contextmanager
@@ -403,12 +449,13 @@ def kb_lock(
 ):
     """Hold an exclusive lock named ``name`` under ``<root>/.locks/``.
 
-    ``wait`` bounds the total blocking wait (default 120 s); expiry raises
-    :class:`LockTimeout`. ``fail_fast=True`` makes a single non-blocking
-    attempt and raises :class:`LockBusy` instead — for whole-run driver locks
-    where waiting would only duplicate a running pipeline. ``stale`` is the
-    age after which a crashed holder's lock may be stolen.
-    """
+    Implementation is an append-only journal (one JSON line per
+    acquire/release) — never delete/create/rename, the three operations a
+    flaky CIFS share answers with ghost dentries. ``wait`` bounds the total
+    blocking wait (default 120 s); expiry raises :class:`LockTimeout`.
+    ``fail_fast=True`` makes a single non-blocking attempt and raises
+    :class:`LockBusy`. ``stale`` is the age after which a crashed holder's
+    lock may be stolen (by appending a new acquire)."""
 
     if locks_disabled():
         print(f"[kb-lock] 已禁用（EMBODIED_KB_LOCKS_DISABLED=1），跳过锁 {name}", file=sys.stderr)
@@ -418,7 +465,7 @@ def kb_lock(
     wait = DEFAULT_WAIT if wait is None else float(wait)
     stale = DEFAULT_STALE if stale is None else float(stale)
     poll = DEFAULT_POLL if poll is None else float(poll)
-    target = lock_path(root, name)
+    target = journal_path(root, name)
     key = str(target)
 
     deadline = None if fail_fast else time.monotonic() + wait
@@ -443,141 +490,80 @@ def _acquire(
     detail: str,
     entry: _Entry,
 ) -> None:
+    """Win the lock by appending an acquire and proving nobody appended after.
+
+    Protocol: only append when the journal shows no live holder (or the holder
+    has been relinquished). Then read back; if a rival appended after our byte
+    offset we lost and undo. A short confirm re-read closes the
+    both-appended-then-both-read race."""
+
     last_progress = 0.0
-    unreadable_streak = 0
     while True:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        record = _owner_record(name, detail)
-        try:
-            fd = os.open(target, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
-        except FileExistsError:
-            pass
-        except OSError as exc:  # e.g. read-only share: degrade loudly, do not block
-            raise LockTimeout(f"锁 {target} 无法创建：{exc}") from exc
-        else:
-            _acquire_file_lock(target, record)
-            entry.claim_id = str(record["claim_id"])
-            return
-
-        holder = read_owner(target)
-        if holder is None:
-            unreadable_streak += 1
-            # Ghost dentry first: nothing else can unblock it (the EEXIST is
-            # cache-answered, so retrying or waiting never reaches the
-            # server). st_nlink==0 is the definitive dying-inode marker, but
-            # flaky NAS clients lie in more shapes — stat may say ENOENT or
-            # report nlink=1 for an entry that cannot be opened — so after a
-            # short streak of unreadable records, take over: unlink alone can
-            # leave the cached dentry stuck (the quick-read ghost incident),
-            # so once the streak proves the record is not a live holder's
-            # just-written JSON, win the steal marker and rename our record
-            # onto the path — rename reaches the server and drops the cache.
-            if _is_ghost_dentry(target) or unreadable_streak >= UNREADABLE_STREAK_LIMIT:
-                if unreadable_streak >= UNREADABLE_STREAK_LIMIT and _try_steal(target):
-                    if _install_replacement(target, record):
-                        entry.claim_id = str(record["claim_id"])
-                        print(
-                            f"[kb-lock] 锁 {name} 的记录不可读（空/损坏/客户端缓存幽灵 dentry），已 rename 抢占",
-                            file=sys.stderr,
-                        )
-                        return
-                target.unlink(missing_ok=True)  # server may say ENOENT; that's the point
-                unreadable_streak = 0
-                print(f"[kb-lock] 清除 {name} 的客户端缓存幽灵 dentry，重试", file=sys.stderr)
-                continue
-        else:
-            unreadable_streak = 0
-        # Third steal path: the owner record is unreadable (0-byte leftover
-        # from a crash between create and record-write, or corrupt content).
-        # The grace is bounded by the caller's own wait so the reclaim always
-        # fires before a timeout; rename-over is what actually un-blocks a
-        # ghost dentry that unlink cannot drop.
-        if holder is None and _record_age(holder, target) > _unreadable_grace(wait, stale, poll):
-            if _try_steal(target):
-                if _install_replacement(target, record):
-                    entry.claim_id = str(record["claim_id"])
-                    print(f"[kb-lock] 锁 {name} 的持有者记录不可读（空/损坏/客户端缓存幽灵），判定遗留，已抢占", file=sys.stderr)
+        now = time.time()
+        events = _journal_events(target)
+        holder = _current_holder(events)
+        if _holder_relinquished(holder, stale=stale, now=now):
+            record = _owner_record(name, detail, op="acquire")
+            claim_id = str(record["claim_id"])
+            try:
+                offset = _append_event(target, record)
+            except OSError as exc:
+                raise LockTimeout(f"锁 {target} 无法写入：{exc}") from exc
+            # Confirm we are still the holder after the append.
+            confirm = _current_holder(_journal_events(target))
+            if confirm and str(confirm.get("claim_id")) == claim_id:
+                if not _later_acquire(_journal_events(target), offset, claim_id):
+                    entry.claim_id = claim_id
                     return
-                print(f"[kb-lock] 锁 {name} 的持有者记录不可读，抢占后创建仍失败，重试", file=sys.stderr)
-                continue
-        # Our own leaked lock (release's unlink failed on a flaky NAS) or a
-        # same-host holder provably dead → steal immediately, regardless of
-        # wait/stale (a crashed driver's run-lock must not block its own
-        # rerun for the full TTL, and a quick-read's brief write must not
-        # block its own card write). Cross-machine holders still age out.
-        if _is_own_leftover(holder) or _holder_dead_locally(holder):
-            if _try_steal(target):
-                who = "本进程遗留（释放时 unlink 失败）" if _is_own_leftover(holder) else _format_owner(holder)
-                if _install_replacement(target, record):
-                    entry.claim_id = str(record["claim_id"])
-                    print(
-                        f"[kb-lock] 锁 {name} 的持有者（{who}）判定遗留，已抢占",
-                        file=sys.stderr,
-                    )
-                    return
-                print(f"[kb-lock] 锁 {name} 抢占（{who}）后创建仍失败，重试", file=sys.stderr)
-                continue
-        elif _record_age(holder, target) > stale and _try_steal(target):
-            if _install_replacement(target, record):
-                entry.claim_id = str(record["claim_id"])
-                print(f"[kb-lock] 锁 {name} 疑似遗留（超过 {stale:.0f}s），已抢占", file=sys.stderr)
-                return
-            print(f"[kb-lock] 锁 {name} 超时抢占后创建仍失败，重试", file=sys.stderr)
-            continue
-        if fail_fast:
-            raise LockBusy(
-                f"锁 {target} 已被占用（{_format_owner(holder)}）；请确认没有重复启动，"
-                f"确认原进程已结束后可删除该锁文件重试"
-            )
-
+            # A rival won the append race — undo ours and fall through to wait.
+            try:
+                _append_event(target, _owner_record(name, detail, op="release") | {"claim_id": claim_id})
+            except OSError:
+                pass
         now = time.monotonic()
         if deadline is not None and now >= deadline:
+            if fail_fast:
+                raise LockBusy(
+                    f"锁 {target} 正被 {_format_owner(holder)} 持有；"
+                    f"请确认没有重复启动"
+                )
             waited = f"{wait:.0f}s" if wait else "等待窗口"
             raise LockTimeout(
                 f"等待锁 {target} 超过 {waited}（{_format_owner(holder)}）；"
-                f"确认持有进程已退出后删除该锁文件，或调大 EMBODIED_KB_LOCK_STALE"
+                f"确认持有进程已退出后重试，或调大 EMBODIED_KB_LOCK_STALE"
             )
         if now - last_progress >= PROGRESS_EVERY:
             print(f"[kb-lock] 等待共享锁 {name}（{_format_owner(holder)}）…", file=sys.stderr)
             last_progress = now
+        if fail_fast:
+            raise LockBusy(
+                f"锁 {target} 正被 {_format_owner(holder)} 持有；请确认没有重复启动"
+            )
         time.sleep(poll)
 
 
 def _release(target: Path, entry: _Entry) -> None:
     if not entry.claim_id:
-        # Never acquired (e.g. LockTimeout/LockBusy propagating through the
-        # finally block) — must not unlink someone else's live lock.
         return
     try:
         holder = read_owner(target)
     except OSError:
         holder = None
-    # Only unlink while we are still the recorded owner: a stale-steal may have
-    # handed the lock to someone else while we were still working.
-    if holder and entry.claim_id and holder.get("claim_id") != entry.claim_id:
+    # Only release our own hold: a stale-steal may have handed the lock to
+    # someone else while we were still working.
+    if holder and holder.get("claim_id") != entry.claim_id:
+        entry.claim_id = None
         return
-    # CIFS unlink can fail on a cached-dentry blip; a leaked lock file then
-    # blocks the caller's next acquisition (same live pid, not yet stale) for
-    # the full wait window. Retry a few times, then leave the file — the
-    # same-pid leftover path in _acquire reclaims it on the next take.
-    last_exc: OSError | None = None
-    for attempt in range(3):
-        try:
-            target.unlink()
-            last_exc = None
-            break
-        except FileNotFoundError:
-            last_exc = None
-            break
-        except OSError as exc:
-            last_exc = exc
-            time.sleep(0.05 * (attempt + 1))
-    if last_exc is not None:
-        print(
-            f"[kb-lock] 释放锁 {target.name} 失败（{last_exc}），残留文件将由同进程下次抢占回收",
-            file=sys.stderr,
-        )
+    record = _owner_record(str((holder or {}).get("name") or target.stem), "", op="release")
+    record["claim_id"] = entry.claim_id
+    try:
+        _append_event(target, record)
+    except OSError as exc:
+        # Never fatal: the journal just keeps an unmatched acquire, which the
+        # stale-TTL / dead-pid paths reclaim. No unlink to fail.
+        print(f"[kb-lock] 释放锁 {target.name} 记账失败（{exc}），将由 TTL 回收", file=sys.stderr)
     entry.claim_id = None
+
 
 
 def claim(root: Path | str, name: str, payload: dict[str, object], *, ttl: float | None = None) -> bool:

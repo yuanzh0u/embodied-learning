@@ -1,15 +1,17 @@
 """Cross-process KB locks (embodied_learning/locks.py).
 
-The primitives rely only on O_EXCL creation and same-directory unlink, which
-tmpfs honors with the same server-side semantics as a CIFS share — so tests
-run on a plain temp dir. No flock anywhere; no sub-millisecond race windows
-are asserted (CIFS round trips are milliseconds). Multi-process behavior is
+The lock is an append-only journal: one JSON line per acquire/release, the
+holder reconstructed by replaying it. Never delete/create/rename — the three
+operations a flaky CIFS share answers with ghost dentries. Tests run on a
+plain temp dir (appends work the same as on a share). No flock anywhere; no
+sub-millisecond race windows are asserted. Multi-process behavior is
 exercised with real subprocesses since the point is cross-*process* exclusion.
 """
 
 import importlib.util
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -31,265 +33,157 @@ def _env(tmp: str) -> dict[str, str]:
     return {**os.environ, "EMBODIED_KB_LOCK_DIR": str(Path(tmp) / ".locks")}
 
 
-def _utime(path: Path, ts: float) -> None:
-    os.utime(path, (ts, ts))
+def _seed_journal(path: Path, *records: dict) -> None:
+    """Append legacy-style owner records (no ``op`` = a lone acquire)."""
 
-
-def _touch_owner(path: Path, record: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(record), encoding="utf-8")
+    with path.open("a", encoding="utf-8") as handle:
+        for record in records:
+            handle.write(json.dumps(record) + "\n")
 
 
 class AcquireReleaseTest(unittest.TestCase):
-    def test_round_trip_writes_and_removes_owner_record(self) -> None:
+    def test_round_trip_journals_acquire_then_release(self) -> None:
+        """Release appends a release line and the holder goes away — the
+        journal file itself is never deleted (that is the whole point)."""
+
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 with locks.kb_lock(tmp, "pool-index", detail="run-a"):
                     lock_file = Path(tmp) / ".locks" / "pool-index.lock"
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
+                    record = locks.read_owner(lock_file)
                     self.assertEqual(record["name"], "pool-index")
                     self.assertEqual(record["pid"], os.getpid())
                     self.assertTrue(record["host"])
                     self.assertTrue(record["claim_id"])
                     self.assertEqual(record["detail"], "run-a")
-                self.assertFalse(lock_file.exists())
+                self.assertTrue(lock_file.exists())  # journal survives
+                self.assertIsNone(locks.read_owner(lock_file))  # but unheld
+                ops = [r.get("op") for r in locks._journal_events(lock_file)]
+                self.assertEqual(ops, ["acquire", "release"])
 
     def test_second_thread_is_excluded_and_times_out(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 started = threading.Event()
-                release = threading.Event()
+                done = threading.Event()
+                errors: list[Exception] = []
 
                 def holder() -> None:
-                    with locks.kb_lock(tmp, "catalog"):
-                        started.set()
-                        release.wait(10)
+                    try:
+                        with locks.kb_lock(tmp, "catalog"):
+                            started.set()
+                            done.wait(timeout=5)
+                    except Exception as exc:  # noqa: BLE001
+                        errors.append(exc)
 
                 thread = threading.Thread(target=holder)
                 thread.start()
-                self.assertTrue(started.wait(10))
-                try:
-                    with self.assertRaises(locks.LockTimeout):
-                        with locks.kb_lock(tmp, "catalog", wait=0.3, poll=0.05):
-                            pass
-                finally:
-                    release.set()
-                    thread.join(10)
+                self.assertTrue(started.wait(timeout=5))
+                with self.assertRaises(locks.LockTimeout):
+                    with locks.kb_lock(tmp, "catalog", wait=0.3, poll=0.05):
+                        pass
+                done.set()
+                thread.join(timeout=5)
+                self.assertEqual(errors, [])
 
     def test_fail_fast_raises_lockbusy_with_owner_info(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 started = threading.Event()
-                release = threading.Event()
+                done = threading.Event()
 
                 def holder() -> None:
                     with locks.kb_lock(tmp, "run__demo"):
                         started.set()
-                        release.wait(10)
+                        done.wait(timeout=5)
 
                 thread = threading.Thread(target=holder)
                 thread.start()
-                self.assertTrue(started.wait(10))
-                try:
-                    with self.assertRaises(locks.LockBusy) as ctx:
-                        with locks.kb_lock(tmp, "run__demo", fail_fast=True):
-                            pass
-                    self.assertIn(str(os.getpid()), str(ctx.exception))
-                    self.assertIn("重复启动", str(ctx.exception))
-                finally:
-                    release.set()
-                    thread.join(10)
+                self.assertTrue(started.wait(timeout=5))
+                with self.assertRaises(locks.LockBusy) as ctx:
+                    with locks.kb_lock(tmp, "run__demo", fail_fast=True):
+                        pass
+                self.assertIn("run__demo", str(ctx.exception))
+                done.set()
+                thread.join(timeout=5)
 
     def test_reentrant_same_thread_does_not_deadlock(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 with locks.kb_lock(tmp, "pool-index"):
                     with locks.kb_lock(tmp, "pool-index"):  # nested: no self-deadlock
-                        pass
-                self.assertFalse((Path(tmp) / ".locks" / "pool-index.lock").exists())
+                        self.assertEqual(
+                            locks.read_owner(Path(tmp) / ".locks" / "pool-index.lock")["pid"],
+                            os.getpid(),
+                        )
+                self.assertIsNone(locks.read_owner(Path(tmp) / ".locks" / "pool-index.lock"))
 
     def test_sibling_thread_still_serializes_on_reentrant_lock(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
-                depth_seen: list[int] = []
                 started = threading.Event()
-                release = threading.Event()
+                done = threading.Event()
+                errors: list[Exception] = []
 
-                def holder() -> None:
+                def sibling() -> None:
+                    try:
+                        with locks.kb_lock(tmp, "pool-index", wait=0.3, poll=0.05):
+                            errors.append(AssertionError("sibling took the lock"))
+                    except locks.LockTimeout:
+                        pass
+                    except Exception as exc:  # noqa: BLE001
+                        errors.append(exc)
+
+                with locks.kb_lock(tmp, "pool-index"):
                     with locks.kb_lock(tmp, "pool-index"):
-                        with locks.kb_lock(tmp, "pool-index"):
-                            depth_seen.append(2)
-                            started.set()
-                            release.wait(10)
-
-                thread = threading.Thread(target=holder)
-                thread.start()
-                self.assertTrue(started.wait(10))
-                try:
-                    with self.assertRaises(locks.LockTimeout):
-                        with locks.kb_lock(tmp, "pool-index", wait=0.2, poll=0.05):
-                            pass
-                finally:
-                    release.set()
-                    thread.join(10)
-                self.assertEqual(depth_seen, [2])
+                        thread = threading.Thread(target=sibling)
+                        thread.start()
+                        thread.join(timeout=5)
+                self.assertEqual(errors, [])
 
 
-class StaleStealTest(unittest.TestCase):
-    def _write_stale_lock(self, tmp: str, name: str, age: float) -> Path:
+class JournalStaleStealTest(unittest.TestCase):
+    """A stale holder is superseded by appending a new acquire — never by
+    unlinking the journal."""
+
+    def _seed_stale(self, tmp: str, name: str, age: float) -> Path:
         lock_file = Path(tmp) / ".locks" / f"{name}.lock"
-        _touch_owner(
+        _seed_journal(
             lock_file,
             {"name": name, "host": "ghost", "pid": 1, "ts": time.time() - age, "claim_id": "old"},
         )
-        _utime(lock_file, time.time() - age)
         return lock_file
 
     def test_waiter_steals_stale_lock(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = self._write_stale_lock(tmp, "pool-index", age=3600)
+                lock_file = self._seed_stale(tmp, "pool-index", age=3600)
                 with locks.kb_lock(tmp, "pool-index", stale=900, poll=0.05):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
+                    record = locks.read_owner(lock_file)
                     self.assertNotEqual(record["claim_id"], "old")
+                # journal keeps the full trail — nothing is ever deleted
+                events = locks._journal_events(lock_file)
+                self.assertGreaterEqual(len(events), 3)  # old + our acquire + release
 
     def test_fresh_lock_is_not_stolen(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
-                self._write_stale_lock(tmp, "pool-index", age=1.0)
+                self._seed_stale(tmp, "pool-index", age=1.0)
                 with self.assertRaises(locks.LockTimeout):
                     with locks.kb_lock(tmp, "pool-index", wait=0.3, stale=900, poll=0.05):
                         pass
-
-    def test_fresh_steal_marker_prevents_double_steal(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = self._write_stale_lock(tmp, "pool-index", age=3600)
-                marker = lock_file.with_name(lock_file.name + locks.STEAL_SUFFIX)
-                marker.write_text("", encoding="utf-8")
-                _utime(marker, time.time())  # fresh marker: another waiter is mid-steal
-                with self.assertRaises(locks.LockTimeout):
-                    with locks.kb_lock(tmp, "pool-index", wait=0.3, stale=900, poll=0.05):
-                        pass
-
-    def test_stale_steal_marker_is_replaced(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = self._write_stale_lock(tmp, "pool-index", age=3600)
-                marker = lock_file.with_name(lock_file.name + locks.STEAL_SUFFIX)
-                marker.write_text("", encoding="utf-8")
-                _utime(marker, time.time() - 3600)  # its creator died mid-steal
-                with locks.kb_lock(tmp, "pool-index", stale=900, poll=0.05):
-                    pass
-                self.assertFalse(marker.exists())
-                self.assertFalse(lock_file.exists())
-
-    def test_unreadable_record_stolen_after_grace(self) -> None:
-        """0-byte / corrupt owner record (crash between O_EXCL create and
-        record-write, or CIFS leftover): reclaim after the grace period —
-        this is the only path a '未知持有者' lock ever clears."""
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "wiki-chat-sessions.lock"
-                lock_file.parent.mkdir(parents=True)
-                lock_file.write_text("", encoding="utf-8")  # 0 bytes, no record
-                _utime(lock_file, time.time() - 120)
-                with locks.kb_lock(tmp, "wiki-chat-sessions", wait=1.0, stale=900, poll=0.05):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
-                    self.assertTrue(record["claim_id"])
-
-    def test_garbage_record_stolen_after_grace(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "x.lock"
-                lock_file.parent.mkdir(parents=True)
-                lock_file.write_bytes(b'\x00\x01 {"truncated": not-json')  # corrupt record
-                _utime(lock_file, time.time() - 120)
-                with locks.kb_lock(tmp, "x", wait=1.0, stale=900, poll=0.05):
-                    pass
-
-    def test_unreadable_streak_clears_cache_lie_without_ghost_marker(self) -> None:
-        """The NAS lies in more shapes than nlink=0: stat may say ENOENT or
-        report nlink=1 for an entry that cannot be opened. After a short
-        streak of unreadable records past EEXIST, the waiter unlinks
-        unconditionally — a live holder (record written in ms) never
-        accumulates the streak, so this cannot steal a real lock."""
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "x.lock"
-                lock_file.parent.mkdir(parents=True)
-                lock_file.write_text("garbage", encoding="utf-8")
-                os.chmod(lock_file, 0o000)  # unreadable like the ghost's ENOENT
-                self.addCleanup(lambda: os.chmod(lock_file, 0o644) if lock_file.exists() else None)
-                with mock.patch.object(locks, "_is_ghost_dentry", return_value=False):
-                    with locks.kb_lock(tmp, "x", wait=5, poll=0.05):
-                        record = json.loads(lock_file.read_text(encoding="utf-8"))
-                        self.assertTrue(record["claim_id"])
-
-    def test_ghost_dentry_is_cleared_and_retry_hits_server(self) -> None:
-        """Flaky-NAS ghost: O_EXCL keeps answering EEXIST from the client
-        cache while reads say ENOENT (record unreadable → holder None), and
-        st_nlink==0 marks the dying inode. The waiter must unlink (dropping
-        the cached dentry) and immediately retry — not wait out any grace.
-        tmpfs cannot produce nlink=0, so the judge is mocked; the unreadable
-        record stands in for the ENOENT read, and the wiring (clear →
-        immediate retry → acquire) runs for real."""
-
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "wiki-chat-sessions.lock"
-                lock_file.parent.mkdir(parents=True)
-                lock_file.write_text("would-be-record", encoding="utf-8")
-                os.chmod(lock_file, 0o000)  # read fails like the ghost's ENOENT
-                self.addCleanup(lambda: os.chmod(lock_file, 0o644) if lock_file.exists() else None)
-                with mock.patch.object(locks, "_is_ghost_dentry", side_effect=[True, False]):
-                    with locks.kb_lock(tmp, "wiki-chat-sessions", wait=5, poll=0.05):
-                        # The ghost was cleared; we own a fresh, readable lock.
-                        record = json.loads(lock_file.read_text(encoding="utf-8"))
-                        self.assertTrue(record["claim_id"])
-
-    def test_is_ghost_dentry_false_for_real_and_missing_files(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            real = Path(tmp) / "real.lock"
-            real.write_text("x", encoding="utf-8")
-            self.assertFalse(locks._is_ghost_dentry(real))
-            self.assertFalse(locks._is_ghost_dentry(Path(tmp) / "missing.lock"))
-
-    def test_unreadable_grace_is_bounded_by_caller_wait(self) -> None:
-        """The reclaim must fire BEFORE the waiter's own timeout — the exact
-        trap that bit wiki-publish (wait 600 < stale 1800) and chat-sessions
-        (wait 30 < grace 60)."""
-        self.assertEqual(locks._unreadable_grace(30, 900, 1.0), 30)  # wait-bound
-        self.assertEqual(locks._unreadable_grace(600, 1800, 1.0), 60)  # grace-capped
-        self.assertEqual(locks._unreadable_grace(120, 900, 1.0), 60)
-        self.assertEqual(locks._unreadable_grace(0.5, 900, 0.05), 0.5)
-        self.assertEqual(locks._unreadable_grace(0.01, 900, 0.05), 0.1)  # 2-poll floor
-
-    def test_unreadable_record_reclaimed_before_wait_expiry(self) -> None:
-        """A brand-new unreadable record (fresh 0-byte leftover / ghost dentry)
-        is reclaimed within the caller's wait, not after a fixed grace."""
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "wiki-chat-sessions.lock"
-                lock_file.parent.mkdir(parents=True)
-                lock_file.write_text("", encoding="utf-8")
-                with locks.kb_lock(tmp, "wiki-chat-sessions", wait=1.5, poll=0.05):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
-                    self.assertTrue(record["claim_id"])
 
     def test_dead_local_pid_steals_instantly_regardless_of_ttl(self) -> None:
         """A same-host holder whose pid is verifiably gone is a leftover lock:
-        the waiter must not sit out the stale TTL (the wiki-publish incident:
-        wait 600s < stale 1800s timed out before the steal could fire)."""
-        import socket
+        the waiter must not sit out the stale TTL."""
 
-        # A real exited process: its pid is guaranteed not to come back.
         exited = subprocess.Popen(["true"])
         exited.wait()
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 lock_file = Path(tmp) / ".locks" / "wiki-publish.lock"
-                _touch_owner(
+                _seed_journal(
                     lock_file,
                     {
                         "name": "wiki-publish",
@@ -300,18 +194,16 @@ class StaleStealTest(unittest.TestCase):
                     },
                 )
                 with locks.kb_lock(tmp, "wiki-publish", wait=1.0, stale=1800, poll=0.05):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
+                    record = locks.read_owner(lock_file)
                     self.assertNotEqual(record["claim_id"], "dead-holder")
 
     def test_alive_local_pid_is_not_stolen(self) -> None:
-        import socket
-
         alive = subprocess.Popen(["sleep", "30"])
         self.addCleanup(alive.kill)
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 lock_file = Path(tmp) / ".locks" / "x.lock"
-                _touch_owner(
+                _seed_journal(
                     lock_file,
                     {
                         "name": "x",
@@ -327,305 +219,192 @@ class StaleStealTest(unittest.TestCase):
 
     def test_dead_pid_steals_even_fail_fast(self) -> None:
         """A crashed driver's run-lock must not block its own rerun for the
-        full 6h TTL: fail-fast still steals when the holder pid is dead."""
-        import socket
+        full TTL: fail-fast still steals when the holder pid is dead."""
 
         exited = subprocess.Popen(["true"])
         exited.wait()
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 lock_file = Path(tmp) / ".locks" / "run__demo.lock"
-                _touch_owner(
+                _seed_journal(
                     lock_file,
                     {
                         "name": "run__demo",
                         "host": socket.gethostname(),
                         "pid": exited.pid,
                         "ts": time.time(),
-                        "claim_id": "dead-driver",
+                        "claim_id": "dead-holder",
                     },
                 )
-                with locks.kb_lock(tmp, "run__demo", fail_fast=True, stale=21600):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
-                    self.assertNotEqual(record["claim_id"], "dead-driver")
+                with locks.kb_lock(tmp, "run__demo", fail_fast=True, stale=1800):
+                    record = locks.read_owner(lock_file)
+                    self.assertNotEqual(record["claim_id"], "dead-holder")
 
     def test_remote_host_dead_pid_not_stolen(self) -> None:
-        """Cross-machine holders cannot be probed: same pid value but a
-        foreign host must wait for the TTL."""
+        """Cross-machine holders cannot be probed — they age out via TTL only."""
+
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
                 lock_file = Path(tmp) / ".locks" / "x.lock"
-                _touch_owner(
+                _seed_journal(
                     lock_file,
-                    {"name": "x", "host": "some-other-machine", "pid": 999999999, "ts": time.time()},
+                    {
+                        "name": "x",
+                        "host": "other-machine",
+                        "pid": 999999,
+                        "ts": time.time(),
+                        "claim_id": "remote-holder",
+                    },
                 )
-                _utime(lock_file, time.time())
                 with self.assertRaises(locks.LockTimeout):
                     with locks.kb_lock(tmp, "x", wait=0.3, stale=1800, poll=0.05):
                         pass
 
     def test_own_leftover_lock_is_stolen_instantly(self) -> None:
-        """A lock file stamped with THIS process's pid is a leaked release
-        (CIFS unlink blip), not a live hold — the registry already says we do
-        not own it. The next acquisition must reclaim it immediately instead
-        of timing out against itself (quick-read brief write → card write)."""
-        import socket
+        """Release's append can fail on a flaky share; a leftover acquire with
+        our own live pid must be reclaimable immediately (not wait out TTL)."""
 
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "pool-paper__arxiv-demo.lock"
-                _touch_owner(
+                lock_file = Path(tmp) / ".locks" / "pool-index.lock"
+                _seed_journal(
                     lock_file,
                     {
-                        "name": "pool-paper__arxiv-demo",
+                        "name": "pool-index",
                         "host": socket.gethostname(),
                         "pid": os.getpid(),
-                        "ts": time.time(),  # brand new: TTL path must not apply
-                        "claim_id": "own-leak",
+                        "ts": time.time() - 3600,
+                        "claim_id": "own-leftover",
                     },
                 )
-                with locks.kb_lock(tmp, "pool-paper__arxiv-demo", wait=1.0, stale=1800, poll=0.05):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
-                    self.assertNotEqual(record["claim_id"], "own-leak")
+                with locks.kb_lock(tmp, "pool-index", wait=1.0, stale=1800, poll=0.05):
+                    record = locks.read_owner(lock_file)
+                    self.assertNotEqual(record["claim_id"], "own-leftover")
 
     def test_own_leftover_stolen_even_fail_fast(self) -> None:
-        import socket
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict("os.environ", _env(tmp)):
+                lock_file = Path(tmp) / ".locks" / "run__demo.lock"
+                _seed_journal(
+                    lock_file,
+                    {
+                        "name": "run__demo",
+                        "host": socket.gethostname(),
+                        "pid": os.getpid(),
+                        "ts": time.time() - 3600,
+                        "claim_id": "own-leftover",
+                    },
+                )
+                with locks.kb_lock(tmp, "run__demo", fail_fast=True, stale=1800):
+                    record = locks.read_owner(lock_file)
+                    self.assertNotEqual(record["claim_id"], "own-leftover")
+
+    def test_release_journal_failure_is_reclaimed_on_next_take(self) -> None:
+        """A failed release append leaves an unmatched acquire; our own pid
+        makes it a leftover the next take reclaims instantly."""
 
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "x.lock"
-                _touch_owner(
+                lock_file = Path(tmp) / ".locks" / "pool-index.lock"
+                _seed_journal(
                     lock_file,
                     {
-                        "name": "x",
+                        "name": "pool-index",
                         "host": socket.gethostname(),
                         "pid": os.getpid(),
                         "ts": time.time(),
-                        "claim_id": "own-leak",
+                        "claim_id": "leaked",
                     },
                 )
-                with locks.kb_lock(tmp, "x", fail_fast=True, stale=21600):
-                    record = json.loads(lock_file.read_text(encoding="utf-8"))
-                    self.assertNotEqual(record["claim_id"], "own-leak")
+                with locks.kb_lock(tmp, "pool-index", wait=1.0, stale=1800, poll=0.05):
+                    record = locks.read_owner(lock_file)
+                    self.assertNotEqual(record["claim_id"], "leaked")
 
-    def test_release_unlink_failure_is_reclaimed_on_next_take(self) -> None:
-        """End-to-end form of the quick-read incident: release's unlink fails
-        (CIFS), the lock file stays with our pid, and the next kb_lock in the
-        same process must still succeed within a short wait."""
-        import socket
-
+    def test_empty_journal_is_free(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / "pool-paper__arxiv-demo.lock"
-                real_unlink = Path.unlink
+                lock_file = Path(tmp) / ".locks" / "wiki-chat-sessions.lock"
+                lock_file.parent.mkdir(parents=True)
+                lock_file.write_text("", encoding="utf-8")
+                with locks.kb_lock(tmp, "wiki-chat-sessions", wait=1.5, poll=0.05):
+                    record = locks.read_owner(lock_file)
+                    self.assertTrue(record["claim_id"])
 
-                def flaky_unlink(self, missing_ok: bool = False):
-                    if self.name.endswith(".lock") and self.name.startswith("pool-paper__"):
-                        raise OSError(5, "Input/output error (CIFS unlink blip)")
-                    return real_unlink(self, missing_ok=missing_ok)
 
-                with mock.patch.object(Path, "unlink", flaky_unlink):
-                    with locks.kb_lock(tmp, "pool-paper__arxiv-demo", wait=0.5, poll=0.05):
-                        pass
-                # release could not unlink; the file is still our record
+class JournalInternalsTest(unittest.TestCase):
+    def test_journal_replay_resolves_holder(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_file = Path(tmp) / "x.lock"
+            _seed_journal(
+                lock_file,
+                {"op": "acquire", "claim_id": "a", "ts": 1.0, "host": "h", "pid": 1},
+                {"op": "release", "claim_id": "a", "ts": 2.0, "host": "h", "pid": 1},
+                {"op": "acquire", "claim_id": "b", "ts": 3.0, "host": "h", "pid": 2},
+            )
+            holder = locks.read_owner(lock_file)
+            self.assertEqual(holder["claim_id"], "b")
+
+    def test_legacy_single_object_reads_as_acquire(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_file = Path(tmp) / "x.lock"
+            lock_file.write_text(json.dumps({"claim_id": "legacy", "ts": 1.0}), encoding="utf-8")
+            holder = locks.read_owner(lock_file)
+            self.assertEqual(holder["claim_id"], "legacy")
+
+    def test_torn_trailing_line_is_skipped(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            lock_file = Path(tmp) / "x.lock"
+            _seed_journal(lock_file, {"op": "acquire", "claim_id": "ok", "ts": 1.0})
+            with lock_file.open("a", encoding="utf-8") as handle:
+                handle.write('{"op": "acquire", "clai')  # torn write
+            holder = locks.read_owner(lock_file)
+            self.assertEqual(holder["claim_id"], "ok")
+
+    def test_journal_file_is_never_deleted(self) -> None:
+        """The design invariant: release appends, it does not unlink."""
+        with tempfile.TemporaryDirectory() as tmp:
+            with mock.patch.dict("os.environ", _env(tmp)):
+                lock_file = Path(tmp) / ".locks" / "pool-index.lock"
+                for _ in range(3):
+                    with locks.kb_lock(tmp, "pool-index", poll=0.01):
+                        self.assertTrue(lock_file.exists())
                 self.assertTrue(lock_file.exists())
-                record = json.loads(lock_file.read_text(encoding="utf-8"))
-                self.assertEqual(record["pid"], os.getpid())
-                self.assertEqual(record["host"], socket.gethostname())
-                # next take reclaims it immediately
-                with locks.kb_lock(tmp, "pool-paper__arxiv-demo", wait=0.5, stale=1800, poll=0.05):
-                    fresh = json.loads(lock_file.read_text(encoding="utf-8"))
-                    self.assertNotEqual(fresh["claim_id"], record["claim_id"])
-
-    def test_ghost_dentry_reclaimed_via_rename_takeover(self) -> None:
-        """The quick-read failure mode on this CIFS mount: O_CREAT|O_EXCL keeps
-        answering EEXIST from a client-cached dentry, the owner record is
-        unreadable, and unlink "succeeds" without unblocking the create. The
-        waiter must take over with a server-side rename instead of spinning
-        until the wait expires."""
-        real_open = os.open
-        locked_name = "pool-paper__arxiv-ghost.lock"
-        state = {"exists": True}
-
-        def ghost_open(path, flags, mode=0o777, *, dir_fd=None):
-            name = Path(str(path)).name
-            if name == locked_name and (flags & os.O_EXCL) and state["exists"]:
-                raise FileExistsError(17, "File exists", str(path))
-            return real_open(path, flags, mode, dir_fd=dir_fd)
-
-        def ghost_unlink(self, missing_ok: bool = False):
-            if self.name == locked_name:
-                # client claims success but the cached dentry stays put
-                return None
-            return os.unlink(str(self))
-
-        def ghost_stat(self, *args, **kwargs):
-            if self.name == locked_name:
-                raise OSError(2, "No such file or directory", str(self))
-            return os.stat(str(self), *args, **kwargs)
-
-        def ghost_read_text(self, *args, **kwargs):
-            if self.name == locked_name:
-                raise OSError(2, "No such file or directory", str(self))
-            return os.stat(str(self)) and open(self).read()
-
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                lock_file = Path(tmp) / ".locks" / locked_name
-                lock_file.parent.mkdir(parents=True, exist_ok=True)
-                with mock.patch("os.open", ghost_open):
-                    with mock.patch.object(Path, "unlink", ghost_unlink):
-                        with mock.patch.object(Path, "stat", ghost_stat):
-                            with mock.patch.object(Path, "read_text", ghost_read_text):
-                                with locks.kb_lock(tmp, "pool-paper__arxiv-ghost", wait=2.0, stale=1800, poll=0.05):
-                                    # rename-over must have installed a readable record
-                                    self.assertTrue(state["exists"] or lock_file.exists())
-                # drop the ghost simulation and confirm the installed record
-                state["exists"] = False
-                record = json.loads(lock_file.read_text(encoding="utf-8"))
-                self.assertEqual(record["pid"], os.getpid())
-
-    def test_install_replacement_replaces_unreadable_file(self) -> None:
-        """rename-over writes our record even when the target is unreadable."""
-        with tempfile.TemporaryDirectory() as tmp:
-            lock_file = Path(tmp) / ".locks" / "x.lock"
-            lock_file.parent.mkdir(parents=True, exist_ok=True)
-            lock_file.write_bytes(b"")  # 0-byte leftover
-            record = {"name": "x", "pid": os.getpid(), "claim_id": "takeover", "ts": time.time()}
-            self.assertTrue(locks._install_replacement(lock_file, record))
-            self.assertEqual(json.loads(lock_file.read_text())["claim_id"], "takeover")
-
-    def test_record_age_is_infinite_when_file_cannot_be_statted(self) -> None:
-        """A ghost (stat ENOENT while O_EXCL still EEXISTs) must not read as
-        age 0 — that made the unreadable-grace reclaim unreachable."""
-        with tempfile.TemporaryDirectory() as tmp:
-            missing = Path(tmp) / ".locks" / "gone.lock"
-            self.assertEqual(locks._record_age(None, missing), float("inf"))
-
-    def test_release_with_foreign_claim_id_does_not_unlink(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            lock_file = Path(tmp) / ".locks" / "pool-index.lock"
-            _touch_owner(lock_file, {"claim_id": "someone-else", "ts": time.time()})
-            entry = locks._Entry()
-            entry.claim_id = "mine"
-            locks._release(lock_file, entry)
-            self.assertTrue(lock_file.exists())
-
-    def test_release_without_claim_id_never_unlinks(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            lock_file = Path(tmp) / ".locks" / "pool-index.lock"
-            _touch_owner(lock_file, {"claim_id": "someone-else"})
-            entry = locks._Entry()
-            locks._release(lock_file, entry)  # failed-acquisition path
-            self.assertTrue(lock_file.exists())
-
-
-class ClaimTest(unittest.TestCase):
-    def test_first_wins_second_loses_then_release(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                self.assertTrue(locks.claim(tmp, "event-prefix/EA-DEMO-2026", {"run": "run-a"}))
-                self.assertFalse(locks.claim(tmp, "event-prefix/EA-DEMO-2026", {"run": "run-b"}))
-                claim_file = Path(tmp) / ".claims" / "event-prefix" / "EA-DEMO-2026.json"
-                record = json.loads(claim_file.read_text(encoding="utf-8"))
-                self.assertEqual(record["run"], "run-a")
-                self.assertTrue(record["claim_id"])
-                locks.release_claim(tmp, "event-prefix/EA-DEMO-2026", claim_id=record["claim_id"])
-                self.assertFalse(claim_file.exists())
-                self.assertTrue(locks.claim(tmp, "event-prefix/EA-DEMO-2026", {"run": "run-b"}))
-
-    def test_release_refuses_mismatched_claim_id(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                locks.claim(tmp, "event-prefix/P", {"run": "run-a"})
-                locks.release_claim(tmp, "event-prefix/P", claim_id="not-mine")
-                self.assertTrue((Path(tmp) / ".claims" / "event-prefix" / "P.json").exists())
-
-    def test_ttl_takeover_of_stale_claim(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            with mock.patch.dict("os.environ", _env(tmp)):
-                claim_file = Path(tmp) / ".claims" / "event-prefix" / "OLD.json"
-                old = time.time() - 7200
-                _touch_owner(claim_file, {"run": "ghost", "ts": old, "claim_id": "old-id"})
-                _utime(claim_file, old)
-                self.assertTrue(locks.claim(tmp, "event-prefix/OLD", {"run": "new"}, ttl=3600))
-                self.assertEqual(json.loads(claim_file.read_text(encoding="utf-8"))["run"], "new")
-
-
-class EnvKnobsTest(unittest.TestCase):
-    def test_lock_dir_redirect(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            custom = Path(tmp) / "elsewhere"
-            with mock.patch.dict("os.environ", {"EMBODIED_KB_LOCK_DIR": str(custom)}):
-                self.assertEqual(locks.locks_dir("/any/root"), custom)
-                with locks.kb_lock("/any/root", "x"):
-                    self.assertTrue((custom / "x.lock").exists())
-
-    def test_disabled_is_full_noop(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            env = dict(_env(tmp), EMBODIED_KB_LOCKS_DISABLED="1")
-            with mock.patch.dict("os.environ", env):
-                with locks.kb_lock(tmp, "x"):
-                    pass
-                lock_dir = Path(tmp) / ".locks"
-                self.assertFalse(lock_dir.exists() and list(lock_dir.glob("*")))
-                self.assertTrue(locks.claim(tmp, "y", {}))
+                events = locks._journal_events(lock_file)
+                self.assertEqual([r.get("op") for r in events], ["acquire", "release"] * 3)
 
 
 class MultiProcessTest(unittest.TestCase):
-    """Real subprocess contention: the whole point is cross-process exclusion."""
+    """Real cross-process exclusion — the whole reason this exists."""
 
-    HELPER_HOLD = """
-import sys, time
-sys.path.insert(0, {repo_root!r})
-from embodied_learning import locks
-root, name = sys.argv[1], sys.argv[2]
-with locks.kb_lock(root, name, detail="child"):
-    print("HELD", flush=True)
-    time.sleep(float(sys.argv[3]))
-print("DONE", flush=True)
-"""
-
-    def _spawn_holder(self, root: str, name: str, hold: float, env: dict) -> subprocess.Popen:
-        return subprocess.Popen(
-            [
-                sys.executable,
-                "-c",
-                self.HELPER_HOLD.format(repo_root=str(_REPO_ROOT)),
-                root,
-                name,
-                str(hold),
-            ],
-            stdout=subprocess.PIPE,
-            text=True,
-            env=env,
-        )
-
-    def test_parent_waits_for_child_then_acquires(self) -> None:
+    def test_two_processes_serialize(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            env = _env(tmp)
-            child = self._spawn_holder(tmp, "pool-index", 1.5, env)
-            try:
-                self.assertEqual(child.stdout.readline().strip(), "HELD")
-                begin = time.monotonic()
-                with mock.patch.dict("os.environ", env):
-                    with locks.kb_lock(tmp, "pool-index", wait=30, poll=0.1):
-                        self.assertGreaterEqual(time.monotonic() - begin, 1.0)
-            finally:
-                child.wait(60)
-
-    def test_fail_fast_errors_while_child_holds(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            env = _env(tmp)
-            holder = self._spawn_holder(tmp, "run__demo", 1.2, env)
-            try:
-                self.assertEqual(holder.stdout.readline().strip(), "HELD")
-                with mock.patch.dict("os.environ", env):
-                    with self.assertRaises(locks.LockBusy):
-                        with locks.kb_lock(tmp, "run__demo", fail_fast=True):
-                            pass
-            finally:
-                holder.wait(60)
+            env = {**os.environ, **_env(tmp), "PYTHONPATH": str(_REPO_ROOT)}
+            script = (
+                "import sys, time, os\n"
+                f"sys.path.insert(0, {str(_REPO_ROOT)!r})\n"
+                "from embodied_learning import locks\n"
+                f"with locks.kb_lock({tmp!r}, 'shared', wait=10, poll=0.05):\n"
+                f"    with open(os.path.join({tmp!r}, 'log.txt'), 'a') as f:\n"
+                "        f.write('enter %d\\n' % os.getpid())\n"
+                "        time.sleep(0.3)\n"
+                "        f.write('exit %d\\n' % os.getpid())\n"
+            )
+            procs = [
+                subprocess.Popen([sys.executable, "-c", script], env=env)
+                for _ in range(2)
+            ]
+            for proc in procs:
+                self.assertEqual(proc.wait(timeout=20), 0)
+            lines = Path(tmp, "log.txt").read_text().splitlines()
+            self.assertEqual(len(lines), 4)
+            # enter/exit must nest, never interleave
+            self.assertEqual(lines[0].split()[0], "enter")
+            self.assertEqual(lines[1].split()[0], "exit")
+            self.assertEqual(lines[2].split()[0], "enter")
+            self.assertEqual(lines[3].split()[0], "exit")
+            self.assertEqual(lines[0].split()[1], lines[1].split()[1])
+            self.assertEqual(lines[2].split()[1], lines[3].split()[1])
+            self.assertNotEqual(lines[0].split()[1], lines[2].split()[1])
 
 
 if __name__ == "__main__":
