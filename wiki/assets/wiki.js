@@ -41,6 +41,7 @@
     extract: "全文抽取",
     packets: "阅读包",
     "deep-read": "论文深读",
+    select: "候选选文",
   };
   const CHAT_WIDTH_MAX = 760;
   const CHAT_DEFAULT_WIDTH = 420;

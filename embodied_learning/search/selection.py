@@ -207,7 +207,11 @@ def smart_select(
         candidates[i : i + SMART_CANDIDATES_PER_CALL]
         for i in range(0, len(candidates), SMART_CANDIDATES_PER_CALL)
     ]
-    for chunk in chunks:
+    for index, chunk in enumerate(chunks, start=1):
+        # One agent call per chunk takes minutes; print a plain progress line
+        # so the driver can translate it into a wiki progress tick (the
+        # 2026-10-13 gap: 13 silent minutes between registry and selection).
+        print(f"chunk {index}/{len(chunks)}: judging {len(chunk)} of {len(candidates)} candidates…", flush=True)
         prompt = SMART_SELECTION_PROMPT.format(
             topic=topic, focus_line=focus_line, limit=limit,
             candidates=_candidate_lines(chunk),

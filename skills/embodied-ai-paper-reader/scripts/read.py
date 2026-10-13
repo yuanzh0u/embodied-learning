@@ -140,7 +140,6 @@ def _pool_add_paper_parse_args(argv: list[str] | None = None) -> argparse.Namesp
 
 def pool_add_paper(argv: list[str] | None = None) -> int:
     args = _pool_add_paper_parse_args(argv)
-    args = parser.parse_args(argv)
     pool = PaperPool(args.pool_root)
     if args.command == "add":
         metadata = load_json(Path(args.metadata).expanduser()) if args.metadata else None

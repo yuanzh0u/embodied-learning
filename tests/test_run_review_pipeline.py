@@ -218,6 +218,22 @@ class DriverPipelineTest(unittest.TestCase):
             out = self.run_dir / "search-semantic-scholar.json"
             out.write_text(json.dumps({"paper_count": 7, "papers": []}), encoding="utf-8")
             return mock.Mock(communicate=lambda timeout=None: (None, None), returncode=0)
+        if "screen-candidates" in joined or "select-candidates" in joined:
+            # streaming stage: per-chunk progress + the screening outputs.
+            # select-candidates carries selection_rule.detail; screen-candidates
+            # is the legacy term-match path with a bare payload.
+            script = "select-candidates" if "select-candidates" in joined else "screen-candidates"
+            for name in self.STAGE_SCRIPTS["screen-candidates"]:
+                out = self.run_dir / name
+                out.parent.mkdir(parents=True, exist_ok=True)
+                if name == "screening-ids.txt":
+                    out.write_text("2402.10329\n2402.10330\n", encoding="utf-8")
+                else:
+                    out.write_text(self._stage_payload(script), encoding="utf-8")
+            return mock.Mock(
+                stdout=iter(["chunk 1/2: judging 3 of 3 candidates…", "chunk 2/2: judging 0 of 3 candidates…"]),
+                wait=lambda timeout=None: 0,
+            )
         if "extract-content-queue" not in joined:
             raise AssertionError(f"unexpected streaming subprocess: {joined}")
         payload = json.loads(self._stage_payload("extract-content-queue"))
@@ -1038,6 +1054,74 @@ class EventPrefixClaimTest(unittest.TestCase):
             "EA-KEEP-2026",
         )
 
+
+
+class StageAnnounceTest(unittest.TestCase):
+    """A stage that blocks for minutes with no output reads as a hang
+    (2026-10-13: 13 silent minutes between "注册 558 篇去重候选" and
+    "精读候选 29 篇"). Every stage now announces itself before it blocks."""
+
+    def test_run_stage_announces_before_blocking(self):
+        driver = load_driver()
+        out: list[str] = []
+
+        def fake_run(command, **kwargs):
+            # the mocked command still has to land the stage output, or
+            # run_stage reports "outputs missing after run"
+            target.write_text("{}", encoding="utf-8")
+            return mock.Mock(returncode=0, stdout="", stderr="")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "out.json"
+            with mock.patch.object(driver, "log", side_effect=out.append), \
+                 mock.patch.object(driver, "run_command", side_effect=fake_run):
+                driver.run_stage("screening", [target], True, lambda: ["true"])
+        self.assertTrue(any("screening 开始" in line for line in out), out)
+        # and it is announced BEFORE the completion line
+        start = next(i for i, l in enumerate(out) if "开始" in l)
+        done = next(i for i, l in enumerate(out) if "DRIVER-STAGE:screening" in l)
+        self.assertLess(start, done)
+
+
+class SelectionProgressTest(unittest.TestCase):
+    """smart selection makes one agent call per chunk — minutes each. The
+    chunk lines must become wiki progress ticks, not be swallowed."""
+
+    def test_chunk_lines_translate_to_progress(self):
+        driver = load_driver()
+        out: list[str] = []
+        with mock.patch.object(driver, "log", side_effect=out.append):
+            driver.selection_line("chunk 1/2: judging 300 of 558 candidates…")
+            driver.selection_line("chunk 2/2: judging 258 of 558 candidates…")
+            driver.selection_line("smart selected 29/558 considered (2 chunk(s))")
+        self.assertIn("[DRIVER-PROGRESS:select:1/2]", out)
+        self.assertIn("[DRIVER-PROGRESS:select:2/2]", out)
+        self.assertIn("[DRIVER] 选文 judging 300 of 558 candidates…", out)
+        self.assertIn("[DRIVER] 选文 smart selected 29/558 considered (2 chunk(s))", out)
+        self.assertFalse(any("选文 :" in line for line in out), out)
+
+    def test_smart_select_prints_chunk_progress(self):
+        import contextlib, io
+        selection = __import__("embodied_learning.search.selection", fromlist=["smart_select"])
+        saved = selection.SMART_CANDIDATES_PER_CALL
+        selection.SMART_CANDIDATES_PER_CALL = 2
+        try:
+            def fake_complete(prompt, **kwargs):
+                return mock.Mock(returncode=0, stdout='{"relevant": []}')
+            registry = {"candidates": [
+                {"arxiv_id": f"2401.{i:05d}", "title": f"P{i}", "abstract": "x"} for i in range(3)
+            ]}
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                selection.smart_select(
+                    registry, topic="t", focus="", limit=5,
+                    complete_fn=fake_complete, cli="x", model="x",
+                )
+        finally:
+            selection.SMART_CANDIDATES_PER_CALL = saved
+        text = buf.getvalue()
+        self.assertIn("chunk 1/2:", text)
+        self.assertIn("chunk 2/2:", text)
 
 if __name__ == "__main__":
     unittest.main()

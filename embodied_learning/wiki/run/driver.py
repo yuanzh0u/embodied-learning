@@ -118,6 +118,23 @@ def extraction_queue_line(line: str) -> None:
         log(f"[DRIVER] 全文抽取 {line}")
 
 
+SELECTION_CHUNK_RE = re.compile(r"^chunk\s+(\d+)/(\d+)\s*[:\-]?\s*(.*)$", re.IGNORECASE)
+
+
+def selection_line(line: str) -> None:
+    """Translate select-candidates' per-chunk stdout into a progress tick so
+    the wiki's per-item bar moves during smart selection (one agent call per
+    chunk of candidates — minutes each). Other lines stay dialog detail."""
+    match = SELECTION_CHUNK_RE.match(line.strip())
+    if match:
+        done_s, total_s, rest = match.groups()
+        log(f"[DRIVER-PROGRESS:select:{done_s}/{total_s}]")
+        if rest.strip():
+            log(f"[DRIVER] 选文 {rest.strip()}")
+    else:
+        log(f"[DRIVER] 选文 {line}")
+
+
 def stage_line(name: str, detail: str = "") -> str:
     """One protocol line per completed stage; the wiki server turns each into
     a timeline event."""
@@ -1278,6 +1295,10 @@ def run_stage(
         detail = "skipped (outputs present)"
         log(stage_line(name, detail))
         return detail
+    # Announce BEFORE blocking: a stage that runs for minutes with no output
+    # reads as a hang to anyone watching the dialog (2026-10-13: 13 silent
+    # minutes between "注册 558 篇去重候选" and "精读候选 29 篇").
+    log(f"[DRIVER] {name} 开始…")
     command = command_builder()
     if stream:
         captured: list[str] = []
@@ -1860,7 +1881,10 @@ def _main_locked(
                 "--output-ids", str(screening_ids),
                 "--output-markdown", str(run_dir / "screening.md"),
             ]
-        run_stage("screening", [screening_output, screening_ids], args.force, screening_cmd)
+        run_stage(
+            "screening", [screening_output, screening_ids], args.force, screening_cmd,
+            stream=True, on_line=selection_line,
+        )
         summary_extra["selection_strategy"] = args.selection_strategy
         try:
             selection_detail = str(
