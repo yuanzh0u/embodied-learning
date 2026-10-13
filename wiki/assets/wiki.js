@@ -385,7 +385,21 @@
   }
 
   async function loadTopic(identifier, requestedVersion = null, openAi = false) {
-    const manifestItem = state.manifest.topics.find((item) => item.id === identifier);
+    let manifestItem = (state.manifest?.topics || []).find((item) => item.id === identifier);
+    if (!manifestItem) {
+      // The topic may have been published AFTER this page loaded its manifest
+      // (a workflow's 综述已发布 link, or a shared URL): the snapshot on the
+      // server already has it, the browser's copy does not. Reload once and
+      // retry instead of dumping the reader on the welcome screen — a manual
+      // refresh should never be required to see a review that is already
+      // published (2026-10-13).
+      try {
+        await loadManifest(true);
+      } catch {
+        // no snapshot at all — fall through to the welcome state
+      }
+      manifestItem = (state.manifest?.topics || []).find((item) => item.id === identifier);
+    }
     if (!manifestItem) {
       showWelcome();
       return;
@@ -2386,7 +2400,7 @@ Canonical: ${absoluteCanonical(topic)}
       const title = evt.title || evt.topic_id;
       const note = document.createElement("p");
       note.className = "chat-node-line";
-      note.innerHTML = `综述已发布：<a href="#/topic/${escapeHtml(evt.topic_id)}?version=zhihu">${escapeHtml(title)}</a>`;
+      note.innerHTML = `综述已发布：<a href="#/topic/${escapeHtml(evt.topic_id)}">${escapeHtml(title)}</a>`;
       workflowNodeCard("settle").querySelector(".chat-node-body").appendChild(note);
       chatScrollToBottom(true);
       return;
