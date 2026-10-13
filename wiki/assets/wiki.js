@@ -78,6 +78,13 @@
       workflowAvailable: false,
       stage: null,
       awaitingInput: false,
+      // Liveness: the last status text + when any workflow event landed.
+      // The composer-adjacent status line ticks '已等待 Ns' during silent
+      // stretches so an impatient reader can see the workflow is alive
+      // even when no stage/brief/progress has fired for minutes (2026-10-13).
+      statusText: null,
+      lastEventAt: 0,
+      livenessTimer: null,
       // Pending @-quote contexts gathered from selections (article, evidence,
       // reader). Each becomes a <selection_context> block on the next send.
       quotes: [],
@@ -1160,13 +1167,65 @@ Canonical: ${absoluteCanonical(topic)}
   }
 
   function setChatStatus(text) {
+    state.chat.statusText = text || null;
+    renderChatStatus();
+  }
+
+  function touchChatLiveness() {
+    // Every workflow event resets the "silently waiting" clock. Idempotent
+    // start: the timer is also armed at workflow kickoff so the first silent
+    // stretch before any [DRIVER-*] line still shows motion.
+    startChatLiveness();
+    state.chat.lastEventAt = Date.now();
+    renderChatStatus();
+  }
+
+  function renderChatStatus() {
+    const text = state.chat.statusText;
+    // Only count as "running" while a segment is actually in flight:
+    // an awaiting-input workspace is idle on purpose, not silently stuck.
+    const active = (Boolean(state.chat.wsId) || state.chat.streaming)
+      && !state.chat.awaitingInput;
     if (!text) {
+      // No stage text of our own — but while the workflow is alive keep a
+      // bare liveness line so the pane is never a frozen blank.
+      if (active && state.chat.lastEventAt) {
+        const waited = Math.round((Date.now() - state.chat.lastEventAt) / 1000);
+        nodes.chatStatus.textContent = `仍在运行 · 已等待 ${formatElapsed(waited)}`;
+        nodes.chatStatus.hidden = false;
+        return;
+      }
       nodes.chatStatus.hidden = true;
       nodes.chatStatus.textContent = "";
       return;
     }
-    nodes.chatStatus.textContent = text;
+    const waited = state.chat.lastEventAt
+      ? Math.round((Date.now() - state.chat.lastEventAt) / 1000) : 0;
+    nodes.chatStatus.textContent = active && waited >= 5
+      ? `${text} · 已等待 ${formatElapsed(waited)}`
+      : text;
     nodes.chatStatus.hidden = false;
+  }
+
+  function formatElapsed(seconds) {
+    if (seconds < 60) return `${seconds}s`;
+    const m = Math.floor(seconds / 60);
+    const s2 = seconds % 60;
+    return s2 ? `${m}m ${s2}s` : `${m}m`;
+  }
+
+  function startChatLiveness() {
+    if (state.chat.livenessTimer) return;
+    state.chat.lastEventAt = Date.now();
+    // 1s tick: cheap DOM text rewrite, and it is what makes the workflow look
+    // alive during the long silent spans (screening, coverage, deep-read agent
+    // calls) where no [DRIVER-*] line fires at all.
+    state.chat.livenessTimer = setInterval(renderChatStatus, 1000);
+  }
+
+  function stopChatLiveness() {
+    if (state.chat.livenessTimer) clearInterval(state.chat.livenessTimer);
+    state.chat.livenessTimer = null;
   }
 
   function setChatStreaming(streaming) {
@@ -2105,6 +2164,7 @@ Canonical: ${absoluteCanonical(topic)}
   }
 
   function renderChatProgress(evt) {
+    startChatLiveness();
     // One fixed bar (sits above the composer, like the status line) for all
     // per-item stages (extraction / packets / deep read): ticks update it in
     // place instead of spamming a dialog line per paper. Hidden until a
@@ -2264,6 +2324,7 @@ Canonical: ${absoluteCanonical(topic)}
   }
 
   function handleWorkflowEvent(evt, renderer) {
+    touchChatLiveness();
     if (evt.type === "stage") {
       state.chat.stage = evt.stage;
       state.chat.awaitingInput = false;
@@ -2316,6 +2377,7 @@ Canonical: ${absoluteCanonical(topic)}
       return;
     }
     if (evt.type === "topic_ready") {
+      stopChatLiveness();
       state.chat.awaitingInput = false;
       state.chat.stage = "settle";
       hideChatProgress();
@@ -2329,12 +2391,14 @@ Canonical: ${absoluteCanonical(topic)}
       return;
     }
     if (evt.type === "topic_error") {
+      stopChatLiveness();
       state.chat.awaitingInput = false;
       hideChatProgress();
       appendChatError(evt.message || "综述落盘后未能定位新话题。");
       return;
     }
     if (evt.type === "done") {
+      stopChatLiveness();
       // No further stage line came to close the bar (e.g. an aborted series).
       hideChatProgress();
     }
@@ -2352,6 +2416,7 @@ Canonical: ${absoluteCanonical(topic)}
       if (!confirmed) return;
     }
     appendChatUserMessage(displayText, quotes);
+    startChatLiveness();
     await streamTurn({
       endpoint: "api/workflow",
       payload: {
@@ -2554,6 +2619,7 @@ Canonical: ${absoluteCanonical(topic)}
     renderTimeline();
     setChatTitle("综述工作流");
     setChatSession(null);
+    startChatLiveness();
     nodes.chatInput.disabled = false;
     nodes.chatInput.placeholder = "对大纲提修改意见，或回复「继续」…";
     setChatOpen(true); // docked split-screen; user can ⤢ to fullscreen
