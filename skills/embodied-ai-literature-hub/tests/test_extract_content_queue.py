@@ -98,5 +98,58 @@ class ExtractContentQueueTest(unittest.TestCase):
             data = json.loads((output_dir / "2110.10805.json").read_text(encoding="utf-8"))
             self.assertIn("extractor exit 2", data["error"])
 
+
+class ChannelCircuitTest(unittest.TestCase):
+    """When arxiv.org is unreachable every paper waits out its full
+    paper_timeout — 79 x 300s on 2026-10-12 burned the whole extraction
+    window. The circuit stops spending per-paper budgets on a dead channel."""
+
+    def _opts(self, output_dir):
+        return extract_content_queue.QueueOptions(
+            paper_id_file="ids.txt", terms="t", output_dir=str(output_dir),
+        )
+
+    def test_connection_failures_trip_the_circuit(self) -> None:
+        circuit = extract_content_queue._ChannelCircuit(limit=3)
+        for _ in range(2):
+            circuit.record(True)
+            self.assertFalse(circuit.tripped)
+        circuit.record(True)
+        self.assertTrue(circuit.tripped)
+
+    def test_success_resets_the_streak(self) -> None:
+        circuit = extract_content_queue._ChannelCircuit(limit=3)
+        circuit.record(True)
+        circuit.record(True)
+        circuit.record(False)  # a real extraction clears the streak
+        circuit.record(True)
+        self.assertFalse(circuit.tripped)
+
+    def test_tripped_circuit_short_circuits_without_spawning(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp)
+            circuit = extract_content_queue._ChannelCircuit(limit=1)
+            circuit.record(True)  # trip it
+            with mock.patch.object(extract_content_queue.subprocess, "run") as run:
+                result = extract_content_queue.extract_one(
+                    "2110.10805", self._opts(output_dir), output_dir, circuit
+                )
+            run.assert_not_called()
+            self.assertEqual(result["state"], "channel-down")
+            data = json.loads((output_dir / "2110.10805.json").read_text(encoding="utf-8"))
+            self.assertIn("channel down", data["error"])
+
+    def test_hard_timeout_counts_as_connection_failure(self) -> None:
+        self.assertTrue(
+            extract_content_queue._is_connection_failure("hard timeout after 300s")
+        )
+        self.assertTrue(
+            extract_content_queue._is_connection_failure("Connection timed out")
+        )
+        # A per-paper failure must NOT advance the streak.
+        self.assertFalse(
+            extract_content_queue._is_connection_failure("extractor exit 2: no such paper")
+        )
+
 if __name__ == "__main__":
     unittest.main()

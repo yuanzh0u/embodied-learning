@@ -1,6 +1,8 @@
 """Tests for scripts/serve_research_wiki.py — chat endpoints, topic
 resolution, and the /api/refresh regression guard."""
 
+from _entry import invoke
+
 import http.client
 import importlib.util
 import json
@@ -20,7 +22,7 @@ from typing import Iterator
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "serve_research_wiki.py"
+SCRIPT = "embodied_learning.wiki.publish.server"  # implementation module (old scripts/serve_research_wiki.py deleted)
 # Route the machine-local conversation store (chat sessions + invocation
 # archive) into this module's own tmp dir so tests never touch the real
 # ~/.claude store.
@@ -31,11 +33,15 @@ atexit.register(_CONVO_STORE.cleanup)
 import os  # noqa: E402
 
 os.environ["EMBODIED_CONVERSATION_STORE"] = _CONVO_STORE.name
-SPEC = importlib.util.spec_from_file_location("serve_research_wiki_tested", SCRIPT)
-server_module = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
+# Load the implementation module (not the scripts/ forwarder) so mock.patch on
+# module attributes (CURRENT_CHAT, acquire_chat_lock, ...) reaches the live
+# globals the handlers read.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+import importlib  # noqa: E402
+
+server_module = importlib.import_module("embodied_learning.wiki.publish.server")
 sys.modules["serve_research_wiki_tested"] = server_module
-SPEC.loader.exec_module(server_module)
 
 
 def build_temp_kb() -> tuple[tempfile.TemporaryDirectory, Path, Path, str]:
@@ -316,7 +322,7 @@ class ChatEndpointTest(ChatServerHarness):
 
 class WorkflowEndpointTest(ChatServerHarness):
     """One-click survey workflow: kickoff → checkpoint → continuation →
-    topic_ready. Runs against the real init_run.py in the temp KB."""
+    topic_ready. Runs against the real run.py init in the temp KB."""
 
     def params(self, topic="高斯溅射SLAM综述"):
         return {
@@ -427,7 +433,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         # The park is a recovery path: the exhausted auto-continuation says so
         # instead of pretending an outline is awaiting approval.
         self.assertIn("自动续跑", events[-1].get("detail") or "")
-        # init_run.py really created the in-progress run in the temp KB.
+        # run.py init really created the in-progress run in the temp KB.
         run_dirs = list((self.kb_root / "work").glob("literature-review-*"))
         self.assertEqual(len(run_dirs), 1)
         manifest = json.loads((run_dirs[0] / "run.json").read_text(encoding="utf-8"))
@@ -454,9 +460,9 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertNotIn("<skills-root>", turn.kwargs["system_prompt"])
         self.assertNotIn("<pool-root>", turn.kwargs["system_prompt"])
         self.assertNotIn("<kb-root>", turn.kwargs["system_prompt"])
-        # The interactive publisher's mechanical tail is finalize_run.py — the
+        # The interactive publisher's mechanical tail is run.py finalize — the
         # hand-run register/rebuild duo must not reappear in the prompt.
-        self.assertIn("finalize_run.py", turn.kwargs["system_prompt"])
+        self.assertIn("run.py finalize", turn.kwargs["system_prompt"])
         self.assertNotIn("register_run.py", turn.kwargs["system_prompt"])
         self.assertNotIn("build_research_wiki.py", turn.kwargs["system_prompt"])
         self.assertGreaterEqual(turn.kwargs["timeout_s"], 5400)
@@ -701,7 +707,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         events = self.sse_events()
         types = [e["type"] for e in events]
         self.assertIn("stage", types)
-        self.assertEqual(types[-1], "topic_ready")
+        self.assertEqual(types[-1], "topic_ready", f"DBG={events[-2:]}")
         ready = events[-1]
         # The published topic id is derived by the builder from run.json's
         # topic field (topic-<sha1[:12]>) — verify it's a real topic id and
@@ -767,7 +773,7 @@ class WorkflowEndpointTest(ChatServerHarness):
         # The workflow system prompt carries the deep-reading contract: one
         # subagent per paper, driver work is off-limits.
         self.assertIn("subagent", turn_kwargs["system_prompt"])
-        self.assertIn("run_review_pipeline.py", turn_kwargs["system_prompt"])
+        self.assertIn("run.py pipeline", turn_kwargs["system_prompt"])
 
     def test_driver_failure_blocks_claude_and_reports(self):
         """A failed driver emits an SSE error and never spawns claude; the run
@@ -1083,12 +1089,7 @@ class EmptyKbStartupTest(unittest.TestCase):
                 "--port", "0",
                 "--no-chat",
             ]
-            original_argv = sys.argv
-            sys.argv = argv
-            try:
-                code = server_module.main()
-            finally:
-                sys.argv = original_argv
+            code = invoke("wiki.py", "serve", argv[1:])
         finally:
             server_module.refresh_snapshot = original_refresh
             server_module.build_knowledge_map = original_map
@@ -1134,12 +1135,9 @@ class NewUserKbCreationTest(unittest.TestCase):
         saved = [(owner, name, getattr(owner, name)) for owner, name, _ in swaps]
         for owner, name, value in swaps:
             setattr(owner, name, value)
-        original_argv = sys.argv
-        sys.argv = ["serve_research_wiki", "--port", "0", "--no-chat", *extra_args]
         try:
-            code = server_module.main()
+            code = invoke("wiki.py", "serve", ["--port", "0", "--no-chat", *extra_args])
         finally:
-            sys.argv = original_argv
             for owner, name, value in saved:
                 setattr(owner, name, value)
         return code, started
@@ -1555,7 +1553,7 @@ class SlideDeckEndpointTest(ChatServerHarness):
 
     def test_run_deck_generate_streams_sse(self):
         def fake_popen(command, **kwargs):
-            self.assertIn("run_slide_deck.py", " ".join(command))
+            self.assertIn("run-deck", " ".join(command))
             self.assertIn(str(self.run_dir), " ".join(command))
             (self.run_dir / "slide-deck_report.html").write_text(self.DECK_HTML, encoding="utf-8")
             return FakeProcess(returncode=0, lines=["[SLIDE-DECK] 幻灯片已编译"])

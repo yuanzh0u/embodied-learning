@@ -9,6 +9,8 @@ with the run's own reference keys as the whitelist, and the exit-code contract
 
 from __future__ import annotations
 
+from _entry import invoke
+
 import importlib.util
 import json
 import sys
@@ -20,14 +22,9 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # script imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "scripts" / "run_slide_deck.py"
-
-
+SCRIPT_PATH = "embodied_learning.writer.run_deck"  # implementation module (old scripts/run_slide_deck.py deleted)
 def load_module():
-    spec = importlib.util.spec_from_file_location("run_slide_deck", SCRIPT_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
+    module = importlib.import_module(SCRIPT_PATH)
     return module
 
 
@@ -114,7 +111,7 @@ class MainFlowTest(unittest.TestCase):
                                                                           encoding="utf-8"),
                                            True, [])[1:]):
                     for build_argv in actions:
-                        codes.append(rsd.main(build_argv(run_dir)))
+                        codes.append(invoke("write.py", "run-deck", build_argv(run_dir)))
                 yield codes, run_dir, agent
 
         return run_ctx()
@@ -143,13 +140,13 @@ class MainFlowTest(unittest.TestCase):
             (run_dir / "run.json").write_text("{}", encoding="utf-8")
             (run_dir / "writing-brief.md").write_text(BRIEF, encoding="utf-8")
             (run_dir / "evidence-appendix.md").write_text("# 无引用\n", encoding="utf-8")
-            code = rsd.main(["--run-dir", str(run_dir)])
+            code = invoke("write.py", "run-deck", ["--run-dir", str(run_dir)])
             self.assertEqual(code, 2)
             self.assertFalse((run_dir / "slide-deck_report.md").is_file())
 
     def test_not_a_run_dir_is_exit_2(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            code = rsd.main(["--run-dir", tmp])
+            code = invoke("write.py", "run-deck", ["--run-dir", tmp])
             self.assertEqual(code, 2)
 
     def test_skip_agent_writes_only_refs(self) -> None:

@@ -11,14 +11,11 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "init_run.py"
+SCRIPT = "embodied_learning.wiki.run.manifest"  # implementation module (old scripts/init_run.py deleted)
 import sys  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "scripts"))  # lib.* imports inside the script
-SPEC = importlib.util.spec_from_file_location("init_run", SCRIPT)
-init_run = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(init_run)
+init_run = importlib.import_module(SCRIPT)
 
 
 class InitRunTest(unittest.TestCase):
@@ -32,7 +29,8 @@ class InitRunTest(unittest.TestCase):
     def _command(self, *extra: str) -> list[str]:
         return [
             sys.executable,
-            str(SCRIPT),
+            str(Path(__file__).resolve().parents[1] / "scripts" / "run.py"),
+            "init",
             "--topic",
             "感知误差 vs 认知误差",
             "--knowledge-id",

@@ -40,12 +40,11 @@ import re
 import time
 from pathlib import Path
 from typing import Any
+from embodied_learning.config import MAX_RETRIES, MAX_WORKERS
 
 BUCKET = "arxiv"
 REGION = "us-east-1"
 DEFAULT_CACHE_DIR = "/tmp/embodied-ai-literature-hub/src"
-MAX_WORKERS = 16
-MAX_RETRIES = 3
 MODERN_ID_RE = re.compile(r"^(\d{2})(\d{2})\.(\d{4,5})$")
 
 

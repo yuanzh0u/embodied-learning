@@ -8,12 +8,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "wiki_chat.py"
-SPEC = importlib.util.spec_from_file_location("wiki_chat", SCRIPT)
-wiki_chat = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-sys.modules["wiki_chat"] = wiki_chat
-SPEC.loader.exec_module(wiki_chat)
+SCRIPT = "embodied_learning.wiki.publish.chat"  # implementation module
+wiki_chat = importlib.import_module("embodied_learning.wiki.publish.chat")
 
 
 class BuildClaudeCommandTest(unittest.TestCase):
@@ -193,13 +189,11 @@ class RegistryTest(unittest.TestCase):
         helper = (
             "import sys, time\n"
             "sys.path.insert(0, {repo_root!r})\n"
-            "sys.path.insert(0, {scripts!r})\n"
-            "import wiki_chat\n"
+            "from embodied_learning.wiki.publish import chat as wiki_chat\n"
             "registry = wiki_chat.ChatSessionRegistry({path!r})\n"
             "registry.append_message('topic-child', 'user', 'from subprocess')\n"
         ).format(
             repo_root=str(Path(__file__).resolve().parents[1]),
-            scripts=str(Path(__file__).resolve().parents[1] / "scripts"),
             path=str(self.registry.path),
         )
         subprocess.run([sys.executable, "-c", helper], check=True, timeout=60)
@@ -440,7 +434,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIsNone(wiki_chat.extract_stop_marker("正常完成 [TOPIC:evidence/run]\n"))
 
     def test_workflow_prompt_settle_runs_finalize(self):
-        """The agent publisher's mechanical settle tail is finalize_run.py —
+        """The agent publisher's mechanical settle tail is run.py finalize —
         the old hand-run register_run.py / build_research_wiki.py duo (and the
         wiki-port topic-count check) must not come back."""
         with tempfile.TemporaryDirectory() as tmp:
@@ -453,7 +447,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
                 kb_root=kb_root,
                 pipeline_root=Path("/repo"),
             )
-        self.assertIn("finalize_run.py", prompt)
+        self.assertIn("run.py finalize", prompt)
         self.assertNotIn("register_run.py", prompt)
         self.assertNotIn("build_research_wiki.py", prompt)
 
@@ -477,7 +471,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertNotIn("[STAGE:", prompt)
         self.assertNotIn("[TOPIC:", prompt)
         self.assertIn("运行目录根", prompt)
-        self.assertIn("build_review_packet.py", prompt)
+        self.assertIn("write.py review-packet", prompt)
         self.assertIn("work/literature-review-x", prompt)
         self.assertNotIn(str(kb_root), prompt)
 
@@ -516,7 +510,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("一次性读取现状", prompt)
         self.assertIn("[STAGE:writing]", prompt)
         self.assertNotIn("等待用户确认", prompt)
-        self.assertIn("finalize_run.py", prompt)
+        self.assertIn("run.py finalize", prompt)
         self.assertNotIn("build_research_wiki.py", prompt)
 
     def test_continuation_prompt_launcher_stops_after_gates(self):
@@ -529,7 +523,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("立即停止本轮回复", launcher)
         self.assertNotIn("[TOPIC:", launcher)
         self.assertNotIn("[STAGE:", launcher)
-        self.assertNotIn("finalize_run.py", launcher)
+        self.assertNotIn("run.py finalize", launcher)
         self.assertIn("仅撰写采访中选定的风格", launcher)
         self.assertNotIn("3 个并行 subagent", launcher)
         mid = wiki_chat.build_continuation_prompt(publisher="launcher")
@@ -603,7 +597,7 @@ class WorkflowPublisherPromptTest(unittest.TestCase):
 
     def test_agent_publisher_finalizes_itself(self):
         prompt = wiki_chat.workflow_system_prompt("agent")
-        self.assertIn("finalize_run.py", prompt)
+        self.assertIn("run.py finalize", prompt)
         self.assertNotIn("register_run.py", prompt)
         self.assertNotIn("build_research_wiki.py", prompt)
         self.assertNotIn("topic 数量", prompt)  # wiki-port topic-count check is gone
@@ -614,7 +608,7 @@ class WorkflowPublisherPromptTest(unittest.TestCase):
     def test_launcher_publisher_stops_after_gates(self):
         prompt = wiki_chat.workflow_system_prompt("launcher")
         self.assertIn("立即停止本轮回复", prompt)
-        self.assertIn("finalize_run.py", prompt)
+        self.assertIn("run.py finalize", prompt)
         self.assertIn("launcher", prompt)
         self.assertNotIn("[STAGE:", prompt)
         self.assertNotIn("[TOPIC:", prompt)
@@ -646,7 +640,7 @@ class WorkflowDriverContractTest(unittest.TestCase):
 
     def test_workflow_prompt_defers_mechanical_stages_to_driver(self):
         prompt = wiki_chat.WORKFLOW_SYSTEM_PROMPT
-        self.assertIn("run_review_pipeline.py", prompt)
+        self.assertIn("run.py pipeline", prompt)
         self.assertIn("pipeline-summary.json", prompt)
         self.assertIn("不要手动执行任何检索/抽取/筛选/深读/投影命令", prompt)
         self.assertIn("search.py search-arxiv", prompt)  # named among banned commands
@@ -657,10 +651,10 @@ class WorkflowDriverContractTest(unittest.TestCase):
         # Deep reading now runs inside the driver; the agent must not redo it.
         self.assertIn("论文深读（速记骨架+审计）与证据投影已由驱动脚本", prompt)
         self.assertIn("不要派发深读 subagent", prompt)
-        self.assertIn("不要跑 note_tools.py project-evidence-events", prompt)
+        self.assertIn("不要跑 read.py project-evidence-events", prompt)
         # Outline/writing remain the agent's judgment work.
-        self.assertIn("build_review_packet.py", prompt)
-        self.assertIn("check_run_bundle.py", prompt)
+        self.assertIn("write.py review-packet", prompt)
+        self.assertIn("run.py check-bundle", prompt)
 
     def test_substitute_prompt_roots_fills_pool(self):
         text = wiki_chat.substitute_prompt_roots(
@@ -689,7 +683,7 @@ class WorkflowDriverContractTest(unittest.TestCase):
             )
             self.assertIn("pipeline-summary.json", prompt)
             self.assertIn("不要重跑任何检索/抽取/筛选/深读/投影命令", prompt)
-            self.assertIn("build_review_packet.py", prompt)
+            self.assertIn("write.py review-packet", prompt)
             # Single-style runs carry the voice contract (memo must not drift
             # into the zhihu-explainer register — 2026-09 regression).
             self.assertIn("风格契约（scientific-memo）", prompt)
@@ -1059,7 +1053,7 @@ class RevisionPromptTest(unittest.TestCase):
         self.assertIn("[REVISION:revisions/keyan-v2.md]", system)
         self.assertIn("build-trace-map", system)
         self.assertIn("audit-article-quality --memo", system)
-        self.assertIn("audit_citations.py --article revisions/keyan-v2.md", system)
+        self.assertIn("run.py audit-citations --article revisions/keyan-v2.md", system)
         self.assertIn("evidence-appendix.md", system)
         self.assertIn("trace-map-keyan-v2.json", system)  # base trace-map untouched
         self.assertIn("风格契约（scientific-memo）", system)  # voice contract injected

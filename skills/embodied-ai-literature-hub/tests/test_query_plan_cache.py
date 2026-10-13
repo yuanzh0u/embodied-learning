@@ -11,12 +11,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "query_plan_cache.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-literature-hub/scripts/search.py"  # subcommand: plan-cache
 def run(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
+        [sys.executable, str(SCRIPT), "plan-cache", *args],
         check=check,
         text=True,
         capture_output=True,

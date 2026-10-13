@@ -11,9 +11,9 @@
 
 ---
 
-## 最容易混淆的两个脚本：launch_review vs run_review_pipeline
+## 最容易混淆的两个入口：run.py pipeline vs run.py launch
 
-| | `run_review_pipeline.py`（driver） | `launch_review.py`（launcher） |
+| | `run.py pipeline`（driver） | `run.py launch`（launcher） |
 |---|---|---|
 | 覆盖范围 | **只做机械阶段**：plan → 检索 → 引文扩张 → registry → 筛选 → coverage → 抽取 → 阅读包 → 深读（并行 one-shot agent）→ 证据投影 → coverage 终态重算 | **端到端**：init_run → driver（上面全部）→ writer agent（写综述成稿）→ 审计门 → settle → 登记 catalog + 重建 wiki |
 | 谁写综述 | 没人——它产出的 `writing-brief.md` / `review-packet.md` 是写作输入 | 一个脱离交互的 one-shot `claude -p` agent（复用 wiki 的 workflow prompt），失败自动带问题清单续跑 |
@@ -28,11 +28,11 @@
 ## 全景关系图
 
 ```
-                        launch_review.py（无头端到端，程序化入口）
+                        run.py launch（无头端到端，程序化入口）
                                 │ 调用
         ┌───────────────────────┼──────────────────────────┐
         ▼                       ▼                          ▼
-  init_run.py            run_review_pipeline.py        wiki workflow prompt
+  run.py init            run.py pipeline               wiki workflow prompt
   （run 出生证明）        （机械阶段 driver）           （claude -p writer agent）
                                 │                           │
         ┌───────────┬───────────┼───────────┐              │
@@ -52,23 +52,25 @@
 
 ---
 
-## 按用途分类
+## 按用途分类（六域 dispatcher — 见 ADR 0004）
 
-### A. 综述流水线（生产主线）
+入口只有 6 个：`scripts/run.py`（运行域）、`scripts/wiki.py`（发布域）、hub `search.py`/`fetch.py`（检索/抓取域）、reader `read.py`（阅读域）、writer `write.py`（写作域）。下表按用途分组列出各子命令；实现全在 `embodied_learning/`。
+
+### A. 综述流水线（生产主线）— `run.py` 子命令
 
 | 脚本 | 作用 | 典型用法 |
 |---|---|---|
-| `launch_review.py` | 无头端到端 launcher（见上表） | `setsid nohup python3 scripts/launch_review.py --topic ... --review-mode systematic --time-range A..B --focus ... --arxiv-snapshot ~/Documents/arxiv/arxiv-metadata-oai-snapshot.sqlite > /tmp/launch.log 2>&1 &`；`--status` / `--resume` / `--stop` 均需 `--run-dir` |
+| `run.py launch` | 无头端到端 launcher（见上表） | `setsid nohup python3 scripts/run.py launch --topic ... --review-mode systematic --time-range A..B --focus ... --arxiv-snapshot ~/Documents/arxiv/arxiv-metadata-oai-snapshot.sqlite > /tmp/launch.log 2>&1 &`；`--status` / `--resume` / `--stop` 均需 `--run-dir` |
 | `init_run.py` | 生成 run 出生证明（`run.json` status=in-progress），防“管线烂尾无痕迹” | `init_run.py --topic ... --knowledge-id EA-DATA --time-range A..B --review-mode systematic`（launcher 内部也调它） |
-| `run_review_pipeline.py` | 机械阶段 driver（见上表）；`--skip-deep-read` 可把深读交给外部编排 | `run_review_pipeline.py --run-dir work/<run> --topic ... --review-mode systematic --time-range A..B --focus ... --arxiv-snapshot <sqlite>` |
+| `run.py pipeline` | 机械阶段 driver（见上表）；`--skip-deep-read` 可把深读交给外部编排 | `run.py pipeline --run-dir work/<run> --topic ... --review-mode systematic --time-range A..B --focus ... --arxiv-snapshot <sqlite>` |
 | `next_event_id.py` | 扫描 evidence/**/evidence.jsonl，给出下一个无冲突事件 ID | `next_event_id.py --prefix EA-XXX-2026` |
 | `check_run_bundle.py` | **settle 前门禁**：bundle 完整性（三风格或声明的 style+scope_note、files 清单、事件数、coverage ready_to_stop） | `check_run_bundle.py <run-dir>` |
 | `audit_citations.py` | **settle 前门禁**：成稿引用审计（死锚点、超出加载证据集的引用、run.json 漂移） | `audit_citations.py --article <成稿> --appendix evidence-appendix.md --evidence-jsonl <jsonl>` |
-| `finalize_run.py` | **机械 settle 一条龙**：盖章 run.json（event_count/evidence_papers/candidate_count/full_text_count、files.evidence、单风格 style+scope_note）→ 引用篇数下限门禁（rapid 6 / scoping 10 / systematic 15，不足则提示续跑 driver 补深读）→ 两道门 → 拷贝 evidence/ → 翻 settled → 登记 catalog → 重建 wiki 快照。幂等；门禁失败打印缺失项（修复重跑，不是停止理由） | `finalize_run.py --run-dir work/<run> --kb-root <kb-root>` |
+| `run.py finalize` | **机械 settle 一条龙**：盖章 run.json（event_count/evidence_papers/candidate_count/full_text_count、files.evidence、单风格 style+scope_note）→ 引用篇数下限门禁（rapid 6 / scoping 10 / systematic 15，不足则提示续跑 driver 补深读）→ 两道门 → 拷贝 evidence/ → 翻 settled → 登记 catalog → 重建 wiki 快照。幂等；门禁失败打印缺失项（修复重跑，不是停止理由） | `run.py finalize --run-dir work/<run> --kb-root <kb-root>` |
 | `run_status.py` | **run 现状一次性摘要**（替代 agent 逐文件循环）：漏斗数字、逐篇证据与 claim 摘要、从 candidate-registry join 的 References 作者/年份元数据、逐篇深读漏斗（held / deep-read-failed 及筛选命中词）、产物清单、引用篇数下限核对、建议命令——含**逐字可执行的综述包完整命令**；`--json` 出机器可读 | `run_status.py --run-dir work/<run>` |
 | `validate_current_reviews.py` | 批量校验 catalog 路由的全部已发布 run | `validate_current_reviews.py`（知识库改动后跑） |
 
-### B. 知识库与 Wiki 运维
+### B. 知识库与 Wiki 运维 — `wiki.py` 子命令
 
 | 脚本 | 作用 | 典型用法 |
 |---|---|---|
@@ -78,7 +80,7 @@
 | `wiki_chat.py` | Wiki 聊天/工作流的 claude 会话后端（stream-json 桥接、嵌套 claude 环境防护、workflow/continuation/revision prompt 的定义处） | 由 `serve_research_wiki.py` 内部使用，不直接手跑 |
 | `visualize_kb_index.py` | 把 `knowledge/index.md` 渲染成可浏览文档站 | `visualize_kb_index.py` |
 
-### C. 论文池与单篇入口
+### C. 论文池与单篇入口 — `read.py` / `write.py` 子命令
 
 公共池默认 `~/Documents/arxiv/pool/`，一论文一目录（`arxiv-<id>/`：paper.md、extraction.json、note.json、meta.json）。
 
@@ -90,7 +92,10 @@
 | `prepare_paper_chat.py` | 为 Wiki「论文对话」备料：保证入池+深读（与速读同链路，不做卡片） | 由 wiki `/api/paper/chat` 内部调用 |
 | `build_paper_note.py` | 深读组装器：agent 只出速记骨架，它负责 locator 解析/逐字校验/组装/审计 | 由 driver 的深读阶段调用；单篇手跑 `build_paper_note.py --help` |
 
-### D. 共享库 `scripts/lib/`
+### D. 共享库（已解散 — 见 ADR 0004）
+
+原 `scripts/lib/` 已全部下沉到 `embodied_learning/`（`utils/layout`、`utils/jsonio`、
+`wiki/run/catalog`、`wiki/publish/markdown`、`harness/claude`、`harness/prompt`）。
 
 | 模块 | 作用 |
 |---|---|
@@ -104,7 +109,7 @@
 ## 能力状态：三段工作流各能力在脚本层的落地情况
 
 对照 [docs/review-workflow-three-stages.md](../docs/review-workflow-three-stages.md) 的能力清单，
-逐项给出典型用法与状态。**状态标准是"无人值守可交付"**：一条命令（或一次 `launch_review.py`）
+逐项给出典型用法与状态。**状态标准是"无人值守可交付"**：一条命令（或一次 `run.py launch`）
 不依赖交互会话现场调整就能跑通的算"已实现"；要人/交互会话手动串步骤或现场发挥的只能算
 "部分（组合式 SOP）"——这类是固定流程而非可交付功能。知识产出阶段（成稿、门禁、settle、
 catalog、wiki）由 launcher spawn 的 writer agent 完成，交互会话只做调度与代码维护。
@@ -123,20 +128,20 @@ catalog、wiki）由 launcher spawn 的 writer agent 完成，交互会话只做
 
 | 能力 | 状态 | 典型用法 |
 |---|---|---|
-| 单篇速读卡 | 已实现 | `scripts/quick_read_paper.py --arxiv-id <id>`（强制入池+深读，产出 `quick-read_sudu.md`） |
-| 单篇组会汇报（reveal.js） | 已实现 | `scripts/paper_slide_deck.py --arxiv-id <id>`（强制入池+深读，产出 `slide-deck_report.html`；编译器 `skills/embodied-ai-review-writer/scripts/build_slide_deck.py`，审计 `writing_audit.py audit-slide-deck`） |
-| run 级汇报（wiki 话题页） | 已实现 | wiki「汇报放映」按钮（无 deck 时确认后生成，走 `serve_research_wiki.py /api/deck/generate` → `scripts/run_slide_deck.py`）；也可手跑 `run_slide_deck.py --run-dir <dir>`，生成后重建快照点亮入口 |
-| 单篇问答 | 已实现 | wiki「论文对话」（`scripts/prepare_paper_chat.py` 备料，`serve_research_wiki.py` 服务） |
+| 单篇速读卡 | 已实现 | `skills/embodied-ai-paper-reader/scripts/read.py quick-read --arxiv-id <id>`（强制入池+深读，产出 `quick-read_sudu.md`） |
+| 单篇组会汇报（reveal.js） | 已实现 | `skills/embodied-ai-review-writer/scripts/write.py paper-deck --arxiv-id <id>`（强制入池+深读，产出 `slide-deck_report.html`；编译器 `skills/embodied-ai-review-writer/scripts/write.py compile-slide-deck`，审计 `write.py audit-slide-deck`） |
+| run 级汇报（wiki 话题页） | 已实现 | wiki「汇报放映」按钮（无 deck 时确认后生成，走 `serve_research_wiki.py /api/deck/generate` → `skills/embodied-ai-review-writer/scripts/write.py run-deck`）；也可手跑 `run_slide_deck.py --run-dir <dir>`，生成后重建快照点亮入口 |
+| 单篇问答 | 已实现 | wiki「论文对话」（`skills/embodied-ai-paper-reader/scripts/read.py prepare-chat` 备料，`serve_research_wiki.py` 服务） |
 | 批量深读（run 内） | 已实现 | driver 深读阶段并行 one-shot agents（launcher `--agents-parallel`，默认 10）；幂等：只有 audit status ∈ {pass, needs-review} 的笔记才算完成，reject/失败自动重试 |
-| 补充深读（单篇缺口） | 已实现 | `scripts/build_paper_note.py` 单篇手跑；driver 重跑自动补 |
+| 补充深读（单篇缺口） | 已实现 | `skills/embodied-ai-paper-reader/scripts/read.py build-paper-note` 单篇手跑；driver 重跑自动补 |
 | 批量入池（给裸 ID 列表建库，不入 run） | 部分（SOP） | 无专门入口：循环 `quick_read_paper.py` 或走一次最小 run |
 
 ### 写作段
 
 | 能力 | 状态 | 典型用法 |
 |---|---|---|
-| 完整综述（无人值守，标准入口） | 已实现 | `scripts/launch_review.py --topic ... --review-mode ... --time-range A..B [--target-style scientific-memo --scope-note ...]`：init → driver（重试+幂等续跑）→ writer agent 成稿 → 门禁（audit_citations + check_run_bundle，失败自动 continuation）→ settle → catalog/wiki 发布校验；`--run-dir` 对已有 run 续跑，`--status`/`--stop` 管生命周期 |
-| 跨 run 综合（换问题重组既有证据） | 部分（组合式 SOP） | `build_review_packet.py --select-events-file <ids> --consolidate-evidence` 后仍需 writer agent 成稿；无专用 launcher 模式 |
+| 完整综述（无人值守，标准入口） | 已实现 | `scripts/run.py launch --topic ... --review-mode ... --time-range A..B [--target-style scientific-memo --scope-note ...]`：init → driver（重试+幂等续跑）→ writer agent 成稿 → 门禁（audit_citations + check_run_bundle，失败自动 continuation）→ settle → catalog/wiki 发布校验；`--run-dir` 对已有 run 续跑，`--status`/`--stop` 管生命周期 |
+| 跨 run 综合（换问题重组既有证据） | 部分（组合式 SOP） | `write.py review-packet --select-events-file <ids> --consolidate-evidence` 后仍需 writer agent 成稿；无专用 launcher 模式 |
 | 换风格重写 / 修订成稿 | 已实现 | launcher `--target-style <style> --run-dir <已有 run>` 续跑 writer 阶段（run.json 声明单 `style`+`scope_note`） |
 
 ---
@@ -146,13 +151,13 @@ catalog、wiki）由 launcher spawn 的 writer agent 完成，交互会话只做
 **1. 程序化出综述（无人值守，推荐入口）**
 
 ```bash
-setsid nohup python3 scripts/launch_review.py \
+setsid nohup python3 scripts/run.py launch \
   --topic "..." --review-mode systematic \
   --time-range 2023-01-01..2026-09-17 --focus "..." \
   --seed-arxiv-ids 2311.18259 \
   --arxiv-snapshot ~/Documents/arxiv/arxiv-metadata-oai-snapshot.sqlite \
   > /tmp/launch.log 2>&1 &
-# 观察：scripts/launch_review.py --status --run-dir work/literature-review-<主题>-<日期>
+# 观察：scripts/run.py launch --status --run-dir work/literature-review-<主题>-<日期>
 ```
 
 产出：`work/<run>/` 内的成稿 + settle + `evidence/` 落库 + catalog 登记 + wiki 快照，一条龙。中断后 `--resume` 续跑。
@@ -160,18 +165,18 @@ setsid nohup python3 scripts/launch_review.py \
 **2. 交互式综述（claude 会话内）**
 
 ```bash
-python3 scripts/init_run.py --topic ... --knowledge-id EA-DATA --time-range A..B --review-mode systematic
-python3 scripts/run_review_pipeline.py --run-dir work/<run> --topic ... --review-mode systematic \
+python3 scripts/run.py init --topic ... --knowledge-id EA-DATA --time-range A..B --review-mode systematic
+python3 scripts/run.py pipeline --run-dir work/<run> --topic ... --review-mode systematic \
   --time-range A..B --focus ... --arxiv-snapshot ~/Documents/arxiv/arxiv-metadata-oai-snapshot.sqlite
-# 之后 claude 接手判断阶段：packet（build_review_packet.py --run-dir work/<run>）→ 成稿 → 审计
-# → python3 scripts/finalize_run.py --run-dir work/<run> --kb-root <kb-root>
+# 之后 claude 接手判断阶段：packet（write.py review-packet --run-dir work/<run>）→ 成稿 → 审计
+# → python3 scripts/run.py finalize --run-dir work/<run> --kb-root <kb-root>
 #   （盖章 run.json + 引用篇数门禁 + 两道门 + evidence/ 落库 + 翻 settled + 登记 catalog + wiki 快照，一条龙幂等）
 ```
 
 **3. 单篇速读 / 论文对话**
 
 ```bash
-python3 scripts/quick_read_paper.py --arxiv-id 2311.18259   # 入池+深读+速读卡
+python3 skills/embodied-ai-paper-reader/scripts/read.py quick-read --arxiv-id 2311.18259   # 入池+深读+速读卡
 ```
 
 ---
@@ -201,10 +206,10 @@ python3 scripts/quick_read_paper.py --arxiv-id 2311.18259   # 入池+深读+速�
 | `build_claude_command` / `parse_stream_line` / `is_resume_failure` | 命令组装与 stream-json 协议解码 |
 | `conversation_store` / `record_agent_invocation` | 机器本地调用归档（`~/.claude/projects/embodied-learning-work/`） |
 
-铁律：**任何模块禁止直接 `subprocess` spawn `claude`**（历史上 launch_review 的 writer 旁路已被收编）；`scripts/lib/agent_invoke.py` 保留为兼容 shim，新代码直接 `from embodied_learning.harness import claude`。
+铁律：**任何模块禁止直接 `subprocess` spawn `claude`**（历史上 launch_review 的 writer 旁路已被收编）；prompt 模板集中在 `embodied_learning/harness/prompt.py`，新代码直接 `from embodied_learning.harness import claude, prompt`。
 - 中间产物只进 gitignored 的 `work/`；settle 时按 run.json 的 `files` 清单拷核心文件进 `evidence/`（大 registry 需瘦身，见 run 内的 slim 说明）。
 - driver 的 stdout 协议行 `[DRIVER-STAGE:<name>] ok <detail>` 与 `[PAPER] <id> ...` 是 wiki 工作流和外部监控的解析面，改格式需同步 `wiki_chat.py` 的映射。
-- 离线检索：`--arxiv-snapshot` 接受 OAI JSONL 或 `search.py build-snapshot-db` 产出的 SQLite/FTS5 库；arXiv API 有 406 间歇封禁（curl 可过而 urllib 被拒），联网检索前先读 `scripts/lib/agent_invoke.py` 注释与记忆条目。
+- 离线检索：`--arxiv-snapshot` 接受 OAI JSONL 或 `search.py build-snapshot-db` 产出的 SQLite/FTS5 库；arXiv API 有 406 间歇封禁（curl 可过而 urllib 被拒），联网检索前先读 `embodied_learning/ratelimit.py` 注释与记忆条目。
 - 嵌套 claude 防护：凡从脚本里 spawn `claude -p`，必须剥掉 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT`（`lib/agent_invoke.py` 的 `isolated_claude_env` 是唯一参考实现）。
 - settle ≠ 完事：`check_run_bundle` 过 + status 翻 settled 之后，必须登记 `knowledge/literature-review-catalog.md` 并重建 wiki 快照，否则该 run 对读者不可见。
 

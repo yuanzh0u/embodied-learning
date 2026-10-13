@@ -37,6 +37,7 @@ from ..atomicio import (
     atomic_write_json,
     atomic_write_text,
 )
+from ..utils.jsonio import load_json as _load_json
 from .. import locks
 
 DEFAULT_POOL_ROOT = "~/Documents/arxiv/pool"
@@ -47,7 +48,7 @@ def stable_now() -> str:
 
 
 def load_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return _load_json(path)
 
 
 def paper_identity(extraction: dict[str, Any], metadata: dict[str, Any] | None) -> dict[str, Any]:

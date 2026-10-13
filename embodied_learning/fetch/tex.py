@@ -39,14 +39,16 @@ from typing import Any
 # The S3 downloader's top-level imports are stdlib-only (boto3 stays lazy inside it),
 # so a module-level import is safe and mock-patchable.
 from embodied_learning.fetch import s3_source as download_arxiv_source
+from embodied_learning.fetch.output import (
+    write_json_output as _write_json_output,
+    write_markdown_sidecar as _write_markdown_sidecar,
+)
 from embodied_learning import ratelimit
+from embodied_learning.config import MAX_EXTRACT_BYTES, MAX_MEMBERS, MAX_TERM_MATCHES
 
 DEFAULT_SOURCE_CACHE_DIR = "/tmp/embodied-ai-literature-hub/src"
 DEFAULT_TO = "markdown+tex_math_dollars"  # plain $...$ math; gfm would render $`...`$ backtick math
-MAX_EXTRACT_BYTES = 512 * 1024 * 1024
-MAX_MEMBERS = 20000
 ALLOWED_SUFFIXES = {".tex", ".bib", ".bbl", ".sty", ".cls"}
-MAX_TERM_MATCHES = 120
 
 ARXIV2MD_API = "https://arxiv2md.org/api/markdown"
 ARXIV2MD_JSON_API = "https://arxiv2md.org/api/json"
@@ -498,23 +500,11 @@ class TexExtraction:
 
 
 def write_markdown_sidecar(output_path: str | None, markdown: str, explicit: str | None) -> None:
-    target = explicit
-    if target is None and output_path:
-        target = re.sub(r"\.json$", "", output_path) + ".md"
-    if not target:
-        return
-    path = Path(target)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(markdown + "\n", encoding="utf-8")
+    _write_markdown_sidecar(output_path, markdown, explicit)
 
 
 def emit(output: dict[str, Any], output_path: str | None, markdown_output: str | None) -> None:
     """Write/print the extraction JSON and its Markdown sidecar (CLI-side)."""
-    rendered = json.dumps(output, ensure_ascii=False, indent=2)
+    _write_json_output(output, output_path)
     if output_path:
-        path = Path(output_path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(rendered + "\n", encoding="utf-8")
-        write_markdown_sidecar(output_path, str(output.get("text") or ""), markdown_output)
-    else:
-        print(rendered)
+        _write_markdown_sidecar(output_path, str(output.get("text") or ""), markdown_output)

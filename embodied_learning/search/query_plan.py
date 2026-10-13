@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from typing import Any
 
 try:
@@ -29,9 +30,15 @@ try:
 except ImportError as exc:  # pragma: no cover - import path failure is surfaced by CLI
     raise SystemExit(f"Unable to import query taxonomy: {exc}") from exc
 
+from embodied_learning.config import DEFAULT_MAX_QUERIES, EVIDENCE_FLOORS  # noqa: E402
+from embodied_learning.harness.prompt import (  # noqa: E402
+    PERSONA_REGENERATION_NOTE,
+    PERSONA_REGENERATION_READING_TRIGGER,
+    PERSONA_REGENERATION_RETRIEVAL_TRIGGER,
+)
+
 
 SOCIAL_SOURCES = {"reddit", "x", "twitter", "x-twitter", "x/twitter"}
-DEFAULT_MAX_QUERIES = 50
 
 # Persona-layer tier <-> coverage-dimension convention. Tier names are chosen
 # so that coverage_group()'s substring fallback ALSO classifies them correctly
@@ -52,23 +59,16 @@ PERSONA_TIER_BY_DIMENSION: dict[str, str] = {value: key for key, value in PERSON
 VALID_COVERAGE_DIMENSIONS = frozenset(PERSONA_DIMENSION_TIERS.values())
 
 PERSONA_REGENERATION_RULE = {
-    "retrieval_phase_trigger": (
-        "After each literature-hub retrieval round, run suggest_persona_regeneration.py: "
-        "any coverage dimension with passed=false or unique_candidates below minimum_unique_candidates "
-        "requests a targeted gap-filling persona."
-    ),
-    "reading_phase_trigger": (
-        "During deep reading, if accepted-evidence stance distribution has limit+gap share below "
-        "0.20, request a counter-evidence seeker persona."
-    ),
+    "retrieval_phase_trigger": PERSONA_REGENERATION_RETRIEVAL_TRIGGER,
+    "reading_phase_trigger": PERSONA_REGENERATION_READING_TRIGGER,
     "max_regeneration_rounds": 2,
-    "note": "Regeneration output re-enters the plan only via --persona-file after review; it never bypasses coverage gates.",
+    "note": PERSONA_REGENERATION_NOTE,
 }
 REVIEW_MODES: dict[str, dict[str, object]] = {
     "rapid": {
         "candidate_floor": 30,
         "full_text_floor": 12,
-        "evidence_floor": 8,
+        "evidence_floor": EVIDENCE_FLOORS["rapid"],
         "query_multiplier": 2,
         "minimum_batches": 2,
         "saturation_rounds": 1,
@@ -78,7 +78,7 @@ REVIEW_MODES: dict[str, dict[str, object]] = {
     "scoping": {
         "candidate_floor": 100,
         "full_text_floor": 35,
-        "evidence_floor": 15,
+        "evidence_floor": EVIDENCE_FLOORS["scoping"],
         "query_multiplier": 4,
         "minimum_batches": 3,
         "saturation_rounds": 2,
@@ -88,7 +88,7 @@ REVIEW_MODES: dict[str, dict[str, object]] = {
     "systematic": {
         "candidate_floor": 200,
         "full_text_floor": 80,
-        "evidence_floor": 30,
+        "evidence_floor": EVIDENCE_FLOORS["systematic"],
         "query_multiplier": 6,
         "minimum_batches": 4,
         "saturation_rounds": 2,
@@ -792,31 +792,48 @@ def build_plan(
             web_queries.append(web_query(item["label"], item["query"], item.get("why", ""), key))
 
     if not raw_queries and topic:
-        raw_queries.append(
-            query_entry(
-                {
-                    "label": "generic-topic",
-                    "tier": "generic",
-                    "query": f'all:"{topic}" AND all:robot',
-                    "why": "Fallback query for a topic that did not match the embodied-AI taxonomy.",
-                },
-                "generic",
-                "fallback",
+        # arXiv indexes English text only — a query built from CJK tokens can
+        # never match and is misread downstream as "rate limited?". Strip to
+        # the ASCII word runs; if none survive, emit no keyword query at all
+        # (a plan with zero queries is a clearer failure than a phantom one).
+        ascii_tokens = [
+            token
+            for token in re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", topic)
+            if token.lower() not in {"and", "the", "for", "with"}
+        ]
+        if ascii_tokens:
+            head = ascii_tokens[0]
+            raw_queries.append(
+                query_entry(
+                    {
+                        "label": "generic-topic",
+                        "tier": "generic",
+                        "query": f'all:"{head}" AND all:robot',
+                        "why": "Fallback query for a topic that did not match the embodied-AI taxonomy.",
+                    },
+                    "generic",
+                    "fallback",
+                )
             )
-        )
-        raw_queries.append(
-            query_entry(
-                {
-                    "label": "generic-topic-broad",
-                    "tier": "generic",
-                    "query": f"all:{topic} AND all:robot",
-                    "why": "Unquoted companion to generic-topic: quoted all: queries on multi-word "
-                    "Chinese topics return nothing, the unquoted form still matches loosely.",
-                },
-                "generic",
-                "fallback",
+            raw_queries.append(
+                query_entry(
+                    {
+                        "label": "generic-topic-broad",
+                        "tier": "generic",
+                        "query": f"all:{head} AND all:robot",
+                        "why": "Unquoted companion to generic-topic: quoted all: queries on multi-word "
+                        "topics return nothing, the unquoted form still matches loosely.",
+                    },
+                    "generic",
+                    "fallback",
+                )
             )
-        )
+        else:
+            plan_notes.append(
+                "Topic has no ASCII tokens (e.g. a pure-Chinese topic); skipped the generic "
+                "keyword fallback — arXiv cannot match CJK query text. English queries must "
+                "come from the dynamic-query agent or a seed/citation channel."
+            )
         web_queries.append(web_query("web-generic-topic", f'"{topic}" robot learning arxiv', "Calibrate an unmatched topic.", "generic"))
 
     arxiv_queries = dedupe_queries(raw_queries, max_queries)

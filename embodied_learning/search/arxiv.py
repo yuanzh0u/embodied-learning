@@ -21,11 +21,17 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from embodied_learning import ratelimit
+from embodied_learning.search.http import (  # noqa: F401  (re-exported for callers)
+    MAX_RETRIES,
+    TRANSIENT_HTTP_CODES,
+    bounded_retries,
+    is_retryable,
+    retry_after_seconds,
+    retry_wait_seconds,
+)
 
 API_URL = "https://export.arxiv.org/api/query"
 ATOM = "{http://www.w3.org/2005/Atom}"
-MAX_RETRIES = 3
-TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
 
 
 def report_partial_batch(query_results: list[dict[str, object]]) -> int:
@@ -161,27 +167,10 @@ class ArxivSearch:
         raise RuntimeError(f"arXiv request failed after {attempts} attempt(s): {last_error}") from last_error
 
     def retry_wait_seconds(self, exc: Exception, attempt: int) -> float:
-        retry_after = retry_after_seconds(exc)
-        if retry_after is not None:
-            return max(0.0, min(retry_after, self.retry_max_seconds))
-        return max(0.0, min(self.retry_base_seconds * (2 ** attempt), self.retry_max_seconds))
+        return retry_wait_seconds(exc, attempt, self.retry_base_seconds, self.retry_max_seconds)
 
 
-def load_queries(queries: list[str] | None = None, query_file: str | None = None) -> list[dict[str, str]]:
-    """Merge query-file entries with repeated --query values (CLI-side helper)."""
-    merged: list[dict[str, str]] = []
-    if query_file:
-        with open(query_file, "r", encoding="utf-8") as handle:
-            data = json.load(handle)
-        for index, item in enumerate(data.get("queries", []), start=1):
-            query = item.get("query")
-            if query:
-                merged.append({"label": item.get("label", f"query-{index}"), "query": query})
-    for index, query in enumerate(queries or [], start=1):
-        merged.append({"label": f"cli-{index}", "query": query})
-    if not merged:
-        raise SystemExit("Provide --query or --query-file.")
-    return merged
+from embodied_learning.search.queries import load_queries  # noqa: F401  (re-exported for callers)
 
 
 def yyyymmdd(value: str, end: bool = False) -> str:
@@ -194,29 +183,6 @@ def with_date_filter(query: str, start_date: str, end_date: str) -> str:
     start = yyyymmdd(start_date)
     end = yyyymmdd(end_date, end=True)
     return f"({query}) AND submittedDate:[{start} TO {end}]"
-
-
-def bounded_retries(value: int) -> int:
-    return max(0, min(value, MAX_RETRIES))
-
-
-def retry_after_seconds(exc: Exception) -> float | None:
-    if not isinstance(exc, urllib.error.HTTPError):
-        return None
-    retry_after = exc.headers.get("Retry-After") if exc.headers else None
-    if not retry_after:
-        return None
-    try:
-        parsed = float(retry_after)
-    except ValueError:
-        return None
-    return parsed if parsed >= 0 else None
-
-
-def is_retryable(exc: Exception) -> bool:
-    if isinstance(exc, urllib.error.HTTPError):
-        return exc.code in TRANSIENT_HTTP_CODES
-    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
 
 
 def text(element: ET.Element, name: str) -> str:

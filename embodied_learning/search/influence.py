@@ -59,9 +59,16 @@ NEIGHBOR_FIELDS = "title,abstract,year,publicationDate,citationCount,venue,autho
 # (e.g. 2-hop expansion from expand_via_citations.py) that lack citationCount/venue.
 ENRICH_FIELDS = "title,abstract,year,publicationDate,citationCount,venue,authors.name,authors.hIndex,authors.citationCount,externalIds"
 PWC_BASE = "https://paperswithcode.com/api/v1/papers/"
-MAX_RETRIES = 3
-TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
-BATCH_MAX_IDS = 500
+from embodied_learning.search.http import (  # noqa: F401  (re-exported for callers)
+    MAX_RETRIES,
+    TRANSIENT_HTTP_CODES,
+    bounded_retries,
+    is_retryable,
+    retry_after_seconds,
+    retry_wait_seconds,
+)
+from embodied_learning.utils.arxiv_id import normalize_arxiv_id  # noqa: E402
+from embodied_learning.config import BATCH_MAX_IDS
 
 # Canonical (lowercased) venue substrings -> (canonical name, tier score).
 # Ordered: more specific phrases must precede phrases they contain, e.g.
@@ -530,9 +537,6 @@ def stable_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def normalize_arxiv_id(value: object) -> str:
-    raw = str(value or "").rsplit("/", 1)[-1].removesuffix(".pdf").removesuffix(".html")
-    return re.sub(r"v\d+$", "", raw.strip())
 
 
 def arxiv_id_of(paper: dict) -> str:
@@ -689,36 +693,6 @@ def filter_papers(
 # Network: retry/backoff copied from search_arxiv.py (explicit params, no
 # option object -- the class methods pass their own values in)
 # ---------------------------------------------------------------------------
-
-
-def bounded_retries(value: int) -> int:
-    return max(0, min(value, MAX_RETRIES))
-
-
-def retry_after_seconds(exc: Exception) -> float | None:
-    if not isinstance(exc, urllib.error.HTTPError):
-        return None
-    retry_after = exc.headers.get("Retry-After") if exc.headers else None
-    if not retry_after:
-        return None
-    try:
-        parsed = float(retry_after)
-    except ValueError:
-        return None
-    return parsed if parsed >= 0 else None
-
-
-def is_retryable(exc: Exception) -> bool:
-    if isinstance(exc, urllib.error.HTTPError):
-        return exc.code in TRANSIENT_HTTP_CODES
-    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
-
-
-def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
-    retry_after = retry_after_seconds(exc)
-    if retry_after is not None:
-        return max(0.0, min(retry_after, retry_max_seconds))
-    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
 
 
 def _request(

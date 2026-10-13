@@ -9,6 +9,8 @@ extraction with the citation whitelist, and the exit-code contract
 
 from __future__ import annotations
 
+from _entry import invoke
+
 import contextlib
 import importlib.util
 import json
@@ -21,14 +23,9 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # script imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "scripts" / "paper_slide_deck.py"
-
-
+SCRIPT_PATH = "embodied_learning.writer.deck"  # implementation module (old scripts/paper_slide_deck.py deleted)
 def load_module():
-    spec = importlib.util.spec_from_file_location("paper_slide_deck", SCRIPT_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
+    module = importlib.import_module(SCRIPT_PATH)
     return module
 
 
@@ -147,7 +144,7 @@ class MainFlowTest(unittest.TestCase):
                                                "<html></html>", encoding="utf-8"),
                                            True, [])[1:]):
                     for argv in actions:
-                        codes.append(psd.main(argv))
+                        codes.append(invoke("write.py", "paper-deck", argv))
                 yield codes, pool_dir, agent
 
         return pool()
@@ -171,7 +168,7 @@ class MainFlowTest(unittest.TestCase):
              mock.patch.object(psd, "pool_root_for", return_value=Path(tmp)), \
              mock.patch.object(psd, "ensure_extraction", return_value=True), \
              mock.patch.object(psd, "ensure_deep_read", return_value="failed"):
-            code = psd.main(["--arxiv-id", PAPER_ID, "--kb-root", str(tmp)])
+            code = invoke("write.py", "paper-deck", ["--arxiv-id", PAPER_ID, "--kb-root", str(tmp)])
             self.assertEqual(code, 3)
 
     def test_skip_agent_writes_only_brief(self) -> None:

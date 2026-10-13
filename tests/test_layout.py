@@ -24,21 +24,29 @@ def load(name: str, path: Path):
     return module
 
 
-layout = load("layout_for_test", REPO / "scripts" / "lib" / "layout.py")
-agent_invoke = load("agent_invoke_for_test", REPO / "scripts" / "lib" / "agent_invoke.py")
-wiki_chat = load("wiki_chat_for_test", REPO / "scripts" / "wiki_chat.py")
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+import embodied_learning.utils.layout as layout
+import embodied_learning.harness.claude as agent_invoke
+from embodied_learning.wiki.publish import chat as wiki_chat
+agent_invoke.run_one_shot_agent = agent_invoke.complete  # historical alias
 
 
 def make_installed_pkg(tmp: Path) -> Path:
-    """Synthesize the wheel layout: <pkg>/wiki_scripts with lib/, init_run.py
-    and the bundled skills tree. Returns the wiki_scripts dir."""
+    """Synthesize the wheel layout: site-packages/{wiki_scripts,embodied_learning}
+    where wiki_scripts holds run.py + the bundled skills tree. Returns the
+    wiki_scripts dir."""
     pkg = tmp / "site-packages" / "wiki_scripts"
-    (pkg / "lib").mkdir(parents=True)
-    shutil.copy2(REPO / "scripts" / "lib" / "layout.py", pkg / "lib" / "layout.py")
-    (pkg / "init_run.py").write_text("# stub\n", encoding="utf-8")
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("# stub\n", encoding="utf-8")
+    (pkg / "run.py").write_text("# stub\n", encoding="utf-8")
     skill = pkg / "skills" / "embodied-ai-review-writer"
     (skill / "references").mkdir(parents=True)
     (skill / "SKILL.md").write_text("---\n---\n", encoding="utf-8")
+    shutil.copytree(
+        REPO / "embodied_learning", pkg.parent / "embodied_learning",
+        dirs_exist_ok=True, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+    )
     return pkg
 
 
@@ -52,11 +60,18 @@ class FindRootsTest(unittest.TestCase):
     def test_installed_layout(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             pkg = make_installed_pkg(Path(tmp))
-            installed = load("layout_installed_for_test", pkg / "lib" / "layout.py")
-            repo_root, skills_root, scripts_root = installed.find_roots()
-            self.assertIsNone(repo_root)
-            self.assertEqual(skills_root, pkg / "skills")
-            self.assertEqual(scripts_root, pkg)
+            env = dict(__import__("os").environ, PYTHONPATH=str(pkg.parent))
+            probe = subprocess.run(
+                [sys.executable, "-c",
+                 "from embodied_learning.utils.layout import find_roots; "
+                 "r, s, c = find_roots(); print(r or ''); print(s); print(c)"],
+                capture_output=True, text=True, timeout=60, cwd=str(pkg), env=env,
+            )
+            self.assertEqual(probe.returncode, 0, probe.stderr)
+            repo_root, skills_root, scripts_root = probe.stdout.splitlines()
+            self.assertEqual(repo_root, "")
+            self.assertEqual(Path(skills_root), pkg / "skills")
+            self.assertEqual(Path(scripts_root), pkg)
 
 
 class ResolvePipelineLayoutTest(unittest.TestCase):
@@ -66,7 +81,7 @@ class ResolvePipelineLayoutTest(unittest.TestCase):
         self.assertEqual(scripts_root, REPO / "scripts")
 
     def test_installed_scripts_dir_shape(self) -> None:
-        # pipeline_root IS the wiki_scripts dir (contains init_run.py + skills/)
+        # pipeline_root IS the wiki_scripts dir (contains run.py + skills/)
         with tempfile.TemporaryDirectory() as tmp:
             pkg = make_installed_pkg(Path(tmp))
             skills_root, scripts_root = wiki_chat.resolve_pipeline_layout(pkg)
@@ -169,17 +184,25 @@ class InstalledLayoutSmokeTest(unittest.TestCase):
     mode of the previous parent.parent bootstrapping). Runs in subprocesses so
     the `lib` package does not leak between layouts in this process."""
 
-    SCRIPT_NAMES = ("run_review_pipeline.py", "launch_review.py",
-                    "quick_read_paper.py", "prepare_paper_chat.py")
+    SCRIPT_NAMES = ("run.py", "wiki.py")
 
     def test_scripts_resolve_inside_pkg(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             pkg = make_installed_pkg(Path(tmp))
-            shutil.copytree(REPO / "scripts" / "lib", pkg / "lib", dirs_exist_ok=True)
+            shutil.copy2(REPO / "scripts" / "__init__.py", pkg / "__init__.py")
             for name in self.SCRIPT_NAMES:
                 shutil.copy2(REPO / "scripts" / name, pkg / name)
-            # embodied_learning stands in for the real install's site-packages
-            env = dict(__import__("os").environ, PYTHONPATH=str(REPO))
+            # The wheel layout: BOTH packages sit in site-packages so
+            # embodied_learning.utils.layout takes its wheel branch
+            # (find_spec("wiki_scripts")) instead of probing a repo checkout.
+            site_packages = pkg.parent
+            shutil.copytree(
+                REPO / "embodied_learning",
+                site_packages / "embodied_learning",
+                dirs_exist_ok=True,
+                ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+            )
+            env = dict(__import__("os").environ, PYTHONPATH=str(site_packages))
             for name in self.SCRIPT_NAMES:
                 probe = subprocess.run(
                     [sys.executable, "-c",
@@ -194,13 +217,13 @@ class InstalledLayoutSmokeTest(unittest.TestCase):
                 self.assertEqual(probe.returncode, 0, f"{name}: {probe.stderr}")
                 self.assertEqual(probe.stdout.strip(), str(pkg), name)
 
-            # entry-point style invocation (--help) works for the console scripts
-            for name in ("run_review_pipeline", "launch_review", "quick_read_paper"):
+            # entry-point style invocation (--help) works for the dispatchers
+            for name, sub in (("run.py", "pipeline"), ("run.py", "finalize"), ("wiki.py", "serve")):
                 help_run = subprocess.run(
-                    [sys.executable, str(pkg / f"{name}.py"), "--help"],
+                    [sys.executable, str(pkg / name), sub, "--help"],
                     capture_output=True, text=True, timeout=60, cwd=str(pkg), env=env,
                 )
-                self.assertEqual(help_run.returncode, 0, f"{name}: {help_run.stderr}")
+                self.assertEqual(help_run.returncode, 0, f"{name} {sub}: {help_run.stderr}")
 
 
 if __name__ == "__main__":

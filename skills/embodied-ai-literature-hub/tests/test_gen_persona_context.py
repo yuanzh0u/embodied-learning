@@ -10,12 +10,10 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "gen_persona_context.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-literature-hub/scripts/search.py"  # subcommand: persona-context
 def run_context(*args: str) -> dict:
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
+        [sys.executable, str(SCRIPT), "persona-context", *args],
         check=True,
         cwd=ROOT,
         text=True,

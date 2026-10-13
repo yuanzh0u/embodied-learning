@@ -23,7 +23,11 @@ def load(name: str, relative: str):
     return module
 
 
-bsd = load("bsd_test", "skills/embodied-ai-review-writer/scripts/build_slide_deck.py")
+import sys
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+import importlib
+bsd = importlib.import_module("embodied_learning.writer.slide_compile")
 
 DOC = """# title: 试编
 # refs: refs.json

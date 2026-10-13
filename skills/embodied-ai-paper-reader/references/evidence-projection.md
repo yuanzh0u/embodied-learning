@@ -29,6 +29,6 @@ Projection requires:
 After projection, run the Hub's compatibility validator:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/parse.py write-lit-outputs \
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py write-lit-outputs \
   --evidence-jsonl <projected.jsonl> --validate-only
 ```

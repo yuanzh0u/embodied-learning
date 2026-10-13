@@ -22,7 +22,7 @@ Three steps; only step 2 involves an LLM, and its output is a reviewable file.
 ### Step 1: Extract local reference context (deterministic)
 
 ```bash
-python skills/embodied-ai-literature-hub/scripts/gen_persona_context.py \
+python skills/embodied-ai-literature-hub/scripts/search.py persona-context \
   --topic "近半年触觉数据联合训练的坑" \
   --knowledge-id EA-SENSOR \
   --knowledge-id EA-DATA \
@@ -122,7 +122,7 @@ Dimension resolution priority for each query: explicit `coverage_dimension` > qu
 Saturation and dimension gaps are correction signals, not just stop signals. After each literature-hub retrieval round:
 
 ```bash
-python skills/embodied-ai-literature-hub/scripts/suggest_persona_regeneration.py \
+python skills/embodied-ai-literature-hub/scripts/search.py persona-suggest \
   --plan work/<run>/query-plan.json \
   --coverage-report work/<run>/coverage-report.json \
   --output work/<run>/personas-round2.json

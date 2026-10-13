@@ -14,13 +14,15 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "build_review_packet.py"
-SPEC = importlib.util.spec_from_file_location("build_review_packet", SCRIPT)
-build_review_packet = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(build_review_packet)
-
-
+import sys
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+# Implementation module (not the scripts/ forwarder) so mock.patch and
+# underscore helpers resolve against the live namespace.
+import importlib
+build_review_packet = importlib.import_module("embodied_learning.writer.packet")
+# The CLI is still exercised through the path-stable entry (forwarder).
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-review-writer/scripts/write.py"  # subcommand: review-packet
 def sample_event(event_id: str, stance: str) -> dict[str, object]:
     return {
         "event_id": event_id,
@@ -152,7 +154,7 @@ class BuildReviewPacketTests(unittest.TestCase):
         self.assertIn("expert-explainer", skill_doc)
         self.assertIn("kol-thread", skill_doc)
         self.assertIn("$embodied-ai-review-writer", skill_doc)
-        self.assertIn("writing_audit.py audit-article-quality", skill_doc)
+        self.assertIn("write.py audit-article-quality", skill_doc)
 
     def test_default_time_range_is_recent_half_year(self) -> None:
         self.assertEqual(
@@ -248,7 +250,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -290,7 +293,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -332,7 +336,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -474,7 +479,7 @@ title: 数据采集与数据质量
             )
 
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--topic", "UMI", "--run-dir", str(run_dir),
+                [sys.executable, str(SCRIPT), "review-packet", "--topic", "UMI", "--run-dir", str(run_dir),
                  "--output", "-"],
                 cwd=ROOT, text=True, capture_output=True,
             )
@@ -491,7 +496,7 @@ title: 数据采集与数据质量
             evidence.write_text("", encoding="utf-8")
 
             completed = subprocess.run(
-                [sys.executable, str(SCRIPT), "--topic", "UMI", "--evidence-jsonl", str(evidence),
+                [sys.executable, str(SCRIPT), "review-packet", "--topic", "UMI", "--evidence-jsonl", str(evidence),
                  "--style", "survey", "--output", "-"],
                 cwd=ROOT, text=True, capture_output=True,
             )
@@ -547,7 +552,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -587,7 +593,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -630,7 +637,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -675,7 +683,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -718,7 +727,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--knowledge-id",
                     "EA-DATA",
@@ -752,7 +762,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "UMI 数据可用性",
                     "--fallback-source-json",
                     str(fallback_sources),
@@ -881,7 +892,8 @@ title: 数据采集与数据质量
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "感知误差溯源",
                     "--knowledge-id",
                     "EA-DATA",
@@ -1053,7 +1065,8 @@ if __name__ == "__main__":
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--topic",
+                    "review-packet",
+                        "--topic",
                     "demo topic",
                     "--knowledge-id",
                     "EA-DATA",

@@ -23,6 +23,12 @@ _SCRIPTS_DIR = ROOT / "scripts"
 
 
 def load_script(name: str):  # type: ignore[no-untyped-def]
+    mapping = {"build_reading_packet": "embodied_learning.parse.reading_packet",
+               "update_reading_ledger": "embodied_learning.knowledge.reading_ledger"}
+    return importlib.import_module(mapping[name])
+
+
+def _unused_load_script(name: str):
     spec = importlib.util.spec_from_file_location(name, _SCRIPTS_DIR / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
@@ -316,7 +322,7 @@ class PaperReaderTest(unittest.TestCase):
         audit_path.write_text(json.dumps(audit_result, ensure_ascii=False), encoding="utf-8")
         completed = subprocess.run(
             [
-                sys.executable, str(ROOT / "scripts" / "note_tools.py"), "project-evidence-events",
+                sys.executable, str(ROOT / "scripts" / "read.py") if False else str(ROOT.parents[1] / "skills" / "embodied-ai-paper-reader" / "scripts" / "read.py"), "project-evidence-events",
                 "--paper-note", str(note_path), "--audit", str(audit_path),
                 "--id-prefix", "EA-DATA-2026", "--output", str(events_path),
             ],
@@ -325,7 +331,7 @@ class PaperReaderTest(unittest.TestCase):
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
-        hub_validator = ROOT.parent / "embodied-ai-literature-hub" / "scripts" / "parse.py"
+        hub_validator = ROOT.parent / "embodied-ai-literature-hub" / "scripts" / "fetch.py"
         hub_validator_argv = ["write-lit-outputs"]
         completed = subprocess.run(
             [sys.executable, str(hub_validator), *hub_validator_argv, "--evidence-jsonl", str(events_path), "--validate-only"],
@@ -344,7 +350,7 @@ class PaperReaderTest(unittest.TestCase):
         completed = subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "scripts" / "build_reading_packet.py"),
+                str(ROOT / "scripts" / "read.py") if False else str(ROOT.parents[1] / "skills" / "embodied-ai-paper-reader" / "scripts" / "read.py"), "build-reading-packet",
                 "--extraction",
                 str(extraction_path),
                 "--review-question",
@@ -377,7 +383,7 @@ class PaperReaderTest(unittest.TestCase):
         completed = subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "scripts" / "build_reading_packet.py"),
+                str(ROOT / "scripts" / "read.py") if False else str(ROOT.parents[1] / "skills" / "embodied-ai-paper-reader" / "scripts" / "read.py"), "build-reading-packet",
                 "--extraction",
                 str(extraction_path),
                 "--review-question",

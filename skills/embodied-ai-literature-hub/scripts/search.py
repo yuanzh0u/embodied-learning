@@ -769,6 +769,122 @@ def _harvest_curated_list_main(argv: list[str] | None = None) -> int:
 
 # ---- dispatch ----------------------------------------------------------------
 
+def _query_plan_cache_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=query_plan_cache.__doc__)
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    shared = argparse.ArgumentParser(add_help=False)
+    shared.add_argument("--topic", required=True)
+    shared.add_argument("--review-mode", default="scoping", choices=["rapid", "scoping", "systematic"])
+    shared.add_argument("--time-range", default="")
+    shared.add_argument(
+    "--family",
+    action="append",
+    default=[],
+    help="Specialized family; repeatable. Order is normalized.",
+    )
+    shared.add_argument(
+    "--cache-root",
+    default=os.environ.get("EMBODIED_QUERY_PLAN_CACHE", str(query_plan_cache.DEFAULT_CACHE_ROOT)),
+    )
+
+    key_p = sub.add_parser("key", parents=[shared], help="Print cache key and paths")
+    key_p.set_defaults(_cmd="key")
+
+    get_p = sub.add_parser("get", parents=[shared], help="Fetch cached plan if present")
+    get_p.add_argument("--output", help="Copy plan JSON here on hit")
+    get_p.add_argument("--json", action="store_true", help="Emit machine-readable hit/miss")
+    get_p.set_defaults(_cmd="get")
+
+    put_p = sub.add_parser("put", parents=[shared], help="Store a plan JSON under the key")
+    put_p.add_argument("--plan", required=True, help="query-plan.json to cache")
+    put_p.add_argument(
+    "--had-dynamic",
+    action="store_true",
+    help="Record that dynamic LLM expansion was used when producing this plan",
+    )
+    put_p.add_argument(
+    "--had-persona",
+    action="store_true",
+    help="Record that persona LLM expansion was used when producing this plan",
+    )
+    put_p.add_argument("--overwrite", action="store_true")
+    put_p.set_defaults(_cmd="put")
+
+    rm_p = sub.add_parser("invalidate", parents=[shared], help="Delete one cache entry")
+    rm_p.set_defaults(_cmd="invalidate")
+    return parser
+
+
+
+def _persona_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=persona.__doc__)
+    parser.add_argument("--topic", required=True, help="Chinese or English embodied-AI topic.")
+    parser.add_argument("--knowledge-id", action="append", default=[], help="EA knowledge ID (e.g. EA-SENSOR). May be repeated.")
+    parser.add_argument("--max-judgments", type=int, default=8, help="Max key judgments per topic card.")
+    parser.add_argument("--max-runs", type=int, default=6, help="Max related runs to report.")
+    parser.add_argument("--output", help="Write JSON context to this path instead of stdout.")
+    return parser
+
+
+
+def _persona_suggest_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=persona_suggest.__doc__)
+    parser.add_argument("--plan", required=True, help="Current query-plan.json.")
+    parser.add_argument("--coverage-report", help="Coverage report from the literature hub retrieval round.")
+    parser.add_argument("--evidence", help="evidence.jsonl with accepted evidence events (reading phase).")
+    parser.add_argument("--max-rounds", type=int, default=2, help="Maximum regeneration rounds allowed.")
+    parser.add_argument("--output", help="Write the draft persona file to this path instead of stdout.")
+    return parser
+
+
+
+def _registry_titles_parser() -> argparse.ArgumentParser:
+    return registry_titles.build_parser()
+
+
+_LIB_MODULES = {
+    "plan-cache": "embodied_learning.search.query_plan_cache",
+    "persona-context": "embodied_learning.search.persona",
+    "persona-suggest": "embodied_learning.search.persona_suggest",
+    "registry-titles": "embodied_learning.search.registry_titles",
+}
+_LIB_PARSERS = {
+    "plan-cache": "_query_plan_cache_parser",
+    "persona-context": "_persona_parser",
+    "persona-suggest": "_persona_suggest_parser",
+    "registry-titles": "_registry_titles_parser",
+}
+
+
+def _lib_main(prog: str, argv: list[str]) -> int:
+    """Dispatch to a library module's ``run(args)``; the flag table is ours."""
+    import importlib
+
+    globals().update({m.split(".")[-1]: importlib.import_module(m) for m in set(_LIB_MODULES.values())})
+    parser = globals()[_LIB_PARSERS[prog]]()
+    parser.prog = prog
+    args = parser.parse_args(argv)
+    mod = importlib.import_module(_LIB_MODULES[prog])
+    return int(mod.run(args) or 0)
+
+
+def _plan_cache_main(argv: list[str]) -> int:
+    return _lib_main("plan-cache", argv)
+
+
+def _persona_context_main(argv: list[str]) -> int:
+    return _lib_main("persona-context", argv)
+
+
+def _persona_suggest_main(argv: list[str]) -> int:
+    return _lib_main("persona-suggest", argv)
+
+
+def _registry_titles_main(argv: list[str]) -> int:
+    return _lib_main("registry-titles", argv)
+
+
 _SUBCOMMANDS = {
     "build-query-plan": _build_query_plan_main,
     "build-snapshot-db": _build_snapshot_db_main,
@@ -783,6 +899,10 @@ _SUBCOMMANDS = {
     "rank-problem-relevance": _rank_problem_relevance_main,
     "parse-browser-candidates": _parse_browser_candidates_main,
     "harvest-curated-list": _harvest_curated_list_main,
+    "plan-cache": _plan_cache_main,
+    "persona-context": _persona_context_main,
+    "persona-suggest": _persona_suggest_main,
+    "registry-titles": _registry_titles_main,
 }
 
 

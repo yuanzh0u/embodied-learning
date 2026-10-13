@@ -13,11 +13,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "sink_run.py"
-SPEC = importlib.util.spec_from_file_location("sink_run", SCRIPT)
-sink_run = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(sink_run)
+SCRIPT = "embodied_learning.wiki.run.sink"  # implementation module (old scripts/sink_run.py deleted)
+sink_run = importlib.import_module(SCRIPT)
 
 DELIVERABLES = [
     "scientific-memo_keyan.md",
@@ -73,11 +70,18 @@ def make_bundle(
 
 
 def run_sink(run_dir: Path, repo: Path, *extra: str) -> tuple[int, str]:
-    argv = ["sink_run.py", str(run_dir), "--repo-root", str(repo), *extra]
+    # sink.py is the legacy settle helper (finalize absorbs it) and is not a
+    # run.py subcommand, so build its Namespace directly — same fields its
+    # parser used to define.
+    import argparse
+    args = argparse.Namespace(
+        run_dir=str(run_dir), repo_root=str(repo),
+        allow_gate_fail="--allow-gate-fail" in extra,
+        dry_run="--dry-run" in extra,
+    )
     stdout = io.StringIO()
-    with mock.patch.object(sys, "argv", argv):
-        with contextlib.redirect_stdout(stdout):
-            code = sink_run.main()
+    with contextlib.redirect_stdout(stdout):
+        code = sink_run.run(args)
     return code, stdout.getvalue()
 
 

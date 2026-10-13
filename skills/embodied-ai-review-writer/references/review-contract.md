@@ -43,7 +43,7 @@ These are **two different controls**. Do not collapse them.
 - Soft enforcement:
 
 ```bash
-python3 skills/embodied-ai-review-writer/scripts/check_deep_read_budget.py \
+python3 skills/embodied-ai-review-writer/scripts/write.py check-deep-read-budget \
   --reading-summary work/<run>/reading-summary.json \
   --review-mode scoping
 ```
@@ -99,14 +99,14 @@ When the threshold is met and no style is specified, produce all three final sty
 
 **The folder name is the contract trigger.** Anything named `literature-review-<topic>-<date>` owes the full bundle; non-review artifacts (research outlines, experiment designs, synthesis notes) must use a different name (e.g. `research-outline-<topic>-<date>`).
 
-- Runs begin with `python3 scripts/init_run.py` — a birth-certificate run.json with `status: in-progress`. The status flips to `settled` only when the bundle is complete and both gates pass. An `in-progress` run fails `check_run_bundle.py` by design.
+- Runs begin with `python3 scripts/run.py init` — a birth-certificate run.json with `status: in-progress`. The status flips to `settled` only when the bundle is complete and both gates pass. An `in-progress` run fails `check_run_bundle.py` by design.
 - **Unfinished-run honesty**: stopping mid-pipeline for any reason is allowed, but must be declared — the run stays `in-progress` in `work/` and the user is told explicitly what is missing (search not run, candidates unpromoted, articles unwritten). A silently abandoned run presented as output is a contract violation.
 - Default deliverables: all three styles (`scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`) plus `evidence-appendix.md`. These are the ONLY recognized deliverable filenames; an invented name is not a deliverable.
 - Reduced scope is legal only when declared: `run.json` records `"style": "<formal-style>"` and `"scope_note": "<why — the user's explicit ask>"`. An undeclared missing style is a contract violation, not a judgment call.
 - The run folder must be self-contained: `files.evidence` (fresh) and/or `files.reused_evidence` (copied from prior runs) exist inside the folder; `event_count` equals the deduplicated local evidence.
 - Workflow-v2 manifests set `workflow_version: 2`, declare `review_mode`, and list `files.query_plan`, `files.candidate_registry`, and `files.coverage_report`. Settlement is blocked while `stop_assessment.ready_to_stop` is false.
 - `run.json` uses the standard schema (see `evidence/README.md`); invented field names (`selected_event_count`, `files.memo`, …) are rejected by the checker.
-- Gate: `python3 scripts/check_run_bundle.py <run-dir>` must pass before settling, alongside `audit_citations.py`.
+- Gate: `python3 scripts/run.py check-bundle <run-dir>` must pass before settling, alongside `audit_citations.py`.
 
 ## Cross-run evidence
 

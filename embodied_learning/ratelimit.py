@@ -43,22 +43,13 @@ import urllib.parse
 import urllib.request
 from contextlib import contextmanager
 from pathlib import Path
-
-TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
-
-# Policy groups: one shared slot/cooldown file per group. arXiv's official
-# politeness rate is 1 request / 3 s for API+export; S2 429s aggressively
-# without an API key; arxiv2md publishes 30 req/min per IP.
-DEFAULT_INTERVALS = {
-    "arxiv": 3.0,
-    "semanticscholar": 1.0,
-    "arxiv2md": 2.0,
-}
-
-DEFAULT_RETRY_BASE_SECONDS = 20.0
-DEFAULT_RETRY_CAP_SECONDS = 600.0
-
-_LOCK_POLL_SECONDS = 0.05
+from embodied_learning.config import (
+    DEFAULT_INTERVALS,
+    DEFAULT_RETRY_BASE_SECONDS,
+    DEFAULT_RETRY_CAP_SECONDS,
+    LOCK_POLL_SECONDS,
+    TRANSIENT_HTTP_CODES,
+)
 
 
 class GateTimeout(RuntimeError):
@@ -147,7 +138,7 @@ def _acquire_lock(lock_fd: int, max_wait: float | None, group: str) -> None:
                 raise
             if deadline is not None and time.monotonic() >= deadline:
                 raise GateTimeout(f"gate '{group}' queue wait exceeded {max_wait}s") from exc
-            time.sleep(_LOCK_POLL_SECONDS)
+            time.sleep(LOCK_POLL_SECONDS)
 
 
 @contextmanager

@@ -11,9 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-review-writer/scripts/write.py"  # subcommand: (in argv)
 class AuditArticleQualityTests(unittest.TestCase):
     def write_good_bundle(self, root: Path) -> None:
         memo_mechanism = (
@@ -737,18 +735,21 @@ class RuleRegistryDriftTest(unittest.TestCase):
     """
 
     def _module(self, name: str):
-        import importlib.util
+        # Implementation modules (not the scripts/ forwarders) so source-text
+        # scans see the real rule emissions and RULE_SPECS is the live registry.
+        import importlib
         from pathlib import Path as _P
 
-        root = _P(__file__).resolve().parents[3]   # .../skills/<skill>/tests/this.py -> repo root
-        path = root / "skills" / "embodied-ai-review-writer" / "scripts" / name
-        spec = importlib.util.spec_from_file_location(f"drift_{name}", path)
-        assert spec and spec.loader
-        mod = importlib.util.module_from_spec(spec)
+        root = _P(__file__).resolve().parents[3]
         import sys as _sys
-        _sys.modules[spec.name] = mod  # dataclasses needs the module registered
-        spec.loader.exec_module(mod)
-        return mod
+
+        if str(root) not in _sys.path:
+            _sys.path.insert(0, str(root))
+        mapping = {
+            "_article_quality.py": "embodied_learning.writer.quality",
+            "build_review_packet.py": "embodied_learning.writer.packet",
+        }
+        return importlib.import_module(mapping[name])
 
     def test_every_emitted_rule_id_is_registered(self):
         """audit_file() may only emit ids that exist in RULE_SPECS."""

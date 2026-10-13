@@ -12,19 +12,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "extract_failed_card_window.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-paper-reader/scripts/read.py"  # subcommand: extract-failed-card-window
 def load_module():
-    spec = importlib.util.spec_from_file_location("extract_failed_card_window", SCRIPT)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    # Ensure sibling audit_claim_support / validate_paper_note import paths work
-    scripts = str(ROOT / "scripts")
-    if scripts not in sys.path:
-        sys.path.insert(0, scripts)
-    spec.loader.exec_module(module)
-    return module
+    import importlib
+
+    sys.path.insert(0, str(ROOT.parents[1]))
+    return importlib.import_module("embodied_learning.knowledge.card_window")
 
 
 FULL_CONTEXT = (
@@ -118,7 +111,8 @@ class ExtractFailedCardWindowTests(unittest.TestCase):
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--audit",
+                    "extract-failed-card-window",
+                        "--audit",
                     str(tmp_path / "audit.json"),
                     "--extraction",
                     str(tmp_path / "extraction.json"),

@@ -21,13 +21,13 @@ import json
 import re
 from pathlib import Path
 from typing import Any
+from embodied_learning.config import MAX_EXCERPT_CHARS
 
 ABSTRACT_TIER = "abstract"
 ABSTRACT_FILENAME = "abstract-tier.jsonl"
 # Sentence splitter good enough for excerpting: split on ., ！, ?, ； kept
 # simple on purpose — an off-by-one sentence in an excerpt is harmless.
 _SENTENCE_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9])")
-MAX_EXCERPT_CHARS = 300
 
 
 def excerpt(text: str, *, max_chars: int = MAX_EXCERPT_CHARS) -> str:

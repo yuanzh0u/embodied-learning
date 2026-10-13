@@ -35,12 +35,16 @@ import urllib.request
 from pathlib import Path
 from typing import Any
 
+from embodied_learning import ratelimit
+from embodied_learning.utils.arxiv_id import normalize_arxiv_id  # noqa: F401  (re-exported for callers)
+from embodied_learning.config import MAX_RETRIES
+from embodied_learning.config import MAX_FILE_BYTES
+
 GITHUB_API = "https://api.github.com"
 RAW_BASE = "https://raw.githubusercontent.com"
 USER_AGENT = "embodied-ai-literature-hub/1.0 (local research workflow)"
 
 TEXT_SUFFIXES = {".md", ".markdown", ".txt", ".bib"}
-MAX_FILE_BYTES = 2_000_000
 
 # arxiv.org/abs/2608.15659, .../pdf/2608.15659v2, legacy .../abs/cs.CV/0303012
 ARXIV_LINK_RE = re.compile(
@@ -55,17 +59,12 @@ EXTERNAL_LINK_RE = re.compile(r"https?://[^\s\])>\"']+")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 
 
-def normalize_arxiv_id(value: str) -> str:
-    """Strip version suffix and scheme noise: ``2608.15659v2`` -> ``2608.15659``."""
-    return re.sub(r"v\d+$", "", value.strip().rstrip("/").rstrip("."))
-
-
 # ---- repository scanning -----------------------------------------------------
 
 
 def _http_get(url: str, timeout: float) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=timeout) as response:
+    with ratelimit.gated_urlopen(request, timeout=timeout) as response:
         return response.read()
 
 

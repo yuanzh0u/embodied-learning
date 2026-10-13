@@ -7,6 +7,8 @@ shapes, stage ordering, idempotent skipping, and the summary payload.
 
 from __future__ import annotations
 
+from _entry import invoke, parse
+
 import importlib.util
 import json
 import os
@@ -17,15 +19,16 @@ from pathlib import Path
 from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DRIVER_PATH = REPO_ROOT / "scripts" / "run_review_pipeline.py"
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 
 def load_driver():
-    spec = importlib.util.spec_from_file_location("run_review_pipeline", DRIVER_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
+    # Load the implementation module (not the scripts/ forwarder) so
+    # mock.patch on module attributes reaches the live globals.
+    import importlib
+
+    return importlib.import_module("embodied_learning.wiki.run.driver")
 
 
 class TermsTest(unittest.TestCase):
@@ -110,7 +113,7 @@ class ExtractionQueueLineTest(unittest.TestCase):
             self.driver.command_label(["/usr/bin/python3", "/x/search.py", "search-arxiv", "--flag"]),
             "search.py search-arxiv",
         )
-        self.assertEqual(self.driver.command_label(["/usr/bin/python3", "/x/build_paper_note.py"]), "build_paper_note.py")
+        self.assertEqual(self.driver.command_label(["/usr/bin/python3", "/x/read.py", "build-paper-note"]), "read.py build-paper-note")
 
 
 class DriverPipelineTest(unittest.TestCase):
@@ -140,11 +143,25 @@ class DriverPipelineTest(unittest.TestCase):
         "select-candidates": ("screening.json", "screening-ids.txt", "screening.md"),
         "assess-review-coverage": ("coverage-report.json",),
         "extract-content-queue": ("extraction-summary.json",),
-        "build_review_packet": ("review-packet.md", "writing-brief.md", "evidence-appendix.md"),
+        "review-packet": ("review-packet.md", "writing-brief.md", "evidence-appendix.md"),
     }
 
     def _stage_payload(self, script: str) -> str:
-        plan = {"knowledge_ids": ["EA-SENSOR"], "queries": [{"label": "a", "query": "all:demo"}]}
+        # coverage_dimensions + search_targets must be present: the driver's
+        # refresh_coverage_inplace() recomputes coverage-report.json through the
+        # REAL assess() at every stage end, so a plan without them would report
+        # every dimension failed and disagree with this fixture's payload.
+        plan = {
+            "knowledge_ids": ["EA-SENSOR"],
+            "queries": [{"label": "a", "query": "all:demo"}],
+            "coverage_dimensions": [
+                {"dimension": "direct-topic", "query_labels": ["a"],
+                 "minimum_unique_candidates": 0},
+            ],
+            "search_targets": {
+                "candidate_floor": 0, "full_text_floor": 0, "accepted_paper_floor": 0,
+            },
+        }
         registry = {"candidate_count": 42, "candidates": []}
         coverage = {
             "observed": {"full_text_recovered_count": 3},
@@ -165,7 +182,7 @@ class DriverPipelineTest(unittest.TestCase):
             },
             "assess-review-coverage": coverage,
             "extract-content-queue": {"paper_count": 2},
-            "build_review_packet": {"packet": "mechanical"},
+            "review-packet": {"packet": "mechanical"},
         }
         return json.dumps(payloads[script])
 
@@ -226,7 +243,7 @@ class DriverPipelineTest(unittest.TestCase):
              agent_patch, \
              mock.patch.object(self.driver.time, "sleep"), \
              mock.patch.object(Path, "glob", return_value=iter([])):
-            code = self.driver.main(argv)
+            code = invoke("run.py", "pipeline", argv)
         summary = json.loads((self.run_dir / "pipeline-summary.json").read_text(encoding="utf-8"))
         return code, summary
 
@@ -333,7 +350,7 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertNotIn("--query", arxiv)
 
     def test_selection_strategy_defaults_to_smart(self):
-        args = self.driver.parse_args(self.argv())
+        args = parse("run.py", "pipeline", self.argv())
         self.assertEqual(args.selection_strategy, "smart")
         self.assertEqual(
             sorted(self.driver.SELECTION_STRATEGIES),
@@ -368,7 +385,7 @@ class DriverPipelineTest(unittest.TestCase):
     def test_deep_read_limit_defaults_to_mode(self):
         """Deep-read throughput is mode-aware by default (the fixed default 10
         starved scoping reviews down to 7 citable papers in real runs)."""
-        self.assertIsNone(self.driver.parse_args(self.argv()).deep_read_limit)
+        self.assertIsNone(parse("run.py", "pipeline", self.argv()).deep_read_limit)
         self.assertEqual(self.driver.DEEP_READ_LIMITS, {"rapid": 12, "scoping": 22, "systematic": 43})
 
     def test_deep_read_order_puts_seeds_first(self):
@@ -496,14 +513,14 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(recovered_reruns, 1)
 
     def test_missing_run_json_rejected(self):
-        code = self.driver.main([
+        code = invoke("run.py", "pipeline", [
             "--run-dir", str(self.run_dir.parent / "nope"),
             "--topic", "x", "--no-terms-agent",
         ])
         self.assertEqual(code, 2)
 
     def test_bad_time_range_rejected(self):
-        code = self.driver.main([
+        code = invoke("run.py", "pipeline", [
             "--run-dir", str(self.run_dir),
             "--topic", "x", "--time-range", "2023-01-01", "--no-terms-agent",
         ])
@@ -564,6 +581,24 @@ class SearchStrategyTest(DriverPipelineTest):
         agent.assert_not_called()
         self.assertEqual(summary["dynamic_source"], "disabled (fast strategy)")
 
+    def test_pure_chinese_topic_forces_dynamic_agent_under_fast(self):
+        # A pure-Chinese topic has no Latin token to conjunct, so without the
+        # agent the plan is left with CJK fallbacks arXiv can never match —
+        # retrieval died at 0 candidates on 2026-10-12. The agent is the only
+        # English-query source there, so fast strategy must not disable it.
+        agent = mock.Mock(return_value={"queries": [
+            {"label": "direct-x", "tier": "direct-x", "query": 'all:"image segmentation"'},
+        ]})
+        _, summary = self.run_driver(
+            ["--run-dir", str(self.run_dir), "--topic", "图像分割",
+             "--review-mode", "rapid", "--time-range", "2023-01-01..2026-06-06",
+             "--kb-root", str(self.tmp.name), "--no-terms-agent",
+             "--search-strategy", "fast"],
+            agent_dynamic=agent,
+        )
+        agent.assert_called_once()
+        self.assertEqual(summary["dynamic_source"], "agent-forced")
+
     def test_seeds_strategy_with_ids_skips_arxiv_keyword_search(self):
         argv = self.argv(
             "--no-terms-agent", "--search-strategy", "seeds",
@@ -596,7 +631,7 @@ class SearchStrategyTest(DriverPipelineTest):
         self.assertEqual(summary["external_candidates"], [str(harvest)])
 
     def test_external_candidates_missing_file_rejected(self):
-        code = self.driver.main(self.argv("--no-terms-agent", "--external-candidates", "/nonexistent.json"))
+        code = invoke("run.py", "pipeline", self.argv("--no-terms-agent", "--external-candidates", "/nonexistent.json"))
         self.assertEqual(code, 2)
         self.assertEqual(self.commands, [])  # rejected before any stage ran
 
@@ -628,7 +663,7 @@ class SearchStrategyTest(DriverPipelineTest):
                  mock.patch.object(self.driver.TermsSelector, "join", return_value=(["demo"], "mechanical")), \
                  mock.patch.object(self.driver.time, "sleep"), \
                  mock.patch.object(Path, "glob", return_value=iter([])):
-                code = self.driver.main(self.argv(
+                code = invoke("run.py", "pipeline", self.argv(
                     "--no-terms-agent", "--seed-arxiv-ids", "2402.14207",
                 ))
         self.assertEqual(code, 0)
@@ -659,7 +694,7 @@ class AbstractEvidenceStageTest(unittest.TestCase):
                 {"arxiv_id": "2311.18259", "title": "Ego-Exo4D", "summary": "Ego-exo dataset.", "authors": []},
             ],
         }), encoding="utf-8")
-        self.args = self.driver.parse_args([
+        self.args = parse("run.py", "pipeline", [
             "--run-dir", str(self.run_dir), "--topic", "demo topic",
         ])
         self.summary: dict = {}
@@ -947,6 +982,61 @@ class InputsNewerThanTest(unittest.TestCase):
             src = Path(tmp) / "search-r1.json"
             src.write_text("{}", encoding="utf-8")
             self.assertTrue(driver.inputs_newer_than(out, [src]))
+
+
+
+class EventPrefixClaimTest(unittest.TestCase):
+    """Event-ID prefixes are reserved O_EXCL under <kb-root>/.claims/. Two
+    races bit this on 2026-10-13 (5 concurrent runs): every Chinese topic
+    collapsed to base "REVIEW" (CJK is stripped from TOPIC8, which must stay
+    ASCII per EVENT_ID_RE), and the post-5-attempts fallback returned an
+    UNRESERVED prefix — 图像内参估计 and 图像拼接 both settled on
+    EA-REVIEW-2026-8."""
+
+    def setUp(self) -> None:
+        import os
+
+        self._tmp = tempfile.TemporaryDirectory()
+        self.kb_root = Path(self._tmp.name)
+        (self.kb_root / "evidence").mkdir()
+        self._env = os.environ.copy()
+        os.environ["EMBODIED_KB_LOCK_DIR"] = str(self.kb_root / ".locks")
+
+    def tearDown(self) -> None:
+        import os
+
+        os.environ.clear()
+        os.environ.update(self._env)
+        self._tmp.cleanup()
+
+    def _claim(self, topic: str, run_name: str) -> str:
+        driver = load_driver()
+        run_dir = self.kb_root / "work" / run_name
+        run_dir.mkdir(parents=True, exist_ok=True)
+        run_json = run_dir / "run.json"
+        run_json.write_text(json.dumps({"topic": topic}), encoding="utf-8")
+        return driver.claim_event_prefix(self.kb_root, run_json, {"topic": topic})
+
+    def test_distinct_chinese_topics_get_distinct_prefixes(self) -> None:
+        first = self._claim("图像内参估计", "literature-review-a-20261013")
+        second = self._claim("图像拼接", "literature-review-b-20261013")
+        self.assertNotEqual(first, second, "two Chinese topics must not share an event-ID namespace")
+
+    def test_claim_is_reserved_on_disk(self) -> None:
+        prefix = self._claim("图像重定位", "literature-review-c-20261013")
+        claims = self.kb_root / ".claims" / "event-prefix"
+        self.assertTrue((claims / f"{prefix}.json").is_file(), "the fallback must never return an unreserved prefix")
+
+    def test_same_topic_is_idempotent_via_manifest(self) -> None:
+        driver = load_driver()
+        run_dir = self.kb_root / "work" / "literature-review-d-20261013"
+        run_dir.mkdir(parents=True, exist_ok=True)
+        run_json = run_dir / "run.json"
+        run_json.write_text(json.dumps({"topic": "图像分割", "event_prefix": "EA-KEEP-2026"}), encoding="utf-8")
+        self.assertEqual(
+            driver.claim_event_prefix(self.kb_root, run_json, {"topic": "图像分割", "event_prefix": "EA-KEEP-2026"}),
+            "EA-KEEP-2026",
+        )
 
 
 if __name__ == "__main__":

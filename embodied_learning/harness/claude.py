@@ -34,6 +34,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from embodied_learning.config import STOP_GRACE_S
 
 # ---- constants ------------------------------------------------------------
 
@@ -43,7 +44,6 @@ FALLBACK_CLI = "/usr/local/bin/claude"
 DRIVER_AGENT_MODEL = "glm-5.3-flash"
 DEFAULT_PERMISSION_MODE = "bypassPermissions"
 # Grace before SIGKILL after a requested stop (ChatTurn).
-STOP_GRACE_S = 5.0
 
 # Environment markers of a running claude session — a spawned headless agent
 # must never think it is nested inside one.

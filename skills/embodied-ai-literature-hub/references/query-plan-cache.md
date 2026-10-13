@@ -32,7 +32,7 @@ Layout:
 1. Before dynamic/persona LLM work, probe the cache:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/query_plan_cache.py get \
+python3 skills/embodied-ai-literature-hub/scripts/search.py plan-cache get \
   --topic "触觉—力觉联合的动作条件世界模型" \
   --review-mode scoping \
   --time-range "近六个月" \
@@ -53,7 +53,7 @@ python3 skills/embodied-ai-literature-hub/scripts/query_plan_cache.py get \
    - After a reviewed plan is finalized, store it:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/query_plan_cache.py put \
+python3 skills/embodied-ai-literature-hub/scripts/search.py plan-cache put \
   --topic "…" --review-mode scoping --time-range "近六个月" --family tactile-force \
   --plan work/<run>/query-plan.json \
   --had-dynamic --had-persona
@@ -62,7 +62,7 @@ python3 skills/embodied-ai-literature-hub/scripts/query_plan_cache.py put \
 4. Invalidate when taxonomy or intentional strategy changes:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/query_plan_cache.py invalidate \
+python3 skills/embodied-ai-literature-hub/scripts/search.py plan-cache invalidate \
   --topic "…" --review-mode scoping --time-range "近六个月" --family tactile-force
 ```
 

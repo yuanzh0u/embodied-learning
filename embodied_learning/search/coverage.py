@@ -15,12 +15,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+from embodied_learning.utils.jsonio import load_json as _load_json
+
 
 FULL_TEXT_STATUSES = {"extracted", "accepted"}
 
 
 def load_json(path: Path) -> dict[str, Any]:
-    data = json.loads(path.read_text(encoding="utf-8"))
+    data = _load_json(path)
     if not isinstance(data, dict):
         raise ValueError(f"{path}: expected JSON object")
     return data

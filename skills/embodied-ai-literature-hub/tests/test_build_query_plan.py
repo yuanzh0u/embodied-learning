@@ -572,11 +572,34 @@ class WeakAliasConfidenceTests(unittest.TestCase):
         self.assertEqual(plan["plan_knowledge_ids"], [])
         labels = {item["label"] for item in plan["arxiv_api_queries"]}
         self.assertNotIn("ea-sensor-multimodal-policy", labels)
-        self.assertTrue(any(label.startswith("generic") for label in labels))
         self.assertTrue(
             any("generic vocabulary aliases" in note for note in plan["notes"]),
             plan["notes"],
         )
+
+    def test_pure_chinese_topic_emits_no_arxiv_keyword_query(self) -> None:
+        # arXiv indexes English text only: a generic all:"<中文>" query can
+        # never match (it was misread downstream as "rate limited?"). The plan
+        # must say so instead of shipping a phantom query — English queries
+        # come from the dynamic agent / seeds, which the driver force-enables.
+        plan = run_json("--topic", "图像分割", "--max-queries", "10")
+        labels = {item["label"] for item in plan["arxiv_api_queries"]}
+        self.assertFalse(any(label.startswith("generic") for label in labels), labels)
+        self.assertFalse(
+            any(not str(item.get("query", "")).isascii() for item in plan["arxiv_api_queries"]),
+            plan["arxiv_api_queries"],
+        )
+        self.assertTrue(
+            any("no ASCII tokens" in note for note in plan["notes"]),
+            plan["notes"],
+        )
+
+    def test_mixed_script_topic_still_gets_generic_ascii_query(self) -> None:
+        plan = run_json("--topic", "单目深度估计 SLAM", "--max-queries", "10")
+        labels = {item["label"] for item in plan["arxiv_api_queries"]}
+        self.assertTrue(any(label.startswith("generic") for label in labels), labels)
+        for item in plan["arxiv_api_queries"]:
+            self.assertTrue(str(item.get("query", "")).isascii(), item)
 
     def test_confident_plan_keeps_card_queries(self) -> None:
         plan = run_json("--topic", "传感器融合", "--max-queries", "10")

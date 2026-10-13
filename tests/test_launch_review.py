@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from _entry import invoke, parse
+
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,17 +14,23 @@ from unittest import mock
 
 
 REPO = Path(__file__).resolve().parents[1]
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
 
 
 def load(name: str, relative: str):
-    spec = importlib.util.spec_from_file_location(name, REPO / relative)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
+    # Load implementation modules (not the scripts/ forwarders) so mock.patch
+    # on module attributes reaches the live globals the functions read.
+    import importlib
+
+    mapping = {
+        "rrp_for_launch_test": "embodied_learning.wiki.run.driver",
+        "launch_review_for_test": "embodied_learning.wiki.run.launcher",
+    }
+    return importlib.import_module(mapping[name])
 
 
-rrp = load("rrp_for_launch_test", "scripts/run_review_pipeline.py")
+rrp = load("rrp_for_launch_test", "scripts/run.py pipeline")
 launcher = load("launch_review_for_test", "scripts/launch_review.py")
 
 
@@ -155,7 +164,7 @@ class CollectGateProblemsTest(unittest.TestCase):
             self.assertTrue(any("成稿" in problem for problem in problems))
 
     def test_filters_run_not_settled_timing_noise(self) -> None:
-        """check_run_bundle runs BEFORE finalize_run.py, so its
+        """check_run_bundle runs BEFORE run.py finalize, so its
         "run not settled: status is `in-progress`" line is timing noise that
         would burn a continuation round; real missing-field lines still report."""
         with tempfile.TemporaryDirectory() as tmp:
@@ -163,7 +172,7 @@ class CollectGateProblemsTest(unittest.TestCase):
             (run_dir / "scientific-memo_keyan.md").write_text("# 成稿\n", encoding="utf-8")
 
             def fake_run(command, **kwargs):
-                if str(command[1]).endswith("check_run_bundle.py"):
+                if "check-bundle" in [str(part) for part in command]:
                     return mock.Mock(
                         returncode=1,
                         stdout="run not settled: status is `in-progress`\n"
@@ -207,8 +216,8 @@ class WriterPromptsTest(unittest.TestCase):
             self.assertNotIn("[TOPIC:", system_prompt)
             self.assertIn(run_dir.name, user_prompt)
             # The launcher branch must not instruct the agent to run finalize.
-            self.assertNotIn("finalize_run.py", user_prompt)
-            self.assertIn("build_review_packet.py", user_prompt)
+            self.assertNotIn("run.py finalize", user_prompt)
+            self.assertIn("write.py review-packet", user_prompt)
             # The selection strategy reaches the writer prompt (and run_mechanical
             # forwards the same flag to the driver).
             self.assertIn("选文策略：bm25", user_prompt)
@@ -216,10 +225,10 @@ class WriterPromptsTest(unittest.TestCase):
     def test_selection_strategy_flag_defaults_and_forwards(self) -> None:
         # Default is smart; an unknown value is rejected by argparse.
         with mock.patch.object(launcher, "launch", return_value=0) as launch:
-            launcher.main(["--topic", "demo"])
+            invoke("run.py", "launch", ["--topic", "demo"])
         self.assertEqual(launch.call_args.args[0].selection_strategy, "smart")
         with self.assertRaises(SystemExit):
-            launcher.main(["--topic", "demo", "--selection-strategy", "bogus"])
+            invoke("run.py", "launch", ["--topic", "demo", "--selection-strategy", "bogus"])
 
     def test_run_mechanical_forwards_selection_strategy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -255,7 +264,7 @@ class RunFinalizeTest(unittest.TestCase):
             ) as run:
                 launcher.run_finalize(self._args(kb_root), run_dir)
             command = run.call_args.args[0]
-            self.assertTrue(any(str(part).endswith("finalize_run.py") for part in command))
+            self.assertTrue(any(str(part).endswith("run.py") for part in command) and "finalize" in command)
             self.assertIn("--style", command)
             self.assertIn("scientific-memo", command)
             self.assertNotIn("--scope-note", command)
@@ -341,6 +350,24 @@ def argparse_namespace(**kwargs):
     return argparse.Namespace(**kwargs)
 
 
+
+class UserDecisionStopTest(unittest.TestCase):
+    """Deep-read shortfall is a designed decision point: the writer reports the
+    shortlisted papers and emits [STOP:awaiting-user]. That is the correct
+    terminal state, not a failure — but the launcher used to ignore the marker
+    and burn every continuation round re-asking (2026-10-13, run 05: 4 writer
+    rounds, $31 of tokens, all ending in the same stop)."""
+
+    def test_stop_marker_is_recognised(self) -> None:
+        import os
+        import tempfile
+
+        self.assertEqual(launcher.USER_DECISION_STOP, "[STOP:awaiting-user]")
+        with tempfile.TemporaryDirectory() as tmp:
+            log = Path(tmp) / "writer.log"
+            log.write_text("...输出如下\n[STOP:awaiting-user]\n", encoding="utf-8")
+            self.assertIn(launcher.USER_DECISION_STOP, log.read_text(encoding="utf-8")[-20000:])
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -373,3 +400,31 @@ class ResolveWriterModelTest(unittest.TestCase):
         env = {"ANTHROPIC_MODEL": "", "CLAUDE_CODE_SUBAGENT_MODEL": ""}
         with mock.patch.dict("os.environ", env, clear=False):
             self.assertEqual(launcher.resolve_writer_model(args), launcher.DRIVER_AGENT_MODEL)
+
+
+class EvidenceProblemClassificationTest(unittest.TestCase):
+    """Floor/coverage failures are a mechanical-driver job. Feeding them to a
+    writer continuation can never resolve them (the writer is forbidden from
+    re-running retrieval) and burned every retry round on an unsolvable
+    problem (2026-10-13, run 02: a network outage killed all extractions and
+    the launcher spent 3 writer rounds unable to help)."""
+
+    def test_floor_problems_are_evidence_side(self) -> None:
+        for problem in (
+            "coverage/saturation gate not passed: full_text_floor, accepted_paper_floor",
+            "full_text_floor（0/12） — 抽取重试可补",
+            "accepted_paper_floor（0/8） — 深读/候补可补",
+            "cited_paper_floor 未过",
+            "补检索/深读后重算",
+        ):
+            with self.subTest(problem=problem):
+                self.assertTrue(launcher.is_evidence_problem(problem), problem)
+
+    def test_editorial_problems_go_to_the_writer(self) -> None:
+        for problem in (
+            "citation audit: anchor 3 outside the loaded evidence",
+            "中文字符占比 0.31 低于阈值 0.60",
+            "trace-map 未生成：删改成稿中无证据支撑的 arXiv 引用",
+        ):
+            with self.subTest(problem=problem):
+                self.assertFalse(launcher.is_evidence_problem(problem), problem)

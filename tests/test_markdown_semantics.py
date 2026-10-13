@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import unittest
 
-from scripts import build_research_wiki as wiki
-from scripts import visualize_kb_index as viz
-from scripts.lib.markdown_semantics import render_markdown
+import sys
+from pathlib import Path as _P
+
+_REPO_ROOT = _P(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from embodied_learning.wiki.publish import snapshot as wiki
+from embodied_learning.wiki.publish import knowledge_map as viz
+from embodied_learning.wiki.publish.markdown import render_markdown
 
 
 class MarkdownSemanticsTest(unittest.TestCase):

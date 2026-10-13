@@ -17,10 +17,7 @@ from unittest import mock
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _REPO_ROOT / "embodied_learning" / "harness" / "claude.py"
-_spec = importlib.util.spec_from_file_location("harness_claude_test_module", _SCRIPT)
-claude = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(claude)
+claude = importlib.import_module("embodied_learning.harness.claude")
 
 
 class SurfaceContractTest(unittest.TestCase):
@@ -50,27 +47,6 @@ class SurfaceContractTest(unittest.TestCase):
             elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
                 imported.add(node.module.split(".")[0])
         self.assertEqual(imported & {"lib", "wiki_scripts", "wiki_chat"}, set())
-
-    def test_compat_shim_aliases_harness_function(self) -> None:
-        import sys
-
-        sys.path.insert(0, str(_REPO_ROOT / "scripts"))
-        importlib.import_module("embodied_learning")  # ensure package path
-        spec = importlib.util.spec_from_file_location(
-            "agent_invoke_shim_test", _REPO_ROOT / "scripts" / "lib" / "agent_invoke.py"
-        )
-        assert spec and spec.loader
-        shim = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(shim)
-        import embodied_learning.harness.claude as harness_claude
-
-        self.assertIs(shim.complete, harness_claude.complete)
-        self.assertIs(shim.run_one_shot_agent, harness_claude.complete)
-        self.assertIs(shim.ChatTurn, harness_claude.ChatTurn)
-        # Mechanical helpers stay in the shim (prompts + KB layout).
-        self.assertTrue(callable(shim.build_skeleton_prompt))
-        self.assertTrue(callable(shim.read_skeleton_output))
-        self.assertTrue(callable(shim.pool_root_for))
 
 
 class CompleteCommandShapeTest(unittest.TestCase):

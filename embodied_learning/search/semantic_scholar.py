@@ -36,9 +36,15 @@ from embodied_learning import ratelimit
 API_BASE = "https://api.semanticscholar.org/graph/v1"
 SEARCH_FIELDS = "title,abstract,year,publicationDate,authors,externalIds,fieldsOfStudy,citationCount"
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "s2")
-MAX_RETRIES = 3
-TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
-PAGE_SIZE = 100
+from embodied_learning.search.http import (  # noqa: F401  (re-exported for callers)
+    MAX_RETRIES,
+    TRANSIENT_HTTP_CODES,
+    bounded_retries,
+    is_retryable,
+    retry_after_seconds,
+    retry_wait_seconds,
+)
+from embodied_learning.utils.arxiv_id import normalize_arxiv_id  # noqa: E402
 
 
 class SemanticScholarSearch:
@@ -210,64 +216,14 @@ def stable_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def load_queries(queries: list[str] | None = None, query_file: str | None = None) -> list[dict[str, str]]:
-    """Merge query-file entries with repeated --query values (CLI-side helper)."""
-    queries = list(queries or [])
-    if query_file:
-        with open(query_file, "r", encoding="utf-8") as handle:
-            data = json.load(handle)
-        existing = queries
-        queries = []
-        for index, item in enumerate(data.get("queries", []), start=1):
-            query = item.get("query")
-            if query:
-                queries.append({"label": item.get("label", f"query-{index}"), "query": query})
-        queries.extend(existing)
-    # Repeated --query values arrive as raw strings; normalize them to the
-    # planner contract shape so run() can index item["query"].
-    queries = [
-        item if isinstance(item, dict) else {"label": f"query-{index}", "query": item}
-        for index, item in enumerate(queries, start=1)
-    ]
-    if not queries:
-        raise SystemExit("Provide --query or --query-file.")
-    return queries
+from embodied_learning.search.queries import load_queries  # noqa: F401  (re-exported for callers)
+from embodied_learning.config import PAGE_SIZE
 
 
 # ---------------------------------------------------------------------------
 # Network: retry/backoff mirrors search_arxiv.py so both backends behave the
 # same under rate limiting; only URL construction and response parsing differ.
 # ---------------------------------------------------------------------------
-
-
-def bounded_retries(value: int) -> int:
-    return max(0, min(value, MAX_RETRIES))
-
-
-def retry_after_seconds(exc: Exception) -> float | None:
-    if not isinstance(exc, urllib.error.HTTPError):
-        return None
-    retry_after = exc.headers.get("Retry-After") if exc.headers else None
-    if not retry_after:
-        return None
-    try:
-        parsed = float(retry_after)
-    except ValueError:
-        return None
-    return parsed if parsed >= 0 else None
-
-
-def is_retryable(exc: Exception) -> bool:
-    if isinstance(exc, urllib.error.HTTPError):
-        return exc.code in TRANSIENT_HTTP_CODES
-    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
-
-
-def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
-    retry_after = retry_after_seconds(exc)
-    if retry_after is not None:
-        return max(0.0, min(retry_after, retry_max_seconds))
-    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
 
 
 def build_search_url(query: str, offset: int, limit: int) -> str:
@@ -323,9 +279,6 @@ def in_window(publication_date: str, start: str, end: str) -> bool:
     return start <= day <= end
 
 
-def normalize_arxiv_id(value: object) -> str:
-    raw = str(value or "").rsplit("/", 1)[-1].removesuffix(".pdf").removesuffix(".html")
-    return re.sub(r"v\d+$", "", raw.strip())
 
 
 def parse_paper(entry: dict, query_label: str, effective_query: str) -> dict[str, object] | None:

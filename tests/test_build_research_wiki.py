@@ -10,7 +10,16 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import mock
 
-from scripts import build_research_wiki as wiki
+import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+# Implementation module (not the scripts/ forwarder) so underscore helpers and
+# mock.patch on module attributes resolve against the live namespace.
+from embodied_learning.wiki.publish import snapshot as wiki
+from embodied_learning import locks
 
 
 def write_triplet(directory: Path, topic: str = "测试话题") -> None:
@@ -274,9 +283,12 @@ class BuildResearchWikiTest(unittest.TestCase):
 
     def test_publication_lock_rejects_concurrent_writer(self) -> None:
         """Publishers serialize across processes/machines via the KB-shared
-        lock file (<output>/.locks/wiki-publish.lock); a second publisher
+        lock journal (<output>/.locks/wiki-publish.lock); a second publisher
         waits briefly, then fails with the owner info. Same-process nesting
-        is deliberately reentrant (the publisher holds it across stages)."""
+        is deliberately reentrant (the publisher holds it across stages).
+
+        Journal semantics: the lock file is append-only and survives release
+        as an audit trail — free means "no live holder", not "file gone"."""
         import threading
 
         lock_file = self.output / ".locks" / "wiki-publish.lock"
@@ -293,6 +305,7 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertTrue(started.wait(10))
         try:
             self.assertTrue(lock_file.exists())
+            self.assertIsNotNone(locks.read_owner(lock_file))
             with mock.patch.dict(os.environ, {"EMBODIED_KB_LOCK_WAIT": "1"}):
                 with self.assertRaisesRegex(RuntimeError, "超过"):
                     with wiki.publication_lock(self.output):
@@ -300,7 +313,8 @@ class BuildResearchWikiTest(unittest.TestCase):
         finally:
             release.set()
             thread.join(10)
-        self.assertFalse(lock_file.exists())
+        self.assertTrue(lock_file.exists())
+        self.assertIsNone(locks.read_owner(lock_file))
 
     def test_single_style_run_publishes_declared_version_only(self) -> None:
         """A run.json declaring style+scope_note publishes with just its own

@@ -1,6 +1,12 @@
+
 #!/usr/bin/env python3
 
 from __future__ import annotations
+
+import sys
+from pathlib import Path as _P
+sys.path.insert(0, str(_P(__file__).resolve().parents[3] / 'tests'))
+from _entry import invoke
 
 import importlib.util
 import json
@@ -10,11 +16,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "print_registry_titles.py"
-SPEC = importlib.util.spec_from_file_location("print_registry_titles", SCRIPT)
-mod = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(mod)
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+import importlib
+mod = importlib.import_module("embodied_learning.search.registry_titles")
 
 
 class PrintRegistryTitlesTests(unittest.TestCase):
@@ -42,9 +47,7 @@ class PrintRegistryTitlesTests(unittest.TestCase):
 
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = mod.main(
-                [
-                    "--candidate-registry",
+            code = invoke("search.py", "registry-titles", ["--candidate-registry",
                     str(self.registry_path),
                     "--limit",
                     "2",
@@ -63,9 +66,7 @@ class PrintRegistryTitlesTests(unittest.TestCase):
 
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = mod.main(
-                [
-                    "--candidate-registry",
+            code = invoke("search.py", "registry-titles", ["--candidate-registry",
                     str(self.registry_path),
                     "--status-counts-only",
                     "--format",

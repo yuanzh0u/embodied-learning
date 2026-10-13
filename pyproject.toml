@@ -18,13 +18,13 @@ tex = ["pypandoc"] # TeX -> Markdown parsing (extract_arxiv_tex.py); pandoc bina
 sources = ["boto3", "pypandoc"] # convenience: full TeX-source recovery chain
 
 [project.scripts]
-extract_arxiv = "hub_scripts.extract_arxiv_content:main"
-serve_research_wiki = "wiki_scripts.serve_research_wiki:main"
-run_review_pipeline = "wiki_scripts.run_review_pipeline:main"
-launch_review = "wiki_scripts.launch_review:main"
-quick_read_paper = "wiki_scripts.quick_read_paper:main"
-paper_slide_deck = "wiki_scripts.paper_slide_deck:main"
-run_slide_deck = "wiki_scripts.run_slide_deck:main"
+extract_arxiv = "hub_scripts.fetch:extract_arxiv_main"
+serve_research_wiki = "wiki_scripts.wiki:serve_main"
+run_review_pipeline = "wiki_scripts.run:pipeline_main"
+launch_review = "wiki_scripts.run:launch_main"
+quick_read_paper = "reader_scripts.read:quick_read_main"
+paper_slide_deck = "writer_scripts.write:paper_deck_main"
+run_slide_deck = "writer_scripts.write:run_deck_main"
 
 [tool.setuptools]
 # Three module roots in one distribution: the arXiv data-processing
@@ -55,14 +55,23 @@ packages = [
     "embodied_learning.parse",
     "embodied_learning.knowledge",
     "embodied_learning.harness",
+    "embodied_learning.utils",
+    "embodied_learning.wiki",
+    "embodied_learning.wiki.run",
+    "embodied_learning.wiki.publish",
+    "embodied_learning.writer",
     "hub_scripts",
-    "wiki_scripts", "wiki_scripts.lib", "wiki_scripts.wiki_assets",
+    "reader_scripts",
+    "writer_scripts",
+    "wiki_scripts", "wiki_scripts.wiki_assets",
     "wiki_scripts.skills",
 ]
 include-package-data = false
 
 [tool.setuptools.package-dir]
 hub_scripts = "skills/embodied-ai-literature-hub/scripts"
+reader_scripts = "skills/embodied-ai-paper-reader/scripts"
+writer_scripts = "skills/embodied-ai-review-writer/scripts"
 wiki_scripts = "scripts"
 "wiki_scripts.wiki_assets" = "wiki"
 "wiki_scripts.skills" = "skills"

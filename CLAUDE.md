@@ -38,7 +38,7 @@ The Makefile mirrors the CI discovery list in `.github/workflows/research-valida
 ```bash
 make test                 # same suites as research-validation CI
 make test-knowledge       # top-level tests/ only
-make validate             # scripts/validate_current_reviews.py (needs full git history)
+make validate             # scripts/run.py validate-reviews (needs full git history)
 
 # Run one skill's suite (skill dirs are hyphenated, so scope discovery to the tests dir)
 python3 -m unittest discover -s skills/embodied-ai-literature-hub/tests -p 'test_*.py'
@@ -47,27 +47,27 @@ python3 -m unittest discover -s skills/embodied-ai-literature-hub/tests -p 'test
 python3 -m unittest discover -s tests -p 'test_*.py'
 
 # Run a single test file directly
-python3 skills/embodied-ai-literature-hub/tests/test_search.py search-arxiv
+python3 skills/embodied-ai-literature-hub/tests/test_search.py  # see test file for usage
 ```
 
 Knowledge-base integrity and ID allocation (top-level `scripts/`):
 
 ```bash
-python3 scripts/check_kb_links.py            # broken links, unregistered source IDs, line-number locators
-python3 scripts/next_event_id.py --prefix EA-TWM-2026   # next collision-free evidence event ID
-python3 scripts/init_run.py --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
-python3 scripts/run_review_pipeline.py --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 12 / scoping 22 / systematic 43) -> projection (stamps run.json event_count/evidence_papers) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
-python3 scripts/check_run_bundle.py <run-dir>           # bundle completeness gate (pre-settle)
-python3 scripts/audit_citations.py --article ... --appendix ... --evidence-jsonl ...   # citation gate
-python3 scripts/finalize_run.py --run-dir <run-dir> --kb-root <kb-root>   # mechanical settle: stamp run.json fields -> cited-paper floor gate (rapid 6 / scoping 10 / systematic 15 distinct papers) -> both gates -> publish evidence/ -> settled -> catalog row -> wiki snapshot
-python3 scripts/run_status.py --run-dir <run-dir>   # one-shot run digest (funnel, per-paper evidence + References metadata, artifact checklist, next commands) — agents read this instead of looping over evidence/*.jsonl
+python3 scripts/wiki.py check-kb-links            # broken links, unregistered source IDs, line-number locators
+python3 scripts/run.py next-event-id --prefix EA-TWM-2026   # next collision-free evidence event ID
+python3 scripts/run.py init --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
+python3 scripts/run.py pipeline --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 12 / scoping 22 / systematic 43) -> projection (stamps run.json event_count/evidence_papers) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
+python3 scripts/run.py check-bundle <run-dir>           # bundle completeness gate (pre-settle)
+python3 scripts/run.py audit-citations --article ... --appendix ... --evidence-jsonl ...   # citation gate
+python3 scripts/run.py finalize --run-dir <run-dir> --kb-root <kb-root>   # mechanical settle: stamp run.json fields -> cited-paper floor gate (rapid 6 / scoping 10 / systematic 15 distinct papers) -> both gates -> publish evidence/ -> settled -> catalog row -> wiki snapshot
+python3 scripts/run.py status --run-dir <run-dir>   # one-shot run digest (funnel, per-paper evidence + References metadata, artifact checklist, next commands) — agents read this instead of looping over evidence/*.jsonl
 ```
 
-**Literature review runs are driver-first.** Default to `run_review_pipeline.py` for every
+**Literature review runs are driver-first.** Default to `scripts/run.py pipeline` for every
 mechanical stage instead of hand-running search/extraction/deep-read steps (it encodes rate-limit
 degradation, dynamic-query merging, and skeleton-agent deep reading). Claude sessions own only the
-judgment stages (packet via `build_review_packet.py --run-dir` → writing → audit gates →
-`finalize_run.py`) and run them **in one turn** — no outline stop-and-wait checkpoint; the only
+judgment stages (packet via `write.py review-packet --run-dir` → writing → audit gates →
+`run.py finalize`) and run them **in one turn** — no outline stop-and-wait checkpoint; the only
 sanctioned early stop is retrieval failure or insufficient evidence (leave the run `in-progress`
 and say what is missing) — a gate failure is a fix-and-rerun condition, never a stop. Settling a
 run is not the last step: `finalize_run.py` performs publish + catalog registration + wiki
@@ -99,27 +99,27 @@ python3 skills/embodied-ai-literature-hub/scripts/search.py search-arxiv --query
 # Offline retrieval (no network): pass --metadata-snapshot with an OAI JSONL snapshot, or a
 # SQLite/FTS5 database built once via `search.py build-snapshot-db --snapshot-jsonl <jsonl> --db <db>`
 # (seconds per round vs minutes; db at ~/Documents/arxiv/arxiv-metadata-oai-snapshot.sqlite).
-# run_review_pipeline.py forwards the same choice as --arxiv-snapshot.
+# run.py pipeline forwards the same choice as --arxiv-snapshot.
 python3 skills/embodied-ai-literature-hub/scripts/search.py build-candidate-registry \
   --semantic-scholar-result /tmp/s2-candidates.json --search-result /tmp/candidates.json --output work/<run>/registry.json
 python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-arxiv-html --paper-id 2402.10329 --terms UMI,data
 # Markdown tier (default arxiv2md transport: public REST API via curl, no credentials;
 # `--transport s3-tex` = S3 tarball + pandoc, TODO pending AWS credentials — requester-pays bucket)
-python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 \
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-content --paper-id 2402.10329 \
   --terms UMI,data --preferred-source auto --include-full-text --output /tmp/extraction.json
-python3 skills/embodied-ai-review-writer/scripts/build_review_packet.py --topic "..." \
+python3 skills/embodied-ai-review-writer/scripts/write.py review-packet --topic "..." \
   --knowledge-id EA-DATA --evidence-jsonl /tmp/evidence.jsonl
 # Local public paper pool (default ~/Documents/arxiv/pool, outside the repo): one folder per paper
-python3 skills/embodied-ai-literature-hub/scripts/knowledge.py pool-add-paper add --extraction /tmp/extraction.json
+python3 skills/embodied-ai-paper-reader/scripts/read.py pool-add-paper add --extraction /tmp/extraction.json
 # Single-paper quick-read card (速读): ensures pooled + deep-read, then writes
 # quick-read_sudu.md into the pool dir (wiki reader 速读 tab browses it)
-python3 scripts/quick_read_paper.py --arxiv-id 2302.01109
+python3 skills/embodied-ai-paper-reader/scripts/read.py quick-read --arxiv-id 2302.01109
 ```
 
 The paper pool is a local store outside the repository (`~/Documents/arxiv/pool` by default) where
 each paper owns one folder keyed by unique ID (`arxiv-<id>/` with `paper.md`, `extraction.json`,
 `note.md`, `meta.json`). Topic cards may cite pool papers with a `POOL-<...>` frontmatter `source`
-entry carrying an absolute `file:` path and a semantic-anchor `locator`; `scripts/check_kb_links.py`
+entry carrying an absolute `file:` path and a semantic-anchor `locator`; `scripts/wiki.py check-kb-links`
 validates the file exists without requiring `sources.md` registration.
 
 ## Architecture: the skill pipeline
@@ -175,7 +175,7 @@ deliberate — do not blur them:
   over raw docs; open archives or `evidence/` only when exact wording or references are needed.
 
 Add new material via `knowledge/ingestion-guide.md` (register source → extract to card → update index).
-Run `python3 scripts/check_kb_links.py` after editing knowledge files.
+Run `python3 scripts/wiki.py check-kb-links` after editing knowledge files.
 
 **Local KB first (`~/Documents/arxiv`).** The canonical working knowledge base is the local KB at
 `~/Documents/arxiv` (its own `knowledge/`, `evidence/`, `pool/`, `work/`); two KB roots exist and
@@ -196,6 +196,14 @@ a pool dir inside the repo is a mis-resolved default, migrate it out and delete 
 
 ## Conventions and invariants
 
+- **The library has no CLI, no prompt text, and no policy constants** (docs/adr/0005).
+  `embodied_learning/**` exposes exactly `run(args: argparse.Namespace) -> int` — no
+  `parse_args`, no `main`, no `if __name__`. The six dispatchers
+  (`scripts/{run,wiki}.py`, `skills/*/scripts/{search,fetch,read,write}.py`) own every
+  argparse flag table and argv/exit-code plumbing. LLM prompt wording lives only in
+  `embodied_learning/harness/prompt.py`; tunable policy knobs (limits, timeouts, thresholds,
+  budgets) live only in `embodied_learning/config.py`. Flag strings, prompt wording and
+  constant values are contracts — moving them is not a license to edit them.
 - **All model-capability calls go through `embodied_learning/harness/claude.py`** (pybind-style
   binding layer). Feature modules keep prompts and output parsing; the harness owns CLI discovery,
   spawn-environment isolation, auth preflight, one-shot `complete()`, streaming `ChatTurn`, and the

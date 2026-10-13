@@ -23,10 +23,7 @@ from unittest import mock
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _REPO_ROOT / "embodied_learning" / "locks.py"
-_spec = importlib.util.spec_from_file_location("locks_test_module", _SCRIPT)
-locks = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(locks)
+locks = importlib.import_module("embodied_learning.locks")
 
 
 def _env(tmp: str) -> dict[str, str]:

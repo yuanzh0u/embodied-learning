@@ -21,9 +21,8 @@ from pathlib import Path
 from urllib.parse import urljoin
 
 from embodied_learning import ratelimit
+from embodied_learning.config import FETCH_TIMEOUT_S, MAX_HTML_BYTES
 
-FETCH_TIMEOUT_S = 45.0
-MAX_HTML_BYTES = 12_000_000  # sanity cap — LaTeXML pages are ≤ ~3 MB today
 
 # Accepts new-style ids (2402.10329, optional v2 suffix) and old-style ids
 # (cs/0301012, astro-ph.EP/9912004). Version suffixes are stripped for the

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from _entry import invoke
+
 import contextlib
 import importlib.util
 import io
@@ -14,11 +16,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "check_sink_integrity.py"
-SPEC = importlib.util.spec_from_file_location("check_sink_integrity", SCRIPT)
-check_sink_integrity = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(check_sink_integrity)
+SCRIPT = "embodied_learning.wiki.run.drift"  # implementation module (old scripts/check_sink_integrity.py deleted)
+check_sink_integrity = importlib.import_module(SCRIPT)
 
 DELIVERABLES = [
     "scientific-memo_keyan.md",
@@ -71,11 +70,9 @@ def make_bundle(
 
 
 def run_check(repo: Path) -> tuple[int, str]:
-    argv = ["check_sink_integrity.py", "--repo-root", str(repo)]
     stdout = io.StringIO()
-    with mock.patch.object(sys, "argv", argv):
-        with contextlib.redirect_stdout(stdout):
-            code = check_sink_integrity.main()
+    with contextlib.redirect_stdout(stdout):
+        code = invoke("run.py", "check-sink-integrity", ["--repo-root", str(repo)])
     return code, stdout.getvalue()
 
 

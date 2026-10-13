@@ -29,7 +29,7 @@ Reject OCR-derived or scan-only papers as `unavailable`. The workflow does not u
 ```bash
 # Prefer --summary-first for scoping / structure-map passes (H1 token guard).
 # Full extraction JSON stays on disk for locator windows and claim-support audits.
-python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
+python3 skills/embodied-ai-paper-reader/scripts/read.py build-reading-packet \
   --extraction work/<run>/extractions/2402.10329.json \
   --metadata work/<run>/paper-metadata/2402.10329.json \
   --review-question "UMI 数据在什么条件下可迁移到机器人策略?" \
@@ -45,10 +45,10 @@ python3 skills/embodied-ai-paper-reader/scripts/build_reading_packet.py \
 4. **Validate and audit locally.** Structural validation does not replace semantic judgment. Confirm that each card's claim is entailed by its cited context and record the manual verification rationale.
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/note_tools.py validate-paper-note \
+python3 skills/embodied-ai-paper-reader/scripts/read.py validate-paper-note \
   work/<run>/paper-notes/2402.10329.json
 
-python3 skills/embodied-ai-paper-reader/scripts/note_tools.py audit-claim-support \
+python3 skills/embodied-ai-paper-reader/scripts/read.py audit-claim-support \
   --paper-note work/<run>/paper-notes/2402.10329.json \
   --extraction work/<run>/extractions/2402.10329.json \
   --output work/<run>/paper-notes/2402.10329.audit.json
@@ -70,7 +70,7 @@ Patch only the failing cards, then re-run validate + audit.
 6. **Project evidence only after the gates pass.** Read [evidence-projection.md](references/evidence-projection.md).
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/note_tools.py project-evidence-events \
+python3 skills/embodied-ai-paper-reader/scripts/read.py project-evidence-events \
   --paper-note work/<run>/paper-notes/2402.10329.json \
   --audit work/<run>/paper-notes/2402.10329.audit.json \
   --id-prefix EA-DATA-2026 --start-seq 1 \

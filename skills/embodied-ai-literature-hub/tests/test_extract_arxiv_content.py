@@ -38,11 +38,19 @@ def load_script(name: str):
 
 
 def load_entry(name: str):
-    path = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
+    # The gateway CLI moved into the fetch dispatcher as extract-content.
+    import types
+
+    spec = importlib.util.spec_from_file_location(
+        "fetch_dispatcher", ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "fetch.py"
+    )
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(module)
+    # Alias the gateway CLI onto the dispatcher module so mock.patch on
+    # entry attributes reaches the globals the handlers actually read.
+    module.parse_args = module._extract_content_parse_args
+    module.main = module._extract_content_main
     return module
 
 

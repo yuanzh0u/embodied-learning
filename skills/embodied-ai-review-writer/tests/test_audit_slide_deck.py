@@ -21,7 +21,11 @@ def load(name: str, relative: str):
     return module
 
 
-sd = load("sd_audit_test", "skills/embodied-ai-review-writer/scripts/_slide_deck.py")
+import sys
+if str(REPO) not in sys.path:
+    sys.path.insert(0, str(REPO))
+import importlib
+sd = importlib.import_module("embodied_learning.writer.slide_audit")
 
 REFS = {"alpha": {"title": "Alpha", "url": ""}, "beta": {"title": "Beta", "url": ""}}
 

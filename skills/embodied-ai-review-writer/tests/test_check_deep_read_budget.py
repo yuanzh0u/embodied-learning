@@ -11,18 +11,12 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = (
-    ROOT
-    / "skills"
-    / "embodied-ai-review-writer"
-    / "scripts"
-    / "check_deep_read_budget.py"
-)
+SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "write.py"
 
 
 def run(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
+        [sys.executable, str(SCRIPT), "check-deep-read-budget", *args],
         check=check,
         text=True,
         capture_output=True,

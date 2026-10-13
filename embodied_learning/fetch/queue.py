@@ -14,19 +14,73 @@ import json
 import re
 import subprocess
 import sys
+import threading
 from pathlib import Path
 from typing import Any
 
 from embodied_learning.fetch import chain as extract_arxiv_content
+from embodied_learning.utils.layout import find_roots
+from embodied_learning.config import CHANNEL_DOWN_LIMIT
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
+_REPO_ROOT = find_roots()[0] or Path(__file__).resolve().parents[2]
 # Per-paper subprocess target: prefer the repo thin entry (dev/CI), fall back to
 # running the installed module when skills/ is absent (wheel installs).
-_EXTRACT_ENTRY = _REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "extract_arxiv_content.py"
+_EXTRACT_ENTRY = _REPO_ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "fetch.py"
 _EXTRACT_CMD = (
-    [sys.executable, str(_EXTRACT_ENTRY)] if _EXTRACT_ENTRY.is_file()
-    else [sys.executable, "-m", "hub_scripts.extract_arxiv_content"]
+    [sys.executable, str(_EXTRACT_ENTRY), "extract-content"] if _EXTRACT_ENTRY.is_file()
+    else [sys.executable, "-m", "hub_scripts.fetch", "extract-content"]
 )
+
+# Circuit breaker: when the network is dead (arxiv.org connection timeouts)
+# every paper waits out its full paper_timeout — 79 papers x 300s on 2026-10-12
+# burned the whole extraction window for nothing. A run of consecutive
+# connection-level failures means the channel is down, not the papers; stop
+# spending per-paper budgets on it. Failures that are clearly per-paper
+# (extractor exit with a message, a short HTTP error) do NOT count.
+
+
+class _ChannelCircuit:
+    """Thread-safe consecutive-connection-failure counter. Once tripped,
+    extract_one short-circuits and marks the paper CHANNEL_DOWN without
+    spawning a subprocess."""
+
+    def __init__(self, limit: int = CHANNEL_DOWN_LIMIT) -> None:
+        self.limit = limit
+        self._streak = 0
+        self._tripped = False
+        self._lock = threading.Lock()
+
+    @property
+    def tripped(self) -> bool:
+        return self._tripped
+
+    def record(self, connection_failure: bool) -> None:
+        with self._lock:
+            if self._tripped:
+                return
+            self._streak = self._streak + 1 if connection_failure else 0
+            if self._streak >= self.limit:
+                self._tripped = True
+
+
+def _is_connection_failure(error: str) -> bool:
+    """Connection-level death (the channel is unreachable) vs a per-paper fail."""
+    text = error.lower()
+    return any(
+        token in text
+        for token in (
+            "timeout",  # hard timeout after Ns / socket timeout
+            "connection",
+            "timed out",
+            "temporary failure in name resolution",
+            "could not resolve",
+            "no route to host",
+            "network is unreachable",
+            "connection reset",
+            "broken pipe",
+            "ssl",
+        )
+    )
 
 
 class QueueOptions:
@@ -114,7 +168,12 @@ def extraction_args(paper_id: str, options: QueueOptions) -> extract_arxiv_conte
     )
 
 
-def extract_one(paper_id: str, options: QueueOptions, output_dir: Path) -> dict[str, Any]:
+def extract_one(
+    paper_id: str,
+    options: QueueOptions,
+    output_dir: Path,
+    circuit: _ChannelCircuit | None = None,
+) -> dict[str, Any]:
     target = output_dir / f"{paper_id}.json"
     if target.is_file() and not options.force:
         data = json.loads(target.read_text(encoding="utf-8"))
@@ -124,6 +183,18 @@ def extract_one(paper_id: str, options: QueueOptions, output_dir: Path) -> dict[
         # failed transiently (rate limit) and a driver rerun should supplement
         # it instead of skipping it forever. Falls through to a fresh extract;
         # a paper that is genuinely unrecoverable just re-checkpoints as HELD.
+    # Channel already declared down by an earlier run of consecutive
+    # connection failures — do not spend this paper's full budget on a
+    # network that is not answering. The driver rerun retries these.
+    if circuit is not None and circuit.tripped:
+        data = {
+            "paper_id": paper_id,
+            "available": False,
+            "evidence_eligible": False,
+            "error": "channel down: skipped after consecutive connection failures",
+        }
+        target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        return {"paper_id": paper_id, "state": "channel-down", "evidence_eligible": False, "path": str(target), "error": data["error"]}
     temporary = target.with_suffix(".json.tmp")
     command = [
         *_EXTRACT_CMD,
@@ -174,6 +245,11 @@ def extract_one(paper_id: str, options: QueueOptions, output_dir: Path) -> dict[
         temporary.unlink(missing_ok=True)
         data = {"paper_id": paper_id, "available": False, "evidence_eligible": False, "error": f"{type(exc).__name__}: {exc}"}
         target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    # One record per paper, after the outcome is known: a hard timeout or a
+    # connection-flavoured error advances the streak; a real extraction (or a
+    # per-paper failure) resets it.
+    if circuit is not None:
+        circuit.record(_is_connection_failure(str(data.get("error") or "")))
     return {"paper_id": paper_id, "state": "extracted", "evidence_eligible": bool(data.get("evidence_eligible")), "path": str(target), "error": data.get("error", "")}
 
 
@@ -183,19 +259,31 @@ def run_queue(options: QueueOptions) -> dict[str, Any]:
     paper_ids = load_ids(Path(options.paper_id_file))
     workers = max(1, min(int(options.workers), 4))
     results: list[dict[str, Any]] = []
+    circuit = _ChannelCircuit()
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {executor.submit(extract_one, paper_id, options, output_dir): paper_id for paper_id in paper_ids}
+        futures = {
+            executor.submit(extract_one, paper_id, options, output_dir, circuit): paper_id
+            for paper_id in paper_ids
+        }
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             results.append(result)
-            state = "OK" if result["evidence_eligible"] else "HELD"
+            state = "OK" if result["evidence_eligible"] else ("CHANNEL-DOWN" if result["state"] == "channel-down" else "HELD")
             print(f"{state} {result['paper_id']} ({len(results)}/{len(paper_ids)})", flush=True)
     results.sort(key=lambda item: paper_ids.index(str(item["paper_id"])))
+    skipped = sum(1 for item in results if item["state"] == "channel-down")
+    if skipped:
+        print(
+            f"channel down: skipped {skipped} papers after "
+            f"{circuit.limit} consecutive connection failures; rerun to retry them",
+            flush=True,
+        )
     summary = {
         "version": 1,
         "paper_count": len(paper_ids),
         "evidence_eligible_count": sum(bool(item["evidence_eligible"]) for item in results),
         "held_count": sum(not bool(item["evidence_eligible"]) for item in results),
+        "channel_down_count": skipped,
         "workers": workers,
         "ocr_mode": options.ocr_mode,
         "include_full_text": bool(options.include_full_text),

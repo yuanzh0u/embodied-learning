@@ -1,21 +1,22 @@
-"""Spawn-environment hygiene for lib.agent_invoke (scripts/lib/agent_invoke.py)."""
+"""Spawn-environment hygiene for embodied_learning.harness.claude."""
 
-import importlib.util
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-_SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "lib" / "agent_invoke.py"
-_spec = importlib.util.spec_from_file_location("agent_invoke_test_module", _SCRIPT)
-agent_invoke = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(agent_invoke)
-# complete()'s globals live in the harness module, not the shim.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 import embodied_learning.harness.claude as harness_claude  # noqa: E402
+
+agent_invoke = harness_claude
+# Historical name kept by the old lib.agent_invoke shim.
+agent_invoke.run_one_shot_agent = harness_claude.complete
 
 
 class IsolatedClaudeEnvTest(unittest.TestCase):

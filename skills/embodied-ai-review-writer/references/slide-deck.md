@@ -9,7 +9,7 @@ Use this style when the user wants a 汇报/展示/放映件 — a presentation 
 - Every edit cycle is: edit slide-source → recompile → (visual QA) → recompile. The compiled HTML is a build artifact; the slide-source is the deliverable's source of truth.
 
 ```bash
-python3 skills/embodied-ai-review-writer/scripts/build_slide_deck.py \
+python3 skills/embodied-ai-review-writer/scripts/write.py compile-slide-deck \
   --source <run-dir>/slide-deck_report.md --output <run-dir>/slide-deck_report.html \
   [--refs <run-dir>/refs.json] [--qa /tmp/deck-qa]
 ```

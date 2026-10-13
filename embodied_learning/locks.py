@@ -63,15 +63,11 @@ import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+from embodied_learning.config import DEFAULT_POLL, DEFAULT_STALE, DEFAULT_WAIT, PROGRESS_EVERY, STEAL_MARKER_MAX_AGE
 
 LOCKS_DIRNAME = ".locks"
 CLAIMS_DIRNAME = ".claims"
-STEAL_MARKER_MAX_AGE = 60.0
-PROGRESS_EVERY = 10.0
 
-DEFAULT_WAIT = 120.0
-DEFAULT_STALE = 900.0
-DEFAULT_POLL = 1.0
 
 
 class LockBusy(RuntimeError):
@@ -133,6 +129,14 @@ def journal_path(root: Path | str, name: str) -> Path:
     probe so they land on the same fallback."""
 
     base = lock_path(root, name)
+    # Probe only trips on genuinely unopenable paths (CIFS ghosts). Create the
+    # .locks/ dir first: a missing dir would fail every probe for one thread
+    # while a sibling's mkdir lands mid-probe and hands it a spurious fallback
+    # name — two journals for one lock, i.e. lost updates under concurrency.
+    try:
+        base.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        pass
     if _appendable(base):
         return base
     for index in range(1, 4):

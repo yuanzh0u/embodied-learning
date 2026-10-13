@@ -28,12 +28,12 @@ import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
+from embodied_learning.harness.prompt import SMART_SELECTION_PROMPT
+from embodied_learning.config import SMART_CANDIDATES_PER_CALL, SMART_MAX_ABSTRACT_CHARS
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 # One smart-agent call stays inside a comfortable context; larger registries
 # are split into full-coverage chunks (every candidate reaches the agent).
-SMART_CANDIDATES_PER_CALL = 300
-SMART_MAX_ABSTRACT_CHARS = 400
 
 
 def _tokens(text: str) -> list[str]:
@@ -121,20 +121,6 @@ def _candidate_lines(candidates: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-SMART_PROMPT_TEMPLATE = (
-    "你是综述选题助手。下面是综述话题和候选论文清单（编号 + arXiv ID + 年份 + 标题 + 摘要）。\n"
-    "话题：{topic}\n"
-    "{focus_line}\n"
-    "任务：判断哪些候选与话题真正相关（能进入综述的相关工作或机制讨论，而不是只沾边）。\n"
-    "要求：\n"
-    "1. 最多输出 {limit} 篇；与话题核心无关的宁缺毋滥。\n"
-    "2. 只输出一个 JSON 对象，格式：{{\"relevant\": [{{\"arxiv_id\": \"<id>\", \"reason\": \"<一句话选中理由>\"}}, ...], "
-    "\"shortfall_note\": \"<如数量不足，一句话说明为什么其余不相关>\"}}。\n"
-    "2b. 每条选中都要给 reason：它与话题哪条主线相关、可贡献什么证据（机制/对比/边界），不要复述标题。\n"
-    "3. arXiv ID 必须逐字取自清单方括号内，不要改写。\n"
-    "不要输出 JSON 以外的任何内容。\n\n"
-    "候选清单：\n{candidates}"
-)
 
 
 def _parse_ids(payload: str, known: set[str]) -> list[str]:
@@ -222,7 +208,7 @@ def smart_select(
         for i in range(0, len(candidates), SMART_CANDIDATES_PER_CALL)
     ]
     for chunk in chunks:
-        prompt = SMART_PROMPT_TEMPLATE.format(
+        prompt = SMART_SELECTION_PROMPT.format(
             topic=topic, focus_line=focus_line, limit=limit,
             candidates=_candidate_lines(chunk),
         )

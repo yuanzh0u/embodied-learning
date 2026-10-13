@@ -18,7 +18,7 @@ Use this reference whenever arXiv HTML is missing, incomplete, flat, or below th
 Run the gateway, not the individual extractors, during normal recovery:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py \
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-content \
   --paper-id 2402.10329 \
   --terms UMI,data,teleoperation,limitation \
   --ocr-mode never \
@@ -31,11 +31,11 @@ For casual human reading (not evidence work), the same gateway renders markdown 
 `--terms` is optional, `.md` outputs imply `--format markdown`, and full text is always included:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py 2402.10329 \
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-content 2402.10329 \
   --output paper.md          # or: pip install -e . && extract_arxiv 2402.10329 --output paper.md
 
 # Insert the markdown tier automatically after HTML fails (HTML -> arxiv2md -> PDF):
-python3 skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py 2402.10329 \
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py extract-content 2402.10329 \
   --preferred-source auto --output paper.md
 ```
 

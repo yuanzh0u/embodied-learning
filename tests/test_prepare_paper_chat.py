@@ -7,6 +7,8 @@ pool cache hits, the extraction→pool→deep-read chain, and exit-code contract
 
 from __future__ import annotations
 
+from _entry import invoke
+
 import importlib.util
 import json
 import sys
@@ -19,15 +21,13 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # prepare_paper_chat imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "scripts" / "prepare_paper_chat.py"
-
-
+SCRIPT_PATH = "embodied_learning.knowledge.deepread"  # implementation module (old scripts/prepare_paper_chat.py deleted)
 def load_module():
-    spec = importlib.util.spec_from_file_location("prepare_paper_chat", SCRIPT_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
+    # Implementation module (not the scripts/ forwarder) so mock.patch on
+    # module attributes (ensure_extraction/run/...) reaches the live globals.
+    import importlib
+
+    return importlib.import_module("embodied_learning.knowledge.deepread")
 
 
 class NormalizeIdTest(unittest.TestCase):
@@ -65,7 +65,7 @@ class PreparePipelineTest(unittest.TestCase):
         def fake_run(command, timeout=0.0, **kwargs):
             joined = " ".join(str(part) for part in command)
             paper_id = argv[argv.index("--arxiv-id") + 1] if "--arxiv-id" in argv else ""
-            if "extract_arxiv_content.py" in joined:
+            if "extract-content" in joined:
                 if extraction_fails:
                     return mock.Mock(returncode=1, stdout="", stderr="boom")
                 output = Path(command[command.index("-o") + 1])
@@ -74,7 +74,7 @@ class PreparePipelineTest(unittest.TestCase):
                 return mock.Mock(returncode=0, stdout="", stderr="")
             if "pool-add-paper" in joined:
                 return mock.Mock(returncode=0, stdout="", stderr="")
-            if "build_paper_note.py" in joined:
+            if "build-paper-note" in joined:
                 pool_dir = self.kb_root / "pool" / f"arxiv-{paper_id}"
                 (pool_dir / "note.json").write_text("{}", encoding="utf-8")
                 (pool_dir / "note.json.audit.json").write_text(
@@ -86,8 +86,8 @@ class PreparePipelineTest(unittest.TestCase):
             return mock.Mock(returncode=0, stdout=json.dumps({"cards": []}), stderr="")
 
         with mock.patch.object(self.module.subprocess, "run", side_effect=fake_run), \
-             mock.patch.object(self.module, "run", side_effect=fake_run):
-            code = self.module.main(argv)
+             mock.patch.object(self.module, "run_command", side_effect=fake_run):
+            code = invoke("read.py", "prepare-chat", argv)
         return code
 
     def test_cached_paper_short_circuits(self):

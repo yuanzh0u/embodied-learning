@@ -9,11 +9,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "lib" / "git_history.py"
-SPEC = importlib.util.spec_from_file_location("git_history", SCRIPT)
-git_history = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(git_history)
+git_history = importlib.import_module("embodied_learning.utils.git_history")
 
 
 def init_repo(tmp: Path) -> None:

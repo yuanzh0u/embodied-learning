@@ -1,17 +1,19 @@
 """run_status.py — one-shot run digest replacing agent file-loop improvisation."""
 
+from _entry import invoke, parse
+
+import contextlib
 import importlib.util
+import io
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_SCRIPT = _REPO_ROOT / "scripts" / "run_status.py"
-_spec = importlib.util.spec_from_file_location("run_status_test_module", _SCRIPT)
-run_status = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(run_status)
+_SCRIPT = "embodied_learning.wiki.run.status"  # implementation module (old scripts/run_status.py deleted)
+run_status = importlib.import_module(_SCRIPT)
 
 
 class RunStatusTest(unittest.TestCase):
@@ -74,9 +76,9 @@ class RunStatusTest(unittest.TestCase):
         """The [next] packet command must be executable verbatim — the writer
         used to read the packet script's argparse source to discover flags."""
         text = run_status.render(
-            run_status.build_report(self.run_dir), self.run_dir, Path("/scripts")
+            run_status.build_report(self.run_dir), self.run_dir, Path("/scripts"), Path("/skills")
         )
-        command_line = next(line for line in text.splitlines() if "build_review_packet.py" in line)
+        command_line = next(line for line in text.splitlines() if "review-packet --run-dir" in line or "review-packet" in line and "write.py" in line)
         self.assertIn("--run-dir", command_line)
         self.assertIn("--topic demo", command_line)
         self.assertIn("--review-mode scoping", command_line)
@@ -102,15 +104,25 @@ class RunStatusTest(unittest.TestCase):
         self.assertEqual(report["artifacts"]["writing-brief.md"], True)
         self.assertEqual(report["artifacts"]["review-packet.md"], False)
 
+    def test_funnel_falls_back_to_registry_and_screening_mid_run(self):
+        # pipeline-summary.json is written at the driver's tail — an agent
+        # reading status mid-run used to see "候选 None → 筛选 None" while the
+        # registry and screening list were already on disk.
+        (self.run_dir / "pipeline-summary.json").unlink()
+        report = run_status.build_report(self.run_dir)
+        funnel = report["funnel"]
+        self.assertEqual(funnel["candidates"], 1)  # candidate-registry.json
+        self.assertEqual(funnel["screened"], 3)  # screening-ids.txt
+
     def test_render_is_single_call_text(self):
         text = run_status.render(
-            run_status.build_report(self.run_dir), self.run_dir, Path("/scripts")
+            run_status.build_report(self.run_dir), self.run_dir, Path("/scripts"), Path("/skills")
         )
         self.assertIn("[funnel] 候选 527 → 筛选 40 → 深读 16", text)
         self.assertIn("S. Yang et al.", text)
         self.assertIn("引用篇数下限 10：不足", text)
         self.assertIn("[next]", text)
-        self.assertIn("finalize_run.py", text)
+        self.assertIn("run.py", text)
 
     def test_gates_block_surfaces_stop_assessment_and_exceptions(self):
         (self.run_dir / "coverage-report.json").write_text(json.dumps({
@@ -130,7 +142,7 @@ class RunStatusTest(unittest.TestCase):
             "gate_exceptions": ["saturation"],
         }), encoding="utf-8")
         report = run_status.build_report(self.run_dir)
-        text = run_status.render(report, self.run_dir, Path("/scripts"))
+        text = run_status.render(report, self.run_dir, Path("/scripts"), Path("/skills"))
         self.assertIn("[gates]", text)
         self.assertIn("saturation=未过", text)
         self.assertIn("已声明豁免：saturation", text)
@@ -143,16 +155,16 @@ class RunStatusTest(unittest.TestCase):
             encoding="utf-8",
         )
         report = run_status.build_report(self.run_dir)
-        text = run_status.render(report, self.run_dir, Path("/scripts"))
+        text = run_status.render(report, self.run_dir, Path("/scripts"), Path("/skills"))
         self.assertIn("因:agent 异常：timeout", text)
 
     def test_next_block_carries_verbatim_gate_commands(self):
         (self.run_dir / "scientific-memo_keyan.md").write_text("# memo\n", encoding="utf-8")
         report = run_status.build_report(self.run_dir)
-        text = run_status.render(report, self.run_dir, Path("/scripts"))
-        self.assertIn("check_run_bundle.py", text)
+        text = run_status.render(report, self.run_dir, Path("/scripts"), Path("/skills"))
+        self.assertIn("check-bundle", text)
         self.assertIn("--article", text)
-        self.assertIn("audit_citations.py", text)
+        self.assertIn("audit-citations", text)
         self.assertIn("audit-article-quality", text)
         self.assertIn("--declare-gate-exception", text)
 
@@ -168,14 +180,32 @@ class RunStatusTest(unittest.TestCase):
                 source = self.run_dir / name
                 (run_dir / name).write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
             text = run_status.render(
-                run_status.build_report(run_dir), run_dir, Path("/scripts")
+                run_status.build_report(run_dir), run_dir, Path("/scripts"), Path("/skills")
             )
         self.assertIn(f"--kb-root {kb_root}", text)
         self.assertNotIn("--kb-root <kb-root>", text)
 
     def test_missing_run_json_rejected(self):
         with tempfile.TemporaryDirectory() as other:
-            self.assertEqual(run_status.main(["--run-dir", other]), 1)
+            self.assertEqual(invoke("run.py", "status", ["--run-dir", other]), 1)
+
+    def test_next_commands_point_at_real_scripts(self):
+        """main() must resolve both roots via find_roots(), not
+        Path(__file__).parent / scripts_root/"skills" — those guesses printed
+        [next] commands pointing at embodied_learning/wiki/run/run.py and
+        scripts/skills/.../write.py, neither of which exists (2026-10-12)."""
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            self.assertEqual(invoke("run.py", "status", ["--run-dir", str(self.run_dir)]), 0)
+        text = buf.getvalue()
+        self.assertNotIn("embodied_learning", text)
+        self.assertNotIn("scripts/skills", text)
+        # every `python3 <path> *.py` suggestion must exist on disk
+        paths = re.findall(r"python3 (\S+\.py)", text)
+        self.assertTrue(paths, text)
+        for path in paths:
+            self.assertTrue(Path(path).is_file(), path)
+        self.assertTrue(any(p.endswith("write.py") for p in paths), paths)
 
 
 if __name__ == "__main__":

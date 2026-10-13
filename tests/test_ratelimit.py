@@ -17,10 +17,7 @@ from pathlib import Path
 from unittest import mock
 
 _SCRIPT = Path(__file__).resolve().parent.parent / "embodied_learning" / "ratelimit.py"
-_spec = importlib.util.spec_from_file_location("ratelimit_test_module", _SCRIPT)
-ratelimit = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(ratelimit)
+ratelimit = importlib.import_module("embodied_learning.ratelimit")
 
 
 def temp_state_dir():

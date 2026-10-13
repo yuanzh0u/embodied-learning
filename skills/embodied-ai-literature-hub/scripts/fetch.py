@@ -227,11 +227,11 @@ def _extract_content_queue_parse_args(argv: list[str] | None = None) -> argparse
     parser.add_argument("--output-dir", required=True)
     parser.add_argument(
         "--html-cache-dir",
-        help="Explicit HTML cache directory forwarded to extract_arxiv_content.py.",
+        help="Explicit HTML cache directory forwarded to the extract-content gateway.",
     )
     parser.add_argument(
         "--pdf-cache-dir",
-        help="Explicit PDF cache directory forwarded to extract_arxiv_content.py.",
+        help="Explicit PDF cache directory forwarded to the extract-content gateway.",
     )
     parser.add_argument("--workers", type=int, default=2, help="Bounded I/O workers; capped at 4.")
     parser.add_argument("--timeout", type=float, default=30.0)
@@ -249,19 +249,19 @@ def _extract_content_queue_parse_args(argv: list[str] | None = None) -> argparse
         "--preferred-source",
         choices=["html", "tex", "auto"],
         default="html",
-        help="Forwarded to extract_arxiv_content.py; default keeps the legacy html->pdf chain.",
+        help="Forwarded to the extract-content gateway; default keeps the legacy html->pdf chain.",
     )
     parser.add_argument(
         "--tex-transport",
         choices=["arxiv2md", "s3-tex"],
         default="arxiv2md",
-        help="Markdown-tier transport, forwarded to extract_arxiv_content.py.",
+        help="Markdown-tier transport, forwarded to the extract-content gateway.",
     )
     parser.add_argument("--curl-timeout", type=float, default=120.0,
                         help="[arxiv2md] curl max time in seconds, forwarded to the gateway.")
     parser.add_argument(
         "--tex-cache-dir",
-        help="[s3-tex] Cache directory for S3 TeX source tarballs, forwarded to extract_arxiv_content.py.",
+        help="[s3-tex] Cache directory for S3 TeX source tarballs, forwarded to the extract-content gateway.",
     )
     parser.add_argument("--summary-output")
     return parser.parse_args(argv)
@@ -295,13 +295,244 @@ def _extract_content_queue_main(argv: list[str] | None = None) -> int:
 
 
 
+# ---- extract-content (was extract_arxiv_content.py, the tier-chain gateway) ---
+from embodied_learning.fetch.chain import (  # noqa: E402
+    DEFAULT_OUTPUT_DIR,
+    ContentOptions,
+    emit,
+    extract_content,
+    resolve_format,
+    resolve_output_path,
+)
+
+
+def _extract_content_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "paper_id_pos", nargs="?",
+        help=argparse.SUPPRESS)  # shortcut: leading bare arXiv ID
+    parser.add_argument("--paper-id",
+                        help="arXiv ID (with or without version).")
+    parser.add_argument(
+        "--terms",
+        help="Comma-separated topic terms (optional for casual reading).")
+    parser.add_argument(
+        "--format",
+        choices=["auto", "json", "markdown"],
+        default="auto",
+        help=
+        "Output format. auto = markdown for .md files/terminals, JSON when piped.",
+    )
+    parser.add_argument("--html-url")
+    parser.add_argument("--pdf-url")
+    parser.add_argument("--pdf-file",
+                        help="Local PDF for testing/offline extraction.")
+    parser.add_argument("--preferred-source",
+                        choices=["html", "tex", "auto"],
+                        default="html",
+                        help=("Full-text tier order. html (default) = html -> pdf, the legacy "
+                              "chain. tex = markdown tier first (arxiv2md API by default, see "
+                              "--tex-transport) -> html -> pdf. auto = html -> markdown tier "
+                              "-> pdf. The markdown tier needs only curl (arxiv2md) and is "
+                              "skipped gracefully when the API has no HTML for the paper."),)
+    parser.add_argument(
+        "--tex-transport",
+        choices=["arxiv2md", "s3-tex"],
+        default="arxiv2md",
+        help=("Transport for the markdown tier. arxiv2md (default) = public "
+              "REST API via curl, no credentials. s3-tex = S3 TeX source "
+              "tarball + pandoc (TODO: needs AWS credentials — the "
+              "s3://arxiv/ bucket is requester-pays)."),
+    )
+    parser.add_argument("--curl-timeout", type=float, default=120.0,
+                        help="[arxiv2md] curl max time in seconds.")
+    from embodied_learning.fetch.chain import extract_arxiv_tex_default_cache_dir  # noqa: E402
+    from embodied_learning.fetch import html as _html, pdf as _pdf  # noqa: E402
+    parser.add_argument("--html-cache-dir", default=_html.DEFAULT_CACHE_DIR)
+    parser.add_argument("--pdf-cache-dir", default=_pdf.DEFAULT_CACHE_DIR)
+    parser.add_argument("--tex-cache-dir",
+                        default=extract_arxiv_tex_default_cache_dir(),
+                        help="[s3-tex] Cache directory for S3 TeX source tarballs.")
+    parser.add_argument("--source-tarball",
+                        help="[s3-tex] Local TeX source .tar.gz; skips the S3 download.")
+    parser.add_argument("--main-tex",
+                        help="[s3-tex] Main .tex member inside the source tarball.")
+    parser.add_argument("--timeout", type=float, default=30.0)
+    parser.add_argument("--top-sections", type=int, default=6)
+    parser.add_argument("--max-pages", type=int, default=0)
+    parser.add_argument(
+        "--ocr-mode",
+        choices=["auto", "never", "always"],
+        default="never",
+        help="Default 'never' per the full-text fallback contract.")
+    parser.add_argument("--ocr-language", default="eng")
+    parser.add_argument("--ocr-dpi", type=int, default=220)
+    parser.add_argument("--min-chars-per-page", type=int, default=180)
+    parser.add_argument("--minimum-html-chars", type=int, default=1000)
+    parser.add_argument("--force-pdf",
+                        action="store_true",
+                        help="Skip HTML and exercise PDF/OCR path.")
+    parser.add_argument("--include-selected-text", action="store_true")
+    parser.add_argument(
+        "--include-full-text",
+        action="store_true",
+        help=
+        "Include complete HTML text or every text-layer PDF page for $embodied-ai-paper-reader.",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        help=("Write result here instead of stdout. Defaults to "
+              f"{DEFAULT_OUTPUT_DIR}/<paper-id>.md; a directory gets "
+              "<paper-id>.md appended (.md implies markdown under --format auto)."
+              ),
+    )
+    args = parser.parse_args(argv)
+    if args.paper_id_pos and not args.paper_id:
+        args.paper_id = args.paper_id_pos
+    if not args.paper_id:
+        parser.error("Provide an arXiv ID, e.g. extract_arxiv 2403.12550")
+    from embodied_learning.fetch.chain import normalize_id  # noqa: E402
+    paper_id = normalize_id(args.paper_id)
+    if args.output is None and sys.stdout.isatty():
+        args.output = f"{DEFAULT_OUTPUT_DIR}/{paper_id}.md"  # interactive default
+    args.output = resolve_output_path(args.output, paper_id)
+    return args
+
+
+
+def _extract_content_main(argv: list[str] | None = None) -> int:
+    args = _extract_content_parse_args(argv)
+    options = ContentOptions(
+        paper_id=args.paper_id,
+        terms=args.terms,
+        format=args.format,
+        html_url=args.html_url,
+        pdf_url=args.pdf_url,
+        pdf_file=args.pdf_file,
+        html_cache_dir=args.html_cache_dir,
+        pdf_cache_dir=args.pdf_cache_dir,
+        preferred_source=args.preferred_source,
+        tex_transport=args.tex_transport,
+        curl_timeout=args.curl_timeout,
+        tex_cache_dir=args.tex_cache_dir,
+        source_tarball=args.source_tarball,
+        main_tex=args.main_tex,
+        timeout=args.timeout,
+        top_sections=args.top_sections,
+        max_pages=args.max_pages,
+        ocr_mode=args.ocr_mode,
+        ocr_language=args.ocr_language,
+        ocr_dpi=args.ocr_dpi,
+        min_chars_per_page=args.min_chars_per_page,
+        minimum_html_chars=args.minimum_html_chars,
+        force_pdf=args.force_pdf,
+        include_selected_text=args.include_selected_text,
+        include_full_text=args.include_full_text,
+        output=args.output,
+    )
+    output_format = resolve_format(options)
+    options.render_markdown = output_format == "markdown"
+    output = extract_content(options)
+    emit(options, output, output_format)
+    return 0 if output.get("evidence_eligible") else 2
+
+
+
+# ---- write-lit-outputs / render-figure-table-block (was parse.py) -------------
+
+def _write_lit_outputs_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--evidence-jsonl", required=True)
+    parser.add_argument("--brief-out")
+    parser.add_argument("--validate-only", action="store_true")
+    return parser.parse_args(argv)
+
+
+def _write_lit_outputs_main(argv: list[str] | None = None) -> int:
+    args = _write_lit_outputs_parse_args(argv)
+    events = load_events(Path(args.evidence_jsonl))
+    result = {"valid": True, "event_count": len(events)}
+    if args.brief_out and not args.validate_only:
+        Path(args.brief_out).write_text(render_brief(events), encoding="utf-8")
+        result["brief_out"] = args.brief_out
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0
+
+# ---- render-figure-table-block (was scripts/render_figure_table_block.py) ---------------
+
+import argparse
+
+from embodied_learning.parse.figure_table import (  # noqa: E402
+    events_with_paper,
+    find_event_figures,
+    load_events,
+    paper_label,
+    render_figure,
+    render_table_block,
+)
+
+def _render_figure_table_block_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--evidence-jsonl", help="Path to the run's evidence.jsonl.")
+    parser.add_argument("--paper-id", help="arXiv ID of the paper whose figures/tables to render.")
+    parser.add_argument("--figure-ids", help="Comma-separated figure ids to include (default: all).")
+    parser.add_argument("--table-ids", help="Comma-separated table ids to include (default: all).")
+    return parser.parse_args(argv)
+
+
+def _render_figure_table_block_main(argv: list[str] | None = None) -> int:
+    args = _render_figure_table_block_parse_args(argv)
+    if not args.evidence_jsonl:
+        print("Provide --evidence-jsonl (path to evidence.jsonl).", file=sys.stderr)
+        return 1
+    events = load_events(args.evidence_jsonl)
+    paper_events = events_with_paper(events, args.paper_id)
+    if not paper_events:
+        print(f"No evidence events found for paper {args.paper_id}.", file=sys.stderr)
+        return 1
+
+    figures, tables = find_event_figures(events, args.paper_id)
+    if args.figure_ids:
+        wanted = {item.strip() for item in args.figure_ids.split(",") if item.strip()}
+        figures = [f for f in figures if str(f.get("figure_id") or f.get("id")) in wanted]
+    if args.table_ids:
+        wanted = {item.strip() for item in args.table_ids.split(",") if item.strip()}
+        tables = [t for t in tables if str(t.get("table_id") or t.get("id")) in wanted]
+
+    label = paper_label(paper_events[0])
+    blocks: list[str] = []
+    for figure in figures:
+        block = render_figure(figure, label)
+        if block:
+            blocks.append(block)
+    for table in tables:
+        block = render_table_block(table, label)
+        if block:
+            blocks.append(block)
+    print("\n\n---\n\n".join(blocks) if blocks else "(no figures or tables recorded)")
+    return 0
+
+
+
+
 _SUBCOMMANDS = {
     "extract-arxiv-html": _extract_arxiv_html_main,
     "extract-arxiv-pdf": _extract_arxiv_pdf_main,
     "extract-arxiv-tex": _extract_arxiv_tex_main,
     "download-arxiv-source": _download_arxiv_source_main,
     "extract-content-queue": _extract_content_queue_main,
+    "extract-content": _extract_content_main,
+    "write-lit-outputs": _write_lit_outputs_main,
+    "render-figure-table-block": _render_figure_table_block_main,
 }
+
+# Console-script alias (pyproject extract_arxiv): bare-ID UX.
+def extract_arxiv_main() -> int:
+    return main(["extract-content", *sys.argv[1:]])
 
 
 def main(argv: list[str] | None = None) -> int:

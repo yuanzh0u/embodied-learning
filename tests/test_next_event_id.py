@@ -9,14 +9,11 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "next_event_id.py"
+SCRIPT = "embodied_learning.wiki.run.events"  # implementation module (old scripts/next_event_id.py deleted)
 import sys  # noqa: E402
 
 sys.path.insert(0, str(ROOT / "scripts"))  # lib.* imports inside the script
-SPEC = importlib.util.spec_from_file_location("next_event_id", SCRIPT)
-next_event_id = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(next_event_id)
+next_event_id = importlib.import_module(SCRIPT)
 
 
 def write_run(evidence_dir: Path, run: str, event_ids: list[str]) -> None:
@@ -88,7 +85,7 @@ class ClaimPrefixTest(unittest.TestCase):
         import sys
 
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), *flags,
+            [sys.executable, str(Path(__file__).resolve().parents[1] / "scripts" / "run.py"), "next-event-id", *flags,
              "--evidence-dir", str(self.evidence), "--kb-root", str(self.kb_root)],
             capture_output=True, text=True, timeout=60,
         )

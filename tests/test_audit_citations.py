@@ -9,11 +9,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "audit_citations.py"
-SPEC = importlib.util.spec_from_file_location("audit_citations", SCRIPT)
-audit_citations = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(audit_citations)
+SCRIPT = "embodied_learning.wiki.run.citations"  # implementation module (old scripts/audit_citations.py deleted)
+audit_citations = importlib.import_module(SCRIPT)
 
 
 def write_evidence(path: Path, event_ids: list[str], arxiv_by_event: dict[str, str] | None = None) -> None:
@@ -149,6 +146,20 @@ class AuditCitationsTest(unittest.TestCase):
         )
         problems = audit_citations.audit_run_json(run_json, set())
         self.assertTrue(any("missing-memo.md" in p for p in problems))
+
+    def test_review_packet_inventory_ids_are_exempt(self) -> None:
+        """The mechanical briefing lists event IDs as an inventory by design,
+        and it IS the survey style's deliverable — auditing it as prose produced
+        500+ unsolvable "bare event ID" lines (2026-10-13, run 04)."""
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"])
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        packet = self.tmp / "review-packet.md"
+        packet.write_text("事件清单：EA-DATA-2026-0001。\n", encoding="utf-8")
+        ids, paper_ids, problems = audit_citations.load_event_ids([self.evidence])
+        anchors, appendix_problems = audit_citations.appendix_anchors(self.appendix)
+        problems.extend(appendix_problems)
+        problems.extend(audit_citations.audit_article(packet, self.appendix, anchors, ids, paper_ids))
+        self.assertFalse(any("bare event ID" in p for p in problems), problems)
 
 
 if __name__ == "__main__":

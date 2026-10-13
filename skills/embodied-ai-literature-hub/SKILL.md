@@ -133,7 +133,7 @@ python3 skills/embodied-ai-literature-hub/scripts/search.py rank-problem-relevan
 
 Epistemic boundaries: output is **candidate-level discovery**. BM25 is **lexical** — it can over-rank a paper that *mentions* a concept but never *solves* it, and under-rank papers using synonyms the questions don't literally contain; that is why stage 3 is a human/agent read. The `judgment_surface` is not a full read: a `surface_complete: false` paper fell back to abstract-only — treat its intro/related-work evidence as absent, not negative. Read [retrieval-method.md](references/retrieval-method.md) for the BM25 method and its limits.
 4. Extract full text through one gateway:
-   - Run `scripts/extract_arxiv_content.py`, which tries structured HTML, flat HTML, then text-layer PDF by default. `--preferred-source auto` inserts a markdown tier after HTML (HTML -> markdown -> PDF); `--preferred-source tex` forces the markdown tier first.
+   - Run `fetch.py extract-content`, which tries structured HTML, flat HTML, then text-layer PDF by default. `--preferred-source auto` inserts a markdown tier after HTML (HTML -> markdown -> PDF); `--preferred-source tex` forces the markdown tier first.
    - The markdown tier (`scripts/fetch.py extract-arxiv-tex`) defaults to the **arxiv2md** transport: a public REST API fetched with plain curl (`GET https://arxiv2md.org/api/markdown?url=<id>`, no credentials, 30 req/min per IP) returning section-aware markdown with LaTeX math and pipe tables. Works for papers with arXiv HTML (roughly 2024-03 onward); papers without HTML answer HTTP 400 and the chain falls through. Requires nothing beyond curl.
    - The alternative `s3-tex` transport is **TODO**: `fetch.py download-arxiv-source` fetches the TeX source tarball from `s3://arxiv/` (boto3, threaded, zero-sleep) and `fetch.py extract-arxiv-tex --transport s3-tex` converts the main `.tex` with pypandoc. The bucket is requester-pays — needs AWS credentials (`RequestPayer=requester`), download bandwidth is billed per GB; pending account setup, `--anonymous` answers `AccessDenied`. Old-style IDs (pre-0704) have no S3 key.
    - Markdown-tier extractions are authoritative text: both `arxiv2md` and `tex-pandoc` methods never need visual validation.
@@ -158,14 +158,14 @@ and stably deduplicated with any explicit `--paper-id` values.
 6. Produce outputs:
    - Source-entry draft for `knowledge/sources.md`.
    - Evidence JSONL plus a Markdown brief, using `references/output-templates.md`.
-   - Allocate event IDs from the repo root with `python3 scripts/next_event_id.py --prefix <topic-prefix>-<year>` so sequences never collide across runs.
-   - Validate the JSONL before settling it: `python skills/embodied-ai-literature-hub/scripts/parse.py write-lit-outputs --evidence-jsonl <file> --validate-only` must pass.
+   - Allocate event IDs from the repo root with `python3 scripts/run.py next-event-id --prefix <topic-prefix>-<year>` so sequences never collide across runs.
+   - Validate the JSONL before settling it: `python skills/embodied-ai-literature-hub/scripts/fetch.py write-lit-outputs --evidence-jsonl <file> --validate-only` must pass.
    - Settle accepted assets into `evidence/literature-review-<topic>-<date>/`: evidence, brief, source draft, query plan, candidate registry, coverage report, and manifest. Full papers and extraction payloads stay in cache/`work/`.
    - Topic-card update suggestions only for high-signal synthesis.
 7. Archive extracted papers into the local public paper pool:
    - The pool (default `~/Documents/arxiv/pool`) is a local shared store outside the repository — one folder per paper keyed by unique ID (`arxiv-2403.12550/` or `doi-<urlquoted>/`), holding `paper.md` (converted full text), `extraction.json`, an optional `note.md` reading note, and `meta.json`; `index.jsonl` indexes the pool. Source tarballs and HTML are temp-dir caches and are never archived here.
    - Add a paper after extraction: `python scripts/knowledge.py pool-add-paper add --extraction work/<run>/extractions/<id>.json --note work/<run>/paper-notes/<id>.md`. Re-adding is idempotent; `--force` refreshes. `list`, `get <id>`, and `import-existing` (migrate legacy flat `<id>.md`) manage the pool.
-   - Topic cards cite pool papers directly instead of per-run duplicates: `- id: POOL-arxiv-2403.12550` + `file: <absolute path to paper.md>` + a semantic-anchor `locator` (same ADR-0002 anchors). `scripts/check_kb_links.py` exempts `POOL-*` entries with a `file:` from `sources.md` registration and validates the file exists.
+   - Topic cards cite pool papers directly instead of per-run duplicates: `- id: POOL-arxiv-2403.12550` + `file: <absolute path to paper.md>` + a semantic-anchor `locator` (same ADR-0002 anchors). `scripts/wiki.py check-kb-links` exempts `POOL-*` entries with a `file:` from `sources.md` registration and validates the file exists.
 
 ## Evidence rules
 
@@ -207,12 +207,12 @@ python skills/embodied-ai-literature-hub/scripts/search.py search-arxiv \
 python skills/embodied-ai-literature-hub/scripts/search.py parse-browser-candidates --input /tmp/browser-arxiv-results.json --start-date 2025-12-06 --end-date 2026-06-06 --output /tmp/browser-candidates.json
 python skills/embodied-ai-literature-hub/scripts/search.py build-candidate-registry --semantic-scholar-result /tmp/umi-s2-candidates.json --search-result /tmp/umi-arxiv-candidates.json --output work/<run>/candidate-registry.json
 python skills/embodied-ai-literature-hub/scripts/search.py assess-review-coverage --query-plan /tmp/umi-query-plan.json --candidate-registry work/<run>/candidate-registry.json --output work/<run>/coverage-report.json
-python skills/embodied-ai-literature-hub/scripts/print_registry_titles.py --candidate-registry work/<run>/candidate-registry.json --limit 80
-python skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 --terms UMI,data,demonstration,teleoperation --ocr-mode never --include-selected-text --include-full-text --output work/<run>/extractions/2402.10329.json
+python skills/embodied-ai-literature-hub/scripts/search.py registry-titles --candidate-registry work/<run>/candidate-registry.json --limit 80
+python skills/embodied-ai-literature-hub/scripts/fetch.py extract-content --paper-id 2402.10329 --terms UMI,data,demonstration,teleoperation --ocr-mode never --include-selected-text --include-full-text --output work/<run>/extractions/2402.10329.json
 # Markdown tier (default arxiv2md transport — needs only curl):
-python skills/embodied-ai-literature-hub/scripts/extract_arxiv_content.py --paper-id 2402.10329 --terms UMI,data --preferred-source auto --include-full-text --output work/<run>/extractions/2402.10329.json
-python skills/embodied-ai-literature-hub/scripts/knowledge.py pool-add-paper add --extraction work/<run>/extractions/2402.10329.json
-python skills/embodied-ai-literature-hub/scripts/parse.py write-lit-outputs --evidence-jsonl evidence.jsonl --brief-out brief.md
+python skills/embodied-ai-literature-hub/scripts/fetch.py extract-content --paper-id 2402.10329 --terms UMI,data --preferred-source auto --include-full-text --output work/<run>/extractions/2402.10329.json
+python skills/embodied-ai-paper-reader/scripts/read.py pool-add-paper add --extraction work/<run>/extractions/2402.10329.json
+python skills/embodied-ai-literature-hub/scripts/fetch.py write-lit-outputs --evidence-jsonl evidence.jsonl --brief-out brief.md
 ```
 
 Once a keyword round saturates, chase citation relationships from vetted candidates to find sub-topics the taxonomy missed (see [citation-expansion.md](references/citation-expansion.md)):

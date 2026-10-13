@@ -12,14 +12,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # build_paper_note imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-BUILDER_PATH = REPO_ROOT / "scripts" / "build_paper_note.py"
-
-
+BUILDER_PATH = "embodied_learning.knowledge.note_assembly"  # implementation module (old scripts/build_paper_note.py deleted)
 def load_module():
-    spec = importlib.util.spec_from_file_location("build_paper_note", BUILDER_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
+    module = importlib.import_module(BUILDER_PATH)
     return module
 
 

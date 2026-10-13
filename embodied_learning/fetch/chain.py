@@ -41,6 +41,7 @@ from typing import Any
 DEFAULT_OUTPUT_DIR = "/tmp"
 
 from embodied_learning.fetch import html as extract_arxiv_html, pdf as extract_arxiv_pdf
+from embodied_learning.fetch.output import write_text_output as _write_text_output
 # The TeX tier is loaded lazily inside try_tex(): it only needs boto3/pypandoc
 # when actually exercised, and the default html-first chain must not pay for it.
 extract_arxiv_tex: Any = None
@@ -581,14 +582,9 @@ def emit(options: ContentOptions, output: dict[str, Any], output_format: str | N
         rendered = build_markdown(output)
     else:
         rendered = json.dumps(output, ensure_ascii=False, indent=2)
-    if options.output:
-        path = Path(options.output)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(rendered + "\n", encoding="utf-8")
-        if output_format == "markdown" and sys.stdout.isatty():
-            print(
-                f"wrote {path} ({output.get('extraction_method', 'unknown')}, "
-                f"evidence_eligible={bool(output.get('evidence_eligible'))})",
-                file=sys.stderr)
-    else:
-        print(rendered)
+    _write_text_output(rendered, options.output)
+    if options.output and output_format == "markdown" and sys.stdout.isatty():
+        print(
+            f"wrote {Path(options.output)} ({output.get('extraction_method', 'unknown')}, "
+            f"evidence_eligible={bool(output.get('evidence_eligible'))})",
+            file=sys.stderr)

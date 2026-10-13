@@ -5,7 +5,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.lib import review_runs
+import sys
+from pathlib import Path as _P
+
+_REPO_ROOT = _P(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from embodied_learning.wiki.run import catalog as review_runs
 
 
 def write_catalog_run(root: Path, name: str, *, status: str = "settled") -> Path:
@@ -233,6 +239,49 @@ class RegisterRunInCatalogTest(unittest.TestCase):
             if "demo3" in line
         ][0]
         self.assertIn("| — / — / — |", row)
+
+
+
+class EventCollisionTest(unittest.TestCase):
+    """Cross-run event_id collisions must be rejected. The 2026-10-13 race test
+    found two concurrent runs both projecting EA-REVIEW-2026-8-0001..0460
+    (Chinese topics all collapsed to base "REVIEW" and the unreserved fallback
+    let them share a namespace) — same IDs, different claims."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def _run(self, name: str, events: list[dict]) -> Path:
+        run_dir = self.root / name
+        run_dir.mkdir(parents=True, exist_ok=True)
+        (run_dir / "evidence.jsonl").write_text(
+            "\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8"
+        )
+        (run_dir / "run.json").write_text(json.dumps({
+            "run": name, "topic": "t", "status": "settled",
+            "event_count": len(events), "files": {"evidence": "evidence.jsonl"},
+        }), encoding="utf-8")
+        return run_dir / "run.json"
+
+    def test_same_id_different_content_is_a_collision(self) -> None:
+        a = self._run("literature-review-a-20261013", [
+            {"event_id": "EA-REVIEW-2026-8-0001", "claim": "A claims X"},
+        ])
+        b = self._run("literature-review-b-20261013", [
+            {"event_id": "EA-REVIEW-2026-8-0001", "claim": "B claims Y"},
+        ])
+        problems = review_runs.event_consistency_problems([a, b])
+        self.assertTrue(any("differs between" in p for p in problems), problems)
+
+    def test_same_id_same_content_is_reuse_not_a_collision(self) -> None:
+        event = {"event_id": "EA-REVIEW-2026-8-0001", "claim": "shared"}
+        a = self._run("literature-review-a-20261013", [event])
+        b = self._run("literature-review-b-20261013", [event])
+        self.assertEqual(review_runs.event_consistency_problems([a, b]), [])
 
 
 if __name__ == "__main__":

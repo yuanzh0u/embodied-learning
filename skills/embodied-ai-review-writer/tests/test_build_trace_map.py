@@ -11,9 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "writing_audit.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-review-writer/scripts/write.py"  # subcommand: (in argv)
 class BuildTraceMapTests(unittest.TestCase):
     def test_maps_article_papers_to_events(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

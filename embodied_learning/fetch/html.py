@@ -27,6 +27,7 @@ import urllib.request
 from pathlib import Path
 
 from embodied_learning import ratelimit
+from embodied_learning.config import MAX_CITATION_CONTEXTS, MAX_REFERENCE_HINTS, MAX_TERM_MATCHES
 
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "html")
 SKIP_TAGS = {"script", "style", "noscript", "svg", "math"}
@@ -39,9 +40,6 @@ SECTION_CLASSES = (
     "ltx_appendix",
 )
 ARXIV_ID_RE = re.compile(r"(?:arXiv[:\s]*)?(\d{4}\.\d{4,5})(?:v\d+)?", re.IGNORECASE)
-MAX_TERM_MATCHES = 120
-MAX_CITATION_CONTEXTS = 200
-MAX_REFERENCE_HINTS = 80
 
 
 class FlatHTMLParser(HTMLParser):

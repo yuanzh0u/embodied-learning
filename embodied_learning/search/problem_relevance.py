@@ -53,18 +53,23 @@ from pathlib import Path
 
 API_BASE = "https://api.semanticscholar.org/graph/v1"
 NEIGHBOR_FIELDS = "title,abstract,year,publicationDate,authors,externalIds"
-MAX_RETRIES = 3
-TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+from embodied_learning import ratelimit  # noqa: E402
+from embodied_learning.search.http import (  # noqa: F401  (re-exported for callers)
+    MAX_RETRIES,
+    TRANSIENT_HTTP_CODES,
+    bounded_retries,
+    is_retryable,
+    retry_after_seconds,
+    retry_wait_seconds,
+)
+from embodied_learning.utils.arxiv_id import normalize_arxiv_id  # noqa: E402
 WRAPPER_KEY = {"references": "citedPaper", "citations": "citingPaper"}
 DEFAULT_SEED_STATUSES = frozenset({"accepted", "full-text-queued", "extracted"})
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "html")
 
 # BM25 hyper-parameters (standard Okapi defaults).
-K1 = 1.5
-B = 0.75
 
 FIELD_ORDER = ("title", "abstract", "introduction", "related_work")
-DEFAULT_FIELD_WEIGHTS = "title=2.0,abstract=1.0,introduction=1.5,related_work=1.5"
 
 # Function words / question words that carry no topical signal. Content words
 # ("camera", "align", "initialize", "third-person", …) are intentionally KEPT.
@@ -103,6 +108,7 @@ RELATED_WORK_KEYWORDS = (
 
 # Cross-layer import: the fetch layer owns the arXiv HTML extractor.
 from embodied_learning.fetch import html as _ARXIV_HTML  # noqa: E402
+from embodied_learning.config import B, DEFAULT_FIELD_WEIGHTS, K1
 
 
 class ProblemRelevanceRetrieval:
@@ -363,9 +369,6 @@ def stable_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def normalize_arxiv_id(value: object) -> str:
-    raw = str(value or "").rsplit("/", 1)[-1].removesuffix(".pdf").removesuffix(".html")
-    return re.sub(r"v\d+$", "", raw.strip())
 
 
 # ---------------------------------------------------------------------------
@@ -396,36 +399,6 @@ def tokenize(text: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def bounded_retries(value: int) -> int:
-    return max(0, min(value, MAX_RETRIES))
-
-
-def retry_after_seconds(exc: Exception) -> float | None:
-    if not isinstance(exc, urllib.error.HTTPError):
-        return None
-    retry_after = exc.headers.get("Retry-After") if exc.headers else None
-    if not retry_after:
-        return None
-    try:
-        parsed = float(retry_after)
-    except ValueError:
-        return None
-    return parsed if parsed >= 0 else None
-
-
-def is_retryable(exc: Exception) -> bool:
-    if isinstance(exc, urllib.error.HTTPError):
-        return exc.code in TRANSIENT_HTTP_CODES
-    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
-
-
-def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
-    retry_after = retry_after_seconds(exc)
-    if retry_after is not None:
-        return max(0.0, min(retry_after, retry_max_seconds))
-    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
-
-
 def _request(
     url: str,
     *,
@@ -448,7 +421,7 @@ def _request(
     capped_retries = bounded_retries(retries)
     for attempt in range(capped_retries + 1):
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
+            with ratelimit.gated_urlopen(request, timeout=timeout) as response:
                 return response.read()
         except Exception as exc:  # pragma: no cover - network dependent
             last_error = exc

@@ -6,19 +6,21 @@ the cited-paper floor is enforced here, and publish/register/wiki are one
 idempotent command.
 """
 
-import importlib.util
+from _entry import invoke, parse
+
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_SCRIPT = _REPO_ROOT / "scripts" / "finalize_run.py"
-_spec = importlib.util.spec_from_file_location("finalize_run_test_module", _SCRIPT)
-finalize = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(finalize)
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+# Load the implementation module (not the scripts/ forwarder) so mock.patch on
+# module attributes reaches the live globals the functions read.
+from embodied_learning.wiki.run import finalize  # noqa: E402
 
 
 def _event(event_id: str) -> str:
@@ -61,7 +63,7 @@ class FinalizeRunTest(unittest.TestCase):
         with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)) as run, \
              mock.patch.object(finalize, "build_trace_map", return_value=(True, [])) as trace, \
              mock.patch.object(finalize, "register_run_in_catalog", return_value=True) as register:
-            code = finalize.main([
+            code = invoke("run.py", "finalize", [
                 "--run-dir", str(self.run_dir), "--kb-root", str(self.kb_root), *extra,
             ])
         return code, run, register, trace
@@ -97,8 +99,17 @@ class FinalizeRunTest(unittest.TestCase):
         self.assertTrue((published / "scientific-memo_keyan.md").is_file())
         # Gates ran with the run dir; catalog registration pointed at the copy.
         commands = [call.args[0] for call in run.call_args_list]
-        bundle_cmd = next(cmd for cmd in commands if "check_run_bundle.py" in cmd[1])
-        self.assertEqual(bundle_cmd[2], str(self.run_dir))
+        bundle_cmd = next(cmd for cmd in commands if "check-bundle" in cmd)
+        self.assertEqual(bundle_cmd[3], str(self.run_dir))
+        # The script path must be the REAL scripts root's run.py. A
+        # Path(__file__).parent guess resolved to
+        # embodied_learning/wiki/run/run.py and the gate died ENOENT
+        # (2026-10-12, smoke run #1).
+        self.assertTrue(
+            bundle_cmd[1].endswith("run.py") and Path(bundle_cmd[1]).is_file(),
+            bundle_cmd,
+        )
+        self.assertNotIn("embodied_learning", bundle_cmd[1])
         trace.assert_called_once()
         register.assert_called_once()
 
@@ -133,7 +144,7 @@ class FinalizeRunTest(unittest.TestCase):
         with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
              mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
              mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
-            code = finalize.main([
+            code = invoke("run.py", "finalize", [
                 "--run-dir", str(self.run_dir), "--kb-root", str(self.kb_root),
                 "--declare-gate-exception", "saturation",
             ])
@@ -161,7 +172,7 @@ class FinalizeRunTest(unittest.TestCase):
         with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
              mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
              contextlib.redirect_stdout(buf):
-            code = finalize.main([
+            code = invoke("run.py", "finalize", [
                 "--run-dir", str(self.run_dir), "--kb-root", str(self.kb_root),
             ])
         out = buf.getvalue()
@@ -183,7 +194,7 @@ class FinalizeRunTest(unittest.TestCase):
              mock.patch.object(finalize, "build_trace_map",
                                return_value=(False, ["UNCOVERED scientific-memo_keyan.md: 9999.99999"])), \
              mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
-            code = finalize.main([
+            code = invoke("run.py", "finalize", [
                 "--run-dir", str(self.run_dir), "--kb-root", str(self.kb_root),
             ])
         self.assertEqual(code, 2)
@@ -234,8 +245,8 @@ class FinalizeRunTest(unittest.TestCase):
         self.assertIn("scientific-memo_keyan.md", outputs)
         self.assertNotIn("review-packet.md", outputs)
         commands = [call.args[0] for call in run.call_args_list]
-        audit_cmd = next(cmd for cmd in commands if "audit_citations.py" in cmd[1])
-        self.assertIn("audit_citations.py", audit_cmd[1])
+        audit_cmd = next(cmd for cmd in commands if "audit-citations" in cmd)
+        self.assertIn("audit-citations", audit_cmd)
         articles = [b for a, b in zip(audit_cmd, audit_cmd[1:]) if a == "--article"]
         self.assertEqual(len(articles), 1)
         self.assertIn("scientific-memo_keyan.md", articles[0])
@@ -297,7 +308,7 @@ class FinalizeRunTest(unittest.TestCase):
         with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
              mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
              mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
-            code = finalize.main(["--run-dir", str(self.run_dir)])
+            code = invoke("run.py", "finalize", ["--run-dir", str(self.run_dir)])
         self.assertEqual(code, 0)
         published = self.kb_root / "evidence" / "literature-review-demo-20260101"
         self.assertTrue((published / "run.json").is_file())
@@ -310,7 +321,7 @@ class FinalizeRunTest(unittest.TestCase):
         with mock.patch.object(finalize.subprocess, "run", return_value=mock.Mock(returncode=0)), \
              mock.patch.object(finalize, "build_trace_map", return_value=(True, [])), \
              mock.patch.object(finalize, "register_run_in_catalog", return_value=True):
-            code = finalize.main([
+            code = invoke("run.py", "finalize", [
                 "--run-dir", str(self.run_dir), "--kb-root", str(other_kb),
             ])
         self.assertEqual(code, 2)

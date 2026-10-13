@@ -16,6 +16,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from embodied_learning.utils.jsonio import load_json  # noqa: F401  (shared reader)
+
 
 ALLOWED_STATUSES = {
     "discovered",
@@ -31,10 +33,6 @@ ALLOWED_STATUSES = {
 def normalize_id(value: object) -> str:
     raw = str(value or "").rsplit("/", 1)[-1].removesuffix(".pdf").removesuffix(".html")
     return re.sub(r"v\d+$", "", raw.strip())
-
-
-def load_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def candidate_base(arxiv_id: str) -> dict[str, Any]:

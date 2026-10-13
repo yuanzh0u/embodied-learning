@@ -53,7 +53,7 @@ identifies an open problem”.
   - `status_counts` and title-only top-N via:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/print_registry_titles.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py registry-titles \
   --candidate-registry work/<run>/candidate-registry.json \
   --status full-text-queued --status extracted --limit 80
 ```

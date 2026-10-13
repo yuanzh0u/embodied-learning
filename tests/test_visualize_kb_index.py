@@ -9,11 +9,8 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "visualize_kb_index.py"
-SPEC = importlib.util.spec_from_file_location("visualize_kb_index", SCRIPT)
-viz = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(viz)
+SCRIPT = "embodied_learning.wiki.publish.knowledge_map"  # implementation module (old scripts/visualize_kb_index.py deleted)
+viz = importlib.import_module(SCRIPT)
 
 
 def make_repo(tmp: Path) -> None:
@@ -249,7 +246,7 @@ class VisualizeKbIndexTest(unittest.TestCase):
 
         output = self.root / "work" / "graph.html"
         result = subprocess.run(
-            [sys.executable, str(SCRIPT), "--root", str(self.root), "--output", str(output), "--no-open"],
+            [sys.executable, str(Path(__file__).resolve().parents[1] / "scripts" / "wiki.py"), "build-knowledge-map", "--root", str(self.root), "--output", str(output), "--no-open"],
             capture_output=True,
             text=True,
         )

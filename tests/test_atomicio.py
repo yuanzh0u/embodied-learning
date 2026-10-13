@@ -16,10 +16,7 @@ from unittest import mock
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPT = _REPO_ROOT / "embodied_learning" / "atomicio.py"
-_spec = importlib.util.spec_from_file_location("atomicio_test_module", _SCRIPT)
-atomicio = importlib.util.module_from_spec(_spec)
-assert _spec and _spec.loader
-_spec.loader.exec_module(atomicio)
+atomicio = importlib.import_module("embodied_learning.atomicio")
 
 
 class AtomicWriteJsonTest(unittest.TestCase):
@@ -88,25 +85,6 @@ class AtomicCopyTest(unittest.TestCase):
             self.assertEqual(dst.read_bytes(), b"console.log('v1')")
             self.assertEqual(list(dst.parent.iterdir()), [dst])
 
-
-class JsonioReexportTest(unittest.TestCase):
-    def test_lib_jsonio_reexports_atomicio(self) -> None:
-        spec = importlib.util.spec_from_file_location(
-            f"jsonio_test_{uuid.uuid4().hex}", _REPO_ROOT / "scripts" / "lib" / "jsonio.py"
-        )
-        assert spec and spec.loader
-        lib_jsonio = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(lib_jsonio)
-        # The shim must resolve to the same package module (single source of
-        # truth), not to a redefinition — hence the module-name + identity check
-        # against the regular import path.
-        import embodied_learning.atomicio as package_atomicio
-
-        self.assertEqual(lib_jsonio.atomic_write_json.__module__, "embodied_learning.atomicio")
-        self.assertIs(lib_jsonio.atomic_write_json, package_atomicio.atomic_write_json)
-        self.assertIs(lib_jsonio.atomic_write_text, package_atomicio.atomic_write_text)
-        self.assertIs(lib_jsonio.atomic_write_bytes, package_atomicio.atomic_write_bytes)
-        self.assertIs(lib_jsonio.atomic_copy, package_atomicio.atomic_copy)
 
 
 if __name__ == "__main__":

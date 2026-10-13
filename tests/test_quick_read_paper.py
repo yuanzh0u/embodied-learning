@@ -8,6 +8,8 @@ unavailable, 1 = hard failure).
 
 from __future__ import annotations
 
+from _entry import invoke
+
 import importlib.util
 import json
 import sys
@@ -20,15 +22,14 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # script imports embodied_learning.*
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "scripts" / "quick_read_paper.py"
-
-
+SCRIPT_PATH = "embodied_learning.knowledge.quick_read"  # implementation module (old scripts/quick_read_paper.py deleted)
 def load_module():
-    spec = importlib.util.spec_from_file_location("quick_read_paper", SCRIPT_PATH)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
+    # Implementation module (not the scripts/ forwarder) so mock.patch on
+    # module attributes (complete/resolve_cli/...) reaches the live globals —
+    # otherwise the agent path would spawn a real claude process.
+    import importlib
+
+    return importlib.import_module("embodied_learning.knowledge.quick_read")
 
 
 PAPER_ID = "2402.10329"
@@ -129,7 +130,7 @@ class QuickReadPipelineTest(unittest.TestCase):
              mock.patch.object(self.module, "audit_article") as audit, \
              mock.patch.object(self.module, "resolve_cli", return_value="/fake/claude"), \
              mock.patch.object(self.module, "complete", side_effect=fake_agent):
-            code = self.module.main(argv)
+            code = invoke("read.py", "quick-read", argv)
         captured.update(extract=extract, deep=deep, audit=audit, agent_calls=len(seen))
         return code, captured
 
@@ -234,7 +235,7 @@ class QuickReadPipelineTest(unittest.TestCase):
     def test_extraction_failure_is_exit_1(self):
         with mock.patch.object(self.module, "ensure_extraction", return_value=False), \
              mock.patch.object(self.module, "ensure_deep_read") as deep:
-            code = self.module.main(["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)])
+            code = invoke("read.py", "quick-read", ["--arxiv-id", PAPER_ID, "--kb-root", str(self.kb_root)])
         self.assertEqual(code, 1)
         deep.assert_not_called()
 

@@ -10,11 +10,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "check_kb_links.py"
-SPEC = importlib.util.spec_from_file_location("check_kb_links", SCRIPT)
-check_kb_links = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(check_kb_links)
+SCRIPT = "embodied_learning.wiki.publish.links"  # implementation module (old scripts/check_kb_links.py deleted)
+check_kb_links = importlib.import_module(SCRIPT)
 
 
 def make_repo(tmp: Path) -> Path:

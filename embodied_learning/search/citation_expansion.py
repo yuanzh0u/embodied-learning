@@ -39,8 +39,15 @@ from embodied_learning import ratelimit
 
 API_BASE = "https://api.semanticscholar.org/graph/v1"
 NEIGHBOR_FIELDS = "title,abstract,year,publicationDate,authors,externalIds"
-MAX_RETRIES = 3
-TRANSIENT_HTTP_CODES = {429, 500, 502, 503, 504}
+from embodied_learning.search.http import (  # noqa: F401  (re-exported for callers)
+    MAX_RETRIES,
+    TRANSIENT_HTTP_CODES,
+    bounded_retries,
+    is_retryable,
+    retry_after_seconds,
+    retry_wait_seconds,
+)
+from embodied_learning.utils.arxiv_id import normalize_arxiv_id  # noqa: E402
 DEFAULT_SEED_STATUSES = frozenset({"accepted", "full-text-queued", "extracted"})
 WRAPPER_KEY = {"references": "citedPaper", "citations": "citingPaper"}
 # Shared with the S2 search library: same URL -> same cache entry.
@@ -252,9 +259,6 @@ def stable_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat()
 
 
-def normalize_arxiv_id(value: object) -> str:
-    raw = str(value or "").rsplit("/", 1)[-1].removesuffix(".pdf").removesuffix(".html")
-    return re.sub(r"v\d+$", "", raw.strip())
 
 
 # ---------------------------------------------------------------------------
@@ -262,36 +266,6 @@ def normalize_arxiv_id(value: object) -> str:
 # library behaves identically under rate limiting; only fetch()'s URL/headers
 # differ, since the target API is Semantic Scholar, not arXiv.
 # ---------------------------------------------------------------------------
-
-
-def bounded_retries(value: int) -> int:
-    return max(0, min(value, MAX_RETRIES))
-
-
-def retry_after_seconds(exc: Exception) -> float | None:
-    if not isinstance(exc, urllib.error.HTTPError):
-        return None
-    retry_after = exc.headers.get("Retry-After") if exc.headers else None
-    if not retry_after:
-        return None
-    try:
-        parsed = float(retry_after)
-    except ValueError:
-        return None
-    return parsed if parsed >= 0 else None
-
-
-def is_retryable(exc: Exception) -> bool:
-    if isinstance(exc, urllib.error.HTTPError):
-        return exc.code in TRANSIENT_HTTP_CODES
-    return isinstance(exc, (TimeoutError, urllib.error.URLError, OSError))
-
-
-def retry_wait_seconds(exc: Exception, attempt: int, retry_base_seconds: float, retry_max_seconds: float) -> float:
-    retry_after = retry_after_seconds(exc)
-    if retry_after is not None:
-        return max(0.0, min(retry_after, retry_max_seconds))
-    return max(0.0, min(retry_base_seconds * (2**attempt), retry_max_seconds))
 
 
 def build_neighbor_url(seed_id: str, direction: str, limit: int) -> str:

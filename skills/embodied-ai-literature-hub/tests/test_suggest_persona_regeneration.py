@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "suggest_persona_regeneration.py"
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-literature-hub/scripts/search.py"  # subcommand: persona-suggest
 PLANNER = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "search.py"  # build-query-plan subcommand
 
 PASSING_DIMENSIONS = [
@@ -31,7 +31,7 @@ def write_json(directory: Path, name: str, payload: object) -> str:
 
 def run_script(*args: str) -> dict:
     completed = subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
+        [sys.executable, str(SCRIPT), "persona-suggest", *args],
         check=True,
         cwd=ROOT,
         text=True,
@@ -204,7 +204,8 @@ class SuggestPersonaRegenerationTests(unittest.TestCase):
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--plan",
+                    "persona-suggest",
+                        "--plan",
                     plan_path,
                     "--coverage-report",
                     coverage_path,
