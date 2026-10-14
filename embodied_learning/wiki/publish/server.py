@@ -1667,13 +1667,16 @@ class WikiHandler(SimpleHTTPRequestHandler):
     def _latest_workspace_id(self) -> str | None:
         """Most recently updated workspace that still points at a live run dir.
         Recovery for a cleared localStorage ``wiki.workflow.ws`` — the journal
-        under the run dir outlives the browser-side id. Parked/in-progress runs
-        outrank settled ones so a finished survey never steals the restore
-        slot from the run the user was mid-way through (2026-10-09)."""
+        under the run dir outlives the browser-side id. Recency is the whole
+        ranking (2026-10-14): the pane has no workspace switcher, so this
+        default is the only reachable conversation and must be the one the
+        user touched last. The 2026-10-09 rank (awaiting_input above
+        in-progress, settled last) made a week-old parked checkpoint outrank
+        the run in progress this morning. Settled-ness survives only as a
+        same-second tiebreak."""
 
         best_id = None
-        best_rank = -1
-        best_at = ""
+        best_key = None
         data = self.chat_sessions.load()
         for ws_id, entry in (data.get("workspaces") or {}).items():
             if not isinstance(entry, dict):
@@ -1685,10 +1688,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
             if not (self.kb_root / run_rel / "dialog" / "journal.jsonl").is_file():
                 continue
             settled = workflow.get("stage") == "settle" and entry.get("topic_id")
-            rank = 0 if settled else (2 if workflow.get("awaiting_input") else 1)
-            updated = str(entry.get("updated_at") or "")
-            if (rank, updated) >= (best_rank, best_at):
-                best_rank, best_at, best_id = rank, updated, ws_id
+            key = (str(entry.get("updated_at") or ""), 0 if settled else 1)
+            if best_key is None or key > best_key:
+                best_key, best_id = key, ws_id
         return best_id
 
     def _handle_workflow_state(self) -> None:

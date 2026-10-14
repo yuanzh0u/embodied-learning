@@ -919,6 +919,48 @@ class WorkflowEndpointTest(ChatServerHarness):
         status, payload, _ = self.request("GET", "/api/workflow/state?latest=1")
         self.assertIsNone(payload.get("ws_id"))
 
+    def test_latest_workspace_prefers_recency_over_parked_checkpoint(self):
+        """A week-old workspace parked at a decision point must not outrank
+        the run touched more recently (2026-10-14: reopening the wiki restored
+        the 10-09 LOD checkpoint instead of the 10-14 run in progress). The
+        old ranking keyed on awaiting_input first, so any parked workspace
+        beat every in-progress one forever."""
+
+        def script(turn_self, kwargs):
+            turn_self._events = self._checkpoint_turn_events()
+
+        self._seed_turn_factory(script)
+        # Two kickoffs with distinct topics → two run dirs, two workspaces.
+        _, _, headers = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "旧主题", "params": self.params("旧主题")})
+        )
+        old_ws = headers.get("X-Workflow-Id")
+        _, _, headers = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "新主题", "params": self.params("新主题")})
+        )
+        new_ws = headers.get("X-Workflow-Id")
+        self.assertNotEqual(old_ws, new_ws)
+        registry_path = server_module.wiki_chat.local_registry_path(self.kb_root)
+        # Old workspace: parked at a checkpoint days ago. New one: mid-stage
+        # and touched this morning. Pin updated_at on disk — registry._mutate
+        # re-stamps it after every write, so backdating through the API is
+        # immediately overwritten.
+        self._set_workflow_state(registry_path, old_ws, stage="packet", awaiting_input=True,
+                                 updated_at="2026-10-09T21:12:46")
+        self._set_workflow_state(registry_path, new_ws, stage="mining", awaiting_input=False,
+                                 updated_at="2026-10-14T10:38:46")
+        status, payload, _ = self.request("GET", "/api/workflow/state?latest=1")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(payload["ws_id"], new_ws)
+
+    @staticmethod
+    def _set_workflow_state(registry_path, ws_id: str, *, updated_at: str, **fields) -> None:
+        data = json.loads(registry_path.read_text(encoding="utf-8"))
+        entry = data["workspaces"][ws_id]
+        entry.setdefault("workflow", {}).update(fields)
+        entry["updated_at"] = updated_at
+        registry_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+
     def test_second_kickoff_truncates_reused_run_dir_journal(self):
         """A kickoff on an in-progress run reuses its dir but starts a new
         conversation: the previous dialog's journal must not survive."""
