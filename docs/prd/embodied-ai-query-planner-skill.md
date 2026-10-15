@@ -7,6 +7,11 @@ tags: [prd, skill, embodied-ai, query-planning, arxiv, literature-mining]
 
 # 具身智能 Query Planner Skill PRD
 
+> **历史文档（已被取代）**：本 PRD 描述的独立 Skill `embodied-ai-query-planner` 已在
+> [ADR 0003](../adr/0003-consolidate-to-three-skills.md) 中并入 `embodied-ai-literature-hub`
+> 的 planning stage（入口 `search.py build-query-plan`）。保留本文作为设计背景，不要按此
+> 结构新建 Skill。
+
 ## Problem Statement
 
 研究者在围绕具身智能话题检索论文时，常常需要把一个中文研究问题拆成多层英文检索 query：直接主题词、邻接主题词、命名方法族、负面讨论、作者或社区新词、Browser fallback 线索等。现有 `embodied-ai-literature-hub` 已经承担 arXiv 检索、候选论文管理、HTML正文挖掘和证据输出，但 query planning 仍混在文献汇聚流程里，且目前只有 UMI/data-usability 一个确定性查询计划。

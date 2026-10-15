@@ -44,11 +44,11 @@ python3 skills/embodied-ai-literature-hub/scripts/search.py plan-cache get \
 2. **On hit** (`hit: true`):
    - Reuse the copied plan.
    - **Skip** dynamic-expansion LLM and persona-generation LLM.
-   - Deterministic `build_query_plan.py` baseline is already inside the cached plan; do not re-spend LLM tokens regenerating the same expansions.
-   - Persona **regeneration** via `suggest_persona_regeneration.py` remains allowed **only when coverage dimensions fail** (or evidence stance skew triggers the reading-phase path). That is an incremental correction, not a cache miss.
+   - Deterministic `search.py build-query-plan` baseline is already inside the cached plan; do not re-spend LLM tokens regenerating the same expansions.
+   - Persona **regeneration** via `search.py persona-suggest` remains allowed **only when coverage dimensions fail** (or evidence stance skew triggers the reading-phase path). That is an incremental correction, not a cache miss.
 
 3. **On miss**:
-   - Run deterministic `build_query_plan.py`.
+   - Run deterministic `search.py build-query-plan`.
    - Add dynamic / persona LLM files only when the skill says they are needed.
    - After a reviewed plan is finalized, store it:
 

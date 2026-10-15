@@ -4,7 +4,7 @@ Use this reference before drafting or auditing a full embodied-AI literature rev
 
 ## Boundary
 
-`$embodied-ai-review-writer` owns evidence orchestration and the briefing bundle. Its default path is `planner -> hub -> review packet -> writing brief -> writer` (the first three stages run inside `$embodied-ai-literature-hub` and `$embodied-ai-paper-reader`). **`build_review_packet.py` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis candidates, topic-clustered evidence, mandatory caveats), and `evidence-appendix.md` (citation anchors). `$embodied-ai-review-writer` independently drafts and editorially audits the three reader-facing files. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables.
+`$embodied-ai-review-writer` owns evidence orchestration and the briefing bundle. Its default path is `planner -> hub -> review packet -> writing brief -> writer` (the first three stages run inside `$embodied-ai-literature-hub` and `$embodied-ai-paper-reader`). **`write.py review-packet` is a briefing generator, not an author**: it emits `review-packet.md` (audit surface), `writing-brief.md` (thesis candidates, topic-clustered evidence, mandatory caveats), and `evidence-appendix.md` (citation anchors). `$embodied-ai-review-writer` independently drafts and editorially audits the three reader-facing files. Mechanical renders exist only as bannered `*.scaffold.md` files and are never deliverables.
 
 If the user does not specify a time range for paper discovery or fallback collection, use the most recent six months. Preserve the resolved time range and review mode in the packet and final artifact.
 
@@ -99,14 +99,14 @@ When the threshold is met and no style is specified, produce all three final sty
 
 **The folder name is the contract trigger.** Anything named `literature-review-<topic>-<date>` owes the full bundle; non-review artifacts (research outlines, experiment designs, synthesis notes) must use a different name (e.g. `research-outline-<topic>-<date>`).
 
-- Runs begin with `python3 scripts/run.py init` — a birth-certificate run.json with `status: in-progress`. The status flips to `settled` only when the bundle is complete and both gates pass. An `in-progress` run fails `check_run_bundle.py` by design.
+- Runs begin with `python3 scripts/run.py init` — a birth-certificate run.json with `status: in-progress`. The status flips to `settled` only when the bundle is complete and both gates pass. An `in-progress` run fails `run.py check-bundle` by design.
 - **Unfinished-run honesty**: stopping mid-pipeline for any reason is allowed, but must be declared — the run stays `in-progress` in `work/` and the user is told explicitly what is missing (search not run, candidates unpromoted, articles unwritten). A silently abandoned run presented as output is a contract violation.
 - Default deliverables: all three styles (`scientific-memo_keyan.md`, `zhihu-explainer_zhihu.md`, `xiaohongshu-post_xiaohongshu.md`) plus `evidence-appendix.md`. These are the ONLY recognized deliverable filenames; an invented name is not a deliverable.
 - Reduced scope is legal only when declared: `run.json` records `"style": "<formal-style>"` and `"scope_note": "<why — the user's explicit ask>"`. An undeclared missing style is a contract violation, not a judgment call.
 - The run folder must be self-contained: `files.evidence` (fresh) and/or `files.reused_evidence` (copied from prior runs) exist inside the folder; `event_count` equals the deduplicated local evidence.
 - Workflow-v2 manifests set `workflow_version: 2`, declare `review_mode`, and list `files.query_plan`, `files.candidate_registry`, and `files.coverage_report`. Settlement is blocked while `stop_assessment.ready_to_stop` is false.
 - `run.json` uses the standard schema (see `evidence/README.md`); invented field names (`selected_event_count`, `files.memo`, …) are rejected by the checker.
-- Gate: `python3 scripts/run.py check-bundle <run-dir>` must pass before settling, alongside `audit_citations.py`.
+- Gate: `python3 scripts/run.py check-bundle <run-dir>` must pass before settling, alongside `run.py audit-citations`.
 
 ## Cross-run evidence
 
@@ -114,7 +114,7 @@ Combining evidence from prior runs is supported and encouraged (it is the accumu
 
 - Load prior evidence explicitly via repeated `--evidence-jsonl`; `load_events` deduplicates by `event_id`. For targeted syntheses, select the relevant events with `--select-event`/`--select-events-file` instead of hand-curating an appendix, and pass `--consolidate-evidence` so the working set lands as the run's own `evidence.jsonl`.
 - Settle **every** evidence file the articles drew from into the run folder, and record the prior runs in `run.json` `source_runs`; `event_count` is the deduplicated count of events available to the articles.
-- An article may only cite events in the settled evidence set — `scripts/audit_citations.py` enforces this, plus dead-anchor and manifest-drift checks, and must pass before settling.
+- An article may only cite events in the settled evidence set — `scripts/run.py audit-citations` enforces this, plus dead-anchor and manifest-drift checks, and must pass before settling.
 
 ## Citation and link contract
 
@@ -166,7 +166,7 @@ Style requirements live in `$embodied-ai-review-writer` and are loaded only for 
 
 ## Writer evidence caps (token optimization)
 
-`build_review_packet.py` projects a **stance-capped** subset into `writing-brief.md` and `evidence-appendix.md` so pathological event counts cannot blow writer context:
+`write.py review-packet` projects a **stance-capped** subset into `writing-brief.md` and `evidence-appendix.md` so pathological event counts cannot blow writer context:
 
 | Stance | Default cap |
 |---|---:|

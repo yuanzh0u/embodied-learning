@@ -34,7 +34,7 @@ python3 skills/embodied-ai-review-writer/scripts/write.py paper-deck --arxiv-id 
 ```
 
 同 quick-read 的骨架：pool → 深读强制 → 简报 → **代理只写 slide-source DSL** →
-`build_slide_deck.py` 编译成 reveal.js 单文件 `slide-deck_report.html`。
+`write.py compile-slide-deck` 编译成 reveal.js 单文件 `slide-deck_report.html`。
 **禁止手写 HTML**——源文件 `slide-deck_report.md` 才是事实源，改内容改它再编译。
 
 ### Run 级

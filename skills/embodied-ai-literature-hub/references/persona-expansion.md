@@ -13,7 +13,7 @@ Personas widen recall for this run; they never replace the static taxonomy, neve
 
 ## Cache interaction
 
-If `query_plan_cache.py get` hits for this `topic+mode+time_range+family`, **skip Step 2** (persona LLM). Reuse the cached plan. Still run `suggest_persona_regeneration.py` later when coverage dimensions fail — that path is not a cache bypass of the initial persona call; it is gap-filling. See [query-plan-cache.md](query-plan-cache.md).
+If `search.py plan-cache get` hits for this `topic+mode+time_range+family`, **skip Step 2** (persona LLM). Reuse the cached plan. Still run `search.py persona-suggest` later when coverage dimensions fail — that path is not a cache bypass of the initial persona call; it is gap-filling. See [query-plan-cache.md](query-plan-cache.md).
 
 ## Workflow
 
@@ -44,7 +44,7 @@ Read `persona-context.json` and write a persona file with:
 ### Step 3: Merge into the plan
 
 ```bash
-python skills/embodied-ai-literature-hub/scripts/build_query_plan.py \
+python3 skills/embodied-ai-literature-hub/scripts/search.py build-query-plan \
   --topic "近半年触觉数据联合训练的坑" \
   --knowledge-id EA-SENSOR \
   --knowledge-id EA-DATA \

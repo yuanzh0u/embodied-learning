@@ -57,7 +57,7 @@ python3 skills/embodied-ai-paper-reader/scripts/read.py audit-claim-support \
 5. **On audit failure, retry only failing cards with a locator window** (not a full re-read):
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/extract_failed_card_window.py \
+python3 skills/embodied-ai-paper-reader/scripts/read.py extract-failed-card-window \
   --audit work/<run>/paper-notes/2402.10329.audit.json \
   --extraction work/<run>/extractions/2402.10329.json \
   --paper-note work/<run>/paper-notes/2402.10329.json \

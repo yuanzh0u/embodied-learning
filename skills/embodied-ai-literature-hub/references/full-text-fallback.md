@@ -77,4 +77,4 @@ and medium-quality extraction whose visual validation is not recorded as passed.
 - TeX-source (`s3-tex`) failure (`no-source`, no S3 key, missing AWS credentials or pandoc) means “fall back to HTML/PDF”, not “the paper lacks a relevant claim”.
 - PDF text-layer failure means “full text was not recoverable in this run”, not “the paper lacks a relevant claim”.
 - Abstracts may guide screening but cannot supply a locator-backed full-text event.
-- Do not copy full PDFs or complete extracted text into `evidence/`; keep caches in `work/` or outside the repository and settle only paper notes and compact evidence records. (The one sanctioned full-text store is the local public paper pool outside the repo — see `knowledge.py pool-add-paper`.)
+- Do not copy full PDFs or complete extracted text into `evidence/`; keep caches in `work/` or outside the repository and settle only paper notes and compact evidence records. (The one sanctioned full-text store is the local public paper pool outside the repo — see `read.py pool-add-paper`.)

@@ -57,7 +57,7 @@ tags: [ingestion, workflow, agent-process]
 
 单篇论文的全文与阅读笔记可归档到本地公共论文池（默认 `~/Documents/arxiv/pool`，仓库之外，每篇一目录、按 arXiv id/DOI 唯一命名），跨主题复用时不再随 run 重复存档：
 
-- 池子登记：`python skills/embodied-ai-literature-hub/scripts/knowledge.py pool-add-paper add --extraction <extraction.json> --note <note.md>`
+- 池子登记：`python3 skills/embodied-ai-paper-reader/scripts/read.py pool-add-paper add --extraction <extraction.json> --note <note.md>`
 - 主题卡引用池子论文时，`source` 用 `POOL-*` 前缀 + 语义锚 locator，不做 `sources.md` 登记：
 
   ```yaml
@@ -93,7 +93,7 @@ tags: [ingestion, workflow, agent-process]
 - 正式结算前检查科研备忘录、知乎解释稿、小红书稿、evidence appendix 和 trace map。
 - 新版本使用新的 append-only run 目录；旧 run 保留，不原地覆盖。
 - 主题卡 `source.file` 指向当前有效 run，并用实际存在的 event ID 或区间作为 locator。
-- 用 `python3 scripts/register_run.py --run-dir <run-dir> --kb-root <kb-root>` 登记 [literature-review-catalog.md](literature-review-catalog.md)（幂等、带共享锁；并发 settle 不会丢行，不要手改表格）。登记后可补充综述范围、候选池、全文数、精读数等规模信息。
+- 用 `python3 scripts/run.py register --run-dir <run-dir> --kb-root <kb-root>` 登记 [literature-review-catalog.md](literature-review-catalog.md)（幂等、带共享锁；并发 settle 不会丢行，不要手改表格）。登记后可补充综述范围、候选池、全文数、精读数等规模信息。
 - 文章是面向读者的表达层，不是独立证据源；知识卡主张最终仍应回到 paper note、audit 和 evidence event。
 
 ## 4. 更新索引

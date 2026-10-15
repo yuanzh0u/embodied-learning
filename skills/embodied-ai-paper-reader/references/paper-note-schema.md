@@ -72,7 +72,7 @@
 `figures: []` and `tables: []` are **card-level optional fields** filled automatically by the
 deep-read assembly: the skeleton agent picks at most one `figure_id`/`table_id` per evidence
 card from the extraction's figure/table inventory (with a one-line Chinese `usage`), and
-`build_paper_note.py` joins those ids against `extraction.json`'s `figures[]/tables[]` records —
+`read.py build-paper-note` joins those ids against `extraction.json`'s `figures[]/tables[]` records —
 caption, `image_url` (figures) and `rows` (tables) come from the extraction, never from the
 agent; ids that do not match an extraction record are dropped. Each figure/table records the
 caption and the usage only — the pipeline never parses figure/table *content*. Figures
@@ -101,10 +101,10 @@ event as `evidence.figures[] / evidence.tables[]`.
 ]
 ```
 
-The `parse.py render-figure-table-block` helper in the literature-hub skill turns these records
+The `fetch.py render-figure-table-block` helper in the literature-hub skill turns these records
 into markdown snippets for the review deliverables (figures render as `![caption](image_url)`
 which the research wiki displays as a real `<img>`; tables render as a markdown grid).
-`build_review_packet.py` already renders them into the evidence appendix and the writing
+`write.py review-packet` already renders them into the evidence appendix and the writing
 brief's 可用图表 section.
 
 ## Allowed values

@@ -5,7 +5,7 @@ Use this style when the user wants a 汇报/展示/放映件 — a presentation 
 ## The division of labor is absolute
 
 - **The agent writes ONLY the slide-source** (`slide-deck_report.md`, a restricted DSL — see below). The agent NEVER hand-writes HTML, never edits the compiled file, never inlines base64.
-- **`build_slide_deck.py` compiles** slide-source → single-file HTML deterministically: citation numbering, References pages, figure base64 inlining, and div balance are all structural guarantees of the compiler.
+- **`write.py compile-slide-deck` compiles** slide-source → single-file HTML deterministically: citation numbering, References pages, figure base64 inlining, and div balance are all structural guarantees of the compiler.
 - Every edit cycle is: edit slide-source → recompile → (visual QA) → recompile. The compiled HTML is a build artifact; the slide-source is the deliverable's source of truth.
 
 ```bash
@@ -43,7 +43,7 @@ Document head (before the first `---`): `# title:` / `# subtitle:` / `# date:` /
 
 ```bash
 # --qa screenshots every slide (reveal #/N hash navigation); then READ each png
-python3 ... build_slide_deck.py --source ... --output ... --qa /tmp/deck-qa
+python3 ... write.py compile-slide-deck --source ... --output ... --qa /tmp/deck-qa
 ```
 
 Read the screenshots and fix: overflowing pages (split the page), label/number collisions in `.bars`, figures too small to read (crop tighter from the source PDF instead of scaling down), text over the verdict bar. Recompile and re-screenshot changed pages until clean.

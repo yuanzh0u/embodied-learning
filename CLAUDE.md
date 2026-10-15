@@ -19,16 +19,17 @@ The interpreter is `python3` (`python` is not on PATH). Scripts are **stdlib-onl
 is no build, lint, install, or dependency step. The full script map (purpose, categories,
 relationships, workflows) lives in `scripts/README.md`. Run any script with `--help` to see its contract.
 Optionally, `pip install .` (editable `-e .` also works) registers `extract_arxiv`,
-`serve_research_wiki`, `run_review_pipeline`, `launch_review`, and `quick_read_paper`. The wheel is
+`serve_research_wiki`, `run_review_pipeline`, `launch_review`, `quick_read_paper`,
+`paper_slide_deck`, and `run_slide_deck`. The wheel is
 **self-contained**: it bundles the three-skill tree (`SKILL.md`/references/agents/scripts, packaged
 as `wiki_scripts.skills`), so an installed environment matches a repo checkout — path resolution
-goes through `scripts/lib/layout.py` (repo checkout vs site-packages), never `parent.parent`
+goes through `embodied_learning/utils/layout.py` (repo checkout vs site-packages), never `parent.parent`
 guesses. The installed layout: the `wiki_scripts` package dir IS the scripts root and contains the
 bundled `skills/`. Spawned headless `claude -p` agents (driver, writer, chat) run with
 `cwd=<kb-root>` and an isolated `CLAUDE_CONFIG_DIR` (`~/.cache/embodied-learning/claude-config`,
 credentials auto-seeded) so they cannot read the launching session's memory or any repo —
-see `scripts/lib/agent_invoke.py` (`isolated_claude_env` / `claude_auth_ready`).
-`serve_research_wiki` serves the local research Wiki and defaults to the local knowledge base at
+see `embodied_learning/harness/claude.py` (`isolated_claude_env` / `claude_auth_ready`).
+`wiki.py serve` (console script `serve_research_wiki`) serves the local research Wiki and defaults to the local knowledge base at
 `~/Documents/arxiv` (override with `--kb-root`; falls back to the repo catalog). Install is not
 required for any pipeline step.
 
@@ -70,8 +71,8 @@ judgment stages (packet via `write.py review-packet --run-dir` → writing → a
 `run.py finalize`) and run them **in one turn** — no outline stop-and-wait checkpoint; the only
 sanctioned early stop is retrieval failure or insufficient evidence (leave the run `in-progress`
 and say what is missing) — a gate failure is a fix-and-rerun condition, never a stop. Settling a
-run is not the last step: `finalize_run.py` performs publish + catalog registration + wiki
-snapshot rebuild (`scripts/build_research_wiki.py --kb-root <kb-root> --output
+run is not the last step: `run.py finalize` performs publish + catalog registration + wiki
+snapshot rebuild (`scripts/wiki.py build-wiki --kb-root <kb-root> --output
 <kb-root>/wiki/data`); runs may also be registered by hand in `knowledge/literature-review-catalog.md`
 (or the local KB's catalog, e.g. `~/Documents/arxiv/knowledge/literature-review-catalog.md` for
 LiDAR/SLAM/calibration topics) — an unregistered run is invisible in the wiki.
@@ -143,7 +144,7 @@ deliberate — do not blur them:
   `search.py search-arxiv --start-date/--end-date` — always pass those explicitly.
 - Query planning is a stage inside `$embodied-ai-literature-hub`
   (`skills/embodied-ai-literature-hub/scripts/search.py build-query-plan`).
-- `build_review_packet.py` is a **briefing generator, not an author**: by default it writes
+- `write.py review-packet` is a **briefing generator, not an author**: by default it writes
   `review-packet.md` + `writing-brief.md` + `evidence-appendix.md` into a new
   `work/literature-review-<topic>-<date>/` folder. The three prose deliverables
   (`scientific-memo_keyan.md` / `zhihu-explainer_zhihu.md` / `xiaohongshu-post_xiaohongshu.md`)
@@ -151,9 +152,9 @@ deliberate — do not blur them:
   ship the script's mechanical renders (`--emit-scaffold` produces bannered `*.scaffold.md` only).
   Use `--style survey` for the packet alone; `--select-event`/`--select-events-file` +
   `--consolidate-evidence` for targeted reuse of prior runs' evidence. Before settling a run into
-  `evidence/`, two gates must pass: `scripts/check_run_bundle.py` (three styles or declared
+  `evidence/`, two gates must pass: `scripts/run.py check-bundle` (three styles or declared
   `style`+`scope_note` in run.json; self-contained evidence; standard manifest fields) and
-  `scripts/audit_citations.py` (dead anchors, citations outside the loaded evidence, run.json drift).
+  `scripts/run.py audit-citations` (dead anchors, citations outside the loaded evidence, run.json drift).
   The `literature-review-<topic>-<date>` folder name IS the bundle contract trigger — non-review
   artifacts use a different naming.
 
@@ -165,7 +166,7 @@ deliberate — do not blur them:
   candidates and intermediates stay in gitignored `work/`.
 - **Retired raw documents** are archived in git history only — recover via the `git show <ref>:<file>`
   commands registered in `knowledge/sources.md`. Locators use semantic anchors (section titles, Q&A
-  numbers), never line numbers. Archive-aware checks (`check_kb_links.py`, `validate_current_reviews.py`)
+  numbers), never line numbers. Archive-aware checks (`wiki.py check-kb-links`, `run.py validate-reviews`)
   therefore need a **full-history clone** (not `git clone --depth 1`). Shallow clones get a clear
   early error; deepen with `git fetch --unshallow` before re-running validation.
 - **Topic cards** (`knowledge/embodied-ai/*.md`, `knowledge/error-governance/*.md`) are compressed
@@ -189,10 +190,10 @@ a pool dir inside the repo is a mis-resolved default, migrate it out and delete 
 ## Token / context soft guards
 
 - Load `AGENTS.md` + the **current** skill `SKILL.md` only; pull `references/` per step. Do not preload the full `knowledge/literature-review-catalog.md` — grep relevant rows.
-- Never dump `candidate-registry.json` into the model; use coverage reports / title-only slices (`print_registry_titles.py`).
-- Prefer `build_reading_packet.py --summary-first` for scoping; full text stays on disk for locator audits.
-- `build_review_packet.py` stance-caps writer brief/appendix (default support 8 / limit 6 / conditional 6 / gap 4); pass `--uncapped-writer` only for debug.
-- Optional metering: `EMBODIED_TOKEN_METER=1` + `scripts/token_meter.py` → `work/<run>/token-meter.jsonl` (see `docs/token-meter.md`).
+- Never dump `candidate-registry.json` into the model; use coverage reports / title-only slices (`search.py registry-titles`).
+- Prefer `read.py build-reading-packet --summary-first` for scoping; full text stays on disk for locator audits.
+- `write.py review-packet` stance-caps writer brief/appendix (default support 8 / limit 6 / conditional 6 / gap 4); pass `--uncapped-writer` only for debug.
+- Optional metering: `EMBODIED_TOKEN_METER=1` + `scripts/run.py token-meter` → `work/<run>/token-meter.jsonl` (see `docs/token-meter.md`).
 
 ## Conventions and invariants
 
@@ -208,8 +209,8 @@ a pool dir inside the repo is a mis-resolved default, migrate it out and delete 
   binding layer). Feature modules keep prompts and output parsing; the harness owns CLI discovery,
   spawn-environment isolation, auth preflight, one-shot `complete()`, streaming `ChatTurn`, and the
   machine-local conversation archive (`~/.claude/projects/embodied-learning-work/`). Never spawn
-  `claude` via `subprocess` anywhere else; `scripts/lib/agent_invoke.py` is a compatibility shim
-  (prompts + KB layout + re-exports).
+  `claude` via `subprocess` anywhere else — there is no bypass shim; everything goes through the
+  harness.
 - **Shared-KB concurrency is O_EXCL-based, never flock.** The KB may live on a CIFS mount shared by
   several machines; all cross-process coordination lives under `<kb-root>/.locks/` (owner-record
   lock files created with `O_CREAT|O_EXCL`, stale-steal via a fixed `.steal` marker) and
@@ -233,7 +234,7 @@ a pool dir inside the repo is a mis-resolved default, migrate it out and delete 
 - **Topic-card edits are suggestions** unless the user explicitly asks to edit the knowledge base.
 - **Do not store full papers or full extracted text in the repo** — cache HTML/tarballs outside it. The
   one sanctioned full-text store is the **local public paper pool outside the repository**
-  (`~/Documents/arxiv/pool`, managed by `knowledge.py pool-add-paper`), which the repo references but never contains.
+  (`~/Documents/arxiv/pool`, managed by `read.py pool-add-paper`), which the repo references but never contains.
 - **Skill layout convention:** each skill is `SKILL.md` + `scripts/` + `references/` + `tests/` +
   `agents/openai.yaml`. A new script gets a matching stdlib-only `unittest` file in the skill's `tests/`
   that loads the script via `importlib.util.spec_from_file_location`. Shared arXiv data-processing

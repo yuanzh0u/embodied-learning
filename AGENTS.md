@@ -22,7 +22,7 @@ This repository is a research knowledge base. Optimize for context efficiency an
 
 - **NEVER** `Read` full `candidate-registry.json` into LLM context (often 2–5 MB). Use `coverage-report.json`, `screening-*.md`, `status_counts`, or `skills/embodied-ai-literature-hub/scripts/search.py registry-titles` (title-only top-N).
 - Coverage decisions: read the coverage report only — **do not** paste search-round JSON (`openalex-candidates-round*.json`, raw arXiv batch files) into the conversation.
-- Paper reading: prefer `build_reading_packet.py --summary-first` (structure map + section windows). Keep full extraction on disk; open locator windows for claim cards. Do not re-paste Complete extracted text every pass.
+- Paper reading: prefer `read.py build-reading-packet --summary-first` (structure map + section windows). Keep full extraction on disk; open locator windows for claim cards. Do not re-paste Complete extracted text every pass.
 - Writer inputs: `writing-brief.md` / `evidence-appendix.md` are stance-capped; complete events stay in `evidence.jsonl` for audits.
 
 ## Context Rules
