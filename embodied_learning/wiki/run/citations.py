@@ -181,6 +181,17 @@ def run(args: argparse.Namespace) -> int:
     if appendix is not None:
         anchors, appendix_problems = appendix_anchors(appendix)
         problems.extend(appendix_problems)
+    elif args.article:
+        # Auditing prose without the appendix silently skipped the dead-anchor
+        # and link-target checks — the gate's core contract — and still printed
+        # "citation audit OK" (2026-10-15, writer agent omitted --appendix on
+        # all three calls). A hollow pass is worse than a strict fail: require
+        # the appendix whenever articles are in scope.
+        problems.append(
+            "audit-citations: --article given without --appendix — "
+            "dead-anchor and link-target checks were skipped"
+            "（修法：补 --appendix <run-dir>/evidence-appendix.md；锚点检查不可省）"
+        )
     for article in [Path(path) for path in args.article]:
         problems.extend(audit_article(article, appendix, anchors, evidence_ids, paper_ids))
     if args.run_json:

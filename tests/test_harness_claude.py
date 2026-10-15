@@ -155,5 +155,47 @@ class ChatTurnInHarnessTest(unittest.TestCase):
                 os.environ.pop("EMBODIED_CONVERSATION_STORE", None)
 
 
+class ToolDetailTest(unittest.TestCase):
+    """``_tool_detail`` feeds the dialog journal — the audit trail for
+    "did the agent pass the right flags?". A 120-char cut used to truncate
+    audit-citations invocations mid-flag and hide real wrong-flag retries
+    (2026-10-15). Commands stay whole; path-ish keys stay compact."""
+
+    def _detail(self, payload: dict) -> str:
+        line = json.dumps({
+            "type": "assistant",
+            "message": {"content": [{"type": "tool_use", "name": "Bash", "input": payload}]},
+        })
+        events = claude.parse_stream_line(line)
+        tool_events = [e for e in events if e.get("stage") == "tool"]
+        self.assertEqual(len(tool_events), 1)
+        return tool_events[0]["detail"]
+
+    def test_command_is_not_cut_at_120(self) -> None:
+        command = (
+            "python3 scripts/run.py audit-citations "
+            "--article work/literature-review-纹理映射-20261013/scientific-memo_keyan.md "
+            "--appendix work/literature-review-纹理映射-20261013/evidence-appendix.md "
+            "--evidence-jsonl work/literature-review-纹理映射-20261013/evidence.jsonl "
+            "--run-json work/literature-review-纹理映射-20261013/run.json"
+        )
+        self.assertGreater(len(command), 120)
+        self.assertEqual(self._detail({"command": command}), command)
+
+    def test_command_still_capped_at_config_limit(self) -> None:
+        huge = "x" * (claude.TOOL_COMMAND_DETAIL_MAX_CHARS + 50)
+        detail = self._detail({"command": huge})
+        self.assertEqual(len(detail), claude.TOOL_COMMAND_DETAIL_MAX_CHARS)
+
+    def test_file_path_stays_compact(self) -> None:
+        path = "/tmp/" + "a" * 400
+        detail = self._detail({"file_path": path})
+        self.assertEqual(len(detail), claude.TOOL_DETAIL_MAX_CHARS)
+
+    def test_non_string_and_missing_input(self) -> None:
+        self.assertEqual(self._detail({"command": 42}), "")
+        self.assertEqual(claude._tool_detail({"input": "not-a-dict"}), "")
+
+
 if __name__ == "__main__":
     unittest.main()

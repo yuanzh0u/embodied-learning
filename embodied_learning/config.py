@@ -136,6 +136,13 @@ DEFAULT_MAX_SECTION_CHARS: int = 4000
 # ---- agent / chat timeouts ---------------------------------------------------
 
 STOP_GRACE_S: float = 5.0
+# Tool-call detail caps for the harness event stream (dialog journal + UI).
+# ``command`` is the audit trail for "did the agent pass the right flags?" —
+# 120 chars used to cut audit-citations invocations mid-flag and hide real
+# flag-guessing retries (2026-10-15). Keep commands whole; path/URL-ish keys
+# stay compact so the live status spinner remains readable.
+TOOL_DETAIL_MAX_CHARS: int = 120
+TOOL_COMMAND_DETAIL_MAX_CHARS: int = 2000
 SKELETON_TIMEOUT_S: float = 900.0
 ARTICLE_TIMEOUT_S: float = 600.0
 SOURCE_TIMEOUT_S: float = 900.0

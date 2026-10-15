@@ -34,7 +34,11 @@ import sys
 import threading
 import time
 from pathlib import Path
-from embodied_learning.config import STOP_GRACE_S
+from embodied_learning.config import (
+    STOP_GRACE_S,
+    TOOL_COMMAND_DETAIL_MAX_CHARS,
+    TOOL_DETAIL_MAX_CHARS,
+)
 
 # ---- constants ------------------------------------------------------------
 
@@ -388,7 +392,15 @@ def parse_stream_line(line: str) -> list[dict]:
 
 
 def _tool_detail(block: dict) -> str:
-    """Short human-readable summary of a tool call input (file path etc.)."""
+    """Human-readable summary of a tool call input (file path / command etc.).
+
+    ``command`` keeps essentially the whole invocation (``TOOL_COMMAND_DETAIL_MAX_CHARS``)
+    because the dialog journal is the audit trail for flag-mistake diagnosis —
+    a 120-char cut used to truncate ``audit-citations`` mid-flag and make real
+    wrong-flag retries look like log noise. Shorter keys (paths, patterns, URLs)
+    stay compact at ``TOOL_DETAIL_MAX_CHARS``; the UI may shorten further for
+    the transient status spinner.
+    """
 
     payload = block.get("input")
     if not isinstance(payload, dict):
@@ -396,7 +408,12 @@ def _tool_detail(block: dict) -> str:
     for key in ("file_path", "notebook_path", "path", "pattern", "command", "url", "query"):
         value = payload.get(key)
         if isinstance(value, str) and value:
-            return value[:120]
+            limit = (
+                TOOL_COMMAND_DETAIL_MAX_CHARS
+                if key == "command"
+                else TOOL_DETAIL_MAX_CHARS
+            )
+            return value[:limit]
     return ""
 
 
