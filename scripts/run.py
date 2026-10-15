@@ -20,10 +20,13 @@ for _root in (_HERE.parents[3], _HERE.parents[1]):
         sys.path.insert(0, str(_root))
 
 from embodied_learning.config import (
+    DEFAULT_AGENT_TIMEOUT_S,
     DYNAMIC_AGENT_TIMEOUT_S,
+    EXTRACTION_PAPER_TIMEOUT_S,
     REVIEW_MODES,
     SEARCH_STRATEGIES,
     SELECTION_STRATEGIES,
+    SELECTION_TIMEOUT_S,
     S2_BUDGET_S,
     STYLE_TO_FILE,
     TERMS_AGENT_TIMEOUT_S,
@@ -269,13 +272,13 @@ def _pipeline_parser() -> argparse.ArgumentParser:
              "(rapid 10 / scoping 16 / systematic 40) so the finalize "
              "cited-paper floor is reachable.",
     )
-    parser.add_argument("--agent-timeout", type=float, default=420.0, help="Per-paper skeleton agent timeout (s).")
+    parser.add_argument("--agent-timeout", type=float, default=DEFAULT_AGENT_TIMEOUT_S, help="Per-paper skeleton agent timeout (s).")
     parser.add_argument(
-        "--selection-timeout", type=float, default=900.0,
+        "--selection-timeout", type=float, default=SELECTION_TIMEOUT_S,
         help="Per-chunk smart-selection agent timeout (s); a timeout is a failed chunk, not a crash.",
     )
     parser.add_argument(
-        "--extraction-timeout", type=float, default=300.0,
+        "--extraction-timeout", type=float, default=EXTRACTION_PAPER_TIMEOUT_S,
         help="Hard per-paper full-text extraction timeout (s).",
     )
     parser.add_argument("--agents-parallel", type=int, default=5, help="Concurrent skeleton agents.")

@@ -425,6 +425,7 @@ def _screen_candidates_main(argv: list[str] | None = None) -> int:
 
 import argparse
 
+from embodied_learning.config import SELECTION_TIMEOUT_S  # noqa: E402
 from embodied_learning.search.selection import run_select  # noqa: E402
 
 SELECTION_STRATEGIES = ("bm25", "influence", "keywords", "smart")
@@ -447,7 +448,7 @@ def _select_candidates_parse_args(argv: list[str] | None = None) -> argparse.Nam
     parser.add_argument("--output-markdown")
     parser.add_argument("--complete-cli", help="claude binary for the smart strategy (default: harness resolve_cli).")
     parser.add_argument("--complete-model", help="Model for the smart strategy (default: harness DRIVER_AGENT_MODEL).")
-    parser.add_argument("--complete-timeout", type=float, default=900.0, help="Smart-agent timeout in seconds (per chunk).")
+    parser.add_argument("--complete-timeout", type=float, default=SELECTION_TIMEOUT_S, help="Smart-agent timeout in seconds (per chunk).")
     return parser.parse_args(argv)
 
 

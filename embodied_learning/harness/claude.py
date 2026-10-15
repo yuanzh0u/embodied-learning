@@ -208,6 +208,18 @@ def resolve_cli(cli: str | None = None) -> str | None:
 # ---- one-shot completion ----------------------------------------------------
 
 
+def warn_timeout(what: str, timeout_s: float, label: str = "") -> None:
+    """Every agent-call timeout must be loud. A silent timeout is
+    indistinguishable from an ordinary failure downstream, so the budget
+    problem stays invisible (2026-10-14: a 900s smart-selection chunk timeout
+    quietly dropped half a candidate registry and starved the evidence floor).
+
+    stderr only — callers parse ``complete()``'s stdout as their payload."""
+
+    where = f" [{label}]" if label else ""
+    print(f"[WARN] timeout{where}: {what} exceeded {timeout_s:.0f}s", file=sys.stderr, flush=True)
+
+
 def complete(
     prompt: str,
     *,
@@ -264,6 +276,7 @@ def complete(
             **run_kwargs,
         )
     except subprocess.TimeoutExpired as exc:
+        warn_timeout("one-shot agent call", timeout_s, label)
         record_agent_invocation(
             kind="one-shot", label=label, prompt=prompt,
             stdout=exc.stdout or "" if isinstance(exc.stdout, str) else "",
@@ -503,7 +516,10 @@ class ChatTurn:
                 try:
                     self._process.wait(timeout=5.0)
                 except subprocess.TimeoutExpired:
-                    pass
+                    # Bounded drain after stdout EOF, not a budget overrun —
+                    # still log it: a child that never exits is a zombie that
+                    # will hold the chat lock.
+                    warn_timeout("post-EOF exit-code drain", 5.0)
                 code = self._process.poll()
             # Archive BEFORE the exit marker: consumers (events()) must be
             # able to rely on the transcript being on disk once they see the
@@ -542,6 +558,7 @@ class ChatTurn:
 
     def _on_timeout(self) -> None:
         self._timed_out = True
+        warn_timeout("chat turn", self.timeout_s)
         self.stop()
 
     # -- consumption -------------------------------------------------------
@@ -560,6 +577,9 @@ class ChatTurn:
         try:
             kind, payload = self._queue.get(timeout=120.0 if timeout_s is None else timeout_s)
         except queue.Empty:
+            warn_timeout(
+                "first chat event", 120.0 if timeout_s is None else timeout_s
+            )
             return None
         if kind == "exit":
             self._early_exit_seen = True

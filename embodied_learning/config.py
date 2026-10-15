@@ -81,12 +81,17 @@ DEFAULT_WRITER_STANCE_CAPS: dict[str, int] = {
 
 # ---- agent / network defaults -----------------------------------------------
 
-TERMS_AGENT_TIMEOUT_S: float = 90.0
-DYNAMIC_AGENT_TIMEOUT_S: float = 240.0
-S2_BUDGET_S: float = 240.0
-DEFAULT_AGENT_TIMEOUT_S: float = 420.0
+TERMS_AGENT_TIMEOUT_S: float = 180.0
+DYNAMIC_AGENT_TIMEOUT_S: float = 480.0
+S2_BUDGET_S: float = 480.0
+DEFAULT_AGENT_TIMEOUT_S: float = 900.0
 DEFAULT_AGENTS_PARALLEL: int = 5
 DEFAULT_EXTRACTION_WORKERS: int = 4
+# One smart-selection chunk is ONE agent call judging up to
+# SMART_CANDIDATES_PER_CALL abstracts; the 2026-10-14 时空智能体 run lost its
+# whole older half (2024-01..2026-08) to a 900s chunk timeout, which then
+# starved the full-text and accepted-paper floors. Keep this generous.
+SELECTION_TIMEOUT_S: float = 3600.0
 
 # ---- network: retry, pacing, circuit breaking -------------------------------
 
@@ -131,16 +136,31 @@ DEFAULT_MAX_SECTION_CHARS: int = 4000
 # ---- agent / chat timeouts ---------------------------------------------------
 
 STOP_GRACE_S: float = 5.0
-SKELETON_TIMEOUT_S: float = 420.0
-ARTICLE_TIMEOUT_S: float = 300.0
-SOURCE_TIMEOUT_S: float = 600.0
-DEFAULT_CHAT_TIMEOUT_S: int = 900
-FIRST_EVENT_TIMEOUT_S: float = 120.0
+SKELETON_TIMEOUT_S: float = 900.0
+ARTICLE_TIMEOUT_S: float = 600.0
+SOURCE_TIMEOUT_S: float = 900.0
+DEFAULT_CHAT_TIMEOUT_S: int = 1800
+FIRST_EVENT_TIMEOUT_S: float = 240.0
 MAX_HISTORY_MESSAGES: int = 40
 MAX_PROMPT_CONTEXT_FILES: int = 40
 WORKFLOW_AUTO_CONTINUE_ROUNDS: int = 2
 WORKFLOW_MIN_TIMEOUT_S: float = 5400.0
-WORKFLOW_DRIVER_TIMEOUT_S: float = 900.0
+WORKFLOW_DRIVER_TIMEOUT_S: float = 10800.0
+# Subprocess budgets the wiki server wraps around its skill scripts (速读卡 /
+# 汇报 deck / 论文对话准备). A timeout there kills the child and surfaces an
+# error to the pane, so they are generous but bounded.
+QUICKREAD_TIMEOUT_S: float = 1800.0
+RUN_DECK_TIMEOUT_S: float = 1800.0
+PAPER_DECK_TIMEOUT_S: float = 3600.0
+PAPER_PREP_TIMEOUT_S: float = 2400.0
+REFRESH_TIMEOUT_S: float = 300.0
+INIT_RUN_TIMEOUT_S: float = 120.0
+# Hard per-paper full-text extraction budget (queue entry point).
+EXTRACTION_PAPER_TIMEOUT_S: float = 600.0
+# Whole extraction-queue stage budget (the driver wraps it in one run_stage).
+EXTRACTION_STAGE_TIMEOUT_S: float = 5400.0
+# Citation-expansion (S2) round budget inside the driver.
+CITATION_EXPANSION_TIMEOUT_S: float = 900.0
 
 # ---- ranking / scoring knobs -------------------------------------------------
 

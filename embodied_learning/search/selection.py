@@ -29,7 +29,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 from embodied_learning.harness.prompt import SMART_SELECTION_PROMPT
-from embodied_learning.config import SMART_CANDIDATES_PER_CALL, SMART_MAX_ABSTRACT_CHARS
+from embodied_learning.config import SELECTION_TIMEOUT_S, SMART_CANDIDATES_PER_CALL, SMART_MAX_ABSTRACT_CHARS
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 # One smart-agent call stays inside a comfortable context; larger registries
@@ -179,7 +179,7 @@ def smart_select(
     model: str,
     env: dict[str, str] | None = None,
     cwd=None,
-    timeout_s: float = 900.0,
+    timeout_s: float = SELECTION_TIMEOUT_S,
 ) -> tuple[list[dict[str, Any]], str]:
     """The smart contract: EVERY candidate's abstract reaches the agent.
 
@@ -230,9 +230,26 @@ def smart_select(
             # reporting one visible coverage hole and continuing.
             timed_out_chunks += 1
             failed_chunks += 1
+            if isinstance(exc, subprocess.TimeoutExpired):
+                print(
+                    f"[DRIVER-WARN] 选文 chunk {index}/{len(chunks)} 超时"
+                    f"（{timeout_s:.0f}s），{len(chunk)} 篇候选未判定 — 覆盖缺口",
+                    flush=True,
+                )
+            else:
+                print(
+                    f"[DRIVER-WARN] 选文 chunk {index}/{len(chunks)} 调用失败"
+                    f"（{type(exc).__name__}: {exc}），{len(chunk)} 篇候选未判定 — 覆盖缺口",
+                    flush=True,
+                )
             continue
         if result.returncode != 0:
             failed_chunks += 1
+            print(
+                f"[DRIVER-WARN] 选文 chunk {index}/{len(chunks)} 返回"
+                f" exit {result.returncode}，{len(chunk)} 篇候选未判定 — 覆盖缺口",
+                flush=True,
+            )
             continue
         parsed = _parse_selections(result.stdout, known)
         if parsed:
@@ -339,7 +356,7 @@ def run_select(
     *,
     cli: str | None = None,
     model: str | None = None,
-    timeout_s: float = 900.0,
+    timeout_s: float = SELECTION_TIMEOUT_S,
     complete_fn=None,
 ) -> int:
     """CLI driver behind ``search.py select-candidates``: rank the registry with

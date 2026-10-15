@@ -7,9 +7,9 @@ claim's wording and scope.
 
 Library API: stateless explicit-parameter functions (:func:`audit`,
 :func:`extraction_text`, :func:`locator_surface`, :func:`meaningful_tokens`,
-:func:`normalize`). Consumers import this module directly — build_paper_note.py
-/``meaningful_tokens``/``normalize``. The CLI surface owns argument parsing and
-lives in the skill entry
+:func:`normalize`, :func:`table_surface`). Consumers import this module
+directly — build_paper_note.py /``meaningful_tokens``/``normalize``. The CLI
+surface owns argument parsing and lives in the skill entry
 ``skills/embodied-ai-paper-reader/scripts/audit_claim_support.py``.
 """
 
@@ -164,6 +164,33 @@ def section_surfaces(locator: str, full_text: str, extraction: dict[str, Any]) -
     return surfaces
 
 
+def table_surface(extraction: dict[str, Any]) -> str:
+    """Captions + cell text of every extracted table.
+
+    Quantitative results canonically live in tables, and the HTML extractor
+    keeps tables out of section prose entirely (often with ``section_index``
+    unset, or set to wherever LaTeX parked the float rather than the section
+    that discusses it — 2026-10-15 纹理映射: 5/12 papers lost every card to the
+    quant gate because the numbers only existed here). The quote gate still
+    binds a card to its locator; this surface only has to prove the
+    measurement tokens are real extracted content of this paper, not
+    hallucinated, so captions and cells count as visible."""
+
+    chunks: list[str] = []
+    for table in extraction.get("tables") or []:
+        if not isinstance(table, dict):
+            continue
+        chunks.append(str(table.get("caption") or ""))
+        rows = table.get("rows")
+        if isinstance(rows, list):
+            for row in rows:
+                if isinstance(row, list):
+                    chunks.append(" ".join(str(cell) for cell in row))
+                else:
+                    chunks.append(str(row))
+    return "\n".join(chunks)
+
+
 def extraction_sections(extraction: dict[str, Any]) -> list[Any]:
     """Section list in the shape the note pipeline expects.
 
@@ -245,6 +272,7 @@ def audit(note: dict[str, Any], extraction: dict[str, Any]) -> dict[str, Any]:
 
     results: list[dict[str, Any]] = []
     overall = "pass"
+    table_tokens = meaningful_tokens(table_surface(extraction))
     for card in note.get("evidence_cards", []):
         locator = str(card.get("locator") or "")
         context = str(card.get("source_context") or "")
@@ -271,7 +299,10 @@ def audit(note: dict[str, Any], extraction: dict[str, Any]) -> dict[str, Any]:
             exact = context_norm in normalize(surface)
             surface_tokens = meaningful_tokens(surface)
             overlap = len(context_tokens & surface_tokens) / max(1, len(context_tokens))
-            visible = measurement_tokens & surface_tokens
+            # Measurement tokens may verify in the locator's prose OR in the
+            # paper's tables (see table_surface) — table numbers never appear
+            # in section prose.
+            visible = measurement_tokens & (surface_tokens | table_tokens)
             quant_ok = not measurement_tokens or len(visible) / len(measurement_tokens) >= 0.34
             score = (exact, quant_ok, overlap)
             if best is None or score > best[0]:
@@ -294,7 +325,10 @@ def audit(note: dict[str, Any], extraction: dict[str, Any]) -> dict[str, Any]:
         if not quant_ok:
             if status != "reject":
                 status = "needs-review"
-            reasons.append("fewer than one third of quantitative metric/value/comparator tokens occur at the locator")
+            reasons.append(
+                "fewer than one third of quantitative metric/value/comparator tokens "
+                "occur at the locator or in the paper's tables"
+            )
 
         verification = card.get("verification") if isinstance(card.get("verification"), dict) else {}
         if verification.get("status") != "passed" or verification.get("checked_against") != "full-text":

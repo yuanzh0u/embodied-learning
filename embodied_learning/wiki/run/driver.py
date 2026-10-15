@@ -73,9 +73,11 @@ REVIEW_MODES = {"rapid", "scoping", "systematic"}
 # Mode tables and agent defaults live in embodied_learning.config (single home).
 from embodied_learning.config import (
     # noqa: E402
+    CITATION_EXPANSION_TIMEOUT_S,
     DEEP_READ_LIMITS,
     DYNAMIC_AGENT_TIMEOUT_S,
     EVIDENCE_FLOORS,
+    EXTRACTION_STAGE_TIMEOUT_S,
     REVIEW_MODES,
     S2_BUDGET_S,
     S2_SLEEP_S,
@@ -114,6 +116,8 @@ def extraction_queue_line(line: str) -> None:
         log(f"[DRIVER-PROGRESS:extract:{done_s}/{total_s}]")
         if state == "HELD":
             log(f"[PAPER] {paper_id} 全文不满足证据条件（HELD）")
+    elif line.strip().startswith("[DRIVER-"):
+        log(line.strip())  # already protocol-formatted (e.g. [DRIVER-WARN])
     else:
         log(f"[DRIVER] 全文抽取 {line}")
 
@@ -131,6 +135,8 @@ def selection_line(line: str) -> None:
         log(f"[DRIVER-PROGRESS:select:{done_s}/{total_s}]")
         if rest.strip():
             log(f"[DRIVER] 选文 {rest.strip()}")
+    elif line.strip().startswith("[DRIVER-"):
+        log(line.strip())  # already protocol-formatted (e.g. [DRIVER-WARN])
     else:
         log(f"[DRIVER] 选文 {line}")
 
@@ -230,7 +236,11 @@ def agent_terms(topic: str, focus: str, timeout_s: float, cli: str | None) -> li
         result = complete(
             TERMS_PROMPT.format(topic=topic, focus=focus or "无"), timeout_s=timeout_s, cli=cli
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        if isinstance(exc, subprocess.TimeoutExpired):
+            log(f"[DRIVER-WARN] 术语 agent 超时（{timeout_s:.0f}s），回退机械术语")
+        else:
+            log(f"[DRIVER-WARN] 术语 agent 启动失败：{exc}")
         return None
     if result.returncode:
         return None
@@ -297,7 +307,11 @@ def agent_dynamic_queries(
     prompt = DYNAMIC_QUERIES_PROMPT.format(topic=topic, focus=focus or "无", seed_line=seed_line)
     try:
         result = complete(prompt, timeout_s=timeout_s, cli=cli)
-    except (subprocess.TimeoutExpired, OSError):
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        if isinstance(exc, subprocess.TimeoutExpired):
+            log(f"[DRIVER-WARN] 动态查询 agent 超时（{timeout_s:.0f}s），回退分类法+通用查询")
+        else:
+            log(f"[DRIVER-WARN] 动态查询 agent 启动失败：{exc}")
         return None
     if result.returncode:
         return None
@@ -774,6 +788,7 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
     ]
     start_seq = max_event_seq(existing_events) + 1
     projected = 0
+    projection_blocked: list[dict[str, str]] = []
     for note_path in sorted(notes_dir.glob("*.json")):
         if note_path.name.endswith(".audit.json"):
             continue
@@ -786,7 +801,15 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
         if not audit_path.is_file():
             continue
         audit = json.loads(audit_path.read_text(encoding="utf-8"))
-        if audit.get("status") not in {"pass", "needs-review"}:
+        pass_cards = [
+            str(item.get("card_id") or "")
+            for item in audit.get("cards") or []
+            if isinstance(item, dict) and item.get("status") == "pass"
+        ]
+        if not pass_cards:
+            # Nothing projectable: structural audit failure (validation /
+            # extraction) or every card rejected. The funnel already reports
+            # these as audit-reject / deep-read-failed — do not double-count.
             continue
         result = run_command([
             sys.executable, str(PROJECT_SCRIPT), "project-evidence-events",
@@ -797,12 +820,31 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
             "--output", str(output),
         ])
         if result.returncode:
-            log(f"[DRIVER-WARN] project {note_path.stem}: exit {result.returncode}")
+            # Surface the projector's own reason — the old bare `exit 2` made
+            # every shortfall look like a deep-read failure (2026-10-15 纹理映射).
+            detail = (result.stderr or result.stdout or "").strip()
+            reason = detail.splitlines()[-1] if detail else f"exit {result.returncode}"
+            log(f"[DRIVER-WARN] project {note_path.stem}: {reason}")
+            projection_blocked.append({"paper_id": note_path.stem, "reason": reason})
             continue
         count = sum(1 for line in output.read_text(encoding="utf-8").splitlines() if line.strip())
         start_seq += count
         projected += count
         log(f"[PAPER] {note_path.stem} 投影 {count} 条证据事件")
+        # Partial drops stay visible: cards without a passing audit are now
+        # skipped instead of zeroing the paper, but the loss is still a loss.
+        note = json.loads(note_path.read_text(encoding="utf-8"))
+        note_cards = {
+            str(card.get("card_id") or "")
+            for card in note.get("evidence_cards") or []
+            if isinstance(card, dict)
+        }
+        dropped = sorted(cid for cid in note_cards if cid and cid not in set(pass_cards))
+        if dropped:
+            reason = f"{len(dropped)} 张卡未过 claim-support 审计未投影: {', '.join(dropped)}"
+            log(f"[DRIVER-WARN] project {note_path.stem}: {reason}")
+            projection_blocked.append({"paper_id": note_path.stem, "reason": reason})
+    summary_extra["projection_blocked"] = projection_blocked
     # evidence_events stays deep-read-only (the abstract tier is positioning,
     # not accepted evidence); the whole-set total goes into run.json.
     deep_read_events = sum(
@@ -899,6 +941,22 @@ def _audited_note(note_path: Path, audit_path: Path | None = None) -> bool:
         return json.loads(audit_path.read_text(encoding="utf-8")).get("status") in {"pass", "needs-review"}
     except (OSError, ValueError):
         return False
+
+
+def projection_units(passed: int, needs_review: int) -> int:
+    """How many of these deep-read outcomes count toward the evidence floor.
+
+    PROJECTION units, not read units. ``evidence_projection.project()`` now
+    emits each passing card even when a sibling card is needs-review
+    (2026-10-15), but a needs-review paper is only projectable if at least one
+    card passed — unknown at this point — so the floor counter stays
+    conservative and counts full-pass papers only. Counting needs-review made
+    13 pass + 6 needs-review read as "19 ≥ 15", skipped the 候补 fill, and left
+    coverage at 13/15 (2026-10-14 时空智能体). ``needs_review`` is kept in the
+    signature only so callers pass it explicitly and the exclusion is visible
+    at the call site."""
+
+    return int(passed)
 
 
 def deep_read_order(screened: list[str], seeds: list[str], limit: int | None) -> list[str]:
@@ -1074,19 +1132,25 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     )
                     outcomes.append((paper_id, "failed", reason))
                     log(f"[PAPER] {paper_id} 深读失败（{outcome}）")
-    # ---- 候补：accepted 不足地板时按评分补读 -----------------------------
+    # ---- 候补：可投影篇数不足地板时按评分补读 ---------------------------
+    # The floor is counted in PROJECTION units, not read units: a needs-review
+    # paper is only projectable if at least one card passed, which is unknown
+    # here, so it is not counted. Counting it made 13 pass + 6 needs-review
+    # read as "19 ≥ 15", skipped the 候补 fill, and left coverage at 13/15 —
+    # the exact shape of the 2026-10-14 时空智能体 run that stopped instead of
+    # reading on.
     floor = int(EVIDENCE_FLOORS.get(args.review_mode) or 0)
-    accepted = passed + needs_review
+    accepted = projection_units(passed, needs_review)
     filled: list[str] = []
     if floor and accepted < floor and waitlist:
         log(
-            f"[DRIVER] 深读通过 {accepted} 篇 < 地板 {floor}，"
-            f"从候补按评分补读（缺 {floor - accepted}，候补 {len(waitlist)} 篇）"
+            f"[DRIVER] 可投影 {accepted} 篇 < 地板 {floor}（另有 needs-review "
+            f"{needs_review} 篇不计），从候补按评分补读（缺 {floor - accepted}，"
+            f"候补 {len(waitlist)} 篇）"
         )
         for paper_id in waitlist:
             if accepted >= floor:
                 break
-            before_pass, before_nr = passed, needs_review
             # reuse the same per-paper path: skip → agent → copy note → count
             run_extraction = run_dir / "extractions" / f"{paper_id}.json"
             if not (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file():
@@ -1134,9 +1198,11 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                 failed += 1
                 _record_deep_read_failure(notes_dir, paper_id, str(outcome), f"候补补读深读失败（{outcome}）")
                 outcomes.append((paper_id, "failed", f"候补补读深读失败（{outcome}）"))
-            accepted = passed + needs_review
-            log(f"[PAPER] {paper_id} 候补 {outcome}，累计通过 {accepted}/{floor}")
-        log(f"[DRIVER] 候补补读 {len(filled)} 篇，通过合计 {passed + needs_review} / 地板 {floor}")
+            accepted = projection_units(passed, needs_review)
+            log(f"[PAPER] {paper_id} 候补 {outcome}，累计可投影 {accepted}/{floor}")
+        log(f"[DRIVER] 候补补读 {len(filled)} 篇，可投影合计 "
+            f"{projection_units(passed, needs_review)} / 地板 {floor}"
+            f"（needs-review {needs_review} 篇不计）")
     summary_extra["deep_read"] = {"total": len(order) + len(filled), "pass": passed, "needs_review": needs_review, "failed": failed}
     summary_extra["deep_read_filled"] = filled
     summary_extra["evidence_floor"] = floor
@@ -1161,7 +1227,11 @@ def run_skeleton_agent(cli: str, paper_id: str, pool_root: Path, timeout_s: floa
             build_skeleton_prompt(paper_id, pool_root), timeout_s=timeout_s, cli=cli,
             cwd=DRIVER_CWD,
         )
-    except (subprocess.TimeoutExpired, OSError):
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        if isinstance(exc, subprocess.TimeoutExpired):
+            log(f"[DRIVER-WARN] {paper_id} 骨架 agent 超时（{timeout_s:.0f}s），该篇深读记 failed")
+        else:
+            log(f"[DRIVER-WARN] {paper_id} 骨架 agent 启动失败：{exc}")
         return None
     if result.returncode:
         return None
@@ -1315,12 +1385,19 @@ def run_stage(
         try:
             returncode = process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
+            log(f"[DRIVER-WARN] {name} 阶段超时（{timeout:.0f}s），已 kill；"
+                "可 --force 续跑该阶段或加大其超时")
             process.kill()
             process.wait()
             returncode = -1
         result = subprocess.CompletedProcess(command, returncode, "\n".join(captured[-10:]), "")
     else:
-        result = run_command(command, timeout=timeout)
+        try:
+            result = run_command(command, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            log(f"[DRIVER-WARN] {name} 阶段超时（{timeout:.0f}s），已中止；"
+                "可 --force 续跑该阶段或加大其超时")
+            raise
     if result.returncode and result.returncode not in soft_exit_codes:
         raise fail(name, f"exit {result.returncode}: {(result.stderr or result.stdout)[-400:]}")
     missing = [str(path) for path in outputs if not outputs_exist(path)]
@@ -1604,6 +1681,8 @@ def _main_locked(
                     try:
                         s2_process.communicate(timeout=args.s2_budget)
                     except subprocess.TimeoutExpired:
+                        log(f"[DRIVER-WARN] Semantic Scholar 预算用尽（{args.s2_budget:.0f}s），"
+                            "已 kill；引文扩充本轮跳过（可加大 --s2-budget）")
                         s2_process.kill()
                         s2_process.communicate()
                         s2_detail = f"degraded: exceeded {args.s2_budget:.0f}s budget"
@@ -1684,10 +1763,14 @@ def _main_locked(
                 "--output", str(citation_output),
             ]
             try:
-                citation_result = run_command(citation_cmd(), timeout=300.0)
+                citation_result = run_command(
+                    citation_cmd(), timeout=CITATION_EXPANSION_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                log(f"[DRIVER-WARN] 引文扩充超时（{CITATION_EXPANSION_TIMEOUT_S:.0f}s），"
+                    "本轮跳过（关键词检索候选照常继续）")
                 citation_result = subprocess.CompletedProcess(
-                    citation_cmd(), returncode=1, stdout="", stderr="timeout after 300s"
+                    citation_cmd(), returncode=1, stdout="",
+                    stderr=f"timeout after {CITATION_EXPANSION_TIMEOUT_S:.0f}s"
                 )
             if citation_result.returncode:
                 # best-effort: keyword retrieval candidates still proceed
@@ -1960,7 +2043,7 @@ def _main_locked(
         # ---- full-text extraction --------------------------------------
         begun = time.monotonic()
         extraction_summary = run_dir / "extraction-summary.json"
-        log(f"[DRIVER] 开始全文抽取（HTML→Markdown，最长 30 分钟，候选 {len(screened_ids)} 篇）…")
+        log(f"[DRIVER] 开始全文抽取（HTML→Markdown，阶段上限 {EXTRACTION_STAGE_TIMEOUT_S/60:.0f} 分钟，候选 {len(screened_ids)} 篇）…")
         extraction_cmd = lambda: [  # noqa: E731
             sys.executable, str(HUB_SCRIPTS / "fetch.py"), "extract-content-queue",
             "--paper-timeout", str(args.extraction_timeout),
@@ -1983,7 +2066,8 @@ def _main_locked(
             except (OSError, ValueError):
                 extraction_force = False
         run_stage(
-            "extraction", [extraction_summary], extraction_force, extraction_cmd, timeout=1800.0,
+            "extraction", [extraction_summary], extraction_force, extraction_cmd,
+            timeout=EXTRACTION_STAGE_TIMEOUT_S,
             stream=True, on_line=extraction_queue_line,
         )
         mark("extraction", begun)

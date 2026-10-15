@@ -66,8 +66,6 @@ def project(note: dict[str, Any], audit: dict[str, Any], prefix: str, start_seq:
     if reading.get("status") not in {"evidence-ready", "accepted"}:
         raise ValueError("projection requires reading.status evidence-ready or accepted")
     paper = note["paper"]
-    if audit.get("status") != "pass":
-        raise ValueError("projection requires a passing claim-support audit")
     if str(audit.get("paper_id") or "") != str(paper.get("arxiv_id") or ""):
         raise ValueError("audit paper_id does not match the paper note")
     audit_cards = {str(item.get("card_id")): item for item in audit.get("cards", []) if isinstance(item, dict)}
@@ -78,12 +76,16 @@ def project(note: dict[str, Any], audit: dict[str, Any], prefix: str, start_seq:
     topic = str(note["review"]["question"])
     prefix = prefix.rstrip("-")
     events: list[dict[str, Any]] = []
-    for offset, card in enumerate(note["evidence_cards"]):
+    for card in note["evidence_cards"]:
         card_id = str(card["card_id"])
+        # Card-level gate: a needs-review/reject card stays out of the evidence
+        # set, but it no longer zeroes the paper's passing cards (2026-10-15
+        # 纹理映射: 5 papers each lost 3-4 passing cards to one table-number
+        # card). Reject a card, not the paper.
         if (audit_cards.get(card_id) or {}).get("status") != "pass":
-            raise ValueError(f"card {card_id} is not pass in the audit")
+            continue
         event = {
-            "event_id": f"{prefix}-{start_seq + offset:04d}",
+            "event_id": f"{prefix}-{start_seq + len(events):04d}",
             "topic_id": str(topic_ids[0]),
             "topic": topic,
             "paper": {

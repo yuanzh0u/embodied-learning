@@ -155,9 +155,13 @@ def paper_funnel(run_dir: Path) -> list[dict]:
         elif audit == "reject":
             stage = "audit-reject"
         elif (run_dir / "paper-notes" / f"{paper_id}.json").is_file():
-            # Note assembled but its audit never passed: invalid skeleton or a
-            # failed audit step — retryable by rerunning the driver.
-            stage = "deep-read-failed"
+            # Note assembled but not projected into evidence. When an audit
+            # exists the deep-read itself is done — calling this
+            # deep-read-failed misdirected every shortfall review (2026-10-15
+            # 纹理映射: 5 complete notes were reported as deep-read failures
+            # when projection had rejected them). Only a note without a usable
+            # audit is a deep-read failure.
+            stage = "projection-blocked" if audit in {"pass", "needs-review"} else "deep-read-failed"
         elif pool_root.is_dir() and (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file():
             stage = "pooled-unread"
         elif eligible.get(paper_id) is False:
@@ -357,7 +361,8 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
         lines.append(
             f"[deep-read] 队列 {len(funnel_rows)} 篇：evidence "
             f"{len(funnel_rows) - len(stuck)}，其余 {len(stuck)} 篇停在下述阶段"
-            "（deep-read-failed / audit-reject 可续跑驱动重试；held 为全文未恢复）："
+            "（projection-blocked 为审计未过卡导致证据未投影；deep-read-failed / "
+            "audit-reject 可续跑驱动重试；held 为全文未恢复）："
         )
         for row in stuck:
             title = row["title"][:36]

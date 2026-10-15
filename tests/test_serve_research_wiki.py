@@ -109,7 +109,7 @@ class FakeTurn:
     def start(self):
         self.started += 1
 
-    def peek_event(self):
+    def peek_event(self, timeout_s=None):
         return self._events[0] if self._events else None
 
     def events(self):

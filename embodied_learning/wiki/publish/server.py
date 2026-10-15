@@ -32,7 +32,18 @@ from embodied_learning.atomicio import atomic_copy, atomic_write_json, atomic_wr
 from embodied_learning import locks
 from embodied_learning.utils.layout import find_roots
 from embodied_learning.wiki.publish import chat as wiki_chat
-from embodied_learning.config import WORKFLOW_AUTO_CONTINUE_ROUNDS, WORKFLOW_DRIVER_TIMEOUT_S, WORKFLOW_MIN_TIMEOUT_S
+from embodied_learning.config import (
+    FIRST_EVENT_TIMEOUT_S,
+    INIT_RUN_TIMEOUT_S,
+    PAPER_DECK_TIMEOUT_S,
+    PAPER_PREP_TIMEOUT_S,
+    QUICKREAD_TIMEOUT_S,
+    REFRESH_TIMEOUT_S,
+    RUN_DECK_TIMEOUT_S,
+    WORKFLOW_AUTO_CONTINUE_ROUNDS,
+    WORKFLOW_DRIVER_TIMEOUT_S,
+    WORKFLOW_MIN_TIMEOUT_S,
+)
 
 # SCRIPT_DIR keeps its historical meaning: the scripts root (spawn paths for
 # sibling entry scripts, bundled assets) — now resolved via layout.find_roots.
@@ -474,7 +485,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 cwd=str(self.kb_root),
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=REFRESH_TIMEOUT_S,
                 check=False,
             )
             if result.returncode:
@@ -493,6 +504,11 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 },
             )
         except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+            if isinstance(exc, subprocess.TimeoutExpired):
+                self.log_message(
+                    "refresh timed out after %s s; rebuild the snapshot manually",
+                    f"{REFRESH_TIMEOUT_S:.0f}",
+                )
             self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)})
         finally:
             REFRESH_LOCK.release()
@@ -963,8 +979,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                             {"type": "stage", "stage": "quickread", "detail": detail}
                         )
             try:
-                returncode = process.wait(timeout=900)
+                returncode = process.wait(timeout=QUICKREAD_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": "速读卡片生成超时，已终止子进程；加大对应超时或重试"}
+                )
                 process.kill()
                 process.wait()
                 returncode = -1
@@ -1111,8 +1131,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                         )
                         break
             try:
-                returncode = process.wait(timeout=900)
+                returncode = process.wait(timeout=RUN_DECK_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": "汇报文件生成超时，已终止子进程；加大对应超时或重试"}
+                )
                 process.kill()
                 process.wait()
                 returncode = -1
@@ -1222,8 +1246,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                         )
                         break
             try:
-                returncode = process.wait(timeout=1500)
+                returncode = process.wait(timeout=PAPER_DECK_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": f"汇报生成超时，已终止子进程；加大对应超时或重试"}
+                )
                 process.kill()
                 process.wait()
                 returncode = -1
@@ -1323,8 +1351,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                         {"type": "stage", "stage": "mining", "detail": detail.removeprefix("[PAPER-CHAT] ")}
                     )
             try:
-                returncode = process.wait(timeout=720)
+                returncode = process.wait(timeout=PAPER_PREP_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": f"论文对话准备（抽取/入池/深读）超时，已终止子进程；加大对应超时或重试"}
+                )
                 process.kill()
                 process.wait()
                 returncode = -1
@@ -1387,13 +1419,17 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
         turn = new_turn(prompt, session_id, model)
         turn.start()
-        first = turn.peek_event()
+        first = turn.peek_event(timeout_s=FIRST_EVENT_TIMEOUT_S)
         if first is not None and first.get("type") == "error" and first.get("resume_failed"):
             turn.stop()
             turn = new_turn(prompt, None, model)
             turn.start()
             return turn, True
         if first is None and turn.is_alive:
+            self.log_message(
+                "first chat event timed out after %s s; killing the turn",
+                f"{FIRST_EVENT_TIMEOUT_S:.0f}",
+            )
             turn.stop()
         return turn, False
 
@@ -1577,7 +1613,17 @@ class WikiHandler(SimpleHTTPRequestHandler):
         ]
         if params["time_range"]:
             command += ["--time-range", params["time_range"]]
-        result = subprocess.run(command, capture_output=True, text=True, timeout=30, check=False)
+        try:
+            result = subprocess.run(
+                command, capture_output=True, text=True,
+                timeout=INIT_RUN_TIMEOUT_S, check=False,
+            )
+        except subprocess.TimeoutExpired:
+            self.log_message(
+                "run init timed out after %s s; the run dir may be half-written",
+                f"{INIT_RUN_TIMEOUT_S:.0f}",
+            )
+            raise
         if result.returncode or not manifest_path.is_file():
             detail = (result.stderr or result.stdout or "").strip()
             raise ChatBadRequest(f"初始化运行目录失败：{detail[:300]}")
@@ -2068,6 +2114,10 @@ class WikiHandler(SimpleHTTPRequestHandler):
             try:
                 returncode = driver.wait(timeout=WORKFLOW_DRIVER_TIMEOUT_S)
             except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": f"固定流程（检索/抽取/深读）超时，已终止子进程；加大对应超时或重试"}
+                )
                 driver.kill()
                 driver.wait()
                 returncode = -1
@@ -2231,7 +2281,9 @@ def find_listener_pid(port: int) -> int | None:
             timeout=10,
             check=False,
         ).stdout
-    except (OSError, subprocess.TimeoutExpired):
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        if isinstance(exc, subprocess.TimeoutExpired):
+            print(f"[WARN] timeout: ss port probe exceeded 10s (port {port})", file=sys.stderr, flush=True)
         return None
     for line in output.splitlines():
         if "127.0.0.1" not in line and "::1" not in line:

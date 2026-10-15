@@ -10,6 +10,7 @@ from __future__ import annotations
 from _entry import invoke, parse
 
 import importlib.util
+import inspect
 import json
 import os
 import sys
@@ -421,6 +422,40 @@ class DriverPipelineTest(unittest.TestCase):
         full = self.driver.deep_read_order(["a", "b", "c", "d"], ["c"], limit=None)
         self.assertEqual(full, ["c", "a", "b", "d"])
         self.assertEqual(full[2:], ["b", "d"])  # the 候补 tail
+
+    def test_evidence_floor_counts_projection_units_not_reads(self):
+        """needs-review papers must not count toward the floor that triggers
+        the 候补 fill. The projector now emits each passing card (2026-10-15),
+        but a needs-review paper is only projectable if at least one card
+        passed — at deep-read time that is unknown, so the floor counter stays
+        conservative. Regression (2026-10-14 时空智能体): 13 pass + 6
+        needs-review read as "19 ≥ 15", the fill never ran, and the run
+        stopped at 13/15."""
+        self.assertEqual(self.driver.projection_units(13, 6), 13)
+        self.assertEqual(self.driver.projection_units(15, 0), 15)
+        self.assertEqual(self.driver.projection_units(0, 30), 0)
+        # The 2026-10-14 shape must now be under the scoping floor of 15.
+        self.assertLess(self.driver.projection_units(13, 6), self.driver.EVIDENCE_FLOORS["scoping"])
+        # And a real pass must satisfy it without padding from needs-review.
+        self.assertGreaterEqual(self.driver.projection_units(15, 6), self.driver.EVIDENCE_FLOORS["scoping"])
+
+    def test_projection_skips_unaudited_cards_so_floor_must_not_count_them(self):
+        """Pin the two halves of the contract together: the projector keeps a
+        paper's passing cards when one card is needs-review (card-level gate,
+        2026-10-15 纹理映射: 5 papers lost 3-4 passing cards each), and the
+        driver's floor counter still counts only full-pass papers so the 候补
+        fill is not skipped on a maybe (2026-10-14 时空智能体)."""
+        from embodied_learning.knowledge import evidence_projection
+
+        source = inspect.getsource(evidence_projection.project)
+        self.assertIn('(audit_cards.get(card_id) or {}).get("status") != "pass"', source)
+        self.assertIn("continue", source)
+        self.assertNotIn('raise ValueError("projection requires a passing claim-support audit")', source)
+        self.assertNotIn('raise ValueError(f"card {card_id} is not pass in the audit")', source)
+        # The counter is the projection unit — never `passed + needs_review`.
+        source = inspect.getsource(self.driver.projection_units)
+        self.assertIn("return int(passed)", source)
+        self.assertNotIn("passed + needs_review", source)
 
     def test_projection_stamps_event_scale_into_run_json(self):
         """check_run_bundle requires run.json event_count to match the evidence

@@ -252,6 +252,66 @@ class PaperReaderTest(unittest.TestCase):
         result = audit_support.audit(note, extraction())
         self.assertEqual("reject", result["status"])
 
+    def test_audit_counts_table_numbers_as_locator_evidence(self) -> None:
+        """Quantitative results canonically live in tables; the extractor keeps
+        them out of section prose. A card whose measurement tokens appear only
+        in extraction.tables must pass the quant gate (2026-10-15 纹理映射:
+        5/12 papers lost every card because the numbers only existed in
+        tables)."""
+        note = valid_note()
+        note["evidence_cards"][0]["quantitative"] = {
+            "metric": "PSNR",
+            "value_or_direction": "29.03 vs 21.27",
+            "comparator": "Baseline X",
+            "task_or_sample": "the benchmark split",
+            "locator": "4 Experiments",
+        }
+        # Without tables the same card must still trip the quant gate.
+        result = audit_support.audit(note, extraction())
+        self.assertEqual("needs-review", result["status"])
+        self.assertEqual(["needs-review"], [card["status"] for card in result["cards"]])
+        self.assertIn("tables", result["cards"][0]["reasons"][0])
+        # With the numbers present in a table (caption or cells), it passes.
+        ext = extraction()
+        ext["tables"] = [
+            {
+                "id": "S4.T1",
+                "caption": "Table 1: Comparison on the benchmark.",
+                "section_index": None,
+                "section": "",
+                "rows": [["Method", "PSNR"], ["Ours", "29.03"], ["Baseline X", "21.27"]],
+            }
+        ]
+        result = audit_support.audit(note, ext)
+        self.assertEqual("pass", result["status"])
+        self.assertEqual(["pass"], [card["status"] for card in result["cards"]])
+
+    def test_projection_skips_unaudited_cards_without_zeroing_the_paper(self) -> None:
+        """One needs-review card must not discard the paper's passing cards
+        (2026-10-15 纹理映射: each of 5 papers lost 3-4 passing cards to one
+        table-number card). Reject a card, not the paper."""
+        note = valid_note(card_count=2)
+        audit = audit_support.audit(note, extraction())
+        audit["status"] = "needs-review"
+        audit["cards"][1]["status"] = "needs-review"
+        audit["cards"][1]["reasons"] = ["fewer than one third of quantitative metric/value/comparator tokens occur at the locator or in the paper's tables"]
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual(1, len(events))
+        self.assertEqual("2402.10329-C01", events[0]["paper_reading"]["card_id"])
+        # IDs stay contiguous from start_seq even when a card is skipped.
+        self.assertEqual("EA-DATA-2026-0001", events[0]["event_id"])
+
+    def test_projection_without_any_passing_card_returns_empty(self) -> None:
+        """Every card needs-review: the paper contributes nothing, but it is a
+        zero-event outcome rather than a projection error."""
+        note = valid_note(card_count=2)
+        audit = audit_support.audit(note, extraction())
+        audit["status"] = "needs-review"
+        for card in audit["cards"]:
+            card["status"] = "needs-review"
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual([], events)
+
     def test_projection_emits_one_event_per_verified_card(self) -> None:
         note = valid_note(card_count=2)
         audit = audit_support.audit(note, extraction())

@@ -99,6 +99,13 @@ def project_evidence_events(argv: list[str] | None = None) -> int:
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("\n".join(json.dumps(event, ensure_ascii=False) for event in events) + "\n", encoding="utf-8")
     print(f"Projected {len(events)} verified evidence event(s): {target}")
+    skipped = len(note.get("evidence_cards") or []) - len(events)
+    if skipped:
+        print(
+            f"Skipped {skipped} card(s) without a passing claim-support audit "
+            f"(the paper's passing cards were still projected)",
+            file=sys.stderr,
+        )
     return 0
 
 

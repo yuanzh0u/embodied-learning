@@ -20,7 +20,7 @@ from typing import Any
 
 from embodied_learning.fetch import chain as extract_arxiv_content
 from embodied_learning.utils.layout import find_roots
-from embodied_learning.config import CHANNEL_DOWN_LIMIT
+from embodied_learning.config import CHANNEL_DOWN_LIMIT, EXTRACTION_PAPER_TIMEOUT_S
 
 _REPO_ROOT = find_roots()[0] or Path(__file__).resolve().parents[2]
 # Per-paper subprocess target: prefer the repo thin entry (dev/CI), fall back to
@@ -100,7 +100,7 @@ class QueueOptions:
         pdf_cache_dir: str | None = None,
         workers: int = 2,
         timeout: float = 30.0,
-        paper_timeout: float = 300.0,
+        paper_timeout: float = EXTRACTION_PAPER_TIMEOUT_S,
         top_sections: int = 3,
         ocr_mode: str = "never",
         ocr_language: str = "eng",
@@ -234,6 +234,10 @@ def extract_one(
             target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     except subprocess.TimeoutExpired:
         temporary.unlink(missing_ok=True)
+        print(
+            f"[DRIVER-WARN] {paper_id} 全文抽取硬超时（{options.paper_timeout:.0f}s），记 HELD 待重试",
+            flush=True,
+        )
         data = {
             "paper_id": paper_id,
             "available": False,
