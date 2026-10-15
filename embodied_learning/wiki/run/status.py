@@ -21,7 +21,7 @@ from collections import Counter
 from pathlib import Path
 
 from embodied_learning.utils.layout import default_kb_root, find_roots, infer_kb_root
-from embodied_learning.config import CITED_PAPER_FLOORS
+from embodied_learning.config import CITED_PAPER_FLOORS, STANDARD_ARTICLES, STYLE_TO_FILE
 
 STYLE_FILES = {
     "scientific-memo": "scientific-memo_keyan.md",
@@ -377,27 +377,42 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
     if not report["artifacts"].get("review-packet.md"):
         lines.append("[next] 生成综述包（直接写进运行目录，逐字执行即可）：")
         lines.append(f"  {packet_command(run_dir, report, skills_root)}")
-    # Gate commands verbatim: the writer used to guess check/audit flags wrong
-    # (positional vs --run-dir) and burn calls re-discovering the CLI.
-    style_flags = {
+    # Gate commands verbatim, printed BEFORE the drafts exist. The gate block
+    # used to appear only once the article file was already on disk, so a
+    # writer that had not yet started drafting saw no audit command at all and
+    # improvised inline-python pre-checks (中文字符数/💡数/链接数) plus gate
+    # source reading instead. The contract lives in writing-brief「各风格写作契约」;
+    # what status must supply up front is "写完拿什么检" — unconditional,
+    # run-verbatim, fix-by-message.
+    audit_flags = {  # deliverable filename -> audit-article-quality style flag
         "scientific-memo_keyan.md": "memo",
         "zhihu-explainer_zhihu.md": "zhihu",
         "xiaohongshu-post_xiaohongshu.md": "xiaohongshu",
     }
-    gate_articles = [name for name in style_flags if (run_dir / name).is_file()]
-    if gate_articles:
-        lines.append("[next] 审计门（逐字执行，参数勿猜）：")
-        lines.append(f"  python3 {scripts_root / 'run.py'} check-bundle {run_dir}")
-        art = " ".join(f"--article {run_dir / name}" for name in gate_articles)
-        lines.append(
-            f"  python3 {scripts_root / 'run.py'} audit-citations {art} "
-            f"--appendix {run_dir / 'evidence-appendix.md'} "
-            f"--evidence-jsonl {run_dir / 'evidence.jsonl'} --run-json {run_dir / 'run.json'}"
-        )
-        style_args = " ".join(f"--{style_flags[name]} {run_dir / name}" for name in gate_articles)
+    declared_style = report.get("style")
+    if declared_style and declared_style in STYLE_TO_FILE:
+        gate_articles = [STYLE_TO_FILE[declared_style]]
+    else:
+        gate_articles = list(STANDARD_ARTICLES)
+    lines.append("[next] 审计门（写完对应成稿后逐字执行，参数勿猜；写完不要自检，直接跑门禁按消息修）：")
+    lines.append(f"  python3 {scripts_root / 'run.py'} check-bundle {run_dir}")
+    art = " ".join(f"--article {run_dir / name}" for name in gate_articles)
+    lines.append(
+        f"  python3 {scripts_root / 'run.py'} audit-citations {art} "
+        f"--appendix {run_dir / 'evidence-appendix.md'} "
+        f"--evidence-jsonl {run_dir / 'evidence.jsonl'} --run-json {run_dir / 'run.json'}"
+    )
+    prose_targets = [name for name in gate_articles if name in audit_flags]
+    if prose_targets:
+        style_args = " ".join(f"--{audit_flags[name]} {run_dir / name}" for name in prose_targets)
         lines.append(
             f"  python3 {skills_root / 'embodied-ai-review-writer' / 'scripts' / 'write.py'} "
             f"audit-article-quality {style_args} --evidence-jsonl {run_dir / 'evidence.jsonl'}"
+        )
+    else:
+        lines.append(
+            f"  （style={declared_style}：交付物是机械渲染包/编译产物，无 editorial 质量门——"
+            "上面 check-bundle / audit-citations 过门即可）"
         )
     kb_root = infer_kb_root(run_dir) or default_kb_root()
     lines.append(

@@ -1019,6 +1019,36 @@ title: 数据采集与数据质量
         # Full event set still drives sufficiency counts in the brief.
         self.assertIn("Accepted events (full evidence set): 50", brief)
 
+    def test_writer_paper_floor_keeps_one_event_per_paper(self) -> None:
+        # Stance-only truncation dropped whole papers (2026-10-15 纹理映射:
+        # 3/12 papers had 0 appendix hits → claim-level citations dead-anchored).
+        # Four papers, 10 support events each; the late papers' cards all sort
+        # past the support cap, but every paper must still keep one event.
+        events = []
+        for idx, arxiv_id in enumerate(["2601.00001", "2601.00002", "2601.00003", "2601.00004"]):
+            for n in range(10):
+                event = event_for_paper(f"EA-DATA-2026-{idx*10+n+1:04d}", arxiv_id)
+                events.append(event)
+        selected, stats = build_review_packet.cap_events_for_writer(events)
+        covered = {build_review_packet.paper_key(event) for event in selected}
+        self.assertEqual({"2601.00001", "2601.00002", "2601.00003", "2601.00004"}, covered)
+        self.assertEqual(4, stats["paper_floor_count"])
+        # Floors first, then the leftover support quota (8 total).
+        self.assertEqual(8, len(selected))
+        self.assertEqual(40, stats["total_events"])
+
+    def test_writer_paper_floor_overflows_stance_cap(self) -> None:
+        # When papers outnumber a stance cap, the floor wins: caps bound
+        # stance volume, never paper coverage.
+        events = [event_for_paper(f"EA-DATA-2026-{idx+1:04d}", f"2601.{idx+1:05d}") for idx in range(10)]
+        selected, stats = build_review_packet.cap_events_for_writer(events)
+        covered = {build_review_packet.paper_key(event) for event in selected}
+        self.assertEqual(10, len(covered))
+        self.assertEqual(10, len(selected))
+        self.assertEqual(10, stats["paper_floor_count"])
+        # Every support slot is a floor; none omitted.
+        self.assertEqual({}, stats["omitted_by_stance"])
+
     def test_uncapped_writer_keeps_all_events_in_brief(self) -> None:
         events = [sample_event(f"EA-DATA-2026-{idx+1:04d}", "support") for idx in range(12)]
         artifacts = build_review_packet.render_output_artifacts(

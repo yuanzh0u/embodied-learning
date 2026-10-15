@@ -949,40 +949,75 @@ def cap_events_for_writer(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Select a bounded writer subset while preserving full-run auditability.
 
+    Paper floor first: every full-text paper keeps at least one event (its
+    headline card under ``event_sort_key``), so stance caps can never zero out
+    a paper's appendix anchors — 2026-10-15 纹理映射: 3/12 papers fell to 0
+    appendix hits under stance-only truncation and their claim-level citations
+    dead-anchored. Caps then bound the rest; where floor and cap disagree the
+    floor wins (caps are token optimization, paper coverage is the contract).
+
     Returns (selected_events, stats). Unselected events remain in evidence.jsonl
     on disk; only the briefing surfaces (writing-brief / evidence-appendix) are
     capped so pathological event counts cannot blow writer context.
     """
     caps = dict(stance_caps or DEFAULT_WRITER_STANCE_CAPS)
+    ordered = sorted(events, key=event_sort_key)
+
+    # Paper floor, full-text tier only: the abstract tier is candidate-landscape
+    # positioning (hundreds of papers sharing one appendix section) and is
+    # bounded by the unlabeled window below. Membership is by id(event) — the
+    # same dicts are held for the whole call, never copied.
+    floored: set[int] = set()
+    seen_papers: set[str] = set()
+    for event in ordered:
+        if str(event.get("tier") or "") == ABSTRACT_TIER:
+            continue
+        key = paper_key(event)
+        if key in seen_papers:
+            continue
+        seen_papers.add(key)
+        floored.add(id(event))
+
     by_stance: dict[str, list[dict[str, Any]]] = defaultdict(list)
     unlabeled: list[dict[str, Any]] = []
-    for event in sorted(events, key=event_sort_key):
+    for event in ordered:
         stance = str(event.get("stance") or "")
         if stance in STANCE_ORDER:
             by_stance[stance].append(event)
         else:
             unlabeled.append(event)
+
+    def fill(group: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+        """Floors first (always kept), then non-floor events up to the leftover
+        quota. A group whose floors alone exceed the limit keeps every floor —
+        that overflow is the paper floor winning over the cap."""
+        kept = [event for event in group if id(event) in floored]
+        rest = [event for event in group if id(event) not in floored]
+        kept.extend(rest[: max(0, limit - len(kept))])
+        return kept
+
     selected: list[dict[str, Any]] = []
     omitted_by_stance: dict[str, int] = {}
     for stance in STANCE_ORDER:
         group = by_stance.get(stance, [])
-        limit = int(caps.get(stance, 0))
-        kept = group[:limit]
+        kept = fill(group, int(caps.get(stance, 0)))
         selected.extend(kept)
         omitted = len(group) - len(kept)
         if omitted:
             omitted_by_stance[stance] = omitted
     # Unlabeled stances are rare; keep a small fixed window for visibility.
     unlabeled_cap = 4
-    selected.extend(unlabeled[:unlabeled_cap])
-    if len(unlabeled) > unlabeled_cap:
-        omitted_by_stance["unlabeled"] = len(unlabeled) - unlabeled_cap
+    kept_unlabeled = fill(unlabeled, unlabeled_cap)
+    selected.extend(kept_unlabeled)
+    if len(unlabeled) > len(kept_unlabeled):
+        omitted_by_stance["unlabeled"] = len(unlabeled) - len(kept_unlabeled)
     stats = {
         "total_events": len(events),
         "writer_events": len(selected),
         "stance_caps": caps,
         "omitted_by_stance": omitted_by_stance,
         "omitted_total": sum(omitted_by_stance.values()),
+        "paper_floor_count": len(seen_papers),
     }
     return selected, stats
 
@@ -1001,7 +1036,9 @@ def format_writer_cap_note(stats: dict[str, Any]) -> str:
             "## Writer evidence caps (token optimization)",
             "",
             f"- Stance caps: {cap_bits}",
-            f"- Events in this brief/appendix: {stats.get('writer_events', 0)} / {stats.get('total_events', 0)} loaded",
+            "- Paper floor: each full-text paper keeps at least one event — caps bound stance volume, never paper coverage.",
+            f"- Events in this brief/appendix: {stats.get('writer_events', 0)} / {stats.get('total_events', 0)} loaded"
+            + (f" across {stats.get('paper_floor_count', 0)} paper(s)" if stats.get("paper_floor_count") else ""),
             omit_line,
             "- Claim-support and citation audits still use the complete `evidence.jsonl`, not this capped projection.",
             "",
@@ -1044,6 +1081,8 @@ def render_writing_brief(
         "> 正文必须是按论证组织的连续 prose;禁止把 claim map 表格当正文;",
         "> 禁止一事件一行/一段;三种风格必须是三个真实读者声音。",
         "> 正文引用一律用 arXiv 论文链接(读者点开即达论文);事件锚点只用于 trace-map/appendix 溯源。",
+        "> 门禁阈值（必需节/篇幅/链接预算/中文占比/句长）全文见下方「各风格写作契约」节："
+        "按契约一稿写完，跑 `run.py status [next]` 的审计门命令；勿读门禁脚本源码、勿内联 python 预检。",
         "",
         "## 范围",
         "",
@@ -1063,6 +1102,10 @@ def render_writing_brief(
         lines.extend(format_writer_cap_note(writer_stats).splitlines())
         if lines[-1] != "":
             lines.append("")
+    # 风格契约前置：契约就是首稿要遵守的标准，必须出现在证据簇之前——
+    # 埋在 brief 文末时 agent 读完证据就动笔，从没翻到过契约节，然后
+    # 用内联 python 预检 + 翻门禁源码把契约"重新发明"一遍（2026-10-15 成稿日志）。
+    lines.extend(render_style_contract())
     lines.extend(
         [
             "## 中心论点候选(从张力对中提炼,不要照抄)",
@@ -1128,7 +1171,6 @@ def render_writing_brief(
             "- Registered sources: "
             + (", ".join(f"`{item}`" for item in source_ids[:12]) if source_ids else "not loaded"),
             "",
-            *render_style_contract(),
         ]
     )
     return "\n".join(lines)
