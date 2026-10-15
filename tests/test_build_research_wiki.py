@@ -8,6 +8,7 @@ import time
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from types import SimpleNamespace
 from unittest import mock
 
 import sys
@@ -805,6 +806,73 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn("function consumeQuotes(", script)
         self.assertIn("chat-quote-chip", styles)
         self.assertIn(".selection-popup", styles)
+
+
+class ResolvePathContractTest(unittest.TestCase):
+    """`wiki.py build-wiki` bare-CLI defaults must match the help text.
+
+    The entry consolidation (ADR 0004/0005) moved argparse into the dispatcher
+    and dropped ``default=DEFAULT_SITE_CONFIG``. CI's deploy workflow runs
+    ``build-wiki --output wiki/data`` with no flags, got a schema v1 snapshot,
+    and ``build-site`` then rejected it — the public site could not build at
+    all (2026-10-15). Without ``--kb-root`` the corpus is the repo catalog and
+    the branding config is the repo's, so the snapshot is schema v2.
+    """
+
+    def test_without_kb_root_the_corpus_and_branding_are_the_repos(self) -> None:
+        args = SimpleNamespace(source=None, output=None, kb_root=None, site_config=None)
+        source, output = wiki.resolve_io_paths(args)
+        self.assertEqual(source, wiki.REPO_ROOT / "knowledge" / "literature-review-catalog.md")
+        self.assertTrue(source.is_file(), "repo catalog must exist for the public deploy")
+        self.assertIs(wiki.resolve_site_config(args), wiki.DEFAULT_SITE_CONFIG)
+        self.assertTrue(wiki.DEFAULT_SITE_CONFIG.is_file())
+
+    def test_kb_root_selects_the_local_kb_and_its_optional_branding(self) -> None:
+        with TemporaryDirectory() as tmp:
+            kb = Path(tmp)
+            (kb / "knowledge").mkdir()
+            (kb / "knowledge" / "literature-review-catalog.md").write_text("# catalog\n", encoding="utf-8")
+            args = SimpleNamespace(
+                source=None, output=None, kb_root=kb, site_config=None,
+            )
+            source, output = wiki.resolve_io_paths(args)
+            self.assertEqual(source, kb / "knowledge" / "literature-review-catalog.md")
+            self.assertEqual(output, kb / "wiki" / "data")
+            # A private KB has no public URL branding: schema v1 is correct.
+            self.assertIsNone(wiki.resolve_site_config(args))
+            # …but a KB that ships one is used.
+            (kb / "wiki").mkdir()
+            (kb / "wiki" / "site-config.json").write_text("{}", encoding="utf-8")
+            self.assertEqual(wiki.resolve_site_config(args), kb / "wiki" / "site-config.json")
+
+    def test_explicit_flags_win_over_every_default(self) -> None:
+        with TemporaryDirectory() as tmp:
+            other = Path(tmp) / "custom.json"
+            other.write_text("{}", encoding="utf-8")
+            args = SimpleNamespace(
+                source=Path("/tmp/explicit-catalog.md"),
+                output=Path("/tmp/explicit-out"),
+                kb_root=Path("/tmp/some-kb"),
+                site_config=other,
+            )
+            source, output = wiki.resolve_io_paths(args)
+            self.assertEqual(source, Path("/tmp/explicit-catalog.md"))
+            self.assertEqual(output, Path("/tmp/explicit-out"))
+            self.assertEqual(wiki.resolve_site_config(args), other)
+
+    def test_bare_cli_publish_is_schema_v2(self) -> None:
+        """The exact CI shape: no --source, no --kb-root, no --site-config."""
+        with TemporaryDirectory() as tmp:
+            args = SimpleNamespace(
+                source=None, output=Path(tmp) / "wiki-data",
+                kb_root=None, site_config=None,
+            )
+            source, output = wiki.resolve_io_paths(args)
+            manifest = wiki.publish_snapshot(
+                source, output, site_config=wiki.resolve_site_config(args),
+            )
+            self.assertEqual(manifest["schema_version"], 2)
+            self.assertGreater(len(manifest["topics"]), 0)
 
 
 if __name__ == "__main__":

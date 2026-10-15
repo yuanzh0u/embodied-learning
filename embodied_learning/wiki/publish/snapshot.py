@@ -48,9 +48,12 @@ _REPO_ROOT_CHECKOUT, _SKILLS_ROOT, SCRIPT_DIR = find_roots()
 REPO_ROOT = SCRIPT_DIR.parent  # REPO_ROOT cosmetic: KB-relative rendering root on a checkout
 
 
-# Bare-CLI fallbacks only; serve_research_wiki and the writer agent always pass
-# --kb-root/--source/--output explicitly. Default to the local KB, not the
-# package tree (a wheel install has no knowledge/ to read from).
+# Bare-CLI fallbacks. `--kb-root` selects the local KB (knowledge outputs live
+# there, never in the package — a wheel install has no knowledge/ to read).
+# Without `--kb-root` the defaults follow the REPO checkout: the public
+# deploy (CI's `build-wiki --output wiki/data`) builds the repo catalog with
+# the repo's branding config, and a wheel install falls back to the local KB.
+# The help text on `wiki.py build-wiki` states this contract; keep them aligned.
 DEFAULT_SOURCE = default_kb_root() / "knowledge" / "literature-review-catalog.md"
 DEFAULT_OUTPUT = default_kb_root() / "wiki" / "data"
 # Branding/SEO config is a repo asset (ships with the wheel), not KB content.
@@ -1274,14 +1277,40 @@ def publish_snapshot(
 
 
 def resolve_io_paths(args: argparse.Namespace) -> tuple[Path, Path]:
-    """Resolve --source/--output, defaulting them from --kb-root when given."""
+    """Resolve --source/--output per the `wiki.py build-wiki` help contract.
+
+    Explicit flags win. ``--kb-root`` selects the local KB. With neither,
+    the repo checkout is the corpus (CI's public deploy); a wheel install
+    without a checkout falls back to the local KB.
+    """
 
     kb_root = Path(args.kb_root).resolve() if args.kb_root else None
-    source = args.source or (
-        (kb_root / "knowledge" / "literature-review-catalog.md") if kb_root else DEFAULT_SOURCE
-    )
-    output = args.output or DEFAULT_OUTPUT
+    if args.source is not None:
+        source = args.source
+    elif kb_root is not None:
+        source = kb_root / "knowledge" / "literature-review-catalog.md"
+    else:
+        repo_catalog = REPO_ROOT / "knowledge" / "literature-review-catalog.md"
+        source = repo_catalog if repo_catalog.is_file() else DEFAULT_SOURCE
+    output = args.output or (kb_root / "wiki" / "data" if kb_root else DEFAULT_OUTPUT)
     return source, output
+
+
+def resolve_site_config(args: argparse.Namespace) -> Path | None:
+    """Resolve --site-config per the `wiki.py build-wiki` help contract.
+
+    Explicit flags win. ``--kb-root`` uses that KB's config (a private KB
+    publishes schema v1 — no public URL branding — when it has none). With no
+    ``--kb-root`` the repo's branding config is the default so the public
+    deploy produces a schema v2 snapshot that ``build-site`` accepts.
+    """
+
+    if args.site_config is not None:
+        return args.site_config
+    if args.kb_root is not None:
+        candidate = Path(args.kb_root).resolve() / "wiki" / "site-config.json"
+        return candidate if candidate.is_file() else None
+    return DEFAULT_SITE_CONFIG if DEFAULT_SITE_CONFIG.is_file() else None
 
 
 def run(args: argparse.Namespace) -> int:
@@ -1299,7 +1328,7 @@ def run(args: argparse.Namespace) -> int:
             manifest = publish_snapshot(
                 source,
                 output,
-                site_config=args.site_config,
+                site_config=resolve_site_config(args),
                 retain=args.retain,
             )
             stats = manifest["stats"]
