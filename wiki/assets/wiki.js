@@ -1098,22 +1098,29 @@ Canonical: ${absoluteCanonical(topic)}
     nodes.chatTitle.textContent = title || "研究助手";
   }
 
-  // Pane switching: the topic conversation and the workflow conversation each
-  // keep their own history; the two header buttons swap the visible pane.
+  // Pane switching: each pane keeps its own history (topic chat / paper chat /
+  // workflow chat); the header buttons swap the visible pane.
   // Chrome-only half of syncChatPane: buttons, forms, placeholders. Split from
   // the message rendering so a pane switch that will immediately load fresh
   // server history can skip the redundant in-memory render.
   function syncPaneChrome() {
     const workflow = state.chat.pane === "workflow";
     const paper = state.chat.pane === "paper";
-    // One button per pane; a button is active/enabled exactly when its pane is.
+    // One button per pane. The switcher must stay clickable — marking the
+    // non-current panes `disabled` (as this once did) locked the panel on
+    // whichever pane you entered last: a workflow kickoff or a page reload
+    // with a parked workspace disabled 主题对话/论文对话 for good (2026-10-15).
+    // Unavailability is expressed by `hidden` (workflow with no workspace),
+    // never by disabling a sibling tab.
     for (const [button, pane] of [
       [nodes.chatShowTopic, "topic"],
       [nodes.chatShowPaper, "paper"],
       [nodes.chatShowWorkflow, "workflow"],
     ]) {
-      button.classList.toggle("is-active", state.chat.pane === pane);
-      button.disabled = state.chat.pane !== pane;
+      const active = state.chat.pane === pane;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+      button.disabled = false;
     }
     nodes.chatShowWorkflow.hidden = !Boolean(state.chat.wsId) && !workflow;
     nodes.paperIdForm.hidden = !paper;
@@ -1654,6 +1661,24 @@ Canonical: ${absoluteCanonical(topic)}
     resetQuickReadTab();
     resetSlideDeckTab();
     showReaderSkeleton(paperId);
+    // Reading a paper primes the paper-chat pane: clicking 论文对话 then opens
+    // the conversation for this id instead of asking for the id again. Never
+    // auto-switch panes — that would yank the view out of an in-flight topic
+    // or workflow conversation.
+    if (paperId && state.chat.paperId !== paperId) {
+      state.chat.paperId = paperId;
+      state.chat.paperMessages = [];
+      state.chat.paperSessionId = null;
+      if (state.chat.pane === "paper") {
+        // Already on the paper pane: show this paper's conversation now.
+        nodes.chatMessages.innerHTML = "";
+        setChatStatus(null);
+        syncChatPane();
+        loadPaperChatState();
+      } else {
+        syncPaneChrome(); // switcher/placeholder know the primed id
+      }
+    }
 
     // Warm cache: paint instantly, no fetch at all.
     const cached = cacheRead(paperId);
@@ -2728,7 +2753,10 @@ Canonical: ${absoluteCanonical(topic)}
     }
     if (evt.type === "status") {
       if (evt.stage === "tool") {
-        const detail = evt.detail ? `：${evt.detail}` : "";
+        // Transient spinner only — the workflow-log line keeps the full
+        // detail (that's the audit trail); the spinner stays readable.
+        const raw = evt.detail || "";
+        const detail = raw ? `：${raw.length > 80 ? `${raw.slice(0, 80)}…` : raw}` : "";
         setChatStatus(`正在调用 ${evt.tool}${detail}…`);
       } else {
         setChatStatus("正在思考…");
@@ -2865,10 +2893,25 @@ Canonical: ${absoluteCanonical(topic)}
     });
   }
 
+  // Conversation key for the visible pane, matching the server's registry key
+  // (topic id / ws-* / paper-<arxiv-id> — see server._paper_chat_key). Stop
+  // addresses one conversation; without a key the server would stop whatever
+  // started last and could kill a different pane's turn.
+  function chatSessionKey() {
+    if (workflowMode()) return state.chat.wsId || null;
+    if (paperMode()) return state.chat.paperId ? `paper-${state.chat.paperId}` : null;
+    return state.topic?.id || null;
+  }
+
   function abortChat() {
     if (state.chat.controller) state.chat.controller.abort();
     const stopPath = workflowMode() ? "api/workflow/stop" : "api/chat/stop";
-    fetch(stopPath, { method: "POST" }).catch(() => {});
+    const key = chatSessionKey();
+    fetch(stopPath, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(key ? { key } : {}),
+    }).catch(() => {});
   }
 
   async function resetChatSession() {

@@ -31,6 +31,8 @@ from embodied_learning import locks
 # this module keeps prompts, session registry, and HTTP glue only.
 from embodied_learning.harness.claude import (  # noqa: E402,F401
     ChatTurn,
+    DEFAULT_PERMISSION_MODE,
+    FALLBACK_CLI,
     build_claude_command,
     is_resume_failure,
     parse_stream_line,
@@ -57,11 +59,8 @@ from embodied_learning.harness.prompt import (  # noqa: F401  (prompt text + bui
 )
 from embodied_learning.utils.layout import resolve_pipeline_layout  # noqa: F401
 from embodied_learning.config import DEFAULT_CHAT_TIMEOUT_S, FIRST_EVENT_TIMEOUT_S, MAX_HISTORY_MESSAGES, MAX_PROMPT_CONTEXT_FILES, STOP_GRACE_S
-
-DEFAULT_PERMISSION_MODE = "bypassPermissions"
-# When ``claude`` is not on PATH (e.g. launched from a desktop launcher), the
-# standard install location is the fallback.
-FALLBACK_CLI = "/usr/local/bin/claude"
+# DEFAULT_PERMISSION_MODE / FALLBACK_CLI are re-exported from the harness
+# above (the single source for "how claude is invoked") — do not redeclare.
 
 
 def local_registry_path(kb_root: Path | str) -> Path:

@@ -708,6 +708,29 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn(".chat-msg-user", styles)
         self.assertIn(".chat-msg-assistant", styles)
 
+    def test_wiki_chat_pane_switcher_stays_clickable(self) -> None:
+        """The three conversation panes (主题对话/论文对话/工作流) must be
+        switchable at all times. Disabling the non-current buttons — as
+        syncPaneChrome once did — locked the panel on whichever pane you
+        entered last: a workflow kickoff or a reload with a parked workspace
+        disabled 主题对话/论文对话 for good (2026-10-15)."""
+        wiki_root = Path(__file__).resolve().parents[1] / "wiki"
+        index = (wiki_root / "index.html").read_text(encoding="utf-8")
+        script = (wiki_root / "assets" / "wiki.js").read_text(encoding="utf-8")
+
+        self.assertIn('id="chat-show-topic"', index)
+        self.assertIn('id="chat-show-paper"', index)
+        self.assertIn('id="chat-show-workflow"', index)
+        # The switcher marks the active pane; it never disables the siblings.
+        self.assertIn('button.setAttribute("aria-pressed", String(active));', script)
+        self.assertIn("button.disabled = false;", script)
+        self.assertNotIn("button.disabled = state.chat.pane !== pane;", script)
+        # Unavailability is `hidden` (workflow with no workspace), not disabled.
+        self.assertIn('nodes.chatShowWorkflow.hidden = !Boolean(state.chat.wsId) && !workflow;', script)
+        # Reading a paper primes the paper-chat id; it must not yank the pane.
+        self.assertIn("state.chat.paperId = paperId;", script)
+        self.assertIn("function chatSessionKey()", script)
+
     def test_wiki_workflow_and_resize_contract(self) -> None:
         wiki_root = Path(__file__).resolve().parents[1] / "wiki"
         index = (wiki_root / "index.html").read_text(encoding="utf-8")

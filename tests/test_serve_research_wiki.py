@@ -132,9 +132,13 @@ class ChatServerHarness(unittest.TestCase):
         self._original_turn = server_module.wiki_chat.ChatTurn
         server_module.wiki_chat.ChatTurn = FakeTurn
         self.addCleanup(self._restore_turn)
-        self._original_current = server_module.CURRENT_CHAT
-        server_module.CURRENT_CHAT = None
-        self.addCleanup(self._restore_current)
+        # In-flight tracking is keyed by conversation (topic/ws/paper); tests
+        # start from a clean slate and put back whatever was there.
+        self._original_turns = dict(server_module.IN_FLIGHT_TURNS)
+        self._original_drivers = dict(server_module.IN_FLIGHT_DRIVERS)
+        server_module.IN_FLIGHT_TURNS.clear()
+        server_module.IN_FLIGHT_DRIVERS.clear()
+        self.addCleanup(self._restore_in_flight)
 
         chat = server_module.wiki_chat.ChatConfig(cli="/fake/claude" if self.chat_enabled else None)
         handler = partial(
@@ -156,8 +160,11 @@ class ChatServerHarness(unittest.TestCase):
     def _restore_turn(self):
         server_module.wiki_chat.ChatTurn = self._original_turn
 
-    def _restore_current(self):
-        server_module.CURRENT_CHAT = self._original_current
+    def _restore_in_flight(self):
+        server_module.IN_FLIGHT_TURNS.clear()
+        server_module.IN_FLIGHT_TURNS.update(self._original_turns)
+        server_module.IN_FLIGHT_DRIVERS.clear()
+        server_module.IN_FLIGHT_DRIVERS.update(self._original_drivers)
 
     def request(self, method: str, path: str, body: dict | None = None) -> tuple[int, dict | str, dict]:
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
@@ -312,6 +319,55 @@ class ChatEndpointTest(ChatServerHarness):
         status, payload, _ = self.request("POST", "/api/chat/stop")
         self.assertEqual(status, HTTPStatus.OK)
         self.assertTrue(payload.get("idle"))
+
+    def test_stop_targets_one_conversation(self):
+        """Stop with a key addresses that conversation only. The single
+        CURRENT_CHAT slot meant a topic-chat stop killed a running workflow
+        turn (2026-10-15); in-flight turns are keyed so that cannot happen."""
+
+        topic_turn = FakeTurn(cli="/fake/claude", prompt="p", cwd=self.kb_root)
+        workflow_turn = FakeTurn(cli="/fake/claude", prompt="p", cwd=self.kb_root)
+        server_module._track_turn("topic-aaaa", topic_turn)
+        server_module._track_turn("ws-11111111", workflow_turn)
+        self.addCleanup(server_module.stop_current_chat)
+
+        self.assertTrue(server_module.stop_current_chat("topic-aaaa"))
+        self.assertTrue(topic_turn.stopped)
+        self.assertFalse(workflow_turn.stopped, "workflow turn must survive a topic-chat stop")
+
+        self.assertTrue(server_module.stop_current_chat("ws-11111111"))
+        self.assertTrue(workflow_turn.stopped)
+
+    def test_stop_without_key_stops_everything(self):
+        """Legacy callers (and server shutdown) pass no key: stop them all."""
+
+        first = FakeTurn(cli="/fake/claude", prompt="p", cwd=self.kb_root)
+        second = FakeTurn(cli="/fake/claude", prompt="p", cwd=self.kb_root)
+        server_module._track_turn("topic-aaaa", first)
+        server_module._track_turn("paper-2402.10329", second)
+        self.addCleanup(server_module.stop_current_chat)
+
+        self.assertTrue(server_module.stop_current_chat())
+        self.assertTrue(first.stopped)
+        self.assertTrue(second.stopped)
+
+    def test_stop_endpoint_accepts_key(self):
+        """POST /api/chat/stop {"key": ...} answers with idle=True when that
+        conversation is not running, and never touches a sibling conversation."""
+
+        workflow_turn = FakeTurn(cli="/fake/claude", prompt="p", cwd=self.kb_root)
+        server_module._track_turn("ws-11111111", workflow_turn)
+        self.addCleanup(server_module.stop_current_chat)
+
+        status, payload, _ = self.request("POST", "/api/chat/stop", {"key": self.topic_id})
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertTrue(payload.get("idle"))
+        self.assertFalse(workflow_turn.stopped)
+
+        status, payload, _ = self.request("POST", "/api/workflow/stop", {"key": "ws-11111111"})
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertFalse(payload.get("idle"))
+        self.assertTrue(workflow_turn.stopped)
 
     def test_refresh_endpoint_regression(self):
         status, payload, _ = self.request("POST", "/api/refresh")

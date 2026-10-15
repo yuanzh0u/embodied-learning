@@ -196,12 +196,32 @@ def release_chat_lock(key: str) -> None:
         lock.release()
 
 
-# The in-flight ChatTurn, guarded by its own tiny lock so /api/chat/stop never
-# blocks on the streaming thread. CURRENT_DRIVER mirrors it for the pre-claude
-# pipeline driver subprocess (a kickoff stop kills the driver, not a turn).
+# In-flight conversations, keyed by conversation key (topic id, ``ws-*``,
+# ``paper-*``) — the same keys the per-conversation locks use. Guarded so
+# /api/chat/stop never blocks on the streaming thread. The pre-claude pipeline
+# driver subprocess is tracked the same way (a kickoff stop kills the driver,
+# not a turn). Keyed rather than a single slot because concurrent conversations
+# are allowed: "stop" must address one of them, not "whatever started last" —
+# a topic-chat stop used to kill a running workflow turn (2026-10-15).
 CHAT_GUARD = threading.Lock()
-CURRENT_CHAT: wiki_chat.ChatTurn | None = None
-CURRENT_DRIVER: subprocess.Popen | None = None
+IN_FLIGHT_TURNS: dict[str, wiki_chat.ChatTurn] = {}
+IN_FLIGHT_DRIVERS: dict[str, subprocess.Popen] = {}
+
+
+def _track_turn(key: str, turn: wiki_chat.ChatTurn | None) -> None:
+    with CHAT_GUARD:
+        if turn is None:
+            IN_FLIGHT_TURNS.pop(key, None)
+        else:
+            IN_FLIGHT_TURNS[key] = turn
+
+
+def _track_driver(key: str, driver: subprocess.Popen | None) -> None:
+    with CHAT_GUARD:
+        if driver is None:
+            IN_FLIGHT_DRIVERS.pop(key, None)
+        else:
+            IN_FLIGHT_DRIVERS[key] = driver
 
 
 def resolve_kb_root(requested: Path | None) -> Path | None:
@@ -296,26 +316,34 @@ def build_refresh_command(kb_root: Path, data_dir: Path) -> list[str]:
     return command
 
 
-def _set_current_chat(turn: wiki_chat.ChatTurn | None) -> None:
-    global CURRENT_CHAT
-    with CHAT_GUARD:
-        CURRENT_CHAT = turn
-
-
-def stop_current_chat() -> bool:
-    """Stop the in-flight chat turn or pipeline driver, if any. Returns True
-    when one was running."""
+def stop_current_chat(key: str | None = None) -> bool:
+    """Stop the in-flight conversation(s). ``key`` addresses one conversation
+    (the registry key the turn was started under: topic id, ``ws-*``,
+    ``paper-*``) so a topic-chat stop can never kill a running workflow turn;
+    ``None`` stops every in-flight turn and driver (legacy callers and tests
+    that do not model a conversation). Returns True when something was running
+    and got the signal."""
 
     with CHAT_GUARD:
-        turn = CURRENT_CHAT
-        driver = CURRENT_DRIVER
-    if driver is not None and driver.poll() is None:
-        driver.kill()
-        return True
-    if turn is None:
-        return False
-    turn.stop()
-    return True
+        drivers = (
+            dict(IN_FLIGHT_DRIVERS)
+            if key is None
+            else ({key: IN_FLIGHT_DRIVERS[key]} if key in IN_FLIGHT_DRIVERS else {})
+        )
+        turns = (
+            dict(IN_FLIGHT_TURNS)
+            if key is None
+            else ({key: IN_FLIGHT_TURNS[key]} if key in IN_FLIGHT_TURNS else {})
+        )
+    stopped = False
+    for driver in drivers.values():
+        if driver.poll() is None:
+            driver.kill()
+            stopped = True
+    for turn in turns.values():
+        turn.stop()
+        stopped = True
+    return stopped
 
 
 class WikiHandler(SimpleHTTPRequestHandler):
@@ -627,7 +655,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
         full assistant text. ``require_existing`` keeps a post-reset cleanup
         from resurrecting a deleted workspace entry."""
 
-        _set_current_chat(turn)
+        _track_turn(key, turn)
         if record_user_message:
             registry.append_message(
                 key, "user", record_user_message, require_existing=require_existing)
@@ -684,7 +712,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 key=topic_id, turn=turn, registry=registry, record_user_message=message
             )
         finally:
-            _set_current_chat(None)
+            _track_turn(topic_id, None)
             release_chat_lock(topic_id)
 
     # ---- topic revision: regenerate one deliverable as a new version ------
@@ -802,7 +830,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                     "message": "修订未完成：agent 未通过门禁或未输出完成标记，详见上方对话内容。",
                 })
         finally:
-            _set_current_chat(None)
+            _track_turn(topic_id, None)
             release_chat_lock(topic_id)
 
     # ---- paper chat: per-arXiv-id conversations over the shared pool -------
@@ -1324,7 +1352,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 self._write_sse_event({"type": "session_reset"})
             self._stream_chat_turn(key=key, turn=turn, registry=registry, record_user_message=message)
         finally:
-            _set_current_chat(None)
+            _track_turn(key, None)
             release_chat_lock(key)
 
     def _run_paper_preparation(self, paper_id: str) -> tuple[str | None, bool] | None:
@@ -1455,8 +1483,21 @@ class WikiHandler(SimpleHTTPRequestHandler):
             model=model or DEFAULT_CHAT_MODEL,
         )
 
+    def _optional_stop_key(self) -> str | None:
+        """Conversation key from an optional stop body (``{"key": "..."}``).
+        None = no key supplied, so stop falls back to every in-flight
+        conversation (legacy callers and tests). A missing or unparseable
+        body is not an error — stop must always be answerable."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest:
+            return None
+        key = body.get("key") if isinstance(body, dict) else None
+        return key.strip() if isinstance(key, str) and key.strip() else None
+
     def _handle_chat_stop(self) -> None:
-        idle = not stop_current_chat()
+        idle = not stop_current_chat(self._optional_stop_key())
         self._send_json(HTTPStatus.OK, {"ok": True, "idle": idle})
 
     def _handle_chat_reset(self) -> None:
@@ -2012,7 +2053,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
             if self._dialog_journal is not None:
                 self._dialog_journal.flush_deltas()
             self._dialog_journal = None
-            _set_current_chat(None)
+            _track_turn(ws_id, None)
             release_chat_lock(ws_id)
 
     def _start_pipeline_driver(self, params: dict, run_dir: Path) -> subprocess.Popen:
@@ -2064,9 +2105,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
         run dir stays in-progress, so a retry resumes idempotently)."""
 
         driver = self._start_pipeline_driver(params, run_dir)
-        global CURRENT_DRIVER
-        with CHAT_GUARD:
-            CURRENT_DRIVER = driver
+        _track_driver(ws_id, driver)
         try:
             self._write_sse_event(
                 {"type": "status", "stage": "driver", "detail": "正在运行固定流程（检索/抽取/深读）"}
@@ -2122,8 +2161,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 driver.wait()
                 returncode = -1
         finally:
-            with CHAT_GUARD:
-                CURRENT_DRIVER = None
+            _track_driver(ws_id, None)
         if returncode != 0:
             stderr_tail = ""
             if driver.stderr is not None:
@@ -2177,7 +2215,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
         )
 
     def _handle_workflow_stop(self) -> None:
-        idle = not stop_current_chat()
+        idle = not stop_current_chat(self._optional_stop_key())
         self._send_json(HTTPStatus.OK, {"ok": True, "idle": idle})
 
     def _handle_workflow_reset(self) -> None:
