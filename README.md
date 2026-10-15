@@ -20,13 +20,16 @@ Embodied AI Evidence Hub is an evidence-first research hub for embodied AI and r
 
 | 当前成果 | 规模 |
 |---|---:|
-| 文献综述专题 | **38 项** |
-| 基础综述 | **22 项** |
+| 文献综述专题 | **44 项** |
+| 基础综述 | **28 项** |
 | 跨 run 综合 | **14 项** |
 | 引文图派生综述 | **2 项** |
-| 不重复精读论文 | **223 篇** |
-| 正式证据事件 | **371 条** |
-| 可复用 AI 研究技能 | **7 个** |
+| 不重复精读论文 | **525 篇** |
+| 正式证据事件 | **2,963 条** |
+| 可复用 AI 研究技能 | **3 个** |
+
+统计口径：专题数取自成果目录当前有效版本；精读论文与证据事件按当前版本 run（不含历史 `reader-v1`）的
+`reading_status ∈ {evidence-ready, accepted}` 去重 arXiv 计数。
 
 候选论文、搜索命中和复用证据不重复计入这些核心数字。覆盖规模不等于结论强度，最终判断仍以正文中的任务范围、证据质量与失败边界为准。
 
@@ -86,14 +89,14 @@ flowchart LR
 ```bash
 git clone https://github.com/yuanzh0u/embodied-learning.git
 cd embodied-learning
-python3 scripts/serve_research_wiki.py --open
+python3 scripts/wiki.py serve --open
 ```
 
 macOS 用户也可以双击根目录的 `打开具身智能研究Wiki.command`。
 
 > **完整历史克隆**：退役原始材料只保留在 git 历史中（`git show <ref>:<file>`）。贡献者若要跑
-> `scripts/check_kb_links.py` / `scripts/validate_current_reviews.py`，需要完整历史，不要用
-> `git clone --depth 1`。若已经是浅克隆，执行 `git fetch --unshallow`（或适当 `git fetch --deepen`）后再验证。
+> `python3 scripts/wiki.py check-kb-links` / `python3 scripts/run.py validate-reviews`，需要完整历史，
+> 不要用 `git clone --depth 1`。若已经是浅克隆，执行 `git fetch --unshallow`（或适当 `git fetch --deepen`）后再验证。
 
 ### 本地验证
 
@@ -113,8 +116,8 @@ make validate
 ### 构建完整发布站点
 
 ```bash
-python3 scripts/build_research_wiki.py --output /tmp/wiki-data
-python3 scripts/build_research_site.py \
+python3 scripts/wiki.py build-wiki --output /tmp/wiki-data
+python3 scripts/wiki.py build-site \
   --snapshot-root /tmp/wiki-data \
   --wiki-root wiki \
   --output /tmp/wiki-site \
@@ -134,17 +137,17 @@ python3 scripts/build_research_site.py \
 每条综合判断都保留证据入口，并明确哪些内容属于推断。
 ```
 
-## 7 个可复用研究技能
+## 3 个可复用研究技能
+
+三个技能构成一条单向流水线（ADR 0003），边界刻意分开，不要互相越权：
 
 | 技能 | 作用 |
 |---|---|
-| `embodied-ai-literature-review` | 编排从研究问题到综述交付的完整流程 |
-| `embodied-ai-query-planner` | 把主题拆成覆盖驱动的检索计划 |
-| `embodied-ai-literature-hub` | 扩展候选池并恢复可审计全文 |
-| `embodied-ai-paper-reader` | 精读论文，生成 paper note 与证据事件 |
-| `embodied-ai-review-writer` | 从 accepted evidence 生成不同文体 |
-| `embodied-ai-influence-ranking` | 沿引文图评估后续影响力 |
-| `embodied-ai-problem-relevance-ranking` | 在引文图候选中检索问题相关论文 |
+| `embodied-ai-literature-hub` | 检索：查询计划、arXiv / Semantic Scholar、候选筛选、全文恢复、证据记录 |
+| `embodied-ai-paper-reader` | 阅读：精读全文、核验主张、投影证据事件 |
+| `embodied-ai-review-writer` | 写作：编排 hub → reader → review packet → 成稿，端到端交付综述 |
+
+影响排序、问题相关度排序、查询计划等曾作为独立技能的能力，已并入上述三技能内部阶段。
 
 ## 仓库结构
 
@@ -152,14 +155,18 @@ python3 scripts/build_research_site.py \
 embodied-learning/
 ├── knowledge/   # 主索引、主题卡、术语与综述路由
 ├── evidence/    # 论文笔记、审计记录、证据事件与正式成稿
-├── skills/      # 7 个可复用 AI 研究技能
-├── scripts/     # 构建、验证、审计与知识图谱工具
+├── skills/      # 3 个可复用 AI 研究技能（检索 / 阅读 / 写作）
+├── scripts/     # 六域 dispatcher 与构建、验证、审计工具
 ├── wiki/        # Wiki 模板、发布配置与前端资产
 ├── tests/       # 快照、渲染、链接与 SEO/GEO 回归测试
-└── docs/        # 架构决策与设计文档
+└── docs/        # 使用文档、架构决策与设计文档
 ```
 
 `evidence/` 是论文级证据与正式综述的 source of truth；`knowledge/` 是面向人和 Agent 的压缩工作记忆；候选池与中间产物进入 gitignored 的 `work/`。
+
+## 使用文档
+
+面向使用者的完整指南在 [docs/user-guide/](docs/user-guide/README.md)：安装、快速上手、综述流水线、单篇工具、Wiki 使用、CLI 参考。脚本运维地图见 [scripts/README.md](scripts/README.md)；架构取舍见 [docs/adr/](docs/adr/)。
 
 ## 如何引用
 

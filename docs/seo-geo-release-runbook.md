@@ -4,21 +4,37 @@
 
 ## 1. 发布前门禁
 
-在仓库根目录运行：
+在仓库根目录运行（与 CI `research-validation.yml` / `validate-research-wiki.yml` 对齐；入口为六域 dispatcher，见 ADR 0004）：
 
 ```bash
-python3 -m unittest discover -s tests -v
-python3 scripts/validate_current_reviews.py --root .
-python3 scripts/check_kb_links.py --root .
-python3 scripts/build_research_wiki.py --output /tmp/wiki-data
-python3 scripts/build_research_site.py \
+# 单元测试 + 已发布综述校验 + 知识库链接完整性
+make test
+make validate
+python3 scripts/wiki.py check-kb-links
+
+# 内容快照（无 --kb-root 时默认取仓库 catalog + wiki/site-config.json，产出 schema v2）
+python3 scripts/wiki.py build-wiki --output /tmp/wiki-data
+
+# 可抓取静态站（sitemap / robots / llms.txt / JSON-LD / canonical）
+python3 scripts/wiki.py build-site \
   --snapshot-root /tmp/wiki-data \
   --wiki-root wiki \
   --output /tmp/wiki-site \
   --base-url https://yuanzh0u.github.io/embodied-learning
+
+# 复查已有输出（CI 在上传 Pages artifact 前也会跑这一步）
+python3 scripts/wiki.py build-site \
+  --output /tmp/wiki-site \
+  --base-url https://yuanzh0u.github.io/embodied-learning \
+  --check-only
 ```
 
-PR Preview 必须满足：页面含 `noindex,nofollow`，`robots.txt` 为 `Disallow: /`，canonical 仍指向生产地址。
+PR Preview 必须满足：页面含 `noindex,nofollow`，`robots.txt` 为 `Disallow: /`，canonical 仍指向生产地址。加 `--preview` 构建即可复现该形态。
+
+> **注意**：`build-wiki` 不带 `--kb-root` 时语义是「公开发布站」——语料取仓库
+> `knowledge/literature-review-catalog.md`，品牌/URL 配置取 `wiki/site-config.json`，
+> 产出 **schema v2** 快照（`build-site` 只接受 v2）。本地知识库（`--kb-root ~/Documents/arxiv`）
+> 没有公开 URL 品牌配置时产出 schema v1，只供本地 Wiki 服务使用，不要拿去跑 `build-site`。
 
 ## 2. 生产发布抽查
 
@@ -29,7 +45,7 @@ PR Preview 必须满足：页面含 `noindex,nofollow`，`robots.txt` 为 `Disal
 - `https://yuanzh0u.github.io/embodied-learning/robots.txt`
 - `https://yuanzh0u.github.io/embodied-learning/sitemap.xml`
 - `https://yuanzh0u.github.io/embodied-learning/llms.txt`
-- Sitemap 中的全部 38 个专题地址
+- Sitemap 中的全部 44 个专题地址
 
 人工关闭 JavaScript，抽查首页及世界模型、VLA、触觉、Ego–Exo、4D 五类页面。正文、论文引用和完整证据附录必须仍可阅读。
 
@@ -92,7 +108,7 @@ Google Search Console 使用 URL Inspection 抽查首页、专题目录和 5 个
 | 第 4 周 |  |  |  |  |  |  |  |
 | 第 8 周 |  |  |  |  |  |  |  |
 
-目标是在发布后 8 周内，让 38 个专题全部进入至少一个主流搜索索引。未收录页面按抓取、重复、内容质量和外链四类归因，每次只调整有明确证据的问题。
+目标是在发布后 8 周内，让 44 个专题全部进入至少一个主流搜索索引。未收录页面按抓取、重复、内容质量和外链四类归因，每次只调整有明确证据的问题。
 
 ## 7. 异常排查顺序
 
