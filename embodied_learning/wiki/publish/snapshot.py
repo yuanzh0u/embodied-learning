@@ -268,6 +268,11 @@ def discover_topics(source: Path) -> tuple[list[Candidate], dict[str, int]]:
             if catalog_mode:
                 raise RuntimeError(f"目录指定的 run 缺少声明成稿：{directory}")
             continue
+        # Wiki topics are reader-facing articles only (keyan/zhihu/xiaohongshu).
+        # Runs whose deliverables are briefing-only (survey / slide-deck) or that
+        # ship none of the three are not publishable — skip them silently.
+        if not any(filename in _FILENAME_TO_VERSION_KEY for filename in article_files):
+            continue
         reader_match = _READER_SUFFIX.search(directory.name)
         complete.append(
             Candidate(
@@ -605,7 +610,9 @@ def build_topic(
             key for key in VERSION_FILES if key != primary and version_file(key).is_file()
         ]
     else:
-        version_keys = [key for key in VERSION_FILES if version_file(key).is_file()] or list(VERSION_FILES)
+        version_keys = [key for key in VERSION_FILES if version_file(key).is_file()]
+    if not version_keys:
+        raise RuntimeError(f"run 没有任何可发布成稿：{candidate.directory.name}")
     markdown_by_version = {
         key: _read_text(candidate.directory / VERSION_FILES[key][1])
         for key in version_keys

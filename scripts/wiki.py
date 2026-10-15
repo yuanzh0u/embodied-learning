@@ -29,6 +29,9 @@ _MODULES: dict[str, str] = {
     "build-mind-omni-reader": "embodied_learning.wiki.publish.mind_omni",
     "check-kb-links": "embodied_learning.wiki.publish.links",
     "serve": "embodied_learning.wiki.publish.server",
+    "kb-stats": "embodied_learning.knowledge.inventory",
+    "kb-search": "embodied_learning.knowledge.query",
+    "kb-merge": "embodied_learning.knowledge.merge",
 }
 
 _HELP: dict[str, str] = {
@@ -38,6 +41,9 @@ _HELP: dict[str, str] = {
     "build-mind-omni-reader": "build the mind-omni reader page for one run",
     "check-kb-links": "audit knowledge/ links, source IDs and locators",
     "serve": "serve the local research wiki",
+    "kb-stats": "inventory a KB root: runs, pool full-text / deep-read, wiki topics",
+    "kb-search": "substring search across runs, papers, evidence events, topics",
+    "kb-merge": "fold runs / pool / cards / slugs from source KB roots into a target",
 }
 
 _PARSER_NAMES = {
@@ -47,6 +53,9 @@ _PARSER_NAMES = {
     "build-mind-omni-reader": "_mind_omni_parser",
     "check-kb-links": "_links_parser",
     "serve": "_server_parser",
+    "kb-stats": "_kb_stats_parser",
+    "kb-search": "_kb_search_parser",
+    "kb-merge": "_kb_merge_parser",
 }
 
 _PARSERS: dict[str, object] = {}
@@ -193,6 +202,72 @@ def _server_parser() -> argparse.ArgumentParser:
     )
     return parser
 
+
+def _kb_stats_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="盘点一个 KB 根：run 数、pool 全文/精读数、wiki 话题数")
+    parser.add_argument(
+        "--kb-root",
+        type=Path,
+        default=DEFAULT_KB_ROOT,
+        help=f"知识库根目录（含 evidence/ 与 pool/），默认 {DEFAULT_KB_ROOT}",
+    )
+    parser.add_argument("--json", action="store_true", help="输出 JSON 而非中文文本")
+    parser.add_argument("--runs-detail", action="store_true", help="附逐 run 明细表")
+    return parser
+
+
+def _kb_search_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="在 KB 内做子串检索（run / 论文 / 证据事件 / 话题）")
+    parser.add_argument("query", help="检索词（空格分隔为 AND）")
+    parser.add_argument(
+        "--scope",
+        choices=["all", "runs", "papers", "events", "topics"],
+        default="all",
+        help="检索范围，默认 all（每范围各限 --limit）",
+    )
+    parser.add_argument("--limit", type=int, default=20, help="每范围最多返回条数，默认 20")
+    parser.add_argument(
+        "--kb-root",
+        type=Path,
+        default=DEFAULT_KB_ROOT,
+        help=f"知识库根目录，默认 {DEFAULT_KB_ROOT}",
+    )
+    parser.add_argument("--json", action="store_true", help="输出 JSON 而非中文文本")
+    return parser
+
+
+def _kb_merge_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="把多个 KB 根的成果并入目标 KB（默认新者胜出）")
+    parser.add_argument(
+        "--kb-root",
+        type=Path,
+        default=DEFAULT_KB_ROOT,
+        help=f"合并目标知识库根目录，默认 {DEFAULT_KB_ROOT}",
+    )
+    parser.add_argument(
+        "--source",
+        type=Path,
+        action="append",
+        required=True,
+        help="来源知识库根目录（可重复）",
+    )
+    parser.add_argument(
+        "--what",
+        action="append",
+        choices=["runs", "pool", "cards", "slugs"],
+        default=None,
+        help="合并对象（可重复；默认全部）",
+    )
+    parser.add_argument(
+        "--prefer",
+        choices=["newer", "target", "source"],
+        default="newer",
+        help="冲突策略，默认 newer（CIFS mtime 不可靠时用 target/source）",
+    )
+    parser.add_argument("--dry-run", action="store_true", help="只出报告，不落盘")
+    parser.add_argument("--no-wiki", action="store_true", help="合并后不重建 wiki 快照")
+    parser.add_argument("--json", action="store_true", help="输出 JSON 而非中文文本")
+    return parser
 
 
 def _parser_for(name: str):

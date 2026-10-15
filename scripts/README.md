@@ -89,6 +89,11 @@
 | `wiki.py serve` | 本地起 Wiki 服务（含安全的 refresh 端点与成稿修订端点） | `python3 scripts/wiki.py serve --open`（默认读 `~/Documents/arxiv`） |
 | `wiki.py build-knowledge-map` | 把 `knowledge/index.md` 渲染成可浏览文档站（目录树 + Markdown 面板） | `python3 scripts/wiki.py build-knowledge-map` |
 | `wiki.py build-mind-omni-reader` | 为单个 run 生成 mind-omni 主站子页 | `wiki.py build-mind-omni-reader --run-dir <run-dir>` |
+| `wiki.py kb-stats` | 盘点一个 KB 根：run 数、pool 全文/精读数、wiki 话题数（`--runs-detail` 附逐 run 表） | `python3 scripts/wiki.py kb-stats --kb-root ~/Documents/arxiv` |
+| `wiki.py kb-search` | KB 内子串检索（run / 论文 / 证据事件 / 话题），空格分词 AND | `python3 scripts/wiki.py kb-search "外参标定" --scope events --limit 5` |
+| `wiki.py kb-merge` | 把多个 KB 根的成果并入目标（runs/pool/cards/slugs），默认新者胜出；**先 `--dry-run`** | `python3 scripts/wiki.py kb-merge --kb-root ~/Documents/arxiv --source /mount/TEST/public/wiki --dry-run` |
+
+详细口径与 Python 库用法见 [docs/kb-inventory.md](../docs/kb-inventory.md)。
 
 Wiki 聊天/工作流的 claude 会话后端（stream-json 桥接、嵌套 claude 环境防护、workflow/continuation/revision prompt）在 `embodied_learning/wiki/publish/chat.py`，由 `wiki.py serve` 内部使用，不直接手跑。
 

@@ -55,6 +55,9 @@ Knowledge-base integrity and ID allocation (top-level `scripts/`):
 
 ```bash
 python3 scripts/wiki.py check-kb-links            # broken links, unregistered source IDs, line-number locators
+python3 scripts/wiki.py kb-stats [--kb-root ...] [--json] [--runs-detail]   # inventory: runs, pool full-text/deep-read, wiki topics (docs/kb-inventory.md)
+python3 scripts/wiki.py kb-search "query" [--scope all|runs|papers|events|topics] [--limit N]   # substring search across the KB
+python3 scripts/wiki.py kb-merge --kb-root <target> --source <src> [--source ...] [--dry-run]   # fold runs/pool/cards/slugs into target (newer wins; docs/kb-inventory.md)
 python3 scripts/run.py next-event-id --prefix EA-TWM-2026   # next collision-free evidence event ID
 python3 scripts/run.py init --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
 python3 scripts/run.py pipeline --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 12 / scoping 22 / systematic 43) -> projection (stamps run.json event_count/evidence_papers) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator

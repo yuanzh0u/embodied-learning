@@ -102,6 +102,22 @@ class WikiFlagTableTest(unittest.TestCase):
                      "--workflow-model", "--workflow-effort"):
             self.assertIn(flag, opts)
 
+    def test_kb_stats(self):
+        self.assertEqual(_options(self.mod, "kb-stats"), {
+            "-h", "--help", "--kb-root", "--json", "--runs-detail",
+        })
+
+    def test_kb_search(self):
+        self.assertEqual(_options(self.mod, "kb-search"), {
+            "-h", "--help", "--scope", "--limit", "--kb-root", "--json",
+        })
+
+    def test_kb_merge(self):
+        self.assertEqual(_options(self.mod, "kb-merge"), {
+            "-h", "--help", "--kb-root", "--source", "--what", "--prefer",
+            "--dry-run", "--no-wiki", "--json",
+        })
+
 
 class WriterFlagTableTest(unittest.TestCase):
     @classmethod
