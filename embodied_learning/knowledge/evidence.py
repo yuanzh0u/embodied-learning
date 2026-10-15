@@ -53,4 +53,3 @@ def consolidate_evidence(run_dir: Path) -> Path:
         absorb(path)
     merged.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
     return merged
-

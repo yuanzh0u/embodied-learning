@@ -331,5 +331,3 @@ def build_output(
         "candidate_count": len(candidates),
         "candidates": candidates,
     }
-
-

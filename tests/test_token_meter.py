@@ -23,7 +23,7 @@ class TokenMeterTests(unittest.TestCase):
             out = Path(tmp) / "token-meter.jsonl"
             sample = Path(tmp) / "brief.md"
             sample.write_text("hello", encoding="utf-8")
-            code = invoke("run.py", "token-meter", 
+            code = invoke("run.py", "token-meter",
                 [
                     "--output",
                     str(out),

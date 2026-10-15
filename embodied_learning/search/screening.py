@@ -188,5 +188,3 @@ def run(
         Path(output_markdown).write_text(render_markdown(selected, int(registry.get("candidate_count") or 0)), encoding="utf-8")
     print(f"Queued {len(selected)} of {registry.get('candidate_count', 0)} candidates for full-text recovery.")
     return 0 if selected else 2
-
-

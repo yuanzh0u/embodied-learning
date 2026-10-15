@@ -21,7 +21,7 @@ os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelim
 ROOT = Path(__file__).resolve().parents[3]
 HUB_SCRIPTS = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts"
 PLANNER_ENTRY = HUB_SCRIPTS / "search.py"  # grouped entry, used via subprocess
-SRC_SEARCH = ROOT / "embodied_learning" / "search" 
+SRC_SEARCH = ROOT / "embodied_learning" / "search"
 PLANNER = SRC_SEARCH / "query_plan.py"  # implementation module for spec-loading
 SEARCH = SRC_SEARCH / "arxiv.py"
 

@@ -989,5 +989,3 @@ def render_markdown(plan: dict[str, Any]) -> str:
         for note in plan["notes"]:
             lines.append(f"- {note}")
     return "\n".join(lines) + "\n"
-
-

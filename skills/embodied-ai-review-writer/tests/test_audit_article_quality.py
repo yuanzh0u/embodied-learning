@@ -796,4 +796,3 @@ class RuleRegistryDriftTest(unittest.TestCase):
                     f"{style_key}: error rule {rule_id} is enforced but its "
                     "contract line never reaches the writing brief",
                 )
-

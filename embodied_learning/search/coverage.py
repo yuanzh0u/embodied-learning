@@ -172,5 +172,3 @@ def run(query_plan: Path, candidate_registry: Path, evidence_jsonl: list[Path], 
     state = "ready" if result["stop_assessment"]["ready_to_stop"] else "continue"
     print(f"wrote coverage report: {output} ({state})")
     return 0
-
-

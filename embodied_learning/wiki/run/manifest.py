@@ -108,5 +108,3 @@ def run(args: argparse.Namespace) -> int:
     print(f"- {manifest_path} (status: in-progress)")
     print("Next: planner -> candidate registry -> coverage rounds -> HTML/PDF/OCR extraction -> evidence -> writer -> settle.")
     return 0
-
-
