@@ -18,7 +18,8 @@ flag 表与退出码全部在上面六个 dispatcher 里。`pip install .` 注�
 （见[安装](installation.md)）。
 
 > 老读者注意：consolidation 前的独立脚本（`build_query_plan.py`、`serve_research_wiki.py` 等）
-> 已改成上述 dispatcher 的子命令，kebab-case 同名。`scripts/README.md` 里部分表格还保留旧名。
+> 已改成上述 dispatcher 的子命令，kebab-case 同名；`docs/adr/` 与已结算的 `evidence/` 交付物里
+> 保留的是当时写法，不要照抄。
 
 ## `scripts/run.py`
 
