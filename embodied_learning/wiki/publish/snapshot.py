@@ -645,6 +645,7 @@ def build_topic(
         plain = markdown_to_plain(markdown)
         versions[key] = {
             "label": label,
+            "style_label": label,
             "article_title": first_heading(markdown) or title,
             "html": rendered,
             # Raw source kept alongside the render so the reader page can
@@ -653,9 +654,11 @@ def build_topic(
             "toc": toc,
             "characters": len(plain),
             "source_file": filename,
+            "scope": str(manifest.get("scope_note") or ""),
         }
         search_versions[key] = {
             "label": label,
+            "style_label": label,
             "article_title": first_heading(markdown) or title,
             "text": plain,
         }
@@ -686,7 +689,8 @@ def build_topic(
             base_label = VERSION_FILES[style][0] if style in VERSION_FILES else style
             meta = revision_meta.get(key) or {}
             versions[key] = {
-                "label": f"{base_label} · 修订v{number}",
+                "label": f"v{number}",
+                "style_label": base_label,
                 "article_title": first_heading(markdown) or title,
                 "html": rendered,
                 "markdown": markdown,
@@ -696,10 +700,12 @@ def build_topic(
                 "revision": number,
                 "based_on": style,
                 "request": str(meta.get("request") or ""),
+                "scope": str(meta.get("request") or ""),
                 "created_at": str(meta.get("created_at") or ""),
             }
             search_versions[key] = {
                 "label": versions[key]["label"],
+                "style_label": base_label,
                 "article_title": versions[key]["article_title"],
                 "text": plain,
             }
@@ -736,7 +742,8 @@ def build_topic(
             plain = markdown_to_plain(markdown)
             base_label = VERSION_FILES[style][0]
             versions[key] = {
-                "label": f"{base_label} · 第{round_index}轮综述",
+                "label": f"v{round_index}",
+                "style_label": base_label,
                 "article_title": first_heading(markdown) or title,
                 "html": rendered,
                 "markdown": markdown,
@@ -747,10 +754,12 @@ def build_topic(
                 "based_on": style,
                 "cross_run": True,
                 "request": f"第{round_index}轮综述 · run {old.directory.name}",
+                "scope": f"第{round_index}轮综述 · run {old.directory.name}",
                 "run_directory": _relative(old.directory),
             }
             search_versions[key] = {
                 "label": versions[key]["label"],
+                "style_label": base_label,
                 "article_title": versions[key]["article_title"],
                 "text": plain,
             }
@@ -786,6 +795,53 @@ def build_topic(
         }
         version_keys.append(key)
 
+    # Mechanical version names: v0/v1/v2… chronological per style (oldest
+    # first). A superseded run's 第N轮综述 is older than the winner's base
+    # deliverable, so it takes the LOWER index; chat revisions are newer than
+    # their base and take the higher ones. The research-scope / change
+    # description lives in `scope` and never enters the version name
+    # (2026-10-16 contract, 2026-10-20 chronology fix).
+    def _chain_order(key: str) -> tuple[int, int]:
+        entry = versions[key]
+        if entry.get("cross_run"):
+            return (0, int(entry.get("revision") or 0))  # 第1轮 = oldest round
+        if not entry.get("based_on") and not entry.get("survey"):
+            return (1, 0)  # winner base after every superseded round
+        return (2, int(entry.get("revision") or 0))  # chat revisions = newest
+
+    style_chains: dict[str, list[str]] = {}
+    for key in version_keys:
+        entry = versions[key]
+        if entry.get("survey"):
+            continue
+        based = str(entry.get("based_on") or key)
+        style_chains.setdefault(based, []).append(key)
+    for _style, chain in style_chains.items():
+        chain.sort(key=_chain_order)
+        for index, key in enumerate(chain):
+            entry = versions[key]
+            entry["version_index"] = index
+            entry["label"] = f"v{index}"
+            if key in search_versions:
+                search_versions[key]["label"] = entry["label"]
+
+    # Default landing version = the latest of the default style's chain (highest
+    # version_index), not always the base deliverable. `default_version` stays
+    # the style key (identity for the style tabs / catalog row); `latest_version`
+    # is the version key a reader should land on.
+    def _latest_of_style(style: str) -> str:
+        chain = [
+            key
+            for key in version_keys
+            if not versions[key].get("survey")
+            and (versions[key].get("based_on") or key) == style
+        ]
+        if not chain:
+            return style
+        return max(chain, key=lambda key: int(versions[key].get("version_index") or 0))
+
+    latest_version = _latest_of_style(str(default_version))
+
     evidence_path = candidate.directory / "evidence-appendix.md"
     evidence_kind = "证据附录"
     if not evidence_path.is_file():
@@ -820,6 +876,7 @@ def build_topic(
         "date": candidate.date,
         "excerpt": excerpt(fallback_markdown),
         "default_version": default_version,
+        "latest_version": latest_version,
         "source_directory": _relative(candidate.directory),
         "versions": versions,
         "available_versions": version_keys,
@@ -841,6 +898,7 @@ def build_topic(
         "date": candidate.date,
         "excerpt": topic["excerpt"],
         "default_version": default_version,
+        "latest_version": latest_version,
         "available_versions": list(version_keys),
         "evidence_available": bool(evidence_html),
         "slide_deck_available": deck_available,
@@ -1027,6 +1085,7 @@ def validate_snapshot(output: Path) -> dict[str, object]:
                 "paper_count",
                 "evidence_event_count",
                 "default_version",
+                "latest_version",
                 "available_versions",
             }
             missing = sorted(required - set(item))
@@ -1091,6 +1150,7 @@ def validate_snapshot(output: Path) -> dict[str, object]:
                 "paper_count",
                 "evidence_event_count",
                 "default_version",
+                "latest_version",
                 "available_versions",
             ):
                 if topic.get(field) != item.get(field):

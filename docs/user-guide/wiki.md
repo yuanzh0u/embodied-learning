@@ -49,11 +49,11 @@ python3 scripts/wiki.py serve --kb-root ~/Documents/arxiv   # 换知识库
 已 settle 的综述可以做**追加式修订**（不改原始交付物）：
 
 页面「修订成稿」开关 → 选文体 → 生成 `evidence/<run>/revisions/<style>-v<N>.md`
-（基线成稿 = v1，首次修订 = v2；`revisions/index.json` 由服务端写 provenance）。
+（基底成稿 = v0，首次修订 = v1；版本名机械化递增，版本变迁由研究范围描述承载；`revisions/index.json` 由服务端写 provenance）。
 
 规则：
 
-- 快照构建器把每个修订版本当作独立版本键（`keyan-v2`）排在基线文体之后；
+- 快照构建器把每个修订版本当作独立版本键（`keyan-v1`）排在基底文体之后；
 - 基线交付物、`run.json`、`trace-map.json`、`evidence-appendix.md` **永不改写**；
 - 修订只用该 run 已有的证据集，不引入新证据。
 

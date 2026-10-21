@@ -15,7 +15,7 @@ import os
 import re
 from pathlib import Path
 
-from embodied_learning.config import MAX_PROMPT_CONTEXT_FILES
+from embodied_learning.config import DEFAULT_SELECTION_STRATEGY, MAX_PROMPT_CONTEXT_FILES
 from embodied_learning.utils.layout import resolve_pipeline_layout
 
 # ---- deep-read skeleton (paper-reader stage) ---------------------------------
@@ -28,7 +28,7 @@ SKELETON_PROMPT = """深读论文 {id}。输入（本地文件，直接 Read）�
 任务：通读后输出速记骨架（只输出一个 JSON 对象，不要写文件不要跑命令）：
 {{
   "arxiv_id": "{id}",
-  "paper_type": "method|system|dataset|survey|analysis|benchmark 之一",
+  "paper_type": "method|empirical|dataset|benchmark|survey|position|theory|system|analysis|other 之一",
   "relevance_reason": "…", "research_question": "…",
   "contributions": ["≤5"], "method_summary": "…",
   "findings": ["1-2"], "limitations": ["1-2"], "transfer_boundary": "…",
@@ -107,6 +107,7 @@ DYNAMIC_QUERIES_PROMPT = (
     "要求：\n"
     "- 10-20 条查询，覆盖：任务本身的直接术语、核心机制/方法、局限性/失效模式、评测/基准、部署工程。\n"
     "- query 使用 arXiv API 语法（all: 字段前缀、AND/OR、双引号短语），全部英文。\n"
+    "- query 的值必须是带双引号的字符串：内部双引号写成 \\\"，含括号的表达式也不能裸写。\n"
     "- tier 取 direct / mechanism / limit / evaluation / deployment 之一，可加后缀，如 direct-anchor。\n"
     "- label 用英文小写连字符，前缀标明 tier（如 direct-online-temporal-calibration）。\n"
     "- 不要输出任何其他文字。\n"
@@ -124,13 +125,37 @@ SMART_SELECTION_PROMPT = (
     "{focus_line}\n"
     "任务：判断哪些候选与话题真正相关（能进入综述的相关工作或机制讨论，而不是只沾边）。\n"
     "要求：\n"
-    "1. 最多输出 {limit} 篇；与话题核心无关的宁缺毋滥。\n"
-    "2. 只输出一个 JSON 对象，格式：{{\"relevant\": [{{\"arxiv_id\": \"<id>\", \"reason\": \"<一句话选中理由>\"}}, ...], "
-    "\"shortfall_note\": \"<如数量不足，一句话说明为什么其余不相关>\"}}。\n"
+    "1. 只输出真正相关的候选；与话题核心无关的宁缺毋滥。\n"
+    "2. 只输出一个 JSON 对象，格式：{{\"relevant\": [{{\"arxiv_id\": \"<id>\", \"reason\": \"<一句话选中理由>\"}}, ...]}}。\n"
     "2b. 每条选中都要给 reason：它与话题哪条主线相关、可贡献什么证据（机制/对比/边界），不要复述标题。\n"
     "3. arXiv ID 必须逐字取自清单方括号内，不要改写。\n"
     "不要输出 JSON 以外的任何内容。\n\n"
     "候选清单：\n{candidates}"
+)
+
+# System One (jev) variant of the same judgement. The decision model does not
+# write prose: it answers ONE typed yes/no question per candidate, so the
+# wording is two pieces — a shared ``state`` (topic + what "relevant" means)
+# and a per-candidate Noul claim. A claim phrased as a statement that can be
+# true or false scores best (2026-10-20 probe: an English claim reached
+# precision 0.88 / recall 0.73 at 0.60 vs 0.70 / 0.73 for a bare abstract
+# prefix, and a Chinese claim collapsed recall to 0.50).
+# The "core contribution directly addresses the topic" wording below is the
+# strict variant A/B'd on the 视频流式重建 registry (455 candidates, 4 blind
+# adjudication rounds): precision 59.5% → 80.0% at threshold 0.60, recall
+# 84.6% → 71.8%, and two repeats agreed at jaccard 0.957 (vs 0.78 for the
+# executor model against itself). Loose "adjacent field counts" wording was
+# what dragged jev's precision down, not the decision model itself.
+SMART_JEV_STATE = (
+    "综述话题：{topic}。\n"
+    "{focus_line}"
+    "判断标准：只有该论文的核心贡献直接针对综述话题时才判为相关。"
+    "仅仅使用相同技术栈、同属一个大领域、或只把一个通用方法应用到相邻任务的论文都不算。"
+)
+
+SMART_JEV_CLAIM = (
+    "This paper's main contribution directly addresses the review topic. "
+    "[{arxiv_id}] {title} — {abstract}"
 )
 
 
@@ -286,8 +311,15 @@ _WORKFLOW_BASE_SYSTEM_PROMPT = (
     "status 在动笔前就给出全部三条，参数勿猜，逐字执行）；"
     "audit-article-quality 加 --evidence-jsonl 以启用带图可用但成稿未落图的告警；"
     "审计门全过之前不要把证据落盘到 evidence/。"
+    "审计输出按严重度分两类处理，别混为一谈：ERROR 是硬门，必须清零、且它会让命令以 exit 1 结束；"
+    "WARNING 不阻塞落盘（audit-article-quality 在只剩 warning 时仍然 exit 0），"
+    "每条只判断一次「是否确实损害读者理解」——是就用 Edit 修，否就在汇报里如实列出并继续，"
+    "不要为了让 warning 归零反复追修（长句/缩写负载/篇幅这类告警修到阈值以下不是交付条件）。"
     "写完不要自检：不要用内联 python 预检中文字符数、💡 数、链接数、句长——直接跑 "
     "write.py audit-article-quality，它的消息自带修法（指标 vs 阈值 + 补救命令/写法），按消息修即可。"
+    "它一次列出全部待修句，且引文照抄原文（含句末标点）——直接用作 Edit 的 old_string，"
+    "不要自己补或删标点；Edit 一旦报「String to replace not found」，先 Read 该段落取精确原文再改，"
+    "严禁用同一个 old_string 原样重试。"
     "要查阈值看 writing-brief 的「各风格写作契约」节，不要 grep 门禁脚本源码；"
     "风格修复（长句拆分、措辞调整）用 Edit 直接改文本，不要写内联 python 字符串手术脚本。"
     "豁免逃生门的机械入口：run.py finalize --declare-gate-exception "
@@ -543,6 +575,19 @@ STYLE_VOICE_CONTRACTS = {
     # ——tests/test_wiki_chat.py 的 no_single_style_contract 契约钉死这一点。
 }
 
+def _selection_label(params: dict) -> str:
+    """Human-readable 选文策略 line: the model-driven variants name their model
+    so the writer knows which one produced the queue."""
+
+    strategy = str(params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY)
+    if strategy == "smart":
+        model = str(params.get("selection_model") or "").strip()
+        return f"smart（执行模型{'：' + model if model else ''}）"
+    if strategy == "smart-jev":
+        return "smart-jev（决策模型 jev）"
+    return strategy
+
+
 def build_workflow_prompt(
     *,
     params: dict,
@@ -605,7 +650,7 @@ def build_workflow_prompt(
         f"综述模式：{params.get('review_mode', 'scoping')}",
         f"时间范围：{params.get('time_range', '')}",
         f"检索策略：{params.get('search_strategy', 'smart')}",
-        f"选文策略：{params.get('selection_strategy', 'smart')}",
+        f"选文策略：{_selection_label(params)}",
         f"种子论文：{params.get('seed_arxiv_ids') or '无'}",
         f"目标风格：{params.get('target_style', 'all')}",
         *(
@@ -808,18 +853,28 @@ def build_revision_prompts(
         + (f"\n{style_contract}\n" if style_contract else "\n")
         + "\n【门禁（逐字执行，命令里的路径不要改）】\n"
         f"{gate_commands}\n"
-        "任一门禁未过：按其输出修复成稿后重跑该命令；门禁未过不是停止理由，"
-        "也不要为过门禁删掉有支撑的引文或图表。\n\n"
+        "任一门禁以非零退出码失败：按其输出修复成稿后重跑该命令；门禁未过不是停止理由，"
+        "也不要为过门禁删掉有支撑的引文或图表。"
+        "ERROR 必须清零；WARNING 不阻塞（只剩 warning 时命令仍然通过），"
+        "每条只判断一次是否确实损害读者理解，需要就改、不需要就在回复里列出，不要反复追清零。\n\n"
         "【完成标记】\n"
         "三道门禁全部通过后，在最终回复的单独一行输出 "
         f"[REVISION:{target_rel}]，不要带其他后缀；"
-        "无法完成修订时如实说明原因，绝不输出该标记。用中文与用户交流。"
+        "无法完成修订时如实说明原因，绝不输出该标记。用中文与用户交流。\n\n"
+        "【阶段视图】\n"
+        "在每个阶段开工前，单独成行输出一行阶段标记（工作流阶段视图靠它点亮节点卡片）：\n"
+        "[STAGE:plan] 规划修订方案\n"
+        "[STAGE:retrieval] 核对证据集\n"
+        "[STAGE:writing] 撰写修订版\n"
+        "[STAGE:audit] 运行审计门\n"
+        "[STAGE:settle] 落盘完成\n"
+        "阶段标记独占一行、放在该阶段第一段输出之前；详情行跟在后面即可。"
     )
     user_prompt = "\n".join([
         "<revision_request>",
         f"话题：{topic_title}（运行目录：{rel(run_dir)}/）",
         f"修订风格：{REVISION_STYLE_LABEL.get(style_key, style_key)}"
-        f"（基底文件：{base_filename}，作为 v{revision_number} 的底本）",
+        f"（基底文件：{base_filename}，作为新修订版的底本）",
         f"目标文件（唯一允许新建的文件）：{target_rel}",
         "用户修订要求：",
         message.strip() or "（无具体要求，请改善整体质量）",

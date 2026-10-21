@@ -11,7 +11,7 @@ Agent output (stdin or --skeleton), one JSON object:
 
     {
       "arxiv_id": "2607.15868",
-      "paper_type": "system",                    // method|system|dataset|survey|analysis|benchmark
+      "paper_type": "system",                    // method|empirical|dataset|benchmark|survey|position|theory|system|analysis|other
       "relevance_reason": "……",
       "research_question": "……",
       "contributions": ["…"],
@@ -44,7 +44,6 @@ from typing import Any
 
 DEFAULT_KB_ROOT = "~/Documents/arxiv"
 TOPIC_IDS = ["EA-SENSOR"]
-PAPER_TYPES = {"method", "system", "dataset", "survey", "analysis", "benchmark"}
 STANCES = {"support", "limit", "conditional", "gap"}
 EVIDENCE_TYPES = {"method", "experiment", "dataset", "claim", "analysis"}
 
@@ -54,6 +53,10 @@ from embodied_learning.utils.jsonio import load_json as _load_json  # noqa: E402
 from embodied_learning.knowledge import claim_support as auditor  # noqa: E402
 from embodied_learning.knowledge.claim_support import extraction_sections  # noqa: E402
 from embodied_learning.knowledge import paper_note as validator  # noqa: E402
+# paper_note.PAPER_TYPES is the validator's contract; assembly must accept
+# exactly what the validator accepts or a skeleton value that assembly likes
+# dies at validate_note (2026-10-16: "analysis").
+PAPER_TYPES = validator.PAPER_TYPES
 from embodied_learning import locks  # noqa: E402
 from embodied_learning.harness.prompt import GENERAL_QUESTION
 

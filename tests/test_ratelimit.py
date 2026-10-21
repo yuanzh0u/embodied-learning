@@ -119,6 +119,43 @@ class GateTest(unittest.TestCase):
         for gap in gaps:
             self.assertGreaterEqual(gap, 0.08, "gate failed to serialize concurrent slots")
 
+    def test_lock_is_released_before_the_reserved_slot_is_slept_off(self) -> None:
+        """A slow dispatch must not block the next worker's reservation.
+
+        Holding the flock across the spacing sleep and the caller's whole
+        body made the extraction queue's four fetch workers effectively
+        single-threaded (2026-10-20: 40 min for 109 papers)."""
+        started = time.time()
+
+        def worker() -> None:
+            with ratelimit.gate("arxiv", min_interval=0.2):
+                time.sleep(0.5)  # stand-in for connect + TLS + body read
+
+        threads = [threading.Thread(target=worker) for _ in range(3)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        # Serialized: 3 x (0.2 + 0.5) = 2.1s. Overlapping: ~0.4 + 0.5 = 0.9s.
+        self.assertLess(time.time() - started, 1.5)
+
+    def test_cooldown_recorded_while_sleeping_aborts_instead_of_dispatching(self) -> None:
+        """A 429 landing while a worker waits out its own reserved slot must
+        make the worker fail fast (GateTimeout) rather than dispatch inside
+        the machine-wide cooldown."""
+        # Burn the first slot so the measured gate has a real spacing sleep.
+        with ratelimit.gate("arxiv", min_interval=0.6):
+            pass
+        # Reserve our slot, then a sibling records a 5s cooldown mid-sleep.
+        recorder = threading.Timer(0.1, ratelimit.report_rejection, args=("arxiv", 5.0))
+        recorder.start()
+        started = time.time()
+        with self.assertRaises(ratelimit.GateTimeout):
+            with ratelimit.gate("arxiv", min_interval=0.1, max_wait=1.0):
+                pass
+        recorder.join()
+        self.assertLess(time.time() - started, 2.0)
+
 
 class GatedUrlopenTest(unittest.TestCase):
     def setUp(self) -> None:

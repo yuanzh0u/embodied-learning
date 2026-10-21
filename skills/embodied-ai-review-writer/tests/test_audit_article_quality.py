@@ -475,7 +475,39 @@ class AuditArticleQualityTests(unittest.TestCase):
         self.assertIn("long-sentence", completed.stdout)
         # The warning names the exact sentence so the writer can Edit it
         # directly — no inline-python sentence hunt.
-        self.assertIn("待修句：当机器人同时面对遮挡", completed.stdout)
+        self.assertIn("待修句（照抄整句，含句末标点）：(84字)当机器人同时面对遮挡", completed.stdout)
+        self.assertIn("掩盖真实失败。", completed.stdout)
+
+    def test_every_long_sentence_is_reported_in_one_pass(self) -> None:
+        """Reporting only the longest sentence made each audit round surface
+        its successor — five rounds and the draft still had one at 72 chars
+        (2026-10-20 视频流式重建). One audit now names every offender, and
+        each quote keeps its own terminator so it is Edit-able verbatim."""
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self.write_good_bundle(root)
+            zhihu = root / "zhihu-explainer_zhihu.md"
+            first = "甲" * 80 + "。"
+            # The second offender is closed by a semicolon and followed by more
+            # prose — the exact shape that made the old message un-matchable.
+            second = "乙" * 75 + "；尾部。"
+            zhihu.write_text(
+                zhihu.read_text(encoding="utf-8").replace(
+                    "\n## 延伸阅读", f"\n\n{first}\n\n{second}\n\n## 延伸阅读"
+                ),
+                encoding="utf-8",
+            )
+            completed = subprocess.run(
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertIn("2 sentence(s) over 70", completed.stdout)
+        self.assertIn("(80字)" + first, completed.stdout)
+        self.assertIn("(75字)" + second.split("；")[0] + "；", completed.stdout)
 
     def test_ten_body_citations_warn(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -223,12 +223,22 @@ class WriterPromptsTest(unittest.TestCase):
             self.assertIn("选文策略：bm25", user_prompt)
 
     def test_selection_strategy_flag_defaults_and_forwards(self) -> None:
-        # Default is smart; an unknown value is rejected by argparse.
-        with mock.patch.object(launcher, "launch", return_value=0) as launch:
+        # Default is smart-jev (the decision model); unknown values are rejected.
+        with mock.patch.object(launcher, "system_one_ready", return_value=True), \
+                mock.patch.object(launcher, "launch", return_value=0) as launch:
             invoke("run.py", "launch", ["--topic", "demo"])
-        self.assertEqual(launch.call_args.args[0].selection_strategy, "smart")
+        self.assertEqual(launch.call_args.args[0].selection_strategy, "smart-jev")
         with self.assertRaises(SystemExit):
             invoke("run.py", "launch", ["--topic", "demo", "--selection-strategy", "bogus"])
+
+    def test_launch_refuses_default_smart_jev_without_the_decision_model(self) -> None:
+        """The default strategy is the decision model: an unconfigured channel
+        stops the launch before a run dir is created (no init subprocess)."""
+        with mock.patch.object(launcher, "system_one_ready", return_value=False), \
+                mock.patch.object(launcher.subprocess, "run") as run:
+            code = invoke("run.py", "launch", ["--topic", "demo", "--kb-root", "/tmp/kb"])
+        self.assertEqual(code, 2)
+        run.assert_not_called()
 
     def test_run_mechanical_forwards_selection_strategy(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

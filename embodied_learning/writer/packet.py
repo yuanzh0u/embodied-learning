@@ -37,6 +37,7 @@ from embodied_learning.config import (  # noqa: E402
     LENGTH_CEILINGS,
     LENGTH_FLOORS,
     LINK_BUDGETS,
+    LONG_SENTENCE_MAX_CHARS,
 )
 STANCE_ORDER = ["support", "conditional", "limit", "gap"]
 # Same numbers as the enforced settle gate (finalize_run.CITED_PAPER_FLOORS):
@@ -915,7 +916,8 @@ def render_style_contract() -> list[str]:
         if style_key == "zhihu":
             lines.append("- 延伸阅读：至少 3 条链接 bullet，每条附一句读者价值注记。")
             lines.append(
-                "- 句长：单句不超过 70 个中文字符（长句拆从句、降推断负载；审计门会点名待修句）。"
+                f"- 句长：单句不超过 {LONG_SENTENCE_MAX_CHARS} 个中文字符（长句拆从句、降推断负载；"
+                "审计门一次点名全部待修句，照抄整句改，不要只改最长的一句）。"
             )
             lines.append("- 缩写：正文领域缩写不超过 5 个，首次出现给一句人话解释。")
             lines.append(
@@ -1143,10 +1145,12 @@ def render_writing_brief(
         lines.extend(
             [
                 "",
-                "## 摘要级相关工作（候选景观，仅定位用）",
+                "## 摘要级相关工作（选文通过、尚未深读的候选，仅定位用）",
                 "",
                 f"- 本 run 另有 {len(abstract_events)} 条摘要级事件（tier: abstract），"
                 f"全量表格在 evidence-appendix 的「摘要级相关工作」节（锚点 `#{ABSTRACT_SECTION_HEADING.lstrip('#').strip()}`）。",
+                "- 这些论文通过了选文、但尚未产出深读证据（含全文恢复失败的 held 篇目）；"
+                "直接引用它们即等于承认该结论没有机制级验证。",
                 "- 用法：只写相关工作定位句——“谁在什么方向做了什么”；不得作为机制结论、"
                 "对比论据或中心论点的证据，也不得与全文证据混写。",
                 "- 正文引用照常给 arXiv 论文链接，References 中对应条目末尾标注（摘要级）。",

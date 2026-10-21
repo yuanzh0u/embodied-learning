@@ -67,7 +67,7 @@ class ArxivSearch:
         end_date: str,
         max_results: int = 25,
         batch_label: str = "",
-        sort_by: str = "submittedDate",
+        sort_by: str = "relevance",
         sort_order: str = "descending",
         sleep_seconds: float = 3.0,
         timeout: float = 20.0,

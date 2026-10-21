@@ -31,6 +31,7 @@ _MODULES: dict[str, str] = {
     "serve": "embodied_learning.wiki.publish.server",
     "kb-stats": "embodied_learning.knowledge.inventory",
     "kb-search": "embodied_learning.knowledge.query",
+    "kb-funnel": "embodied_learning.knowledge.funnel",
     "kb-merge": "embodied_learning.knowledge.merge",
 }
 
@@ -43,6 +44,7 @@ _HELP: dict[str, str] = {
     "serve": "serve the local research wiki",
     "kb-stats": "inventory a KB root: runs, pool full-text / deep-read, wiki topics",
     "kb-search": "substring search across runs, papers, evidence events, topics",
+    "kb-funnel": "per-run retrieval→evidence funnel, or the papers in one funnel layer",
     "kb-merge": "fold runs / pool / cards / slugs from source KB roots into a target",
 }
 
@@ -55,6 +57,7 @@ _PARSER_NAMES = {
     "serve": "_server_parser",
     "kb-stats": "_kb_stats_parser",
     "kb-search": "_kb_search_parser",
+    "kb-funnel": "_kb_funnel_parser",
     "kb-merge": "_kb_merge_parser",
 }
 
@@ -232,6 +235,45 @@ def _kb_search_parser() -> argparse.ArgumentParser:
         default=DEFAULT_KB_ROOT,
         help=f"知识库根目录，默认 {DEFAULT_KB_ROOT}",
     )
+    parser.add_argument("--json", action="store_true", help="输出 JSON 而非中文文本")
+    return parser
+
+
+def _kb_funnel_parser() -> argparse.ArgumentParser:
+    # The layer/sort vocabularies are owned by the funnels' own module; import
+    # them here rather than duplicating the tuples in the flag table.
+    from embodied_learning.knowledge.funnel import LAYERS, SORTS
+
+    parser = argparse.ArgumentParser(
+        description="检索→证据漏斗：逐 run 统计，或查询某一层的论文清单",
+    )
+    parser.add_argument(
+        "--layer",
+        choices=list(LAYERS),
+        default=None,
+        help="只查询该层的论文清单（缺省＝逐 run 统计）；层值取自 funnel.json",
+    )
+    parser.add_argument(
+        "--kb-root",
+        type=Path,
+        default=DEFAULT_KB_ROOT,
+        help=f"知识库根目录，默认 {DEFAULT_KB_ROOT}",
+    )
+    parser.add_argument("--run", default=None, help="只统计指定 run（目录名精确匹配）")
+    parser.add_argument("--topic", default=None, help="按话题子串过滤")
+    parser.add_argument(
+        "--review-mode",
+        choices=["rapid", "scoping", "systematic"],
+        default=None,
+        help="按 review mode 过滤",
+    )
+    parser.add_argument(
+        "--sort",
+        choices=list(SORTS),
+        default="run",
+        help="逐 run 统计的排序键（run 升序；数值键降序，null 恒置末），默认 run",
+    )
+    parser.add_argument("--limit", type=int, default=20, help="最多返回行数（0 = 不限），默认 20")
     parser.add_argument("--json", action="store_true", help="输出 JSON 而非中文文本")
     return parser
 

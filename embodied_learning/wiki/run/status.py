@@ -20,6 +20,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from embodied_learning.knowledge.funnel import FUNNEL_FILENAME
 from embodied_learning.utils.layout import default_kb_root, find_roots, infer_kb_root
 from embodied_learning.config import CITED_PAPER_FLOORS, STANDARD_ARTICLES, STYLE_TO_FILE
 
@@ -30,7 +31,7 @@ STYLE_FILES = {
 }
 ARTIFACTS = [
     "review-packet.md", "writing-brief.md", "evidence-appendix.md",
-    "trace-map.json", "evidence.jsonl",
+    "trace-map.json", "evidence.jsonl", FUNNEL_FILENAME,
 ]
 
 
@@ -355,6 +356,10 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
     missing = [name for name, exists in report["artifacts"].items() if not exists]
     have = [name for name, exists in report["artifacts"].items() if exists]
     lines.append(f"[artifacts] 有：{', '.join(have) or '无'}；缺：{', '.join(missing) or '无'}")
+    if FUNNEL_FILENAME in missing and report["status"] == "settled":
+        # 135 historical runs predate the artifact: a settled run without
+        # funnel.json is a record of the past, not a to-do item.
+        lines.append("  funnel.json 缺失属旧 run：settled 于漏斗产物化之前，不回填（缺数据处理见 kb-funnel）")
     funnel_rows = report.get("paper_funnel") or []
     if funnel_rows:
         stuck = [row for row in funnel_rows if row["stage"] not in ("evidence",)]

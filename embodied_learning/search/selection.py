@@ -9,9 +9,18 @@ Strategies (``--selection-strategy``):
   only — channels without citation metadata degrade honestly (the caller
   falls back to bm25 and reports it).
 - ``smart`` (default): abstract evidence for the whole registry + the review
-  topic go to ONE one-shot agent that returns the relevant arXiv IDs. The
-  count is capped by the mode limit; a shortfall is reported as-is and never
-  padded.
+  topic go to chunked one-shot agent calls that return the relevant arXiv IDs.
+  There is no count cap and no relevance score: everything judged relevant is
+  queued for full-text recovery, in retrieval order.
+- ``smart-jev``: the same full-coverage judgement asked of a decision model
+  (System One / jev) instead of the execution model. One typed yes/no question
+  per candidate, many questions per request, keep the papers whose probability
+  clears ``SMART_JEV_RELEVANCE_THRESHOLD``. Seconds, not minutes, for a
+  registry of hundreds — see harness/claude.judge_questions.
+
+Selection produces the screening queue in RETRIEVAL order (the registry's
+discovery order), not the agent's output order — the queue's order becomes the
+deep-read order, and deep reading is the only stage that truncates.
 
 Selection replaces the screening stage's role: it produces the same
 screening.json / screening-ids.txt artifacts so extraction and deep-read
@@ -26,14 +35,29 @@ import re
 import subprocess
 import sys
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
-from embodied_learning.harness.prompt import SMART_SELECTION_PROMPT
-from embodied_learning.config import SELECTION_TIMEOUT_S, SMART_CANDIDATES_PER_CALL, SMART_MAX_ABSTRACT_CHARS
+from embodied_learning.harness.prompt import (
+    SMART_JEV_CLAIM,
+    SMART_JEV_STATE,
+    SMART_SELECTION_PROMPT,
+)
+from embodied_learning.config import (
+    SELECTION_TIMEOUT_S,
+    SMART_CANDIDATE_CHARS_PER_CALL,
+    SMART_CANDIDATES_PER_CALL,
+    SMART_JEV_CHARS_PER_CALL,
+    SMART_JEV_QUESTIONS_PER_CALL,
+    SMART_JEV_RELEVANCE_THRESHOLD,
+    SMART_MAX_ABSTRACT_CHARS,
+    SYSTEM_ONE_MODEL,
+)
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 # One smart-agent call stays inside a comfortable context; larger registries
 # are split into full-coverage chunks (every candidate reaches the agent).
+# Chunk boundaries come from pack_chunks() — rendered size, not fixed count.
 
 
 def _tokens(text: str) -> list[str]:
@@ -82,12 +106,19 @@ def bm25_scores(registry: dict[str, Any], query: str) -> list[tuple[str, float, 
     return scored
 
 
-def bm25_select(registry: dict[str, Any], query: str, limit: int) -> list[dict[str, Any]]:
-    return [candidate for _, _, candidate in bm25_scores(registry, query)[: max(0, limit)]]
+def bm25_select(
+    registry: dict[str, Any], query: str, limit: int | None = None
+) -> list[dict[str, Any]]:
+    """BM25 order, no cap unless the caller asks for one. Selection does not
+    truncate — deep reading is the only stage that does."""
+    scored = bm25_scores(registry, query)
+    if limit is None:
+        return [candidate for _, _, candidate in scored]
+    return [candidate for _, _, candidate in scored[: max(0, limit)]]
 
 
 def influence_select(
-    registry: dict[str, Any], limit: int
+    registry: dict[str, Any], limit: int | None = None
 ) -> tuple[list[dict[str, Any]], int]:
     """Citation-count ranking over registry metadata. Returns (selected,
     papers_with_citation_data) — the caller degrades to bm25 when the
@@ -102,23 +133,61 @@ def influence_select(
     with_citations.sort(
         key=lambda c: (-int(c["citation_count"]), str(c.get("published") or ""), str(c.get("arxiv_id")))
     )
-    selected = with_citations[: max(0, limit)]
+    selected = with_citations if limit is None else with_citations[: max(0, limit)]
     return selected, len(with_citations)
 
 
 # ---- smart strategy ---------------------------------------------------------
 
 
+def _candidate_line(candidate: dict[str, Any]) -> str:
+    title = " ".join(str(candidate.get("title") or "").split())
+    abstract = " ".join(str(candidate.get("summary") or "").split())
+    if len(abstract) > SMART_MAX_ABSTRACT_CHARS:
+        abstract = abstract[: SMART_MAX_ABSTRACT_CHARS - 1].rstrip() + "…"
+    published = str(candidate.get("published") or "")[:10]
+    return f"[{candidate.get('arxiv_id')}] ({published}) {title} — {abstract}"
+
+
 def _candidate_lines(candidates: list[dict[str, Any]]) -> str:
-    lines = []
-    for index, candidate in enumerate(candidates, start=1):
-        title = " ".join(str(candidate.get("title") or "").split())
-        abstract = " ".join(str(candidate.get("summary") or "").split())
-        if len(abstract) > SMART_MAX_ABSTRACT_CHARS:
-            abstract = abstract[: SMART_MAX_ABSTRACT_CHARS - 1].rstrip() + "…"
-        published = str(candidate.get("published") or "")[:10]
-        lines.append(f"{index}. [{candidate.get('arxiv_id')}] ({published}) {title} — {abstract}")
-    return "\n".join(lines)
+    return "\n".join(
+        f"{index}. {_candidate_line(candidate)}"
+        for index, candidate in enumerate(candidates, start=1)
+    )
+
+
+def pack_chunks(
+    candidates: list[dict[str, Any]],
+    *,
+    char_budget: int,
+    count_ceiling: int,
+) -> list[list[dict[str, Any]]]:
+    """Split candidates into agent-call chunks by rendered line size.
+
+    A chunk closes when the next line would overflow ``char_budget`` OR reach
+    ``count_ceiling`` — so a registry of long abstracts (the 2026-10-16 强化学习
+    run: 300 candidates rendered a 157KB prompt and the completion stream died
+    mid-response) packs into short calls, while a registry of tiny lines still
+    keeps the candidate count per call bounded. A single line larger than the
+    budget becomes its own chunk; candidates are never dropped or split.
+    """
+
+    chunks: list[list[dict[str, Any]]] = []
+    current: list[dict[str, Any]] = []
+    current_chars = 0
+    for candidate in candidates:
+        line_chars = len(_candidate_line(candidate)) + 1  # + newline
+        if current and (
+            current_chars + line_chars > char_budget or len(current) >= count_ceiling
+        ):
+            chunks.append(current)
+            current = []
+            current_chars = 0
+        current.append(candidate)
+        current_chars += line_chars
+    if current:
+        chunks.append(current)
+    return chunks
 
 
 
@@ -173,7 +242,6 @@ def smart_select(
     *,
     topic: str,
     focus: str,
-    limit: int,
     complete_fn,
     cli: str,
     model: str,
@@ -188,7 +256,11 @@ def smart_select(
     selection. No lexical prefilter may decide what the agent sees — bm25
     cannot tokenize a Chinese topic, and prefiltering by it silently reverts
     smart to the word-matching screen this strategy exists to replace.
-    Shortfalls are reported honestly and never padded."""
+
+    Nothing is truncated here. The queue is emitted in REGISTRY order (the
+    retrieval order), not in the agent's reply order: chunk order is a
+    coverage device, not a relevance ranking, and the deep-read stage owns the
+    only cut in the funnel."""
 
     candidates = [
         c for c in registry.get("candidates", [])
@@ -199,21 +271,25 @@ def smart_select(
         return [], "empty registry"
     by_id = {str(c.get("arxiv_id")): c for c in candidates}
     focus_line = f"关注重点：{focus}" if focus else ""
-    selected: list[tuple[str, str]] = []
+    # arxiv_id -> reason. Insertion order is chunk order, which is only
+    # meaningful for coverage accounting; the queue itself is re-projected
+    # onto registry order below.
+    chosen: dict[str, str] = {}
     failed_chunks = 0
     timed_out_chunks = 0
     salvaged_chunks = 0
-    chunks = [
-        candidates[i : i + SMART_CANDIDATES_PER_CALL]
-        for i in range(0, len(candidates), SMART_CANDIDATES_PER_CALL)
-    ]
+    chunks = pack_chunks(
+        candidates,
+        char_budget=SMART_CANDIDATE_CHARS_PER_CALL,
+        count_ceiling=SMART_CANDIDATES_PER_CALL,
+    )
     for index, chunk in enumerate(chunks, start=1):
         # One agent call per chunk takes minutes; print a plain progress line
         # so the driver can translate it into a wiki progress tick (the
         # 2026-10-13 gap: 13 silent minutes between registry and selection).
         print(f"chunk {index}/{len(chunks)}: judging {len(chunk)} of {len(candidates)} candidates…", flush=True)
         prompt = SMART_SELECTION_PROMPT.format(
-            topic=topic, focus_line=focus_line, limit=limit,
+            topic=topic, focus_line=focus_line,
             candidates=_candidate_lines(chunk),
         )
         try:
@@ -253,7 +329,8 @@ def smart_select(
             continue
         parsed = _parse_selections(result.stdout, known)
         if parsed:
-            selected.extend(parsed)
+            for arxiv_id, reason in parsed:
+                chosen.setdefault(arxiv_id, reason)
         elif result.stdout.strip():
             # Non-empty output that parses to nothing is NOT an empty verdict:
             # count it as a coverage hole (or salvage IDs) — never let a
@@ -261,12 +338,13 @@ def smart_select(
             # irrelevant" (20260930 absolute-pose chunk-1).
             salvaged = _salvage_ids(result.stdout, known)
             if salvaged:
-                selected.extend((arxiv_id, "") for arxiv_id in salvaged)
+                for arxiv_id in salvaged:
+                    chosen.setdefault(arxiv_id, "")
                 salvaged_chunks += 1
             else:
                 failed_chunks += 1
     detail_parts = [
-        f"smart selected {len(selected)}/{len(candidates)} considered "
+        f"smart selected {len(chosen)}/{len(candidates)} considered "
         f"({len(chunks)} full-coverage chunk(s))"
     ]
     if salvaged_chunks:
@@ -280,17 +358,138 @@ def smart_select(
         )
     if failed_chunks:
         detail_parts.append(f"{failed_chunks}/{len(chunks)} chunk(s) failed — coverage incomplete")
-    # Dedup, cap, and resolve to candidate records carrying their selection
-    # reason (debug surface in screening.json); if fewer than the limit came
-    # back relevant, that is the honest answer (never padded).
-    ordered = list(dict.fromkeys(selected))[: max(0, limit)]
+    # Emit in registry (retrieval) order. The agent's per-chunk reply order is
+    # not a global ranking — merging chunk answers by arrival would make the
+    # queue's order depend on chunk boundaries and on which chunks happened to
+    # fail (2026-10-20 自监督预训练: 120-slot cap + chunk-arrival order put every
+    # deep read in 2021-2022). Registry order keeps the retrieval relevance
+    # ranking that the search backend produced.
     out = []
-    for arxiv_id, reason in ordered:
+    for candidate in candidates:
+        arxiv_id = str(candidate.get("arxiv_id"))
+        if arxiv_id not in chosen:
+            continue
         record = dict(by_id[arxiv_id])
-        record["selection_reason"] = reason
+        record["selection_reason"] = chosen[arxiv_id]
         out.append(record)
-    if len(out) < limit:
-        detail_parts.append(f"shortfall: only {len(out)} relevant (limit {limit}), not padded")
+    return out, "; ".join(detail_parts)
+
+
+# ---- smart-jev strategy (decision model) ------------------------------------
+
+
+def _jev_claim(candidate: dict[str, Any]) -> str:
+    title = " ".join(str(candidate.get("title") or "").split())
+    abstract = " ".join(str(candidate.get("summary") or "").split())
+    if len(abstract) > SMART_MAX_ABSTRACT_CHARS:
+        abstract = abstract[: SMART_MAX_ABSTRACT_CHARS - 1].rstrip() + "…"
+    return SMART_JEV_CLAIM.format(
+        arxiv_id=candidate.get("arxiv_id"), title=title, abstract=abstract
+    )
+
+
+def jev_select(
+    registry: dict[str, Any],
+    *,
+    topic: str,
+    focus: str = "",
+    judge_fn,
+    threshold: float = SMART_JEV_RELEVANCE_THRESHOLD,
+    model: str = SYSTEM_ONE_MODEL,
+    questions_per_call: int = SMART_JEV_QUESTIONS_PER_CALL,
+    chars_per_call: int = SMART_JEV_CHARS_PER_CALL,
+    workers: int = 4,
+    label: str = "selection-smart-jev",
+) -> tuple[list[dict[str, Any]], str]:
+    """Full-coverage relevance judgement by a decision model.
+
+    Same contract as :func:`smart_select` — every candidate is judged, nothing
+    is truncated, the queue comes back in REGISTRY order — but each candidate
+    is one typed Noul question in a batched System One request. The union of
+    probabilities above ``threshold`` is the selection; a failed batch is a
+    reported coverage gap, never a run-killing error.
+
+    ``judge_fn(state, questions, *, model, label)`` is the harness binding
+    (``claude.judge_questions``); batching is by rendered claim size and by
+    question count, mirroring ``pack_chunks``."""
+
+    candidates = [
+        c for c in registry.get("candidates", [])
+        if isinstance(c, dict) and str(c.get("arxiv_id") or "").strip()
+    ]
+    if not candidates:
+        return [], "empty registry"
+    focus_line = f"关注重点：{focus}\n" if focus else ""
+    state = SMART_JEV_STATE.format(topic=topic, focus_line=focus_line)
+    chunks = pack_chunks(
+        candidates, char_budget=chars_per_call, count_ceiling=questions_per_call
+    )
+    scores: dict[str, float] = {}
+    failed_chunks = 0
+
+    def run_chunk(chunk: list[dict[str, Any]]) -> tuple[dict[str, float], str]:
+        questions = {
+            str(candidate.get("arxiv_id")): {
+                "type": "noul",
+                "instructions": _jev_claim(candidate),
+            }
+            for candidate in chunk
+        }
+        payload = judge_fn(state, questions, model=model, label=label)
+        answers = payload.get("answers") if isinstance(payload, dict) else None
+        out: dict[str, float] = {}
+        if isinstance(answers, dict):
+            for arxiv_id, answer in answers.items():
+                if not isinstance(answer, dict):
+                    continue
+                value = answer.get("noul")
+                if isinstance(value, (int, float)):
+                    out[str(arxiv_id)] = float(value)
+        return out, ""
+
+    print(
+        f"jev: judging {len(candidates)} candidates in {len(chunks)} "
+        f"System One request(s)…",
+        flush=True,
+    )
+    with ThreadPoolExecutor(max_workers=max(1, min(workers, len(chunks)))) as pool:
+        futures = [pool.submit(run_chunk, chunk) for chunk in chunks]
+        for index, future in enumerate(futures, start=1):
+            try:
+                found, _ = future.result()
+            except Exception as exc:  # noqa: BLE001 — one batch must not kill the run
+                failed_chunks += 1
+                print(
+                    f"[DRIVER-WARN] 选文(jev) batch {index}/{len(chunks)} 失败"
+                    f"（{type(exc).__name__}: {exc}），{len(chunks[index - 1])} 篇候选未判定 — 覆盖缺口",
+                    flush=True,
+                )
+                continue
+            scores.update(found)
+
+    known = {str(c.get("arxiv_id")) for c in candidates}
+    chosen = {arxiv_id for arxiv_id, score in scores.items()
+              if arxiv_id in known and score >= threshold}
+    detail_parts = [
+        f"smart-jev selected {len(chosen)}/{len(candidates)} considered "
+        f"(threshold {threshold:.2f}, {len(chunks)} System One request(s))"
+    ]
+    unjudged = len(candidates) - len(scores)
+    if unjudged:
+        detail_parts.append(
+            f"{unjudged} candidate(s) unjudged ({failed_chunks} failed batch(es)) — "
+            "coverage incomplete"
+        )
+    out: list[dict[str, Any]] = []
+    for candidate in candidates:
+        arxiv_id = str(candidate.get("arxiv_id"))
+        if arxiv_id not in chosen:
+            continue
+        record = dict(candidate)
+        record["selection_reason"] = (
+            f"jev p={scores.get(arxiv_id, 0.0):.2f} ≥ {threshold:.2f}"
+        )
+        out.append(record)
     return out, "; ".join(detail_parts)
 
 
@@ -348,7 +547,6 @@ def run_select(
     strategy: str,
     topic: str,
     focus: str,
-    limit: int,
     output_screening: str,
     output_ids: str,
     output_markdown: str | None = None,
@@ -358,10 +556,15 @@ def run_select(
     model: str | None = None,
     timeout_s: float = SELECTION_TIMEOUT_S,
     complete_fn=None,
+    judge_fn=None,
+    threshold: float = SMART_JEV_RELEVANCE_THRESHOLD,
 ) -> int:
     """CLI driver behind ``search.py select-candidates``: rank the registry with
     one non-keywords strategy and write the same screening artifacts the legacy
     screen-candidates emits, so extraction/deep-read downstream are unchanged.
+
+    No count cap: the queue carries every paper the strategy judges relevant.
+    Deep reading is the only funnel stage that truncates.
 
     Returns the process exit code (0 when candidates were queued, 2 otherwise)."""
     if strategy == "keywords":
@@ -374,22 +577,22 @@ def run_select(
     # must be augmented with the run's English terms or every query scores 0.
     query = " ".join(part for part in (topic, focus, terms.replace(",", " ")) if part.strip())
     if strategy == "influence":
-        selected, with_data = influence_select(registry, limit)
+        selected, with_data = influence_select(registry)
         parts = [f"influence ranked {with_data} papers with citation data"]
-        if len(selected) < limit:
-            # Offline honesty: a channel without citation metadata cannot fill
-            # the queue by influence alone — bm25 covers the remaining slots
-            # and the detail says so (nothing is padded silently).
+        if len(selected) < len(registry.get("candidates") or []):
+            # Offline honesty: a channel without citation metadata cannot rank
+            # every candidate by influence alone — bm25 covers the rest and the
+            # detail says so (nothing is dropped silently).
             chosen = {str(c.get("arxiv_id")) for c in selected}
             selected = selected + [
                 candidate
                 for _, _, candidate in bm25_scores(registry, query)
                 if str(candidate.get("arxiv_id")) not in chosen
-            ][: max(0, limit - len(selected))]
+            ]
             parts.append(f"influence degraded to bm25 (citation data: {with_data} papers)")
         detail = "; ".join(parts)
     elif strategy == "bm25":
-        selected = bm25_select(registry, query, limit)
+        selected = bm25_select(registry, query)
         detail = f"bm25 selected {len(selected)} for topic+focus query"
     elif strategy == "smart":
         from embodied_learning.harness.claude import (
@@ -407,13 +610,34 @@ def run_select(
             registry,
             topic=topic,
             focus=focus,
-            limit=limit,
             complete_fn=complete_fn or complete,
             cli=cli,
             model=model or DRIVER_AGENT_MODEL,
             env=isolated_claude_env(),
             cwd=None,  # the driver spawns this entry with cwd=kb-root
             timeout_s=timeout_s,
+        )
+    elif strategy == "smart-jev":
+        from embodied_learning.harness.claude import system_one_ready
+
+        if not system_one_ready():
+            print(
+                "决策模型（System One / jev）未配置：需要 "
+                "EMBODIED_SYSTEM_ONE_URL（或 ANTHROPIC_BASE_URL）与 "
+                "EMBODIED_SYSTEM_ONE_API_KEY（或 ANTHROPIC_AUTH_TOKEN）。"
+                "可改用 --selection-strategy smart（执行模型）。",
+                file=sys.stderr,
+            )
+            return 2
+        if judge_fn is None:
+            from embodied_learning.harness.claude import judge_questions as judge_fn
+        selected, detail = jev_select(
+            registry,
+            topic=topic,
+            focus=focus,
+            judge_fn=judge_fn,
+            threshold=threshold,
+            model=model or SYSTEM_ONE_MODEL,
         )
     else:
         print(f"unknown selection strategy: {strategy}", file=sys.stderr)
@@ -422,7 +646,7 @@ def run_select(
     screening = {
         "version": 1,
         "candidate_registry": registry_path,
-        "selection_rule": {"strategy": strategy, "detail": detail, "limit": limit},
+        "selection_rule": {"strategy": strategy, "detail": detail},
         "candidates": rows,
     }
     atomic_write_text(

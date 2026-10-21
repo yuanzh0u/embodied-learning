@@ -21,14 +21,16 @@ and for non-urllib transports (curl) use :func:`gate` directly::
 
 Design notes:
 
-- Sleeping happens while holding the lock on purpose — that *is* the global
-  lock: concurrent processes queue on ``flock`` and are released one interval
-  apart. ``flock`` operates on open file descriptions, so threads of one
-  process (e.g. the fetch queue's thread pool) are mutually excluded as well.
+- A caller reserves its slot under the lock (advancing ``next_ok_ts`` one
+  interval) and sleeps **after** releasing it. Concurrent workers therefore
+  dispatch one interval apart without serializing: each owns a distinct slot.
+  (Holding the lock across the sleep — the original design — made the
+  extraction queue's four fetch workers effectively single-threaded.)
 - The gate covers request dispatch only; the response body is read after the
   slot is released (``next_ok_ts`` was already advanced, so pacing holds).
 - ``report_rejection`` shares backoff machine-wide: one process's 429 with a
-  ``Retry-After`` delays every process's next request in that group.
+  ``Retry-After`` delays every process's next request in that group. Callers
+  that would rather fail fast than sit out a cooldown pass ``max_wait``.
 """
 
 from __future__ import annotations
@@ -141,18 +143,13 @@ def _acquire_lock(lock_fd: int, max_wait: float | None, group: str) -> None:
             time.sleep(LOCK_POLL_SECONDS)
 
 
-@contextmanager
-def gate(group: str, *, min_interval: float | None = None, max_wait: float | None = None):
-    """Reserve one request slot for ``group``, machine-wide.
-
-    Blocks (queuing on flock) until the group's shared ``next_ok_ts`` /
-    ``cooldown_until`` have passed, then advances ``next_ok_ts`` by the group
-    interval. Each wait (queueing and spacing separately) is bounded by
-    ``max_wait``; expiry raises :class:`GateTimeout` so callers can reach their
-    degradation paths.
-    """
-    interval = resolve_interval(group, min_interval)
-    state_dir().mkdir(parents=True, exist_ok=True)
+def _reserve_slot(group: str, interval: float, max_wait: float | None) -> float:
+    """Take the next dispatch slot for ``group`` and return how long the caller
+    must sleep before using it. The lock is released BEFORE the caller sleeps:
+    each caller owns a distinct reserved slot, so N workers wait out their own
+    spacing in parallel instead of queueing behind one sleeping holder (the
+    2026-10-20 extraction run serialized four workers this way — see the
+    module docstring)."""
     lock_fd = os.open(_lock_path(group), os.O_RDWR | os.O_CREAT, 0o600)
     try:
         _acquire_lock(lock_fd, max_wait, group)
@@ -160,18 +157,54 @@ def gate(group: str, *, min_interval: float | None = None, max_wait: float | Non
         now = time.time()
         earliest = max(float(state.get("next_ok_ts", 0.0)), float(state.get("cooldown_until", 0.0)))
         wait = earliest - now
-        if wait > 0:
-            if max_wait is not None and wait > max_wait:
-                raise GateTimeout(f"gate '{group}' spacing wait {wait:.1f}s exceeded {max_wait}s")
-            time.sleep(wait)
-        reserved = time.time()
-        state["next_ok_ts"] = max(reserved, earliest) + interval
+        if wait > 0 and max_wait is not None and wait > max_wait:
+            raise GateTimeout(f"gate '{group}' spacing wait {wait:.1f}s exceeded {max_wait}s")
+        reserved = max(time.time(), earliest)
+        state["next_ok_ts"] = reserved + interval
         if state.get("cooldown_until", 0) <= reserved:
             state.pop("cooldown_until", None)  # expired cooldown: clear it
         _write_state(group, state)
-        yield
+        return max(0.0, reserved - time.time())
     finally:
         os.close(lock_fd)  # releases the flock
+
+
+def _active_cooldown(group: str) -> float:
+    """Seconds left on the group's shared 429/503 cooldown (0 when clear)."""
+    state = _read_state(group)
+    return max(0.0, float(state.get("cooldown_until", 0.0)) - time.time())
+
+
+@contextmanager
+def gate(group: str, *, min_interval: float | None = None, max_wait: float | None = None):
+    """Reserve one request slot for ``group``, machine-wide.
+
+    Blocks until the group's shared ``next_ok_ts`` / ``cooldown_until`` have
+    passed, then advances ``next_ok_ts`` by the group interval. The slot is
+    reserved under the lock and slept off AFTER releasing it, so concurrent
+    workers are paced one interval apart without serializing each other.
+
+    Each wait (queueing, spacing, and a cooldown recorded while sleeping) is
+    bounded by ``max_wait``; expiry raises :class:`GateTimeout` so callers can
+    reach their degradation paths — a fast failure beats a 600s hard timeout.
+    """
+    interval = resolve_interval(group, min_interval)
+    state_dir().mkdir(parents=True, exist_ok=True)
+    wait = _reserve_slot(group, interval, max_wait)
+    if wait > 0:
+        time.sleep(wait)
+    # A sibling may have recorded a 429/503 cooldown while we waited. Dispatching
+    # straight into one is what turned a long Retry-After into per-paper hard
+    # timeouts, so check unconditionally (the reservation already covered any
+    # cooldown visible at reservation time).
+    remaining = _active_cooldown(group)
+    if remaining > 0:
+        if max_wait is not None and remaining > max_wait:
+            raise GateTimeout(
+                f"gate '{group}' cooldown {remaining:.1f}s exceeded {max_wait}s"
+            )
+        time.sleep(remaining)
+    yield
 
 
 def report_rejection(
@@ -190,9 +223,9 @@ def report_rejection(
     state_dir().mkdir(parents=True, exist_ok=True)
     lock_fd = os.open(_lock_path(group), os.O_RDWR | os.O_CREAT, 0o600)
     try:
-        # Bounded, non-blocking acquisition: a sibling process may legitimately
-        # hold this lock while sleeping out its slot, and recording the cooldown
-        # must never wedge the caller for a full cooldown period.
+        # Bounded acquisition: the lock is only held for the read-merge-write
+        # (callers no longer sleep under it), but a sibling may still be
+        # mid-write, and recording the cooldown must never wedge the caller.
         _acquire_lock(lock_fd, 10.0, group)
         state = _read_state(group)
         now = time.time()

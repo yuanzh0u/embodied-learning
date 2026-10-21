@@ -89,8 +89,9 @@
 | `wiki.py serve` | 本地起 Wiki 服务（含安全的 refresh 端点与成稿修订端点） | `python3 scripts/wiki.py serve --open`（默认读 `~/Documents/arxiv`） |
 | `wiki.py build-knowledge-map` | 把 `knowledge/index.md` 渲染成可浏览文档站（目录树 + Markdown 面板） | `python3 scripts/wiki.py build-knowledge-map` |
 | `wiki.py build-mind-omni-reader` | 为单个 run 生成 mind-omni 主站子页 | `wiki.py build-mind-omni-reader --run-dir <run-dir>` |
-| `wiki.py kb-stats` | 盘点一个 KB 根：run 数、pool 全文/精读数、wiki 话题数（`--runs-detail` 附逐 run 表） | `python3 scripts/wiki.py kb-stats --kb-root ~/Documents/arxiv` |
+| `wiki.py kb-stats` | 盘点一个 KB 根：run 数、pool 全文/精读数、wiki 话题数、检索漏斗汇总（`--runs-detail` 附逐 run 表） | `python3 scripts/wiki.py kb-stats --kb-root ~/Documents/arxiv` |
 | `wiki.py kb-search` | KB 内子串检索（run / 论文 / 证据事件 / 话题），空格分词 AND | `python3 scripts/wiki.py kb-search "外参标定" --scope events --limit 5` |
+| `wiki.py kb-funnel` | 检索→证据漏斗：逐 run 统计，或 `--layer {registry,screened,full_text,deep_read,evidence,abstract}` 查该层论文 | `python3 scripts/wiki.py kb-funnel --layer screened --run <run>` |
 | `wiki.py kb-merge` | 把多个 KB 根的成果并入目标（runs/pool/cards/slugs），默认新者胜出；**先 `--dry-run`** | `python3 scripts/wiki.py kb-merge --kb-root ~/Documents/arxiv --source /mount/TEST/public/wiki --dry-run` |
 
 详细口径与 Python 库用法见 [docs/kb-inventory.md](../docs/kb-inventory.md)。
@@ -156,7 +157,7 @@ catalog、wiki）由 launcher spawn 的 writer agent 完成，交互会话只做
 | 单篇组会汇报（reveal.js） | 已实现 | `skills/embodied-ai-review-writer/scripts/write.py paper-deck --arxiv-id <id>`（强制入池+深读，产出 `slide-deck_report.html`；编译器 `skills/embodied-ai-review-writer/scripts/write.py compile-slide-deck`，审计 `write.py audit-slide-deck`） |
 | run 级汇报（wiki 话题页） | 已实现 | wiki「汇报放映」按钮（无 deck 时确认后生成，走 `wiki.py serve` 的 `/api/deck/generate` → `skills/embodied-ai-review-writer/scripts/write.py run-deck`）；也可手跑 `write.py run-deck --run-dir <dir>`，生成后重建快照点亮入口 |
 | 单篇问答 | 已实现 | wiki「论文对话」（`skills/embodied-ai-paper-reader/scripts/read.py prepare-chat` 备料，`wiki.py serve` 服务） |
-| 批量深读（run 内） | 已实现 | driver 深读阶段并行 one-shot agents（launcher `--agents-parallel`，默认 10）；幂等：只有 audit status ∈ {pass, needs-review} 的笔记才算完成，reject/失败自动重试 |
+| 批量深读（run 内） | 已实现 | driver 深读阶段并行 one-shot agents（launcher `--agents-parallel`，默认 10）；幂等：只有 audit status ∈ {pass, needs-review} 的笔记才算完成，reject/失败自动重试。两层重试：骨架 agent 单篇 `SKELETON_AGENT_ATTEMPTS=2` 次（非零退出/不可解析/超时都重试，仅 CLI 启动失败不重试）；首轮失败且全文已恢复的论文再由 `DEEP_READ_RETRY_PASSES=1` 轮整队列补读（无 extraction 的不重试——瓶颈在抓取） |
 | 补充深读（单篇缺口） | 已实现 | `skills/embodied-ai-paper-reader/scripts/read.py build-paper-note` 单篇手跑；driver 重跑自动补 |
 | 批量入池（给裸 ID 列表建库，不入 run） | 部分（SOP） | 无专门入口：循环 `read.py quick-read` 或走一次最小 run |
 
@@ -210,11 +211,11 @@ python3 skills/embodied-ai-paper-reader/scripts/read.py quick-read --arxiv-id 23
 - **全部 stdlib-only Python 3**（解释器 `python3`，`python` 不在 PATH）；每个脚本的合同用 `--help` 查看。
 - **成稿修订（版本管理）**：已发布 run 的成稿修订走 wiki 主题对话框的「修订成稿」开关 →
   `POST /api/topic/revise` → agent 只新建 `evidence/<run>/revisions/<style>-v<N>.md`（style ∈ keyan/zhihu/xiaohongshu，
-  基底交付物即 v1，首个修订为 v2；run.json / 三件套 / trace-map.json / evidence-appendix 一律不动）→
+  基底交付物即 v0，首个修订为 v1；run.json / 三件套 / trace-map.json / evidence-appendix 一律不动）→
   agent 逐字跑三道门（build-trace-map → `revisions/trace-map-<key>.json`、audit-article-quality 单风格、`run.py audit-citations`）→
   服务端追加 `revisions/index.json`（version_key/style/request/created_at，agent 不写）→ 刷新快照 →
-  前端发 `revision_ready` 事件自动切到新版本键（如 `keyan-v2`）。快照构建会把 revisions 目录发现为
-  `available_versions` 里的新版本（label「科研备忘录 · 修订v2」等）。修订只基于现有证据集，不加文献。
+  前端发 `revision_ready` 事件自动切到新版本键（如 `keyan-v1`）。快照构建会把 revisions 目录发现为
+  `available_versions` 里的新版本（label「v1」等，版本名机械化递增）。修订只基于现有证据集，不加文献。
 - **布局解析只走 `embodied_learning/utils/layout.py`**：仓库检出与 wheel 安装（`wiki_scripts` 包目录自带打包的 `skills/` 树）两种布局都成立；禁止新增 `Path(__file__).parent.parent` 式的 REPO_ROOT 猜测——装到 site-packages 后全部失准。wheel 是自包含的：`pyproject.toml` 把 `skills/` 打成 `wiki_scripts.skills` 包数据（SKILL.md/references/agents/scripts，tests 不进包）。
 - **spawn 的 claude 代理必须隔离**：cwd=kb_root、env 走 harness 的 `isolated_claude_env()`（剥 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT` + 重定向 `CLAUDE_CONFIG_DIR` 到 `~/.cache/embodied-learning/claude-config`，凭据自动播种）——代理只能看到 KB 与打包内容，看不到 launcher 会话的记忆/代码库；认证缺失用 `claude_auth_ready()` 提前报错。
 
@@ -224,16 +225,20 @@ python3 skills/embodied-ai-paper-reader/scripts/read.py quick-read --arxiv-id 23
 
 | 入口 | 用途 |
 |---|---|
-| `complete(prompt, *, timeout_s, model, cwd, label, stream=False, stream_to=None)` | one-shot 文本完成（writer/速读/汇报/骨架/引文扩张）；`stream=True` 切 stream-json，`stream_to` 落文件 |
+| `complete(prompt, *, timeout_s, model, cwd, label, stream=False, stream_to=None, ledger=None)` | one-shot 文本完成（writer/速读/汇报/骨架/引文扩张）；非流式用 `--output-format json` 取用量信封后在 harness 内解包，调用方 stdout 仍是纯文本；`ledger` 传入则追加到调用方的会话账本 |
 | `ChatTurn` | 交互式流式回合（wiki 主题/工作流聊天） |
+| `judge_questions(state, questions, ...)` / `system_one_ready` | System One 决策模型（jev，`POST <base>/v1/systemone`，原语 Choice/Score/Noul）——不出文本，只给概率；走 `ratelimit` 的 `systemone` 组，`smart-jev` 选文调用。端点/密钥只走环境变量（`EMBODIED_SYSTEM_ONE_URL` / `EMBODIED_SYSTEM_ONE_API_KEY`，回退 `ANTHROPIC_BASE_URL` / `ANTHROPIC_AUTH_TOKEN`），不落配置文件 |
 | `resolve_cli` / `claude_auth_ready` / `isolated_claude_env` | CLI 发现、鉴权预检、隔离 spawn 环境 |
 | `build_claude_command` / `parse_stream_line` / `is_resume_failure` | 命令组装与 stream-json 协议解码 |
 | `conversation_store` / `record_agent_invocation` | 机器本地调用归档（`~/.claude/projects/embodied-learning-work/`） |
+| `session_log_path` / `open_session_log` / `session_ledger_enabled` | 用量/轨迹账本（monica usage-records-format），见「对话记录归档」 |
 
 铁律：**任何模块禁止直接 `subprocess` spawn `claude`**（历史上 launch 的 writer 旁路已被收编）；prompt 模板集中在 `embodied_learning/harness/prompt.py`，新代码直接 `from embodied_learning.harness import claude, prompt`。
 - 中间产物只进 gitignored 的 `work/`；settle 时按 run.json 的 `files` 清单拷核心文件进 `evidence/`（大 registry 需瘦身，见 run 内的 slim 说明）。
 - driver 的 stdout 协议行 `[DRIVER-STAGE:<name>] ok <detail>` 与 `[PAPER] <id> ...` 是 wiki 工作流和外部监控的解析面，改格式需同步 `embodied_learning/wiki/publish/chat.py` 的映射。
 - 离线检索：`--arxiv-snapshot` 接受 OAI JSONL 或 `search.py build-snapshot-db` 产出的 SQLite/FTS5 库；arXiv API 有 406 间歇封禁（curl 可过而 urllib 被拒），联网检索前先读 `embodied_learning/ratelimit.py` 注释与记忆条目。
+- 出站闸门语义（2026-10-21 起）：`gate()` 在锁内**只预留 slot**（推进 `next_ok_ts`），睡眠发生在**释放锁之后**——并发 worker 各持自己的 slot 并行 dispatch，而不是排队等一个正在睡的持有者。fetch 调用点传 `max_wait=FETCH_GATE_MAX_WAIT_S`（60s），冷却中直接 `GateTimeout` 快速失败交给抽取队列的 retry pass；`DEFAULT_RETRY_CAP_SECONDS`（120s）**必须**远小于 `EXTRACTION_PAPER_TIMEOUT_S`（600s），否则一次 429 就是一篇硬超时。
+- 全文缓存：driver 把 `--html-cache-dir/--pdf-cache-dir` 指到 `<kb-root>/.cache/{html,pdfs}`，跨 run、跨机器复用；`/tmp` 只是库函数被单独调用时的兜底。
 - 嵌套 claude 防护：凡从脚本里 spawn `claude -p`，必须剥掉 `CLAUDECODE` / `CLAUDE_CODE_ENTRYPOINT` / `CLAUDE_CODE_SSE_PORT`（`embodied_learning/harness/claude.py` 的 `isolated_claude_env` 是唯一参考实现）。
 - settle ≠ 完事：`run.py check-bundle` 过 + status 翻 settled 之后，必须登记 `knowledge/literature-review-catalog.md` 并重建 wiki 快照，否则该 run 对读者不可见。
 
@@ -265,6 +270,18 @@ KB 可能整体部署在局域网 CIFS 挂载上（如 `/mount/TEST/public/wiki/
 
 所有 claude 交互——主题聊天、子代理综述 writer、速读、汇报制作、深读骨架——统一归档在 **`~/.claude/projects/embodied-learning-work/`**（env `EMBODIED_CONVERSATION_STORE` 可重定向，仅测试用）：
 
-- `invocations.jsonl`：逐次调用索引（kind/label/model/cwd/returncode/时长）。
+- `invocations.jsonl`：逐次调用索引（kind/label/model/cwd/returncode/时长，含 `session_id`/`num_turns`/`cost_usd`/`usage` 四字段汇总）。
 - `<kind>/<时间戳>-<pid>-<label>/`：每次调用的 `prompt.md`、`output.txt`（one-shot 含 stderr）、`meta.json`；`kind` 分 `one-shot`（`embodied_learning/harness/claude.py` 的 `complete()` 所有调用方：writer、速读、深读骨架、汇报 slide-source、引文扩张 agent 等，可用 `label` 标注论文 ID/run 名）与 `chat`（wiki 主题/工作流聊天的原始 stream-json 转录，`embodied_learning/wiki/publish/chat.py` 的 `ChatTurn`）。
 - `chat-sessions/<kb-hash>/chat-sessions.json`：wiki 对话历史的机器本地缓存（按 kb-root 哈希分库；同机多端口同 KB 共享一份）。共享 KB 上只保留**成果输出**：evidence/、pool/、knowledge/、work/<run>/、wiki 快照。
+
+### 用量/轨迹账本（monica `usage-records-format`）
+
+归档目录根下另有 `usage-<kind>-<YYYYMMDD>-<HHMMSS>-<pid>-<label>.jsonl`，供 monica 004 成本分析与 005 loglens 直接消费（格式见 `/home/ming/code/monica/spec/usage-records-format.md`）：
+
+- **位置**：直接放在 store 根目录，**不建日期子目录**——monica 用 `path.parent.name` 作 `project`，子目录会让归属退化为日期/杂项；store 目录名 `embodied-learning-work` 命中 repo 规则（W-ai-dev）。
+- **基础层**（账单）：`type=assistant` + 带时区 `timestamp` + `message.{id,model,usage.{input_tokens,output_tokens,cache_read_input_tokens,cache_creation_input_tokens}}`。`message.id` 用 CLI 信封的 `session_id`，重试不共享去重键；同一调用的多模型走 `modelUsage` 各记一行。
+- **扩展层**（loglens）：`type=system` + `level`(error/warn/info/debug) + `kind`(step/error/warn/metric/note) + `text` + `attrs`。driver 每个机械阶段写 step + 耗时 metric，失败写 error；ChatTurn 每回合写去重后的 usage + 一条 `chat` metric（含 `tool_calls`/`cost_usd`/`num_turns`）。
+- **粒度**：driver 全程只开**一个** `usage-pipeline-*` 文件（`open_session_log("pipeline", run_dir.name)`，所有 `run_stage` 与 one-shot agent 共用）；driver 同时导出 `EMBODIED_AGENT_LEDGER=<该文件>`，让子进程阶段脚本（smart 选文、S2 扩张等）里的 agent 调用也追加进同一文件。其余 one-shot 调用各开一个 `usage-one-shot-*`；ChatTurn 每回合一个 `usage-chat-*`。
+- **隐私（D9）**：不写 prompt/回复全文；事件 `text` 截断到 `SESSION_EVENT_TEXT_MAX_CHARS`（300），命令类 `attrs` 由 `TOOL_COMMAND_DETAIL_MAX_CHARS` 约束。
+- **开关**：`EMBODIED_AGENT_SESSION_LOG=0|false|no|off` 关闭；任何写盘失败都静默降级（`SessionLog` 吞 OSError），绝不影响模型调用。
+- **去重语义**：读取端按 `message.id` 只保留 `output_tokens` 最大的一条；无 id 的行独立计数。账本每行写完即 flush，进程被杀也能保留已发生的轨迹。

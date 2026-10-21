@@ -442,16 +442,24 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertEqual(
             topic["available_versions"], ["keyan", "keyan-v2", "keyan-v3"]
         )
+        # Style identity on the base key; landing version = the latest revision.
         self.assertEqual(manifest["topics"][0]["default_version"], "keyan")
+        self.assertEqual(manifest["topics"][0]["latest_version"], "keyan-v3")
+        self.assertEqual(topic["latest_version"], "keyan-v3")
+        v0 = topic["versions"]["keyan"]
+        self.assertEqual(v0["label"], "v0")
         v2 = topic["versions"]["keyan-v2"]
-        self.assertEqual(v2["label"], "科研备忘录 · 修订v2")
+        self.assertEqual(v2["label"], "v1")
+        self.assertEqual(v2["style_label"], "科研备忘录")
         self.assertEqual(v2["based_on"], "keyan")
         self.assertEqual(v2["revision"], 2)
         self.assertEqual(v2["request"], "开头加落地建议")
+        self.assertEqual(v2["scope"], "开头加落地建议")
         self.assertEqual(v2["source_file"], "revisions/keyan-v2.md")
         # keyan revisions keep the citation superscript reader links.
         self.assertIn("/api/reader/2601.00001", v2["html"])
         v3 = topic["versions"]["keyan-v3"]
+        self.assertEqual(v3["label"], "v2")
         self.assertEqual(v3["revision"], 3)
         self.assertEqual(v3["request"], "")
         validated = wiki.validate_snapshot(self.output)
@@ -501,12 +509,20 @@ class BuildResearchWikiTest(unittest.TestCase):
         )
         self.assertEqual(topic["available_versions"], ["keyan", "keyan-r1"])
         r1 = topic["versions"]["keyan-r1"]
-        self.assertEqual(r1["label"], "科研备忘录 · 第1轮综述")
+        # Chronological labels: the OLDEST run is v0, the newer winner is v1.
+        self.assertEqual(r1["label"], "v0")
+        self.assertEqual(r1["version_index"], 0)
+        self.assertEqual(r1["style_label"], "科研备忘录")
         self.assertEqual(r1["based_on"], "keyan")
         self.assertTrue(r1["cross_run"])
         self.assertIn("地面箭头提取-20260928", r1["run_directory"])
-        # The winner's own memo is still the default view.
+        winner = topic["versions"]["keyan"]
+        self.assertEqual(winner["label"], "v1")
+        self.assertEqual(winner["version_index"], 1)
+        # Style identity stays on the winner; the landing version is the latest.
         self.assertEqual(manifest["topics"][0]["default_version"], "keyan")
+        self.assertEqual(manifest["topics"][0]["latest_version"], "keyan")
+        self.assertEqual(topic["latest_version"], "keyan")
         # Old-run evidence appendix stays in the old run dir, untouched.
         self.assertTrue((old_run / "evidence-appendix.md").is_file())
 

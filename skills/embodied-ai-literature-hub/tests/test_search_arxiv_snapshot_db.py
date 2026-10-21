@@ -4,13 +4,21 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 
-SNAPSHOT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "search" / "arxiv_snapshot.py"
-DB_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "search" / "arxiv_snapshot_db.py"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+# arxiv_snapshot_db imports embodied_learning.search.arxiv_snapshot as a real
+# package import — put the repo root first so it does not resolve to a stale
+# installed wheel (2026-10-16: the wheel lacked select_balanced_by_year).
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+SNAPSHOT_PATH = REPO_ROOT / "embodied_learning" / "search" / "arxiv_snapshot.py"
+DB_PATH = REPO_ROOT / "embodied_learning" / "search" / "arxiv_snapshot_db.py"
 SNAP_SPEC = importlib.util.spec_from_file_location("snapshot_for_db_test", SNAPSHOT_PATH)
 snap = importlib.util.module_from_spec(SNAP_SPEC)
 assert SNAP_SPEC and SNAP_SPEC.loader
@@ -58,9 +66,9 @@ RECORDS = [
 ]
 
 
-def build_test_db() -> str:
+def build_test_db(records: list[dict] | None = None) -> str:
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
-        for record in RECORDS:
+        for record in RECORDS if records is None else records:
             handle.write(json.dumps(record) + "\n")
         jsonl = handle.name
     with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as handle:
@@ -162,10 +170,58 @@ class SnapshotDbSearchTest(unittest.TestCase):
         result = run_query(self.db, "all:epic")
         self.assertTrue(result["papers"][0]["published"].startswith("2018-04-08"))
 
-    def test_order_newest_first(self) -> None:
+    def test_order_relevance_first(self) -> None:
+        """Default sort is relevance (bm25), not newest-first. The EPIC-KITCHENS
+        title/abstract hits 'egocentric' more densely than the Ego-Exo4D record."""
         result = run_query(self.db, "all:egocentric")
+        ids = [p["arxiv_id"] for p in result["papers"]]
+        self.assertEqual(result["sort_by"], "relevance")
+        self.assertEqual(len(ids), 2)
+        # Both match; the denser one (EPIC-KITCHENS: 'Egocentric' in title AND
+        # abstract) must not be displaced by the newer paper's date.
+        self.assertIn("1804.02748", ids)
+        self.assertIn("2311.18259", ids)
+
+    def test_date_sort_when_requested(self) -> None:
+        result = run_query(self.db, "all:egocentric", sort_by="submittedDate")
         published = [p["published"] for p in result["papers"]]
         self.assertEqual(published, sorted(published, reverse=True))
+
+    def test_relevance_cut_drops_marginal_matches(self) -> None:
+        """Top-``max_results`` is by bm25, so a dense match survives while a
+        marginal (but newer) one is cut — not the other way round."""
+        records = [
+            {
+                "id": "2601.0001", "title": "A general robotics paper",
+                "abstract": "machines and control theory " * 8,
+                "authors": "A. Author", "categories": "cs.RO",
+                "versions": [{"version": "v1", "created": "Fri, 1 Jan 2026 10:00:00 GMT"}],
+                "update_date": "2026-02-01", "comments": "", "journal-ref": "",
+            },
+            {
+                "id": "1804.0001", "title": "Egocentric video benchmark",
+                "abstract": "egocentric video benchmark egocentric video " * 3,
+                "authors": "A. Author", "categories": "cs.CV",
+                "versions": [{"version": "v1", "created": "Sun, 8 Apr 2018 12:00:00 GMT"}],
+                "update_date": "2018-05-01", "comments": "", "journal-ref": "",
+            },
+            {
+                "id": "2301.0001", "title": "Egocentric vision",
+                "abstract": "egocentric",
+                "authors": "A. Author", "categories": "cs.CV",
+                "versions": [{"version": "v1", "created": "Sun, 1 Jan 2023 12:00:00 GMT"}],
+                "update_date": "2023-02-01", "comments": "", "journal-ref": "",
+            },
+        ]
+        db = build_test_db(records)
+        # Both 1804.0001 (dense title+abstract) and 2301.0001 (title-only) match
+        # `egocentric`; the 2026 general paper does not. max_results=1 must keep
+        # the densest and cut the marginal one — and report the cut.
+        result = run_query(db, "all:egocentric", max_results=1)
+        self.assertEqual([p["arxiv_id"] for p in result["papers"]], ["1804.0001"])
+        meta = result["queries"][0]
+        self.assertTrue(meta["capped"])
+        self.assertGreaterEqual(meta["matched"], 2)
 
     def test_batch_shape(self) -> None:
         result = run_query(self.db, "all:ego")
@@ -225,7 +281,7 @@ class SnapshotDbSearchTest(unittest.TestCase):
                 for row in connection.execute(
                     "SELECT p.id FROM papers p JOIN fts f ON f.rowid = p.rowid_alias"
                     " WHERE fts MATCH ? AND p.v1_date >= ? AND p.v1_date <= ?"
-                    " ORDER BY p.v1_date DESC, p.id",
+                    " ORDER BY bm25(fts) ASC, p.v1_date DESC, p.id",
                     (sql_expr, int(low), int(high)),
                 ).fetchall()
             ]

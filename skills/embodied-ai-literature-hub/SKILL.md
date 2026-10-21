@@ -105,7 +105,9 @@ introduction + related work), then retrieves the ~50 most task-relevant papers w
 snippet). Relevance is *shown*, not asserted. Use it when evidence answers the headline
 topic but leaves sub-questions open.
 
-Four-stage budget funnel — expensive steps only touch a few papers:
+Four-stage **budget funnel** (预算漏斗) — expensive steps only touch a few papers. This is a
+per-command truncation ladder for `rank-problem-relevance`, not the run-wide retrieval funnel
+(候选 → 选文 → 全文 → 深读 → 证据, published as `funnel.json`):
 
 | Stage | Who | Input → Output | Budget |
 |---|---|---|---|

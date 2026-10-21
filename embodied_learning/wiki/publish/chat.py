@@ -113,13 +113,30 @@ WORKFLOW_STAGE_NAMES = (
 # the frontend timeline lights the same pills: plan/retrieval/mining map from
 # driver stage names; unknown names pass through.
 DRIVER_STAGE_RE = re.compile(r"^\[DRIVER-STAGE:([a-z_-]+)\]\s*(.*)$")
+# Driver stage name (and brief tag) -> workflow timeline section. Retrieval
+# work (arXiv search, recall rounds, registry merge) must land under
+# "retrieval" — unmapped names used to default to "mining", so recall/registry
+# completions and the 检索命中 brief piled into 全文挖掘 (2026-10-16).
 DRIVER_STAGE_TO_WORKFLOW = {
     "plan": "plan",
+    "terms": "plan",
+    "retrieval": "retrieval",
     "retrieval-arxiv": "retrieval",
+    "recall-author": "retrieval",
+    "recall-title": "retrieval",
+    "known-works": "retrieval",
+    "registry": "retrieval",
+    "citation-expansion": "retrieval",
     "screening": "mining",
+    "selection": "mining",
     "coverage": "mining",
+    "coverage-final": "mining",
     "extraction": "mining",
     "packets": "mining",
+    "deep-read": "mining",
+    "project": "mining",
+    "abstract-evidence": "mining",
+    "review-packet": "packet",
     "summary": "mining",
 }
 
@@ -234,12 +251,19 @@ def extract_driver_stage(line: str) -> tuple[str, str] | None:
 
     The driver runs before claude in a kickoff; the server forwards its
     progress onto the same timeline so the user sees plan → retrieval →
-    mining advance in code, not in agent narration."""
+    mining advance in code, not in agent narration. The detail carries the
+    driver stage name so multiple completions inside one workflow node stay
+    distinguishable (recall-author vs recall-title vs registry)."""
 
     match = DRIVER_STAGE_RE.match(line.strip())
     if not match:
         return None
-    return DRIVER_STAGE_TO_WORKFLOW.get(match.group(1), "mining"), match.group(2).strip()
+    driver_name = match.group(1)
+    detail = match.group(2).strip()
+    if detail.startswith("ok "):
+        detail = detail[3:]
+    detail = f"{driver_name}: {detail}" if detail else driver_name
+    return DRIVER_STAGE_TO_WORKFLOW.get(driver_name, "mining"), detail
 
 
 def extract_driver_phase(line: str) -> tuple[str, str] | None:

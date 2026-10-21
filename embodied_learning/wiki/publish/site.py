@@ -204,7 +204,7 @@ def _article_bodies(
     directory = _source_directory(repo_root, topic)
     renderer = StaticMarkdownRenderer(repo_root, directory, repository_url)
     versions = topic.get("versions")
-    default_version = topic.get("default_version")
+    default_version = topic.get("latest_version") or topic.get("default_version")
     if not isinstance(versions, dict) or default_version not in versions:
         raise RuntimeError(f"专题缺少有效默认正文：{topic.get('id')}")
     version = versions[default_version]

@@ -57,10 +57,11 @@ Knowledge-base integrity and ID allocation (top-level `scripts/`):
 python3 scripts/wiki.py check-kb-links            # broken links, unregistered source IDs, line-number locators
 python3 scripts/wiki.py kb-stats [--kb-root ...] [--json] [--runs-detail]   # inventory: runs, pool full-text/deep-read, wiki topics (docs/kb-inventory.md)
 python3 scripts/wiki.py kb-search "query" [--scope all|runs|papers|events|topics] [--limit N]   # substring search across the KB
+python3 scripts/wiki.py kb-funnel [--layer registry|screened|full_text|deep_read|evidence|abstract] [--run NAME] [--sort ...] [--limit N] [--json]   # retrieval→evidence funnel per run, or the papers in one layer (published funnel.json)
 python3 scripts/wiki.py kb-merge --kb-root <target> --source <src> [--source ...] [--dry-run]   # fold runs/pool/cards/slugs into target (newer wins; docs/kb-inventory.md)
 python3 scripts/run.py next-event-id --prefix EA-TWM-2026   # next collision-free evidence event ID
 python3 scripts/run.py init --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
-python3 scripts/run.py pipeline --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 12 / scoping 22 / systematic 43) -> projection (stamps run.json event_count/evidence_papers) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
+python3 scripts/run.py pipeline --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 12 / scoping 22 / systematic 43) -> projection (stamps run.json event_count/evidence_papers) -> funnel.json (six-layer retrieval funnel, published by finalize) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
 python3 scripts/run.py check-bundle <run-dir>           # bundle completeness gate (pre-settle)
 python3 scripts/run.py audit-citations --article ... --appendix ... --evidence-jsonl ...   # citation gate
 python3 scripts/run.py finalize --run-dir <run-dir> --kb-root <kb-root>   # mechanical settle: stamp run.json fields -> cited-paper floor gate (rapid 6 / scoping 10 / systematic 15 distinct papers) -> both gates -> publish evidence/ -> settled -> catalog row -> wiki snapshot
@@ -82,10 +83,13 @@ LiDAR/SLAM/calibration topics) — an unregistered run is invisible in the wiki.
 
 **Post-settle revisions are additive versions.** The wiki topic chat's 修订成稿 toggle (`POST
 /api/topic/revise`) regenerates one deliverable as `evidence/<run>/revisions/<style>-v<N>.md`
-(base deliverable = v1, first revision = v2; provenance in `revisions/index.json`, written by the
-server only). The snapshot builder publishes each revision as its own version key (`keyan-v2`)
-ordered after its base style; the base deliverables, `run.json`, `trace-map.json`, and
-`evidence-appendix.md` are never edited. Revisions use the run's existing evidence set only.
+(file numbering: base deliverable = v0, first revision = v1; provenance in `revisions/index.json`,
+written by the server only). The snapshot builder publishes each revision as its own version key
+(`keyan-v1`) ordered after its base style, and labels the whole per-style chain **chronologically**
+(`v0` = oldest — a superseded 第N轮综述 run or the base — then newer revisions); `latest_version`
+is the landing version a reader opens, so the default is never a stale `v0`. The base deliverables,
+`run.json`, `trace-map.json`, and `evidence-appendix.md` are never edited. Revisions use the run's
+existing evidence set only.
 
 Note: repo-wide `unittest discover -s skills` finds **0 tests** — the hyphenated skill directories
 are not importable packages and have no `__init__.py`. Always scope to a `*/tests` directory or a file.

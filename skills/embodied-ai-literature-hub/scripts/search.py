@@ -121,7 +121,7 @@ def _search_arxiv_parse_args(argv: list[str] | None = None) -> argparse.Namespac
     parser.add_argument("--end-date", required=True, help="Inclusive YYYY-MM-DD submitted date.")
     parser.add_argument("--max-results", type=int, default=25, help="Results per query for this discovery batch.")
     parser.add_argument("--batch-label", help="Stable round label stored for candidate-registry saturation analysis.")
-    parser.add_argument("--sort-by", default="submittedDate", choices=["relevance", "lastUpdatedDate", "submittedDate"])
+    parser.add_argument("--sort-by", default="relevance", choices=["relevance", "lastUpdatedDate", "submittedDate"])
     parser.add_argument("--sort-order", default="descending", choices=["ascending", "descending"])
     parser.add_argument("--sleep-seconds", type=float, default=3.0, help="Delay between multiple API requests.")
     parser.add_argument("--timeout", type=float, default=20.0, help="Per-request timeout in seconds.")
@@ -401,7 +401,7 @@ def _screen_candidates_parse_args(argv: list[str] | None = None) -> argparse.Nam
     parser.add_argument("--terms", required=True, help="Comma-separated title/abstract relevance terms.")
     parser.add_argument("--query-label-prefix", action="append", default=[], help="Prefer discoveries whose query label starts with this prefix.")
     parser.add_argument("--seed-evidence-jsonl", action="append", default=[], help="Previously accepted evidence used only as a priority seed.")
-    parser.add_argument("--limit", type=int, default=40, help="Number of candidates to queue for full-text recovery.")
+    parser.add_argument("--limit", type=int, default=None, help="Optional cap on the recovery queue; default queues every matched candidate.")
     parser.add_argument("--output-screening", required=True)
     parser.add_argument("--output-ids", required=True)
     parser.add_argument("--output-markdown")
@@ -425,30 +425,34 @@ def _screen_candidates_main(argv: list[str] | None = None) -> int:
 
 import argparse
 
-from embodied_learning.config import SELECTION_TIMEOUT_S  # noqa: E402
+from embodied_learning.config import SELECTION_TIMEOUT_S, SMART_JEV_RELEVANCE_THRESHOLD  # noqa: E402
 from embodied_learning.search.selection import run_select  # noqa: E402
 
-SELECTION_STRATEGIES = ("bm25", "influence", "keywords", "smart")
+SELECTION_STRATEGIES = ("bm25", "influence", "keywords", "smart", "smart-jev")
 
 
 def _select_candidates_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Rank a candidate registry into the deep-read queue with one "
-        "selection strategy (bm25 / influence / smart). The keywords strategy is "
-        "NOT implemented here — screen-candidates owns it."
+        "selection strategy (bm25 / influence / smart / smart-jev). The keywords "
+        "strategy is NOT implemented here — screen-candidates owns it."
     )
     parser.add_argument("--registry", required=True, help="candidate-registry.json.")
     parser.add_argument("--strategy", required=True, choices=SELECTION_STRATEGIES)
     parser.add_argument("--topic", required=True, help="Review topic (the bm25/smart query).")
     parser.add_argument("--focus", default="", help="Interview focus text appended to the query.")
     parser.add_argument("--terms", default="", help="Comma-separated English terms augmenting the bm25 query (a pure-Chinese topic tokenizes to nothing).")
-    parser.add_argument("--limit", required=True, type=int, help="Deep-read queue size.")
     parser.add_argument("--output-screening", required=True)
     parser.add_argument("--output-ids", required=True)
     parser.add_argument("--output-markdown")
     parser.add_argument("--complete-cli", help="claude binary for the smart strategy (default: harness resolve_cli).")
     parser.add_argument("--complete-model", help="Model for the smart strategy (default: harness DRIVER_AGENT_MODEL).")
     parser.add_argument("--complete-timeout", type=float, default=SELECTION_TIMEOUT_S, help="Smart-agent timeout in seconds (per chunk).")
+    parser.add_argument(
+        "--selection-threshold", type=float,
+        default=SMART_JEV_RELEVANCE_THRESHOLD,
+        help="smart-jev only: keep candidates whose decision-model probability clears this.",
+    )
     return parser.parse_args(argv)
 
 
@@ -459,7 +463,6 @@ def _select_candidates_main(argv: list[str] | None = None) -> int:
         args.strategy,
         args.topic,
         args.focus,
-        args.limit,
         args.output_screening,
         args.output_ids,
         args.output_markdown,
@@ -467,6 +470,7 @@ def _select_candidates_main(argv: list[str] | None = None) -> int:
         cli=args.complete_cli,
         model=args.complete_model,
         timeout_s=args.complete_timeout,
+        threshold=args.selection_threshold,
     )
 
 # ---- assess-review-coverage (was scripts/assess_review_coverage.py) ------------------

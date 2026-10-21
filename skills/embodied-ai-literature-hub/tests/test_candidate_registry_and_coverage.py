@@ -60,6 +60,36 @@ class CandidateRegistryAndCoverageTest(unittest.TestCase):
         self.assertEqual({"core", "limit"}, labels)
         self.assertEqual(3, len(result["batches"]))
 
+    def test_candidates_keep_discovery_order_not_arxiv_id_order(self) -> None:
+        """2026-10-20 自监督预训练 run：registry 曾按 arXiv ID 字典序输出，
+        最早的 2021-2022 论文排在最前；smart 选文按该顺序分块，截断后又按
+        命中顺序取前 120，精读队列全落在 2021-2022。改为按发现（检索）顺序
+        输出，让检索端的相关性排序一路传到选文与深读。"""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            newest_first = root / "round-1.json"
+            newest_first.write_text(
+                json.dumps({"batch": "r1", "papers": [
+                    {"arxiv_id": "2602.00001", "title": "Newest, ranked first"},
+                    {"arxiv_id": "2112.00001", "title": "Old, ranked second"},
+                ]}),
+                encoding="utf-8",
+            )
+            second_round = root / "recall-title.json"
+            second_round.write_text(
+                json.dumps({"batch": "recall-title", "papers": [
+                    {"arxiv_id": "2401.00001", "title": "New in a recall round"},
+                ]}),
+                encoding="utf-8",
+            )
+
+            result = registry_module.build_registry([newest_first, second_round], [])
+
+        self.assertEqual(
+            ["2602.00001", "2112.00001", "2401.00001"],
+            [candidate["arxiv_id"] for candidate in result["candidates"]],
+        )
+
     def test_citation_results_get_a_truthful_channel_and_carry_coupling_fields(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

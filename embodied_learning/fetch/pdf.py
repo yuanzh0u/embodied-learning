@@ -22,6 +22,8 @@ import urllib.request
 from pathlib import Path
 
 from embodied_learning import ratelimit
+from embodied_learning.atomicio import atomic_write_bytes
+from embodied_learning.config import FETCH_GATE_MAX_WAIT_S
 
 
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "pdfs")
@@ -64,8 +66,15 @@ def download(url: str, target: Path, timeout: float = 90.0) -> None:
         url,
         headers={"User-Agent": "embodied-ai-literature-hub/1.0 (research workflow)"},
     )
-    with ratelimit.gated_urlopen(request, group="arxiv", timeout=max(1.0, timeout)) as response:
-        target.write_bytes(response.read())
+    with ratelimit.gated_urlopen(
+        request,
+        group="arxiv",
+        timeout=max(1.0, timeout),
+        max_wait=FETCH_GATE_MAX_WAIT_S,
+    ) as response:
+        # Atomic: the cache dir may live on a shared KB mount where another
+        # machine reads the file while this one writes it.
+        atomic_write_bytes(target, response.read())
 
 
 def extract_pages(pdf_file: Path, max_pages: int) -> list[dict[str, object]]:

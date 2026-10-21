@@ -11,6 +11,7 @@ from _entry import invoke
 
 import importlib.util
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -56,6 +57,12 @@ class PreparePipelineTest(unittest.TestCase):
         self.addCleanup(self.tmp.cleanup)
         self.kb_root = Path(self.tmp.name) / "kb"
         self.kb_root.mkdir()
+        # The harness writes a usage/trace ledger; keep it out of the archive.
+        env = mock.patch.dict(
+            os.environ, {"EMBODIED_CONVERSATION_STORE": str(Path(self.tmp.name) / "store")}
+        )
+        env.start()
+        self.addCleanup(env.stop)
 
     def run_main(self, argv, *, extraction_fails=False, deep_status="pass"):
         """One unified subprocess fake covering every command the script may

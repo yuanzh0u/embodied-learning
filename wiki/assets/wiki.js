@@ -36,6 +36,10 @@
   // Tool calls worth a permanent dialog line in the workflow pane (everything
   // else only ticks the transient status spinner).
   const WORKFLOW_LOG_TOOLS = new Set(["Bash", "Write", "Edit", "MultiEdit", "NotebookEdit", "Task"]);
+  // Path-only tool calls whose journal line carries the agent's stated reason
+  // (`evt.reason`, captured by the harness from the preceding narration).
+  // Bash already logs its whole command, so it needs none.
+  const WORKFLOW_REASON_TOOLS = new Set(["Write", "Edit", "MultiEdit", "NotebookEdit"]);
   // Per-item progress bar labels, keyed by the driver's [DRIVER-PROGRESS:name].
   const WORKFLOW_PROGRESS_LABELS = {
     extract: "全文抽取",
@@ -132,7 +136,8 @@
     articleTitle: el("article-title"),
     articleExcerpt: el("article-excerpt"),
     versionTabs: el("version-tabs"),
-    revisionChips: el("revision-chips"),
+    versionSelect: el("version-select"),
+    versionSelectWrap: el("version-select-wrap"),
     latestBadge: el("article-kicker")?.querySelector(".latest-badge") || null,
     versionArticleTitle: el("version-article-title"),
     readingLength: el("reading-length"),
@@ -188,6 +193,7 @@
     homeChatSend: el("home-chat-send"),
     interviewCard: el("interview-card"),
     chatModel: el("chat-model"),
+    reviseToggle: el("revise-toggle"),
     readerViewHeader: el("reader-view-header"),
     readerViewId: el("reader-view-id"),
     readerViewTitle: el("reader-view-title"),
@@ -234,7 +240,11 @@
   }
 
   function canonicalHref(topic) {
-    return topic?.canonical_path ? topic.canonical_path.replace(/^\/+/, "") : "research/";
+    if (topic?.canonical_path) return topic.canonical_path.replace(/^\/+/, "");
+    // Local KBs publish a schema-v1 snapshot: no public slug exists, so the
+    // permanent address of a topic is its in-wiki route, not /research/.
+    if (topic?.id) return `#/topic/${encodeURIComponent(topic.id)}`;
+    return "research/";
   }
 
   function shouldUseNativeLink(event) {
@@ -243,6 +253,37 @@
 
   function topicDefaultVersion(topic) {
     return topic?.default_version || state.manifest?.site?.default_version || "zhihu";
+  }
+
+  // Landing version = the latest of the default style's chain (snapshot's
+  // `latest_version`), so opening a topic never parks the reader on a stale
+  // v0 while a newer revision/run exists. Manifest items carry the field
+  // without the versions dict; older snapshots fall back to the style key.
+  function topicLandingVersion(topic) {
+    if (!topic) return topicDefaultVersion(topic);
+    if (topic.latest_version && (!topic.versions || topic.versions[topic.latest_version])) {
+      return topic.latest_version;
+    }
+    return topicDefaultVersion(topic);
+  }
+
+  // Latest version key of one style's chain (style tabs land here too).
+  function latestStyleVersion(topic, style) {
+    const versions = topic?.versions || {};
+    let best = style;
+    let bestIndex = -1;
+    for (const key of Object.keys(versions)) {
+      const entry = versions[key];
+      if (!entry || entry.survey) continue;
+      const based = entry.based_on || key;
+      if (based !== style) continue;
+      const index = entry.version_index ?? -1;
+      if (index > bestIndex) {
+        bestIndex = index;
+        best = key;
+      }
+    }
+    return bestIndex >= 0 ? best : style;
   }
 
   function openTopicFromLink(event, element, version = null) {
@@ -378,7 +419,7 @@
 
   function setRoute(topicId, version = null, replace = false) {
     const manifestItem = state.manifest?.topics.find((item) => item.id === topicId);
-    const selectedVersion = version || topicDefaultVersion(manifestItem);
+    const selectedVersion = version || topicLandingVersion(manifestItem);
     const hash = `#/topic/${encodeURIComponent(topicId)}?version=${selectedVersion}`;
     if (replace) history.replaceState(null, "", hash);
     else location.hash = hash;
@@ -412,7 +453,7 @@
         state.topicCache.set(identifier, topic);
       }
       state.topic = topic;
-      const fallbackVersion = topicDefaultVersion(topic);
+      const fallbackVersion = topicLandingVersion(topic);
       state.version = topic.versions[requestedVersion] ? requestedVersion : fallbackVersion;
       state.drawerMode = null;
       state.expandedFields.add(topic.field);
@@ -463,17 +504,23 @@
     nodes.deckButton.title = topic.slide_deck?.available
       ? "打开汇报放映件" : "还没有放映件：点击生成（约 5-10 分钟）";
     const available = topic.available_versions || Object.keys(topic.versions);
-    nodes.versionTabs.innerHTML = Object.entries(topic.versions).map(([key, item]) =>
-      `<button type="button" role="tab" data-version="${escapeHtml(key)}">${escapeHtml(item.label || VERSION_LABELS[key] || key)}</button>`
+    // Style tabs: mutually exclusive 3-way switch (keyan/zhihu/xiaohongshu).
+    // Show however many base styles actually exist; versions of the active
+    // style live in the adjacent dropdown (v0/v1/v2…), never mixed into tabs.
+    const styleKeys = ["keyan", "zhihu", "xiaohongshu"];
+    const activeEntry = topic.versions[state.version] || {};
+    const activeStyle = activeEntry.based_on || (styleKeys.includes(state.version) ? state.version : "");
+    const baseStyles = styleKeys.filter((key) => available.includes(key));
+    nodes.versionTabs.innerHTML = baseStyles.map((key) =>
+      `<button type="button" role="tab" data-style="${escapeHtml(key)}">${escapeHtml(VERSION_LABELS[key] || key)}</button>`
     ).join("");
-    [...nodes.versionTabs.querySelectorAll("[data-version]")].forEach((button) => {
-      const present = available.includes(button.dataset.version);
-      button.hidden = !present;
-      const active = button.dataset.version === state.version;
+    [...nodes.versionTabs.querySelectorAll("[data-style]")].forEach((button) => {
+      const active = button.dataset.style === activeStyle;
       button.setAttribute("aria-selected", String(active));
       button.tabIndex = active ? 0 : -1;
+      button.classList.toggle("is-active", active);
     });
-    renderRevisionChips(topic, available);
+    renderVersionSelect(topic, available, activeStyle);
     nodes.tocPanel.hidden = false;
     renderToc(version.toc || []);
     renderFieldTree();
@@ -489,43 +536,47 @@
     return String(versionKey || "").replace(/-v\d+$/, "");
   }
 
-  function renderRevisionChips(topic, available) {
-    // Per-style revision history: chips list the active style's base + its
-    // revisions (keyan-v2 …), driven purely by the snapshot's versions map.
-    const chips = nodes.revisionChips;
-    if (!chips) return;
-    const current = topic.versions[state.version];
-    const base = current?.based_on || state.version;
-    const revisions = available
-      .filter((key) => topic.versions[key]?.based_on === base)
-      .sort((a, b) => (topic.versions[a].revision || 0) - (topic.versions[b].revision || 0));
-    // Standalone documents (survey-*.md 补注/讨论稿) belong to the topic, not
-    // to one style — always listed after the style's revisions.
-    const styleKeys = ["keyan", "zhihu", "xiaohongshu"];
-    const docs = available.filter((key) => !styleKeys.includes(key) && !topic.versions[key]?.based_on);
-    if (!revisions.length && !docs.length) {
-      chips.hidden = true;
-      chips.innerHTML = "";
-    } else {
-      chips.hidden = false;
-      chips.innerHTML = revisions.map((key) => {
+  function renderVersionSelect(topic, available, activeStyle) {
+    // Version dropdown beside the style tabs: v0 (base), v1, v2… for the
+    // active style — mechanical names only. What changed between versions
+    // lives in each entry's `scope` (research-scope description), shown as
+    // the option title and the current-version caption, never in the name.
+    const select = nodes.versionSelect;
+    const wrap = nodes.versionSelectWrap;
+    if (!select || !wrap) return;
+    const chain = available
+      .filter((key) => {
         const entry = topic.versions[key];
-        const active = key === state.version;
-        // Chip text stays tiny (导航栏空间紧张): 修订v2 / 第1轮; the request
-        // and full label live in the tooltip only.
-        const name = entry.cross_run
-          ? `第${entry.revision}轮`
-          : `修订v${entry.revision}`;
-        return `<button type="button" class="revision-chip${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.request || entry.label || name)}">${escapeHtml(name)}</button>`;
-      }).join("")
-        + docs.map((key) => {
-            const entry = topic.versions[key];
-            const active = key === state.version;
-            return `<button type="button" class="revision-chip revision-chip-doc${active ? " is-active" : ""}" data-version="${escapeHtml(key)}" title="${escapeHtml(entry.article_title || entry.label)}">📄${escapeHtml(entry.label)}</button>`;
-          }).join("");
+        if (!entry) return false;
+        if (entry.survey) return false;
+        const based = entry.based_on || key;
+        return based === (activeStyle || based);
+      })
+      .sort((a, b) => (topic.versions[a].version_index ?? 0) - (topic.versions[b].version_index ?? 0));
+    const docs = available.filter((key) => topic.versions[key]?.survey);
+    const current = topic.versions[state.version];
+    const options = [
+      ...chain.map((key) => {
+        const entry = topic.versions[key];
+        return `<option value="${escapeHtml(key)}" title="${escapeHtml(entry.scope || entry.request || "")}">${escapeHtml(entry.label || `v${entry.version_index ?? 0}`)}</option>`;
+      }),
+      ...docs.map((key) => {
+        const entry = topic.versions[key];
+        return `<option value="${escapeHtml(key)}" title="${escapeHtml(entry.scope || entry.article_title || "")}">📄 ${escapeHtml(entry.label || key)}</option>`;
+      }),
+    ];
+    if (!options.length) {
+      wrap.hidden = true;
+      select.innerHTML = "";
+    } else {
+      wrap.hidden = false;
+      select.innerHTML = options.join("");
+      select.value = state.version;
     }
     if (nodes.latestBadge) {
-      nodes.latestBadge.textContent = current?.revision ? `修订版 v${current.revision}` : "最新版本";
+      const label = current?.label || (current?.version_index != null ? `v${current.version_index}` : "");
+      nodes.latestBadge.textContent = current ? label : "最新版本";
+      nodes.latestBadge.title = current?.scope || current?.request || "";
     }
   }
 
@@ -636,7 +687,11 @@
   }
 
   function absoluteCanonical(topic = state.topic) {
-    return new URL(canonicalHref(topic), document.baseURI).href.split("#")[0];
+    const url = new URL(canonicalHref(topic), document.baseURI).href;
+    // v2 snapshots have a real /research/<slug>/ page; a v1 local snapshot
+    // only has the hash route, so keep the fragment (dropping it would hand
+    // the AI the bare wiki root instead of this topic).
+    return topic?.canonical_path ? url.split("#")[0] : url;
   }
 
   function buildAiPrompt(task = "summary") {
@@ -650,7 +705,7 @@ English title: ${topic.title_en || "未标注"}
 Canonical: ${absoluteCanonical(topic)}
 证据规模：${topic.paper_count || 0} 篇精读论文，${topic.evidence_event_count || 0} 条正式证据事件
 知识单元：${knowledgeIds}
-当前阅读版本：${topic.versions[state.version]?.label || VERSION_LABELS[state.version] || state.version}
+当前阅读版本：${topic.versions[state.version]?.style_label || VERSION_LABELS[state.version] || state.version} ${topic.versions[state.version]?.label || ""}
 
 研究任务：${instruction}
 
@@ -879,7 +934,7 @@ Canonical: ${absoluteCanonical(topic)}
     nodes.searchCount.textContent = `找到 ${results.length} 个版本匹配`;
     nodes.searchResults.innerHTML = results.length ? results.map((result) => `
       <a class="search-result" href="${escapeHtml(canonicalHref(result.topic))}" data-topic-id="${result.topic.id}" data-version="${result.versionKey}">
-        <span class="search-result-badge">${escapeHtml(result.version.label || VERSION_LABELS[result.versionKey] || result.versionKey)}</span>
+        <span class="search-result-badge">${escapeHtml(result.version.style_label || VERSION_LABELS[result.versionKey] || result.versionKey)}</span>
         <span><strong>${escapeHtml(result.topic.title)}</strong><p>${makeSnippet(result.version.text, normalizeSearch(value))}</p></span>
       </a>`).join("") : '<p class="search-empty">没有找到匹配内容。试试更短的关键词。</p>';
   }
@@ -2398,9 +2453,18 @@ Canonical: ${absoluteCanonical(topic)}
       // status spinner only. Log into the CURRENT workflow stage's card —
       // evt.stage is the literal "tool" sentinel, not a real node key.
       if (WORKFLOW_LOG_TOOLS.has(evt.tool)) {
+        // `inline` = the narration of the same message (a motive for this
+        // call); `carried` = the previous narration repeated because the call
+        // arrived without text. Marking the carried case keeps the log honest:
+        // fifteen edits in a row used to look like fifteen identical motives.
+        const carried = evt.reason_source === "carried";
+        const reason =
+          WORKFLOW_REASON_TOOLS.has(evt.tool) && evt.reason
+            ? `｜原因${carried ? "（承上文）" : ""}：${evt.reason}`
+            : "";
         appendNodeLine(
           state.chat.stage || "other",
-          `↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}`,
+          `↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}${reason}`,
           evt.ts,
         );
       }
@@ -2580,7 +2644,8 @@ Canonical: ${absoluteCanonical(topic)}
       </div>
       <p class="interview-question">⑤ 选文策略</p>
       <div class="interview-options" role="radiogroup" aria-label="选文策略">
-        <label><input type="radio" name="iw-selection" value="smart" checked title="一个 agent 通读全部候选摘要，按话题挑出真正相关的论文；宁缺毋滥，不足如实汇报">智能相关性（推荐）</label>
+        <label><input type="radio" name="iw-selection" value="smart-jev" checked title="用 jev 决策模型逐篇判定相关性（不生成文字，只给概率）；整库分批并行，通常数秒完成，阈值 0.60">智能相关性 · 决策模型 jev（推荐）</label>
+        <label><input type="radio" name="iw-selection" value="smart" title="用 ⑧ 选定的执行模型通读全部候选摘要，按话题挑出真正相关的论文；宁缺毋滥，不足如实汇报。未配置 jev 时选它作为回退">智能相关性 · 执行模型</label>
         <label><input type="radio" name="iw-selection" value="bm25" title="BM25 相关性排序（标题+摘要 vs 话题），纯机械最快">BM25 相关性</label>
         <label><input type="radio" name="iw-selection" value="influence" title="按引用数排序（候选池缺引用数据时自动降级为 BM25）">影响力</label>
         <label><input type="radio" name="iw-selection" value="keywords" title="旧的词面打分（标题/摘要词匹配），仅作降级备用">关键词</label>
@@ -2591,7 +2656,7 @@ Canonical: ${absoluteCanonical(topic)}
       <textarea id="iw-focus" placeholder="例如：重点关注室外场景下的效率与鲁棒性…"></textarea>
       <p class="interview-question">⑧ 执行模型</p>
       <div class="interview-options" role="radiogroup" aria-label="执行模型">
-        <label><input type="radio" name="iw-model" value="glm-5.3-flash" checked>glm-5.3-flash</label>
+        <label><input type="radio" name="iw-model" value="glm-5.3-flash" checked title="同时用于写作会话与「智能相关性 · 执行模型」选文">glm-5.3-flash</label>
         <label><input type="radio" name="iw-model" value="deepseek-v4-flash-vision-exp">deepseek-v4-flash-vision-exp</label>
         <label><input type="radio" name="iw-model" value="opus">opus</label>
       </div>
@@ -2636,7 +2701,7 @@ Canonical: ${absoluteCanonical(topic)}
       time_range: rangePreset === "custom" ? { range: rangeCustom } : rangePreset,
       target_style: card.querySelector('input[name="iw-style"]:checked')?.value || "scientific-memo",
       search_strategy: card.querySelector('input[name="iw-strategy"]:checked')?.value || "smart",
-      selection_strategy: card.querySelector('input[name="iw-selection"]:checked')?.value || "smart",
+      selection_strategy: card.querySelector('input[name="iw-selection"]:checked')?.value || "smart-jev",
       seed_arxiv_ids: card.querySelector("#iw-seeds")?.value.trim() || "",
       focus: card.querySelector("#iw-focus")?.value.trim() || "",
     };
@@ -2879,6 +2944,9 @@ Canonical: ${absoluteCanonical(topic)}
     }
     const requested = state.topic.versions[state.version]?.based_on || state.version;
     appendChatUserMessage(`〔修订〕${displayText}`, quotes);
+    // Reset the stage-node board so the revision's plan/retrieval/writing/audit
+    // cards render fresh (same board the workflow pane uses).
+    resetWorkflowNodeCards();
     await streamTurn({
       endpoint: "api/topic/revise",
       payload: {
@@ -2887,7 +2955,7 @@ Canonical: ${absoluteCanonical(topic)}
         message: composedMessage,
         model: selectedChatModel() || undefined,
       },
-      onEvent: handleChatEvent,
+      onEvent: handleWorkflowEvent,
       history: state.chat.messages,
       errorLabel: "修订失败",
     });
@@ -2947,7 +3015,7 @@ Canonical: ${absoluteCanonical(topic)}
   }
 
   function exportFilename(topic, version, extension) {
-    const base = `${topic.title}-${version.label}`
+    const base = `${topic.title}-${version.style_label || ""}-${version.label || "v0"}`
       .replace(/[\\/:*?"<>|#\s]+/g, "-")
       .replace(/^-+|-+$/g, "")
       .slice(0, 80);
@@ -2955,7 +3023,7 @@ Canonical: ${absoluteCanonical(topic)}
   }
 
   function buildExportHtml(topic, version) {
-    const meta = `${topic.field} · ${version.label} · ${formatDate(topic.date)}`;
+    const meta = `${topic.field} · ${version.style_label || ""} ${version.label || ""} · ${formatDate(topic.date)}`;
     return [
       "<!doctype html>",
       '<html lang="zh-CN">',
@@ -3009,11 +3077,11 @@ Canonical: ${absoluteCanonical(topic)}
         return;
       }
       downloadExport(exportFilename(topic, version, "md"), "text/markdown;charset=utf-8", version.markdown);
-      showToast(`已导出 Markdown：${version.label}`);
+      showToast(`已导出 Markdown：${version.style_label || ""} ${version.label || ""}`);
       return;
     }
     downloadExport(exportFilename(topic, version, "html"), "text/html;charset=utf-8", buildExportHtml(topic, version));
-    showToast(`已导出 HTML：${version.label}`);
+    showToast(`已导出 HTML：${version.style_label || ""} ${version.label || ""}`);
   }
 
   function downloadExport(filename, mime, content) {
@@ -3059,7 +3127,7 @@ Canonical: ${absoluteCanonical(topic)}
     const topics = state.manifest.topics;
     const current = topics.findIndex((topic) => topic.id === state.topic.id);
     const next = topics[(current + 1) % topics.length];
-    setRoute(next.id, topicDefaultVersion(next));
+    setRoute(next.id, topicLandingVersion(next));
   }
 
   function bindEvents() {
@@ -3112,12 +3180,17 @@ Canonical: ${absoluteCanonical(topic)}
     });
     nodes.recentResearch.addEventListener("click", showRecentResearch);
     nodes.versionTabs.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-version]");
-      if (button) switchVersion(button.dataset.version);
+      const button = event.target.closest("[data-style]");
+      if (!button) return;
+      // Switching style lands on that style's latest version (not a stale v0).
+      const style = button.dataset.style;
+      const topic = state.topic;
+      if (!topic) return;
+      const target = latestStyleVersion(topic, style);
+      if (target && topic.versions[target]) switchVersion(target);
     });
-    nodes.revisionChips?.addEventListener("click", (event) => {
-      const button = event.target.closest("[data-version]");
-      if (button) switchVersion(button.dataset.version);
+    nodes.versionSelect?.addEventListener("change", () => {
+      switchVersion(nodes.versionSelect.value);
     });
     nodes.tocNav.addEventListener("click", (event) => {
       const link = event.target.closest('a[href^="#"]');

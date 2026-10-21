@@ -267,7 +267,14 @@ def build_registry(
     batches.extend(load_citation_results(citation_results or [], registry))
     batches.sort(key=_batch_round_key)
     apply_screening(registry, load_screening(screening_file))
-    candidates = [registry[key] for key in sorted(registry)]
+    # Discovery order, NOT arXiv-ID order. ``sorted(registry)`` put the oldest
+    # papers first, and downstream smart-selection chunking inherits this order
+    # — the 2026-10-20 自监督预训练 run's chunk 1 was 2021-2022 and, once the
+    # 120-slot cap truncated a chunk-ordered prefix, every deep read landed in
+    # 2021-2022 even though retrieval was relevance-ranked. Insertion order is
+    # the retrieval order: query-priority batches, each already relevance-
+    # ranked by the search backend (bm25 for the snapshot db).
+    candidates = list(registry.values())
     status_counts: dict[str, int] = {}
     for item in candidates:
         status = str(item["status"])

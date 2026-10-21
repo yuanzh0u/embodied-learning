@@ -543,6 +543,28 @@ class KnowledgeBase:
 
         return kb_search(self, query, scope=scope, limit=limit)
 
+    def funnel(
+        self,
+        *,
+        layer: str | None = None,
+        run: str | None = None,
+        topic: str | None = None,
+        review_mode: str | None = None,
+        sort: str = "run",
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        from embodied_learning.knowledge.funnel import kb_funnel
+
+        return kb_funnel(
+            self,
+            layer=layer,
+            run=run,
+            topic=topic,
+            review_mode=review_mode,
+            sort=sort,
+            limit=limit,
+        )
+
     def merge_from(
         self,
         source: "KnowledgeBase | str | Path",

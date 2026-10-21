@@ -90,6 +90,23 @@ class BuildPaperNoteTest(unittest.TestCase):
         audit = self.mod.auditor.audit(note, self.extraction)
         self.assertEqual(audit.get("status"), "pass")
 
+    def test_analysis_paper_type_survives_validation(self):
+        """2026-10-16 regression: the skeleton prompt taught agents
+        "analysis", assembly's local PAPER_TYPES accepted it, and
+        validate_note then rejected the note ("reading.paper_type is
+        invalid") — deep read exit 1 with no audit. The two vocabularies are
+        now one set (paper_note.PAPER_TYPES), and 'analysis' is in it."""
+        note, problems = self.mod.assemble_note(
+            self.skeleton(paper_type="analysis"), self.extraction, Path("/tmp")
+        )
+        self.assertEqual(problems, [])
+        self.assertEqual(note["reading"]["paper_type"], "analysis")
+        errors, _ = self.mod.validator.validate_note(note)
+        self.assertEqual(errors, [])
+
+    def test_paper_type_vocabulary_is_single_sourced(self):
+        self.assertIs(self.mod.PAPER_TYPES, self.mod.validator.PAPER_TYPES)
+
     def test_locators_resolve_to_exact_titles(self):
         note, _ = self.mod.assemble_note(self.skeleton(), self.extraction, Path("/tmp"))
         locators = [card["locator"] for card in note["evidence_cards"]]

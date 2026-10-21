@@ -297,6 +297,7 @@ def run(args: argparse.Namespace) -> int:
                 build_agent_prompt(paper_id, pool_dir),
                 timeout_s=SOURCE_TIMEOUT_S,
                 cli=cli,
+                label=f"paper-deck-source-{paper_id}",
             )
         except subprocess.TimeoutExpired:
             log(f"slide-source 写作 agent 超时（{SOURCE_TIMEOUT_S:.0f}s）")

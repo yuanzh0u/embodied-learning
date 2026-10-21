@@ -397,23 +397,18 @@ body.sidebar-collapsed .sidebar { transform: translateX(-105%); }
   font-size: 12px;
 }
 .version-tabs button[aria-selected="true"] { color: var(--jade-deep); background: var(--paper-strong); box-shadow: 0 2px 8px rgba(30, 42, 36, 0.08); font-weight: 750; }
-.revision-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.revision-chip {
-  padding: 4px 10px;
-  max-width: 9em;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--ink-soft);
-  background: transparent;
+.version-select-wrap { display: inline-flex; align-items: center; }
+.version-select {
+  padding: 7px 10px;
+  color: var(--ink);
+  background: var(--paper-strong);
   border: 1px solid #cfdcd5;
-  border-radius: 999px;
+  border-radius: 9px;
+  font-size: 12px;
   cursor: pointer;
-  font-size: 11.5px;
+  max-width: 11em;
 }
-.revision-chip-doc { max-width: 12em; }
-.revision-chip:hover { color: var(--jade-deep); border-color: #9db8ac; }
-.revision-chip.is-active { color: var(--paper-strong); background: var(--jade-deep); border-color: var(--jade-deep); font-weight: 700; }
+.version-select:hover { border-color: #9db8ac; }
 .revise-toggle { display: inline-flex; align-items: center; gap: 4px; color: var(--ink-soft); font-size: 12px; cursor: pointer; user-select: none; white-space: nowrap; }
 .revise-toggle input { accent-color: var(--jade-deep); cursor: pointer; }
 .revise-toggle:has(input:checked) { color: var(--jade-deep); font-weight: 700; }
@@ -1111,8 +1106,10 @@ noscript { position: fixed; z-index: 100; inset: auto 20px 20px; padding: 14px; 
   .article-header h1 { font-size: 28px; }
   .article-actions { align-items: stretch; flex-direction: column; }
   .article-tool-buttons { display: grid; grid-template-columns: 1fr 1fr; }
-  .version-tabs { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .version-tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
   .version-tabs button { padding: 9px 5px; }
+  .version-select-wrap { width: 100%; }
+  .version-select { flex: 1; max-width: none; }
   .evidence-button, .ai-research-button { justify-content: center; }
   .ai-dialog-actions { align-items: stretch; flex-direction: column; }
   .ai-copy-button { width: 100%; }

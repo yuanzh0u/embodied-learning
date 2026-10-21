@@ -115,7 +115,9 @@ class ParseStreamLineTest(unittest.TestCase):
                     "type": "status",
                     "stage": "tool",
                     "tool": "Read",
-                    "detail": "/x/y.md"
+                    "detail": "/x/y.md",
+                    "reason": "你好",
+                    "reason_source": "inline",
                 },
             ],
         )
@@ -371,7 +373,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
         self.assertIn("work/literature-review-demo-20260908", prompt)
         self.assertNotIn(str(kb_root), prompt)
 
-    def test_selection_strategy_line_defaults_to_smart(self):
+    def test_selection_strategy_line_defaults_to_smart_jev(self):
         with tempfile.TemporaryDirectory() as tmp:
             kb_root = Path(tmp).resolve()
             run_dir = kb_root / "work" / "literature-review-demo-20260908"
@@ -385,7 +387,7 @@ class BuildWorkflowPromptTest(unittest.TestCase):
                 run_dir=run_dir, kb_root=kb_root, pipeline_root=Path("/repo"),
             )
         self.assertIn("选文策略：bm25", prompt)
-        self.assertIn("选文策略：smart", default)
+        self.assertIn("选文策略：smart-jev（决策模型 jev）", default)
 
     def test_system_prompt_bounds_abstract_tier_usage(self):
         """Abstract-tier events are positioning-only material: the shared
@@ -707,11 +709,11 @@ class WorkflowDriverContractTest(unittest.TestCase):
     def test_extract_driver_stage_maps_to_workflow_stages(self):
         self.assertEqual(
             wiki_chat.extract_driver_stage("[DRIVER-STAGE:retrieval-arxiv] ok ran"),
-            ("retrieval", "ok ran"),
+            ("retrieval", "retrieval-arxiv: ran"),
         )
         self.assertEqual(
             wiki_chat.extract_driver_stage("[DRIVER-STAGE:packets] ok 50/50"),
-            ("mining", "ok 50/50"),
+            ("mining", "packets: 50/50"),
         )
         self.assertIsNone(wiki_chat.extract_driver_stage("[STAGE:plan] claude line"))
         self.assertIsNone(wiki_chat.extract_driver_stage("plain text"))
@@ -767,10 +769,15 @@ class WorkflowDriverContractTest(unittest.TestCase):
         self.assertTrue(wiki_chat.journalable_event({"type": "stage", "stage": "plan", "detail": "d"}))
         self.assertFalse(wiki_chat.journalable_event({"type": "progress", "done": 1}))
 
-    def test_registry_stage_maps_to_mining(self):
-        # the mining phase opens before the registry stage completes; the
-        # completion line must not flip the pill back to retrieval
-        self.assertEqual(wiki_chat.extract_driver_stage("[DRIVER-STAGE:registry] ok ran")[0], "mining")
+    def test_registry_and_recall_stages_map_to_retrieval(self):
+        # Registry merge and recall rounds are retrieval work — they must
+        # land under arXiv 检索, not pile into 全文挖掘 (2026-10-16).
+        for name in ("registry", "recall-author", "recall-title", "known-works"):
+            self.assertEqual(
+                wiki_chat.extract_driver_stage(f"[DRIVER-STAGE:{name}] ok ran")[0],
+                "retrieval",
+                name,
+            )
 
 
 class SystemPromptOverrideTest(unittest.TestCase):
@@ -833,6 +840,15 @@ class FakeCliTurnTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.tmp_path = Path(self.tmp.name)
+        # ChatTurn writes a usage/trace ledger; keep it out of the real archive.
+        import os
+        from unittest import mock
+
+        env = mock.patch.dict(
+            os.environ, {"EMBODIED_CONVERSATION_STORE": str(self.tmp_path / "store")}
+        )
+        env.start()
+        self.addCleanup(env.stop)
         self.fake_cli = self.tmp_path / "fake-claude"
         self.fake_cli.write_text(
             "#!/bin/sh\n"

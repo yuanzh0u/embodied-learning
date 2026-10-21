@@ -23,7 +23,17 @@ STATUSES = {
     "discovered", "abstract-screened", "full-text-recovered", "map-read", "deep-read",
     "claim-verified", "evidence-ready", "accepted", "rejected", "unavailable",
 }
-PAPER_TYPES = {"method", "empirical", "dataset", "benchmark", "survey", "position", "theory", "system", "other"}
+# Single source of truth for the note schema's paper_type label. note_assembly
+# imports this set and the skeleton prompt lists it — the 2026-10-16 强化学习 run
+# lost two deep reads because assembly's local copy admitted "analysis" while
+# this validator rejected it ("reading.paper_type is invalid"). Keep the union
+# of the two historical vocabularies: assembly taught agents analysis/system/
+# benchmark, the validator also knows empirical/position/theory/other (19 pool
+# notes already carry "analysis").
+PAPER_TYPES = {
+    "method", "empirical", "dataset", "benchmark", "survey",
+    "position", "theory", "system", "analysis", "other",
+}
 RELEVANCE = {"include", "background-only", "exclude"}
 ROLES = {
     "problem", "relevant-core", "method-or-design", "data-or-setting", "results-or-analysis",

@@ -103,6 +103,14 @@ class RunStatusTest(unittest.TestCase):
         # Empty jsonl neither counts as a paper nor as an event.
         self.assertEqual(report["artifacts"]["writing-brief.md"], True)
         self.assertEqual(report["artifacts"]["review-packet.md"], False)
+        self.assertEqual(report["artifacts"]["funnel.json"], False)
+
+    def test_funnel_artifact_shows_up_once_written(self):
+        (self.run_dir / "funnel.json").write_text(
+            json.dumps({"schema_version": 1, "stages": {}}), encoding="utf-8"
+        )
+        report = run_status.build_report(self.run_dir)
+        self.assertEqual(report["artifacts"]["funnel.json"], True)
 
     def test_funnel_falls_back_to_registry_and_screening_mid_run(self):
         # pipeline-summary.json is written at the driver's tail — an agent

@@ -152,8 +152,12 @@ def extraction_args(paper_id: str, options: QueueOptions) -> extract_arxiv_conte
         html_url=None,
         pdf_url=None,
         pdf_file=None,
-        html_cache_dir=extract_arxiv_content.extract_arxiv_html.DEFAULT_CACHE_DIR,
-        pdf_cache_dir=extract_arxiv_content.extract_arxiv_pdf.DEFAULT_CACHE_DIR,
+        # Explicit queue options win; the /tmp defaults only apply when the
+        # caller passed none (lightweight library calls).
+        html_cache_dir=options.html_cache_dir
+        or extract_arxiv_content.extract_arxiv_html.DEFAULT_CACHE_DIR,
+        pdf_cache_dir=options.pdf_cache_dir
+        or extract_arxiv_content.extract_arxiv_pdf.DEFAULT_CACHE_DIR,
         timeout=options.timeout,
         top_sections=options.top_sections,
         max_pages=0,
@@ -220,11 +224,20 @@ def extract_one(
         command.append("--include-full-text")
     try:
         completed = subprocess.run(command, capture_output=True, text=True, timeout=max(1.0, options.paper_timeout), check=False)
-        if completed.returncode == 0 and temporary.is_file():
-            data = json.loads(temporary.read_text(encoding="utf-8"))
-            temporary.replace(target)
-        else:
-            temporary.unlink(missing_ok=True)
+        data = None
+        if temporary.is_file():
+            # extract-content writes its full result JSON (quality grade,
+            # attempts, fallback_reason, error) to --output before exiting —
+            # including exit 2 ("ran but not evidence-eligible"). Reading it
+            # on any exit preserves the real failure reason for packet /
+            # deep-read / run_status instead of a bare "extractor exit 2: "
+            # with an empty tail (2026-10-16).
+            try:
+                data = json.loads(temporary.read_text(encoding="utf-8"))
+                temporary.replace(target)
+            except (json.JSONDecodeError, OSError):
+                temporary.unlink(missing_ok=True)
+        if data is None:
             data = {
                 "paper_id": paper_id,
                 "available": False,
@@ -232,17 +245,27 @@ def extract_one(
                 "error": f"extractor exit {completed.returncode}: {(completed.stderr or completed.stdout)[-800:]}",
             }
             target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    except subprocess.TimeoutExpired:
+    except subprocess.TimeoutExpired as exc:
         temporary.unlink(missing_ok=True)
+        # Keep the tail of what the extractor printed: without it the
+        # checkpoint says only "hard timeout", and the cause (a gate cooldown,
+        # a dead endpoint, a slow PDF) is unrecoverable after the fact.
+        tail = ""
+        raw_stderr = exc.stderr
+        if raw_stderr:
+            tail = raw_stderr.decode("utf-8", "replace") if isinstance(raw_stderr, bytes) else str(raw_stderr)
+            tail = tail.strip()[-800:]
         print(
-            f"[DRIVER-WARN] {paper_id} 全文抽取硬超时（{options.paper_timeout:.0f}s），记 HELD 待重试",
+            f"[DRIVER-WARN] {paper_id} 全文抽取硬超时（{options.paper_timeout:.0f}s），记 HELD 待重试"
+            + (f"：{tail.splitlines()[-1]}" if tail else ""),
             flush=True,
         )
         data = {
             "paper_id": paper_id,
             "available": False,
             "evidence_eligible": False,
-            "error": f"hard timeout after {options.paper_timeout:.0f}s",
+            "error": f"hard timeout after {options.paper_timeout:.0f}s"
+            + (f": {tail}" if tail else ""),
         }
         target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     except Exception as exc:  # keep the queue moving and checkpoint the failure
@@ -274,6 +297,23 @@ def run_queue(options: QueueOptions) -> dict[str, Any]:
             results.append(result)
             state = "OK" if result["evidence_eligible"] else ("CHANNEL-DOWN" if result["state"] == "channel-down" else "HELD")
             print(f"{state} {result['paper_id']} ({len(results)}/{len(paper_ids)})", flush=True)
+    # Second pass over HELD papers while the channel is still up. Most HELD
+    # outcomes are transient (rate-limited HTML fetch, a 600s hard timeout under
+    # load, a subprocess that died before writing its result) — on 2026-10-16
+    # all 16 HELD papers of the 强化学习 run re-extracted cleanly minutes later.
+    # extract_one already re-extracts a non-eligible checkpoint, so this is a
+    # plain retry; a genuinely unrecoverable paper just re-checkpoints as HELD.
+    held = [item for item in results if not item["evidence_eligible"] and item["state"] != "channel-down"]
+    if held and not circuit.tripped:
+        print(f"retry: {len(held)} HELD paper(s) get one more attempt", flush=True)
+        for item in held:
+            result = extract_one(str(item["paper_id"]), options, output_dir, circuit)
+            results[results.index(item)] = result
+            state = "OK" if result["evidence_eligible"] else ("CHANNEL-DOWN" if result["state"] == "channel-down" else "HELD")
+            print(f"RETRY-{state} {result['paper_id']}", flush=True)
+            if circuit.tripped:
+                print("retry: channel down mid-pass, leaving the rest HELD for a rerun", flush=True)
+                break
     results.sort(key=lambda item: paper_ids.index(str(item["paper_id"])))
     skipped = sum(1 for item in results if item["state"] == "channel-down")
     if skipped:

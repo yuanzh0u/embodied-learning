@@ -74,7 +74,16 @@ def score_candidate(candidate: dict[str, Any], terms: list[str], prefixes: list[
     }
 
 
-def select_candidates(registry: dict[str, Any], terms: list[str], prefixes: list[str], seed_ids: set[str], limit: int) -> list[dict[str, Any]]:
+def select_candidates(
+    registry: dict[str, Any],
+    terms: list[str],
+    prefixes: list[str],
+    seed_ids: set[str],
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Term-match priority order. ``limit=None`` (the driver's path) queues
+    every candidate that matched — screening selects, it does not truncate;
+    deep reading owns the funnel's only cut."""
     ranked = [score_candidate(item, terms, prefixes, seed_ids) for item in registry.get("candidates", []) if isinstance(item, dict)]
     ranked = [item for item in ranked if item["score"] > 0]
     ranked.sort(
@@ -85,6 +94,8 @@ def select_candidates(registry: dict[str, Any], terms: list[str], prefixes: list
             str(item["candidate"].get("arxiv_id") or ""),
         )
     )
+    if limit is None:
+        return ranked
     limit = max(0, limit)
     if not limit:
         return []
@@ -142,20 +153,21 @@ def run(
     terms_raw: str,
     query_label_prefixes: list[str],
     seed_evidence_jsonl: list[str],
-    limit: int,
     output_screening: str,
     output_ids: str,
     output_markdown: str | None = None,
+    limit: int | None = None,
 ) -> int:
     """CLI-side orchestration: load the registry, select, and write all outputs.
+
+    No count cap by default (``limit=None``): every candidate that matched the
+    terms is queued for full-text recovery.
 
     Returns the process exit code (0 when candidates were queued, 2 otherwise).
     """
     registry = json.loads(Path(candidate_registry).read_text(encoding="utf-8"))
     terms = [value.strip().lower() for value in terms_raw.split(",") if value.strip()]
     selected = select_candidates(registry, terms, query_label_prefixes, load_seed_ids(seed_evidence_jsonl), limit)
-    if len(selected) < limit:
-        print(f"Only {len(selected)} candidates matched; requested {limit}.")
     screening = {
         "version": 1,
         "candidate_registry": candidate_registry,

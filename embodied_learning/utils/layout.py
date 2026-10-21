@@ -58,6 +58,17 @@ def default_kb_root() -> Path:
     return DEFAULT_KB_ROOT
 
 
+def kb_cache_dir(kb_root: str | Path) -> Path:
+    """Shared full-text fetch cache under the KB root.
+
+    HTML/PDF artefacts are reused across runs and machines, so they belong
+    next to the pool rather than in ``/tmp`` (which is per-machine and lost on
+    reboot): the same paper fetched by a quick-read is already warm for the
+    next review run. Writes go through ``atomicio`` because the KB may be a
+    CIFS mount read by several machines."""
+    return Path(kb_root).expanduser() / ".cache"
+
+
 def infer_kb_root(run_dir: Path) -> Path | None:
     """Owning KB root of a run directory, from its birth layout.
 

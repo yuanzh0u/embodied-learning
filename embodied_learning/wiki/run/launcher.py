@@ -50,6 +50,7 @@ from embodied_learning.harness.claude import (
     complete,
     isolated_claude_env,
     resolve_cli,
+    system_one_ready,
 )
 from embodied_learning.harness.prompt import USER_DECISION_STOP
 
@@ -106,6 +107,10 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
         "--selection-strategy", args.selection_strategy,
         "--deep-read-limit", str(args.deep_read_limit),
     ]
+    if getattr(args, "selection_model", None) and args.selection_strategy == "smart":
+        command += ["--selection-model", args.selection_model]
+    if args.selection_strategy == "smart-jev":
+        command += ["--selection-threshold", str(args.selection_threshold)]
     if args.time_range:
         command += ["--time-range", args.time_range]
     if args.seed_arxiv_ids:
@@ -122,6 +127,14 @@ def run_mechanical(args: argparse.Namespace, run_dir: Path) -> None:
         result = subprocess.run(command, cwd=str(kb_root), env=isolated_claude_env())
         if result.returncode == 0:
             return
+        if result.returncode == 2:
+            # Usage/config refusal (bad run.json, mode drift, unconfigured
+            # decision model): retrying the identical argv cannot succeed and
+            # would only burn two 60s cooldowns on the default smart-jev path.
+            raise RuntimeError(
+                f"mechanical driver refused the run (exit 2); fix the reported "
+                f"configuration and re-run with --resume"
+            )
         log(f"driver exit {result.returncode}; cooling down 60s before retry")
         time.sleep(60)
     raise RuntimeError(f"mechanical driver failed after {args.mechanical_retries} attempts")
@@ -137,6 +150,7 @@ def writer_prompts(run_dir: Path, args: argparse.Namespace, wiki: object) -> tup
         "time_range": args.time_range,
         "search_strategy": args.search_strategy,
         "selection_strategy": args.selection_strategy,
+        "selection_model": getattr(args, "selection_model", "") or "",
         "seed_arxiv_ids": args.seed_arxiv_ids,
         "target_style": args.target_style,
         "focus": args.focus,
@@ -406,6 +420,18 @@ def launch(args: argparse.Namespace) -> int:
         return print_status(run_dir)
     if args.stop:
         return print_stop(run_dir)
+    if args.selection_strategy == "smart-jev" and not system_one_ready():
+        # The default strategy is the decision model; refuse before creating a
+        # run dir instead of failing inside the driver (same stance as the wiki
+        # kickoff's 400 and the driver's own preflight).
+        print(
+            "决策模型（System One / jev）未配置：需要 "
+            "EMBODIED_SYSTEM_ONE_URL（或 ANTHROPIC_BASE_URL）与 "
+            "EMBODIED_SYSTEM_ONE_API_KEY（或 ANTHROPIC_AUTH_TOKEN）。"
+            "可改用 --selection-strategy smart（执行模型）。",
+            file=sys.stderr,
+        )
+        return 2
 
     # fresh launch: create the run birth certificate via run.py init
     if run_dir is None:

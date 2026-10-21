@@ -27,7 +27,13 @@ import urllib.request
 from pathlib import Path
 
 from embodied_learning import ratelimit
-from embodied_learning.config import MAX_CITATION_CONTEXTS, MAX_REFERENCE_HINTS, MAX_TERM_MATCHES
+from embodied_learning.atomicio import atomic_write_text
+from embodied_learning.config import (
+    FETCH_GATE_MAX_WAIT_S,
+    MAX_CITATION_CONTEXTS,
+    MAX_REFERENCE_HINTS,
+    MAX_TERM_MATCHES,
+)
 
 DEFAULT_CACHE_DIR = os.path.join(tempfile.gettempdir(), "embodied-ai-literature-hub", "html")
 SKIP_TAGS = {"script", "style", "noscript", "svg", "math"}
@@ -424,7 +430,14 @@ def fetch_html(url: str, target: Path, timeout: float) -> tuple[bool, str]:
         headers={"User-Agent": "embodied-ai-literature-hub/1.0 (local research workflow)"},
     )
     try:
-        with ratelimit.gated_urlopen(request, group="arxiv", timeout=timeout) as response:
+        # max_wait: a machine-wide 429/503 cooldown must surface as a fast
+        # failure the extraction queue can retry, not as a per-paper timeout.
+        with ratelimit.gated_urlopen(
+            request,
+            group="arxiv",
+            timeout=timeout,
+            max_wait=FETCH_GATE_MAX_WAIT_S,
+        ) as response:
             status = getattr(response, "status", 200)
             if status >= 400:
                 return False, ""
@@ -433,7 +446,9 @@ def fetch_html(url: str, target: Path, timeout: float) -> tuple[bool, str]:
         if exc.code in {404, 410}:
             return False, ""
         raise  # transient codes already extended the machine-wide cooldown in gated_urlopen
-    target.write_text(payload, encoding="utf-8")
+    # Atomic: the cache dir may sit on a shared mount where another machine
+    # reads the file while this one writes it.
+    atomic_write_text(target, payload)
     return True, payload
 
 

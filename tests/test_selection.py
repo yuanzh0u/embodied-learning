@@ -20,6 +20,7 @@ from embodied_learning.search.selection import (
     bm25_scores,
     bm25_select,
     influence_select,
+    pack_chunks,
     render_selection_markdown,
     run_select,
     smart_select,
@@ -87,15 +88,16 @@ class SmartSelectTest(unittest.TestCase):
         candidate("1704.02084", "PointNet", "Point cloud classification."),
     )
 
-    def test_parses_agent_json_and_caps_at_limit(self):
+    def test_parses_agent_json_and_keeps_retrieval_order(self):
+        """No cap: every relevant paper is queued, in registry (retrieval)
+        order rather than the agent's reply order."""
         result = mock.Mock(returncode=0, stdout='说明 {"relevant": ["2402.10329", "1704.02084", "9999.99999"]} 结束')
         selected, detail = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=1,
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=mock.Mock(return_value=result), cli="/fake/claude", model="m",
         )
-        # Unknown IDs are dropped, the cap is respected, and one relevant paper
-        # against a limit of 1 is a full queue (no shortfall note).
-        self.assertEqual([c["arxiv_id"] for c in selected], ["2402.10329"])
+        # Unknown IDs are dropped; both known papers are kept.
+        self.assertEqual([c["arxiv_id"] for c in selected], ["2402.10329", "1704.02084"])
         self.assertIn("smart selected 2/2 considered (1 full-coverage chunk(s))", detail)
 
     def test_reasons_are_parsed_and_carried_into_artifacts(self):
@@ -107,10 +109,9 @@ class SmartSelectTest(unittest.TestCase):
                 {"arxiv_id": "1704.02084", "reason": "点云分类先验，作对比基线"},
                 {"arxiv_id": "2402.10329", "reason": "重复条目应去重"},
             ],
-            "shortfall_note": "",
         }))
         selected, _ = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=2,
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=mock.Mock(return_value=result), cli="/fake/claude", model="m",
         )
         self.assertEqual(
@@ -134,7 +135,7 @@ class SmartSelectTest(unittest.TestCase):
         garbled = '前言 {"relevant": ["2410.14164", "2407.15540".replace("x","x"), "2407.15540"]} 后记'
         result = mock.Mock(returncode=0, stdout=garbled)
         selected, detail = smart_select(
-            registry, topic="absolute pose", focus="", limit=40,
+            registry, topic="absolute pose", focus="",
             complete_fn=mock.Mock(return_value=result), cli="c", model="m",
         )
         self.assertEqual(sorted(c["arxiv_id"] for c in selected), ["2407.15540", "2410.14164"])
@@ -144,7 +145,7 @@ class SmartSelectTest(unittest.TestCase):
     def test_unparseable_chunk_counts_as_coverage_hole(self):
         result = mock.Mock(returncode=0, stdout="好的，我认为这些论文都不错。")
         _, detail = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=2,
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=mock.Mock(return_value=result), cli="c", model="m",
         )
         # 非空但不可解析 = 覆盖缺口（failed chunk），不是"0 篇相关"的诚实结论
@@ -156,27 +157,51 @@ class SmartSelectTest(unittest.TestCase):
             [("2402.10329", "")],
         )
 
-    def test_shortfall_is_reported_when_relevant_below_limit(self):
+    def test_queue_is_never_padded_to_a_quota(self):
+        """No count cap: the queue is exactly what the agent judged relevant.
+
+        Selection does not pad toward a number — deep reading owns the only
+        truncation (and the driver's 候补 fill reads the extracted pool)."""
         result = mock.Mock(returncode=0, stdout='{"relevant": ["2402.10329"]}')
-        _, detail = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=2,
+        selected, detail = smart_select(
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=mock.Mock(return_value=result), cli="/fake/claude", model="m",
         )
-        self.assertIn("shortfall: only 1 relevant (limit 2), not padded", detail)
+        self.assertEqual([c["arxiv_id"] for c in selected], ["2402.10329"])
+        self.assertNotIn("shortfall", detail)
+
+    def test_selection_follows_registry_order_not_agent_reply_order(self):
+        """2026-10-20 自监督预训练: chunk-arrival order put every deep read in
+        2021-2022. The agent's reply order carries no global ranking, so the
+        queue is re-projected onto the registry's retrieval order."""
+        registry = registry_with(
+            candidate("2601.00001", "First found", "a"),
+            candidate("2601.00002", "Second found", "b"),
+            candidate("2601.00003", "Third found", "c"),
+        )
+        result = mock.Mock(returncode=0, stdout='{"relevant": ["2601.00003", "2601.00001", "2601.00002"]}')
+        selected, _ = smart_select(
+            registry, topic="t", focus="",
+            complete_fn=mock.Mock(return_value=result), cli="c", model="m",
+        )
+        self.assertEqual(
+            [c["arxiv_id"] for c in selected],
+            ["2601.00001", "2601.00002", "2601.00003"],
+        )
 
     def test_garbage_output_selects_nothing(self):
         result = mock.Mock(returncode=0, stdout="好的，我认为这些论文都不错。")
         selected, detail = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=2,
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=mock.Mock(return_value=result), cli="/fake/claude", model="m",
         )
         self.assertEqual(selected, [])
-        self.assertIn("shortfall", detail)
+        self.assertIn("failed", detail)
 
     def test_agent_failure_is_honest_not_padded(self):
         result = mock.Mock(returncode=1, stdout="", stderr="boom")
         selected, detail = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=2,
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=mock.Mock(return_value=result), cli="/fake/claude", model="m",
         )
         self.assertEqual(selected, [])
@@ -190,7 +215,7 @@ class SmartSelectTest(unittest.TestCase):
             side_effect=subprocess.TimeoutExpired(cmd=["claude"], timeout=900.0)
         )
         selected, detail = smart_select(
-            self.REGISTRY, topic="umi", focus="", limit=2,
+            self.REGISTRY, topic="umi", focus="",
             complete_fn=complete_fn, cli="/fake/claude", model="m", timeout_s=900.0,
         )
         self.assertEqual(selected, [])
@@ -206,7 +231,7 @@ class SmartSelectTest(unittest.TestCase):
         hang = subprocess.TimeoutExpired(cmd=["claude"], timeout=1.0)
         with mock.patch.object(selection_mod, "SMART_CANDIDATES_PER_CALL", 1):
             selected, detail = smart_select(
-                self.REGISTRY, topic="umi", focus="", limit=2,
+                self.REGISTRY, topic="umi", focus="",
                 complete_fn=mock.Mock(side_effect=[hang, ok]),
                 cli="/fake/claude", model="m", timeout_s=1.0,
             )
@@ -216,10 +241,60 @@ class SmartSelectTest(unittest.TestCase):
 
     def test_empty_registry_short_circuits(self):
         selected, detail = smart_select(
-            registry_with(), topic="umi", focus="", limit=2,
+            registry_with(), topic="umi", focus="",
             complete_fn=mock.Mock(), cli="/fake/claude", model="m",
         )
         self.assertEqual((selected, detail), ([], "empty registry"))
+
+    def test_prompt_asks_for_relevance_not_a_quota_or_a_score(self):
+        """2026-10-20: the agent is asked only "relevant or not" — no count
+        quota (selection never truncates) and no relevance score (an
+        unanchored number is not a ranking anyone can check)."""
+        from embodied_learning.harness.prompt import SMART_SELECTION_PROMPT
+
+        self.assertNotIn("{limit}", SMART_SELECTION_PROMPT)
+        self.assertNotIn("最多输出", SMART_SELECTION_PROMPT)
+        for token in ("score", "分数", "相关度评分"):
+            self.assertNotIn(token, SMART_SELECTION_PROMPT)
+
+
+class PackChunksTest(unittest.TestCase):
+    """pack_chunks 的打包契约：按渲染长度切、计数上限兜底、一篇不丢。"""
+
+    def line_chars(self, candidate: dict) -> int:
+        return len(selection_mod._candidate_line(candidate)) + 1
+
+    def test_packs_by_rendered_length_and_keeps_order(self):
+        candidates = [candidate(f"2601.{i:05d}", f"Paper {i}", "A" * 400) for i in range(6)]
+        per_line = self.line_chars(candidates[0])
+        chunks = pack_chunks(candidates, char_budget=per_line * 2 + 10, count_ceiling=60)
+        self.assertEqual([len(c) for c in chunks], [2, 2, 2])
+        flat = [c["arxiv_id"] for c in sum(chunks, [])]
+        self.assertEqual(flat, [f"2601.{i:05d}" for i in range(6)])
+
+    def test_count_ceiling_bounds_tiny_lines(self):
+        candidates = [candidate(f"2601.{i:05d}", f"P{i}", "") for i in range(5)]
+        chunks = pack_chunks(candidates, char_budget=10_000, count_ceiling=2)
+        self.assertEqual([len(c) for c in chunks], [2, 2, 1])
+
+    def test_oversized_single_line_forms_its_own_chunk(self):
+        # 单行超过预算也要成片（不丢、不切半个候选）。
+        big = candidate("2601.00000", "Huge", "B" * 400)
+        small = candidate("2601.00001", "P", "")
+        chunks = pack_chunks([big, small], char_budget=self.line_chars(big) // 2, count_ceiling=60)
+        self.assertEqual([[c["arxiv_id"] for c in chunk] for chunk in chunks],
+                         [["2601.00000"], ["2601.00001"]])
+
+    def test_exact_budget_fit_stays_in_one_chunk(self):
+        candidates = [candidate(f"2601.{i:05d}", f"P{i}", "") for i in range(2)]
+        budget = sum(self.line_chars(c) for c in candidates)
+        chunks = pack_chunks(candidates, char_budget=budget, count_ceiling=60)
+        self.assertEqual(len(chunks), 1)
+        chunks = pack_chunks(candidates, char_budget=budget - 1, count_ceiling=60)
+        self.assertEqual([len(c) for c in chunks], [1, 1])
+
+    def test_empty_registry_packs_nothing(self):
+        self.assertEqual(pack_chunks([], char_budget=100, count_ceiling=2), [])
 
 
 class ToScreeningArtifactsTest(unittest.TestCase):
@@ -251,9 +326,9 @@ class RunSelectTest(unittest.TestCase):
         self.ids = Path(self.tmp.name) / "screening-ids.txt"
         self.markdown = Path(self.tmp.name) / "screening.md"
 
-    def run_select(self, strategy: str, limit: int = 1, **kwargs) -> int:
+    def run_select(self, strategy: str, **kwargs) -> int:
         return run_select(
-            str(self.registry_path), strategy, "umi manipulation", "focus text", limit,
+            str(self.registry_path), strategy, "umi manipulation", "focus text",
             str(self.screening), str(self.ids), str(self.markdown), **kwargs,
         )
 
@@ -278,12 +353,12 @@ class RunSelectTest(unittest.TestCase):
         self.assertIn("2402.10329", markdown)
 
     def test_influence_degrades_to_bm25_with_detail(self):
-        self.assertEqual(self.run_select("influence", limit=2), 0)
+        self.assertEqual(self.run_select("influence"), 0)
         rule = self.screening_payload()["selection_rule"]
         self.assertEqual(rule["strategy"], "influence")
         self.assertIn("influence degraded to bm25 (citation data: 1 papers)", rule["detail"])
-        # bm25 backfills the remaining slot: the queue reaches the limit even
-        # though only one candidate carries citation data.
+        # bm25 covers every candidate the citation channel could not rank:
+        # nothing is dropped for lack of a citation count.
         self.assertEqual(len(self.screening_payload()["candidates"]), 2)
 
     def test_smart_uses_the_harness_one_shot(self):
@@ -308,6 +383,59 @@ class RunSelectTest(unittest.TestCase):
             self.assertEqual(self.run_select("smart"), 2)
         self.assertFalse(self.screening.exists())
 
+    def test_smart_jev_uses_the_decision_model_binding(self):
+        """smart-jev is a second binding, not a prompt variant: it asks the
+        System One channel one typed question per candidate and keeps the
+        papers above the threshold, in registry order."""
+        judge_fn = mock.Mock(return_value={"answers": {
+            "2402.10329": {"type": "noul", "noul": 0.91},
+            "1704.02084": {"type": "noul", "noul": 0.12},
+        }})
+        with mock.patch(
+            "embodied_learning.harness.claude.system_one_ready", return_value=True
+        ):
+            code = self.run_select("smart-jev", judge_fn=judge_fn, threshold=0.6)
+        self.assertEqual(code, 0)
+        payload = self.screening_payload()
+        self.assertEqual(payload["selection_rule"]["strategy"], "smart-jev")
+        self.assertIn("threshold 0.60", payload["selection_rule"]["detail"])
+        self.assertEqual([r["arxiv_id"] for r in payload["candidates"]], ["2402.10329"])
+        state, questions = judge_fn.call_args.args
+        self.assertIn("umi manipulation", state)
+        # The strict wording is a measured contract, not decoration: the loose
+        # "adjacent field counts" phrasing cost ~20 points of precision.
+        self.assertIn("核心贡献直接针对综述话题", state)
+        self.assertEqual(questions["2402.10329"]["type"], "noul")
+        self.assertIn("[2402.10329]", questions["2402.10329"]["instructions"])
+        self.assertTrue(
+            questions["2402.10329"]["instructions"].startswith(
+                "This paper's main contribution directly addresses the review topic."
+            )
+        )
+
+    def test_smart_jev_without_configuration_fails_loudly(self):
+        with mock.patch("sys.stderr"), \
+             mock.patch("embodied_learning.harness.claude.system_one_ready", return_value=False):
+            self.assertEqual(self.run_select("smart-jev"), 2)
+        self.assertFalse(self.screening.exists())
+
+    def test_jev_select_reports_failed_batch_as_coverage_gap(self):
+        registry = registry_with(*[
+            candidate(f"2601.{i:05d}", f"Paper {i}", "streaming reconstruction")
+            for i in range(4)
+        ])
+
+        def judge(state, questions, **kwargs):
+            if "2601.00002" in questions:
+                raise RuntimeError("upstream 503")
+            return {"answers": {k: {"type": "noul", "noul": 0.9} for k in questions}}
+
+        selected, detail = selection_mod.jev_select(
+            registry, topic="t", judge_fn=judge, questions_per_call=2, workers=1,
+        )
+        self.assertEqual([c["arxiv_id"] for c in selected], ["2601.00000", "2601.00001"])
+        self.assertIn("2 candidate(s) unjudged", detail)
+
     def test_zero_matches_exit_two(self):
         self.registry_path.write_text(
             json.dumps(registry_with(candidate("9999.00001", "Unrelated", "nothing matches"))),
@@ -318,11 +446,11 @@ class RunSelectTest(unittest.TestCase):
 
     def test_smart_covers_every_candidate_via_chunks(self) -> None:
         # The smart contract: no lexical prefilter decides what the agent
-        # sees. 300 candidates = one call; 301 = two calls, all seen once.
+        # sees — every candidate is rendered into exactly one chunk prompt.
         registry = {"candidates": [
             {"arxiv_id": f"2601.{i:05d}", "title": f"Paper {i} on tactile sensing",
              "summary": "We study tactile sensing for robotic manipulation."}
-            for i in range(300)
+            for i in range(120)
         ]}
         seen = []
 
@@ -331,13 +459,40 @@ class RunSelectTest(unittest.TestCase):
             return mock.Mock(returncode=0, stdout='{"relevant": ["2601.00001"]}')
 
         selected, detail = selection_mod.smart_select(
-            registry, topic="图像粗配准", focus="", limit=40,
+            registry, topic="图像粗配准", focus="",
             complete_fn=fake_complete, cli="claude", model="test-model",
         )
-        self.assertEqual(len(seen), 1)  # single call, no prefilter
+        self.assertGreater(len(seen), 1)  # 120 lines cannot fit one call
         import re as _re
-        self.assertEqual(len(_re.findall(r"\n\d+\. \[", seen[0])), 300)
+        ids = [i for p in seen for i in _re.findall(r"\[(\d{4}\.\d{4,5})\]", p)]
+        self.assertEqual(len(ids), 120)          # full coverage…
+        self.assertEqual(len(set(ids)), 120)     # …and each seen exactly once
         self.assertEqual([c["arxiv_id"] for c in selected], ["2601.00001"])
+
+    def test_smart_chunks_by_rendered_size_not_fixed_count(self) -> None:
+        """打包按候选行的渲染长度切，不按固定篇数（2026-10-16 强化学习 run：
+        固定 300 篇/片渲染出 157KB prompt，完成流在中途断掉）。长摘要即使只有
+        6 篇也要切成多次调用。"""
+        registry = {"candidates": [
+            {"arxiv_id": f"2601.{i:05d}", "title": f"Paper {i}", "summary": "A" * 400}
+            for i in range(6)
+        ]}
+        seen = []
+
+        def fake_complete(prompt, **kwargs):
+            seen.append(prompt)
+            return mock.Mock(returncode=0, stdout='{"relevant": []}')
+
+        with mock.patch.object(selection_mod, "SMART_CANDIDATE_CHARS_PER_CALL", 800), \
+             mock.patch.object(selection_mod, "SMART_CANDIDATES_PER_CALL", 60):
+            selection_mod.smart_select(
+                registry, topic="t", focus="",
+                complete_fn=fake_complete, cli="c", model="m",
+            )
+        # 每行 ~450 字符，800 预算 → 一篇/片；计数上限没到就先被长度切断
+        self.assertEqual(len(seen), 6)
+        import re as _re
+        self.assertTrue(all(len(_re.findall(r"\n\d+\. \[", p)) == 1 for p in seen))
 
     def test_smart_chunks_large_registry_without_dropping_anyone(self) -> None:
         registry = {"candidates": [
@@ -349,26 +504,24 @@ class RunSelectTest(unittest.TestCase):
 
         def fake_complete(prompt, **kwargs):
             seen.append(prompt)
-            last = len(seen) == 2
-            ids = ["2601.00000"] if not last else ["2601.00300"]
-            import json as _json
-            return mock.Mock(returncode=0, stdout=_json.dumps({"relevant": ids}))
+            return mock.Mock(returncode=0, stdout='{"relevant": []}')
 
-        selected, detail = selection_mod.smart_select(
-            registry, topic="图像粗配准", focus="", limit=40,
-            complete_fn=fake_complete, cli="claude", model="test-model",
-        )
-        self.assertEqual(len(seen), 2)
+        with mock.patch.object(selection_mod, "SMART_CANDIDATES_PER_CALL", 60):
+            selected, detail = selection_mod.smart_select(
+                registry, topic="图像粗配准", focus="",
+                complete_fn=fake_complete, cli="claude", model="test-model",
+            )
         import re as _re
-        self.assertEqual(len(_re.findall(r"\n\d+\. \[", seen[0])), 300)
-        self.assertEqual(len(_re.findall(r"\n\d+\. \[", seen[1])), 1)
-        self.assertEqual([c["arxiv_id"] for c in selected], ["2601.00000", "2601.00300"])
+        ids = [i for p in seen for i in _re.findall(r"\[(\d{4}\.\d{4,5})\]", p)]
+        self.assertEqual(len(ids), 301)
+        self.assertEqual(len(set(ids)), 301)
+        self.assertTrue(all(len(_re.findall(r"\n\d+\. \[", p)) <= 60 for p in seen))
         self.assertIn("full-coverage chunk(s)", detail)
 
     def test_smart_partial_chunk_failure_reports_incomplete_coverage(self) -> None:
         registry = {"candidates": [
             {"arxiv_id": f"2601.{i:05d}", "title": f"Paper {i}", "summary": f"A{i}."}
-            for i in range(301)
+            for i in range(4)
         ]}
         calls = {"n": 0}
 
@@ -378,10 +531,11 @@ class RunSelectTest(unittest.TestCase):
                 return mock.Mock(returncode=0, stdout='{"relevant": ["2601.00001"]}')
             return mock.Mock(returncode=1, stdout="", stderr="boom")
 
-        selected, detail = selection_mod.smart_select(
-            registry, topic="t", focus="", limit=40,
-            complete_fn=fake_complete, cli="c", model="m",
-        )
+        with mock.patch.object(selection_mod, "SMART_CANDIDATES_PER_CALL", 2):
+            selected, detail = selection_mod.smart_select(
+                registry, topic="t", focus="",
+                complete_fn=fake_complete, cli="c", model="m",
+            )
         self.assertEqual(len(selected), 1)
         self.assertIn("1/2 chunk(s) failed", detail)
 
@@ -405,7 +559,7 @@ class RunSelectTest(unittest.TestCase):
                 {"arxiv_id": "2", "title": "Unrelated", "summary": "Other stuff."},
             ]}), encoding="utf-8")
             code = selection_mod.run_select(
-                str(reg), "bm25", "图像粗配准", "", 1,
+                str(reg), "bm25", "图像粗配准", "",
                 str(Path(tmp) / "s.json"), str(Path(tmp) / "ids.txt"),
                 terms="coarse registration,point clouds",
             )

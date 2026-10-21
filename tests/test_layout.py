@@ -5,12 +5,14 @@ isolation guarantees."""
 from __future__ import annotations
 
 import importlib.util
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 REPO = Path(__file__).resolve().parents[1]
@@ -72,6 +74,15 @@ class FindRootsTest(unittest.TestCase):
             self.assertEqual(repo_root, "")
             self.assertEqual(Path(skills_root), pkg / "skills")
             self.assertEqual(Path(scripts_root), pkg)
+
+
+class KbCacheDirTest(unittest.TestCase):
+    def test_cache_lives_under_the_kb_root(self) -> None:
+        """Full text is reused across runs and machines, so the cache hangs
+        off the KB root (next to pool/) instead of /tmp."""
+        self.assertEqual(layout.kb_cache_dir("/kb"), Path("/kb/.cache"))
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(layout.kb_cache_dir(tmp), Path(tmp) / ".cache")
 
 
 class ResolvePipelineLayoutTest(unittest.TestCase):
@@ -167,12 +178,15 @@ class RunOneShotAgentIsolationTest(unittest.TestCase):
         orig_run = harness_claude.subprocess.run
         harness_claude.subprocess.run = fake_run
         try:
-            with tempfile.TemporaryDirectory() as tmp:
+            with tempfile.TemporaryDirectory() as tmp, \
+                    mock.patch.dict(os.environ,
+                                    {"EMBODIED_CONVERSATION_STORE": str(Path(tmp) / "store")}):
                 harness_claude.ISOLATED_CONFIG_DIR = Path(tmp) / "cfg"
                 agent_invoke.run_one_shot_agent("prompt", timeout_s=1.0, cli="claude", cwd=Path(tmp))
         finally:
             harness_claude.subprocess.run = orig_run
         self.assertEqual(captured["command"], ["claude", "-p", "--model", agent_invoke.DRIVER_AGENT_MODEL,
+                                               "--output-format", "json",
                                                "--permission-mode", "bypassPermissions"])
         self.assertIn("cwd", captured)
         self.assertIn("CLAUDE_CONFIG_DIR", captured["env"])

@@ -33,11 +33,19 @@ python3 scripts/run.py launch \
 | `--review-mode` | `rapid`（12 篇精读）/ `scoping`（22）/ `systematic`（43） |
 | `--time-range` | `YYYY-MM-DD..YYYY-MM-DD`，实际过滤在这里，不是 query plan 里 |
 | `--search-strategy` | `smart`（默认，代理选题）/ `fast` / `seeds` |
-| `--selection-strategy` | `smart` / `keywords` / `influence` / `bm25` |
+| `--selection-strategy` | `smart-jev`（决策模型 jev 选文，默认：逐篇概率判定，数秒完成）/ `smart`（执行模型选文，未配置 jev 时的回退）/ `keywords` / `influence` / `bm25` |
+| `--selection-model` | `smart` 使用的执行模型（默认 harness 的 `DRIVER_AGENT_MODEL`；采访卡的 ⑧ 执行模型即此项）；`smart-jev` 忽略它 |
+| `--selection-threshold` | `smart-jev` 的保留阈值（默认 `0.60`；jev 概率 ≥ 阈值入队） |
 | `--seed-arxiv-ids` | 给定种子论文，强制排到深读队列最前 |
 | `--arxiv-snapshot` | 离线检索：OAI 快照 JSONL 或 SQLite/FTS5 库 |
 | `--kb-root` | 目标知识库；run 落在 `<kb-root>/work/` |
 | `--target-style` + `--scope-note` | 只交付单一文体（否则三文体） |
+
+`smart-jev` 是默认选文策略，需要 System One 端点的环境变量（只走环境，不写配置文件）：
+`EMBODIED_SYSTEM_ONE_URL`（缺省时取 `ANTHROPIC_BASE_URL` + `/v1/systemone`）与
+`EMBODIED_SYSTEM_ONE_API_KEY`（缺省时取 `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_API_KEY`）。
+未配置时 `launch` / `pipeline` 会在开跑前报错，不会跑到选文阶段才失败；
+此时显式传 `--selection-strategy smart` 走执行模型。
 
 后台跑法（推荐，防终端断开）：
 
@@ -52,8 +60,9 @@ python3 scripts/run.py status --run-dir <run-dir>
 python3 scripts/run.py launch --status --run-dir <run-dir>
 ```
 
-`status` 给漏斗数字（候选 → 全文 → 精读 → 证据事件）、逐篇证据、产物清单和
-**下一步可执行命令**。不用逐个翻 `evidence/*.jsonl`。
+`status` 给漏斗数字（候选 → 选文 → 全文 → 深读 → 证据论文）、逐篇证据、产物清单和
+**下一步可执行命令**。不用逐个翻 `evidence/*.jsonl`。同一个漏斗也在 driver 收尾时落成
+`<run>/funnel.json` 并随 `finalize` 发布，可用 `wiki.py kb-funnel` 跨 run 查询（见下）。
 
 ### 断点续跑
 
@@ -78,7 +87,7 @@ python3 scripts/run.py pipeline \
 ```
 plan → retrieval → registry → screening → coverage
      → extraction → packets → deep read → projection
-     → pipeline-summary.json
+     → funnel.json → pipeline-summary.json
 ```
 
 - **种子优先**：`--seed-arxiv-ids` 的论文强制排到深读队列最前。
@@ -138,6 +147,28 @@ python3 scripts/run.py launch ... \
 | `systematic` | 43 | 15 |
 
 地板数的是**不重复的已引用论文**。不足则 `finalize` 提示续跑 driver 补深读。
+
+## 检索漏斗：六层口径
+
+一次 run 的检索判断被固化成六层。每层的产出者、判据与失败语义：
+
+| 层 | 谁产出 | 判据 | 失败/缺失语义 |
+|---|---|---|---|
+| `registry` | 检索 + 候选注册 | `candidate-registry.json` 的候选（多轮合并后） | 检索失败 → 候选 0，这是唯一允许的早停 |
+| `screened` | 选文（smart / smart-jev / influence / keywords / bm25） | `screening-ids.txt`：策略判定相关的论文，**不按数量截断** | 选文 chunk 超时 → 覆盖缺口记入 `[DRIVER-WARN]`，其余照常 |
+| `full_text` | 全文抽取队列 | `extraction-summary.json` 中 `evidence_eligible` 且 ∈ 选文 | 不可用 → `held`（暂扣）；通道故障 → `channel_down`，单列 |
+| `deep_read` | 深读骨架（受模式预算约束） | `paper-notes/<id>.json` ∪ `<id>.failed.json`（**尝试过**的论文） | 审计不过 → `needs_review`；骨架失败 → `failed`；不虚报队列上限 |
+| `evidence` | 投影 + claim-support audit | `evidence/*.jsonl` 非空（不含摘要级 tier） | 通过审计的论文才可引用 |
+| `abstract` | 摘要级投影 | `evidence/abstract-tier.jsonl` | 见下方「摘要级范围」 |
+
+三个口径要点：
+
+- **摘要级只面向选文结果。** `abstract-tier` 的对象是 `screening-ids.txt` 通过集合（含抽取失败被 `held` 的论文），**不是** `candidate-registry.json` 全量。选文排除的论文不进入附录「摘要级相关工作」。缺 `screening-ids.txt` 时该阶段跳过并告警，**不回退全量**。摘要级事件共享唯一锚点 `#摘要级相关工作`，不计入引用篇数地板。
+- **全文缓存落在 KB 里。** driver 把 HTML/PDF 缓存指到 `<kb-root>/.cache/{html,pdfs}`：早先 run 或速读抓过的论文直接复用，同一 KB 挂载上的其他机器也命中。arXiv 仍是机器级串行限速（3s/请求），所以 N 篇的**理论下限**约 `N × 3s`；并行只摊薄下载/解析时间，不突破礼貌速率。
+- **漏斗不是严格嵌套。** `--seed-arxiv-ids` 的种子论文强制排在深读队列最前、可以不在选文集合内；差值记在 `funnel.json` 的 `detail.seeds_outside_screened`。
+- **`deep_read` 数的是尝试数**，不是模式预算（rapid 12 / scoping 22 / systematic 43）。被中断的 run 不能报「已读完预算」。
+
+上下游消费：driver 收尾写 `<run>/funnel.json`，`finalize` 随 bundle 发布；`wiki.py kb-stats` 汇总、`wiki.py kb-funnel` 查询逐 run 统计或某一层的论文（字段契约见 [KB 盘点](../kb-inventory.md)）。历史 run 不回填，缺数据标 `null`。
 
 ## 证据纪律
 

@@ -210,6 +210,59 @@ class SnapshotSearchTest(unittest.TestCase):
         result = run_search(records, "all:egocentric", max_results=3)
         self.assertEqual(result["paper_count"], 3)
 
+    def test_relevance_ranks_by_term_density(self) -> None:
+        """Discovery is relevance-ranked, not newest-first (2026-10-16: date
+        ordering collapsed a 10-year window to its latest submissions). A
+        dense multi-hit match must outrank a marginal one even when the
+        marginal one is newer."""
+        records = [
+            make_record(
+                arxiv_id="2601.0001", title="A general robotics paper",
+                abstract="we study machines and control theory " * 5,
+                v1_created="Fri, 1 Jan 2026 10:00:00 GMT",
+            ),
+            make_record(
+                arxiv_id="1804.0001", title="Egocentric video benchmark",
+                abstract="egocentric video benchmark egocentric video " * 3,
+                v1_created="Sun, 8 Apr 2018 12:00:00 GMT",
+            ),
+            make_record(
+                arxiv_id="2301.0001", title="Egocentric vision",
+                abstract="egocentric",
+                v1_created="Sun, 1 Jan 2023 12:00:00 GMT",
+            ),
+        ]
+        # `all:egocentric` matches both the dense 2018 paper and the marginal
+        # 2023 one (but not the 2026 paper). max_results=2 keeps both; the
+        # densest must rank first regardless of the newer date.
+        result = run_search(records, "all:egocentric", max_results=2)
+        self.assertEqual(result["sort_by"], "relevance")
+        ids = [paper["arxiv_id"] for paper in result["papers"]]
+        self.assertEqual(ids[0], "1804.0001", "densest match must rank first")
+        self.assertIn("2301.0001", ids, "marginal match is kept at max_results=2")
+        self.assertNotIn("2601.0001", ids, "non-matching paper is not a hit")
+
+    def test_date_sort_when_requested(self) -> None:
+        records = [
+            make_record(arxiv_id="1804.0001", title="Egocentric video",
+                        v1_created="Sun, 8 Apr 2018 12:00:00 GMT"),
+            make_record(arxiv_id="2301.0001", title="Egocentric video",
+                        v1_created="Sun, 1 Jan 2023 12:00:00 GMT"),
+        ]
+        result = run_search(records, "all:egocentric", sort_by="submittedDate")
+        self.assertEqual(
+            [p["arxiv_id"] for p in result["papers"]], ["2301.0001", "1804.0001"]
+        )
+
+    def test_relevance_score_prefers_title_hits(self) -> None:
+        paper_title = {"title": "Egocentric video", "summary": "unrelated text"}
+        paper_abstract = {"title": "Unrelated", "summary": "egocentric video"}
+        literals = ["egocentric video"]
+        self.assertGreater(
+            snap.relevance_score(paper_title, literals),
+            snap.relevance_score(paper_abstract, literals),
+        )
+
     def test_heap_replace_with_identical_sort_keys(self) -> None:
         # >slack matches sharing one sort key: heap tuples must stay comparable
         # via the sequence tiebreaker, never fall through to dict comparison.

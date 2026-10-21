@@ -3,11 +3,12 @@
 
 Abstracts are themselves evidence for related-work positioning: a human
 survey writer never reads every paper in full either. One event per
-registry candidate with a title + abstract, ``tier: "abstract"``, claim =
-a condensed excerpt of the abstract. No stance and no full-text
-verification — downstream consumers (packet, appendix, citation gate)
-treat abstract-tier events as positioning-only material, never as
-mechanism-level claims.
+**selection-accepted** candidate with a title + abstract, ``tier:
+"abstract"``, claim = a condensed excerpt of the abstract. Registry members
+the selector judged off-topic are not positioning material and never become
+events. No stance and no full-text verification — downstream consumers
+(packet, appendix, citation gate) treat abstract-tier events as
+positioning-only material, never as mechanism-level claims.
 
 Output events share the run's event-ID prefix and numbering with the
 deep-read projection (same citable namespace); allocate the deep-read
@@ -63,13 +64,22 @@ def build_abstract_events(
     topic_id: str,
     prefix: str,
     start_seq: int,
+    include_arxiv_ids: set[str] | None = None,
     exclude_arxiv_ids: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """One abstract-tier event per registry candidate with title + abstract.
+    """One abstract-tier event per candidate with title + abstract.
+
+    ``include_arxiv_ids`` is the selection scope: only papers that passed
+    screening may become positioning evidence, because the registry also holds
+    candidates the selector judged off-topic (2026-10-13 手部姿态估计: 308
+    registry candidates but 200 selected — the 108 rejected ones leaked into
+    the appendix). ``None`` keeps the legacy whole-registry behaviour for
+    standalone reuse; the driver always passes the screening set.
 
     ``exclude_arxiv_ids`` drops papers that already carry full-text evidence
     (their abstract event would be redundant positioning)."""
     prefix = prefix.rstrip("-")
+    include = include_arxiv_ids
     exclude = exclude_arxiv_ids or set()
     events: list[dict[str, Any]] = []
     seq = start_seq
@@ -80,6 +90,8 @@ def build_abstract_events(
         title = str(candidate.get("title") or "").strip()
         summary = str(candidate.get("summary") or "").strip()
         if not arxiv_id or not title or not summary or arxiv_id in exclude:
+            continue
+        if include is not None and arxiv_id not in include:
             continue
         cond = excerpt(summary)
         if not cond:

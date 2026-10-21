@@ -32,6 +32,9 @@ from embodied_learning.utils.layout import find_roots
 
 _REPO_ROOT, _SKILLS_ROOT, SCRIPTS_ROOT = find_roots()
 HUB_SCRIPTS = _SKILLS_ROOT / "embodied-ai-literature-hub" / "scripts"
+# Skill dispatchers live under skills/<name>/scripts/, not the scripts root
+# (ADR 0005). SCRIPTS_ROOT/read.py does not exist in either layout.
+READ_SCRIPT = _SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "read.py"
 from embodied_learning.utils.arxiv_id import normalize_arxiv_id as _normalize_arxiv_id  # noqa: E402
 from embodied_learning import locks  # noqa: E402
 from embodied_learning.wiki.run.driver import deep_read_paper  # noqa: E402
@@ -97,7 +100,7 @@ def ensure_extraction(paper_id: str, pool_root: Path, force: bool) -> bool:
             return False
     add = run_command(
         [
-            sys.executable, str(SCRIPTS_ROOT / "read.py"),
+            sys.executable, str(READ_SCRIPT),
             "pool-add-paper", "add", "--extraction", str(output), "--pool-root", str(pool_root),
         ],
         timeout=60.0,
@@ -127,7 +130,7 @@ def ensure_deep_read(paper_id: str, pool_root: Path, cli: str | None, force: boo
         log("claude CLI 不存在，跳过深读（按原文对话）")
         return "skipped"
     log("深读 agent 启动（速记骨架 + 审计组装）…")
-    outcome = deep_read_paper(
+    outcome, reason = deep_read_paper(
         paper_id, pool_root, cli,
         agent_timeout_s=SKELETON_TIMEOUT_S,
         skeleton_path=pool_dir / "skeleton-latest.json",
@@ -137,7 +140,7 @@ def ensure_deep_read(paper_id: str, pool_root: Path, cli: str | None, force: boo
     elif outcome == "needs-review":
         log("深读完成：needs-review（可用），已入池")
     else:
-        log(f"深读审计未过：{outcome}（按原文对话）")
+        log(f"深读审计未过：{reason or outcome}（按原文对话）")
     return outcome
 
 

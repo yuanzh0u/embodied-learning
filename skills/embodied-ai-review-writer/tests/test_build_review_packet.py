@@ -1206,7 +1206,7 @@ class AbstractTierRenderingTests(unittest.TestCase):
         self.assertIn("## 摘要级相关工作（候选景观）", artifacts["review-packet.md"])
         self.assertIn("### 摘要级相关工作", artifacts["evidence-appendix.md"])
         brief = artifacts["writing-brief.md"]
-        self.assertIn("摘要级相关工作（候选景观，仅定位用）", brief)
+        self.assertIn("摘要级相关工作（选文通过、尚未深读的候选，仅定位用）", brief)
         self.assertIn("References 中对应条目末尾标注（摘要级）", brief)
         # Full-text stats stay on the full-text tier.
         self.assertIn("- Evidence events: 1", artifacts["review-packet.md"])

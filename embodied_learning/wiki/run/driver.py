@@ -41,8 +41,11 @@ from pathlib import Path
 
 from embodied_learning.harness.claude import (
     DRIVER_AGENT_MODEL,
+    SessionLog,
     complete,
+    open_session_log,
     resolve_cli,
+    session_ledger_enabled,
 )
 from embodied_learning.harness.prompt import (
     DYNAMIC_QUERIES_PROMPT,
@@ -53,7 +56,13 @@ from embodied_learning.harness.prompt import (
     read_skeleton_output,
 )
 from embodied_learning.knowledge.evidence import consolidate_evidence
-from embodied_learning.utils.layout import default_kb_root, find_roots
+from embodied_learning.knowledge.funnel import (
+    FUNNEL_FILENAME,
+    build_funnel,
+    write_funnel,
+)
+from embodied_learning.utils.layout import default_kb_root, find_roots, kb_cache_dir
+from embodied_learning.utils.translate import translate as translate_text
 from embodied_learning.search.abstract_evidence import (
     ABSTRACT_FILENAME,
     build_abstract_events,
@@ -73,17 +82,23 @@ REVIEW_MODES = {"rapid", "scoping", "systematic"}
 # Mode tables and agent defaults live in embodied_learning.config (single home).
 from embodied_learning.config import (
     # noqa: E402
+    AGENT_SESSION_LEDGER_ENV,
     CITATION_EXPANSION_TIMEOUT_S,
     DEEP_READ_LIMITS,
+    DEEP_READ_RETRY_PASSES,
+    DYNAMIC_AGENT_ATTEMPTS,
     DYNAMIC_AGENT_TIMEOUT_S,
     EVIDENCE_FLOORS,
     EXTRACTION_STAGE_TIMEOUT_S,
+    FUNNEL_LAYER_PAPER_CAP,
     REVIEW_MODES,
     S2_BUDGET_S,
     S2_SLEEP_S,
-    SCREEN_LIMITS,
+    SEARCH_MAX_RESULTS_PER_QUERY,
     SEARCH_STRATEGIES,
     SELECTION_STRATEGIES,
+    SESSION_EVENT_TEXT_MAX_CHARS,
+    SKELETON_AGENT_ATTEMPTS,
     TERMS_AGENT_TIMEOUT_S,
 )
 # Deep-read queue selection: keywords is the legacy term-matching screen
@@ -211,6 +226,33 @@ def mechanical_terms(topic: str, focus: str) -> list[str]:
 
 
 
+def translation_terms(topic: str, focus: str) -> tuple[list[str], str]:
+    """Mechanical terms merged with a MyMemory translation of the topic.
+
+    Pure-Chinese topics carry no Latin token to conjunct — arXiv cannot match
+    CJK text (2026-10-15 强化学习), so the mechanical path gets nothing to run.
+    One translation call contributes English tokens. Merge, never replace: the
+    topic's own tokens stay in the list (call sites filter to Latin where it
+    matters), English tokens first so the 12-cap and the recall scope clause
+    prefer them. When the topic already has Latin tokens, or translation is
+    unavailable, the mechanical result passes through unchanged.
+
+    Returns ``(terms, translated_text)``; ``translated_text`` is "" unless a
+    translation actually contributed terms."""
+
+    terms = mechanical_terms(topic, focus)
+    if any(term.isascii() for term in terms):
+        return terms, ""
+    translated = translate_text(f"{topic} {focus}".strip()) or ""
+    if not translated:
+        return terms, ""
+    english = [t for t in mechanical_terms(translated, "") if t.isascii()]
+    if not english:
+        return terms, ""
+    merged = (english + [t for t in terms if t not in english])[:12]
+    return merged, translated
+
+
 def extract_terms_json(text: str) -> list[str] | None:
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if not match:
@@ -226,7 +268,10 @@ def extract_terms_json(text: str) -> list[str] | None:
     return cleaned[:12] or None
 
 
-def agent_terms(topic: str, focus: str, timeout_s: float, cli: str | None) -> list[str] | None:
+def agent_terms(
+    topic: str, focus: str, timeout_s: float, cli: str | None,
+    *, ledger: SessionLog | None = None,
+) -> list[str] | None:
     """One-shot claude call for screening terms. Returns None on any failure —
     the caller falls back to mechanical terms. This is a function call with a
     timeout, not a decision-maker."""
@@ -234,7 +279,8 @@ def agent_terms(topic: str, focus: str, timeout_s: float, cli: str | None) -> li
         return None
     try:
         result = complete(
-            TERMS_PROMPT.format(topic=topic, focus=focus or "无"), timeout_s=timeout_s, cli=cli
+            TERMS_PROMPT.format(topic=topic, focus=focus or "无"), timeout_s=timeout_s, cli=cli,
+            label="terms-agent", ledger=ledger,
         )
     except (subprocess.TimeoutExpired, OSError) as exc:
         if isinstance(exc, subprocess.TimeoutExpired):
@@ -264,15 +310,44 @@ def parse_seed_ids(raw: str) -> list[str]:
     return ids
 
 
-def extract_dynamic_queries_json(text: str) -> dict | None:
+def _dynamic_query_candidates(text: str) -> list[str]:
+    """Parse candidates for the agent's JSON payload, cheapest first.
+
+    Includes a head-repair ladder: the completion channel occasionally drops
+    the first bytes of the response (2026-10-13/14/15 runs arrived starting at
+    ``queries":`` / ``":[`` instead of ``{"queries":``), leaving intact query
+    objects under a damaged outer wrapper that a strict parse rejects."""
+
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        stripped = re.sub(r"^```[A-Za-z]*\s*", "", stripped)
+        stripped = re.sub(r"\s*```$", "", stripped)
+    bases = [stripped]
     match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
-        return None
+    if match and match.group(0) not in bases:
+        bases.append(match.group(0))
+    candidates: list[str] = []
+    for base in bases:
+        for prefix in ("", '{"', '{"queries', '{"queries":', '{"queries": [', '{"queries": '):
+            candidate = prefix + base
+            if candidate not in candidates:
+                candidates.append(candidate)
+    return candidates
+
+
+def _load_dynamic_queries(candidate: str) -> dict | None:
+    """One candidate string → ``{"queries": [...]}`` or None when unusable."""
+
     try:
-        payload = json.loads(match.group(0))
+        payload = json.loads(candidate)
     except json.JSONDecodeError:
         return None
-    queries = payload.get("queries") if isinstance(payload, dict) else None
+    if isinstance(payload, dict):
+        queries = payload.get("queries")
+    elif isinstance(payload, list):
+        queries = payload
+    else:
+        return None
     if not isinstance(queries, list):
         return None
     cleaned: list[dict] = []
@@ -292,50 +367,108 @@ def extract_dynamic_queries_json(text: str) -> dict | None:
     return {"queries": cleaned[:20]}
 
 
+def extract_dynamic_queries_json(text: str) -> dict | None:
+    """Parse the dynamic-query agent's JSON payload out of its stdout.
+
+    Tolerates code fences and prose around the object, and repairs a truncated
+    response head (see :func:`_dynamic_query_candidates`). Returns None only
+    when no candidate yields a non-empty query list."""
+
+    for candidate in _dynamic_query_candidates(text):
+        payload = _load_dynamic_queries(candidate)
+        if payload is not None:
+            return payload
+    return None
+
+
 def agent_dynamic_queries(
-    topic: str, focus: str, seed_ids: list[str], timeout_s: float, cli: str | None
+    topic: str, focus: str, seed_ids: list[str], timeout_s: float, cli: str | None,
+    *,
+    attempts: int | None = None,
+    ledger: SessionLog | None = None,
 ) -> dict | None:
     """One-shot claude call generating the run's dynamic arXiv queries.
 
     This is the stage the failed 2026-09-11 runs were missing: their topics
     matched no taxonomy card, the mechanical latin-term fallback was empty for
     pure-Chinese topics, and retrieval ran 4 off-topic card queries. Returns
-    None on any failure — the plan still contains the generic fallback."""
+    None when every attempt fails — the plan still contains the generic
+    fallback (and the driver stops with an actionable empty-plan error when
+    that fallback is also empty).
+
+    Parse failures and non-zero exits retry up to ``DYNAMIC_AGENT_ATTEMPTS``
+    total tries; a timeout does not retry — that budget is already spent.
+    Every failure reason is logged: the silent None of 2026-10-15 made the
+    head-truncation outage hard to diagnose."""
+
     if not cli:
         return None
+    total = max(1, int(attempts if attempts is not None else DYNAMIC_AGENT_ATTEMPTS))
     seed_line = SEED_LINE.format(seeds=", ".join(seed_ids)) if seed_ids else ""
     prompt = DYNAMIC_QUERIES_PROMPT.format(topic=topic, focus=focus or "无", seed_line=seed_line)
-    try:
-        result = complete(prompt, timeout_s=timeout_s, cli=cli)
-    except (subprocess.TimeoutExpired, OSError) as exc:
-        if isinstance(exc, subprocess.TimeoutExpired):
-            log(f"[DRIVER-WARN] 动态查询 agent 超时（{timeout_s:.0f}s），回退分类法+通用查询")
-        else:
-            log(f"[DRIVER-WARN] 动态查询 agent 启动失败：{exc}")
-        return None
-    if result.returncode:
-        return None
-    return extract_dynamic_queries_json(result.stdout)
+    for attempt in range(1, total + 1):
+        try:
+            result = complete(
+                prompt, timeout_s=timeout_s, cli=cli, label=f"dynamic-queries:{topic}",
+                ledger=ledger,
+            )
+        except (subprocess.TimeoutExpired, OSError) as exc:
+            if isinstance(exc, subprocess.TimeoutExpired):
+                log(f"[DRIVER-WARN] 动态查询 agent 超时（{timeout_s:.0f}s），回退分类法+通用查询")
+            else:
+                log(f"[DRIVER-WARN] 动态查询 agent 启动失败：{exc}")
+            return None
+        if result.returncode:
+            log(
+                f"[DRIVER-WARN] 动态查询 agent 退出 {result.returncode}（第 {attempt}/{total} 次）："
+                f"{(result.stderr or result.stdout or '').strip()[-200:]}"
+            )
+            continue
+        payload = extract_dynamic_queries_json(result.stdout)
+        if payload:
+            return payload
+        head = re.sub(r"\s+", " ", (result.stdout or "").strip())[:100]
+        log(f"[DRIVER-WARN] 动态查询 agent 输出无法解析（第 {attempt}/{total} 次）：{head!r}")
+    return None
 
 
 class TermsSelector:
     """Runs the terms selection in a thread so it overlaps retrieval; the main
-    flow only blocks on it right before screening."""
+    flow only blocks on it right before screening.
 
-    def __init__(self, topic: str, focus: str, *, use_agent: bool, timeout_s: float, cli: str | None):
+    ``fallback_terms`` is the precomputed mechanical/translated term list: the
+    caller already bootstrapped pure-Chinese topics through translation, and a
+    second mechanical pass over the raw Chinese topic would drop back to CJK
+    tokens that English titles never match."""
+
+    def __init__(
+        self,
+        topic: str,
+        focus: str,
+        *,
+        use_agent: bool,
+        timeout_s: float,
+        cli: str | None,
+        fallback_terms: list[str] | None = None,
+        ledger: SessionLog | None = None,
+    ):
         self._result: list[str] | None = None
         self._source = "mechanical"
         self._thread: threading.Thread | None = None
+
+        def mechanical() -> list[str]:
+            return list(fallback_terms) if fallback_terms is not None else mechanical_terms(topic, focus)
+
         if not use_agent:
-            self._result = mechanical_terms(topic, focus)
+            self._result = mechanical()
             return
         def worker() -> None:
-            terms = agent_terms(topic, focus, timeout_s, cli)
+            terms = agent_terms(topic, focus, timeout_s, cli, ledger=ledger)
             if terms:
                 self._result = terms
                 self._source = "agent"
             else:
-                self._result = mechanical_terms(topic, focus)
+                self._result = mechanical()
                 self._source = "mechanical-fallback"
         self._thread = threading.Thread(target=worker, daemon=True)
 
@@ -448,6 +581,10 @@ def _topic_scope_clause(terms: list[str] | str, *, limit: int = 4) -> str:
     if isinstance(terms, str):
         terms = re.findall(r"[A-Za-z][A-Za-z0-9\-]{2,}", terms)
     tokens = [t for t in terms if t and t.lower() not in _RECALL_STOPWORDS]
+    # A merged term list (translated bootstrap, see translation_terms) can mix
+    # Latin and CJK tokens — the scope clause wants the English ones.
+    latin = [t for t in tokens if t.isascii()]
+    tokens = latin or tokens
     if not tokens:
         return ""
     return " AND (" + " OR ".join(f"all:{t}" for t in tokens[:limit]) + ")"
@@ -735,12 +872,23 @@ def abstract_evidence_stage(
     knowledge_ids: list[str],
     args: argparse.Namespace,
     summary_extra: dict,
+    screening_ids: Path | None = None,
 ) -> None:
-    """Project registry metadata into abstract-tier evidence events (stage:
-    abstract-evidence). Abstracts are positioning-only material — related-work
-    landscape, never mechanism-level claims — and they share the run's event-ID
-    prefix with the deep-read projection (the deep-read start sequence is
-    computed after this file exists). Idempotent on the output file."""
+    """Project *selection-accepted* registry metadata into abstract-tier
+    evidence events (stage: abstract-evidence). Abstracts are positioning-only
+    material — related-work landscape, never mechanism-level claims. The scope
+    is ``screening-ids.txt``: a registry candidate the selector rejected is
+    never positioning evidence (2026-10-13 手部姿态估计 leaked 108 rejected
+    papers into the appendix at whole-registry scope). Held papers are inside
+    the selection set and keep their event.
+
+    Missing ``screening-ids.txt`` skips the stage with a warning — falling
+    back to the whole registry would restore that bug. Events share the run's
+    event-ID prefix with the deep-read projection (the deep-read start sequence
+    is computed after this file exists). Idempotent on the output file."""
+    screening_ids = screening_ids or (run_dir / "screening-ids.txt")
+    basis = "screened" if screening_ids.is_file() else "skipped"
+    summary_extra["abstract_basis"] = basis
     evidence_dir = run_dir / "evidence"
     target = evidence_dir / ABSTRACT_FILENAME
     if not args.force and outputs_exist(target):
@@ -748,6 +896,15 @@ def abstract_evidence_stage(
         summary_extra["abstract_events"] = len(existing)
         log(stage_line("abstract-evidence", f"skipped (outputs present, {len(existing)} events)"))
         return
+    if not screening_ids.is_file():
+        summary_extra["abstract_events"] = 0
+        log("[DRIVER-WARN] 未找到 screening-ids.txt，跳过摘要级（不回退全 registry）")
+        return
+    include = {
+        line.strip()
+        for line in screening_ids.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    }
     manifest = json.loads(run_json_path.read_text(encoding="utf-8"))
     prefix = ensure_event_prefix(kb_root, run_json_path, manifest)
     registry = json.loads((run_dir / "candidate-registry.json").read_text(encoding="utf-8"))
@@ -759,10 +916,14 @@ def abstract_evidence_stage(
         topic_id=knowledge_ids[0] if knowledge_ids else "EA-DATA",
         prefix=prefix,
         start_seq=1,
+        include_arxiv_ids=include,
     )
     write_abstract_tier(events, evidence_dir)
     summary_extra["abstract_events"] = len(events)
-    log(stage_line("abstract-evidence", f"{len(events)} 条摘要级事件（tier: abstract，仅定位用）"))
+    log(stage_line(
+        "abstract-evidence",
+        f"{len(events)} 条摘要级事件（选文通过 {len(include)} 篇，tier: abstract，仅定位用）",
+    ))
 
 
 def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_extra: dict) -> None:
@@ -1003,7 +1164,8 @@ def _clear_deep_read_failure(notes_dir: Path, paper_id: str) -> None:
         path.unlink(missing_ok=True)
 
 
-def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, summary_extra: dict) -> None:
+def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, summary_extra: dict,
+              ledger: SessionLog | None = None) -> None:
     """Per-paper skeleton agents (parallel one-shot claude) + local assembly.
 
     Progress is one stdout line per paper event so the wiki dialog shows
@@ -1056,6 +1218,66 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
         done = 0
         outcomes = []
     log(f"[DRIVER] 深读开始：{len(todo)} 篇并行（每批 {args.agents_parallel}）")
+    # Papers whose first pass failed but whose full text is on disk: candidates
+    # for the retry pass below (upstream instability under parallel load).
+    failed_ids: list[str] = []
+
+    def absorb(
+        paper_id: str, outcome: str, deep_reason: str,
+        *, note: str = "", failure_prefix: str = "",
+    ) -> None:
+        """Copy the pooled note (when one was built) and fold one outcome into
+        the counters/outcomes. Shared by the first pass, the retry pass and
+        the waitlist fill (``note``/``failure_prefix`` label the latter two)."""
+        nonlocal passed, needs_review, failed
+        pooled_note = pool_root / f"arxiv-{paper_id}" / "note.json"
+        pooled_audit = pool_root / f"arxiv-{paper_id}" / "note.json.audit.json"
+        if pooled_note.is_file():
+            shutil.copyfile(pooled_note, notes_dir / f"{paper_id}.json")
+            if pooled_audit.is_file():
+                shutil.copyfile(pooled_audit, notes_dir / f"{paper_id}.audit.json")
+        # Only exceptions to the norm go to the dialog; steady progress lives
+        # on the progress bar. Failure reasons are persisted so run_status can
+        # report WHY a paper stopped (log-only reasons were invisible to the
+        # writer).
+        if outcome == "pass":
+            passed += 1
+            _clear_deep_read_failure(notes_dir, paper_id)
+            outcomes.append((paper_id, "pass", note))
+        elif outcome == "needs-review":
+            needs_review += 1
+            _clear_deep_read_failure(notes_dir, paper_id)
+            outcomes.append((
+                paper_id, "needs-review",
+                f"{note} · 审计 needs-review（可用）" if note else "审计 needs-review（可用）",
+            ))
+            log(f"[PAPER] {paper_id} 审计 needs-review（可用）")
+        else:
+            failed += 1
+            reason = deep_reason or f"深读失败（{outcome}）"
+            if failure_prefix:
+                reason = f"{failure_prefix}深读失败（{reason}）"
+            _record_deep_read_failure(notes_dir, paper_id, str(outcome), reason)
+            outcomes.append((paper_id, "failed", reason))
+            log(f"[PAPER] {paper_id} 深读失败（{reason}）")
+            if paper_id not in failed_ids:
+                failed_ids.append(paper_id)
+            return
+        if paper_id in failed_ids:
+            failed_ids.remove(paper_id)
+
+    def forget_failure(paper_id: str) -> None:
+        """Drop a paper's earlier failed row before recording its retry, so one
+        recovered paper counts once (as pass/needs-review, not twice)."""
+        nonlocal failed
+        if paper_id in failed_ids:
+            failed -= 1
+            failed_ids.remove(paper_id)
+        outcomes[:] = [
+            item for item in outcomes
+            if not (item[0] == paper_id and item[1] == "failed")
+        ]
+
     for batch_start in range(0, len(todo), args.agents_parallel):
         chunk = todo[batch_start : batch_start + args.agents_parallel]
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunk)) as executor:
@@ -1091,47 +1313,64 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                     deep_read_paper, paper_id, pool_root, cli,
                     agent_timeout_s=args.agent_timeout,
                     skeleton_path=run_dir / f"skel-{paper_id}.json",
+                    ledger=ledger,
                 )
             for paper_id, future in futures.items():
                 if future is None:
                     continue  # counted when skipped at submission
                 try:
-                    outcome = future.result()
-                    failure_reason = ""
+                    outcome, deep_reason = future.result()
                 except Exception as exc:  # noqa: BLE001 - per-paper isolation
                     outcome = "failed"
-                    failure_reason = f"agent 异常：{exc}"
+                    deep_reason = f"agent 异常：{exc}"
                     log(f"[PAPER] {paper_id} agent 异常：{exc}")
-                pooled_note = pool_root / f"arxiv-{paper_id}" / "note.json"
-                pooled_audit = pool_root / f"arxiv-{paper_id}" / "note.json.audit.json"
-                if pooled_note.is_file():
-                    shutil.copyfile(pooled_note, notes_dir / f"{paper_id}.json")
-                    if pooled_audit.is_file():
-                        shutil.copyfile(pooled_audit, notes_dir / f"{paper_id}.audit.json")
                 done += 1
                 log(f"[DRIVER-PROGRESS:deep-read:{done}/{len(order)}]")
-                # Only exceptions to the norm go to the dialog; steady progress
-                # lives on the progress bar. Failure reasons are persisted so
-                # run_status can report WHY a paper stopped (log-only reasons
-                # were invisible to the writer).
-                if outcome == "pass":
-                    passed += 1
-                    _clear_deep_read_failure(notes_dir, paper_id)
-                    outcomes.append((paper_id, "pass", ""))
-                elif outcome == "needs-review":
-                    needs_review += 1
-                    _clear_deep_read_failure(notes_dir, paper_id)
-                    outcomes.append((paper_id, "needs-review", "审计 needs-review（可用）"))
-                    log(f"[PAPER] {paper_id} 审计 needs-review（可用）")
-                else:
-                    failed += 1
-                    reason = failure_reason or f"深读失败（{outcome}）"
-                    _record_deep_read_failure(
-                        notes_dir, paper_id, str(outcome),
-                        failure_reason or f"深读失败（{outcome}）",
+                absorb(paper_id, outcome, deep_reason)
+    # ---- 重试：并发下上游不稳定，失败但全文已恢复的论文再读一遍 ----------
+    # The extraction queue already does a HELD second pass for the same reason
+    # (rate limits / hard timeouts under load). Deep reads had no such pass:
+    # one failed skeleton call wrote <id>.failed.json and the paper was lost
+    # for the run even though its full text was on disk. Papers without an
+    # extraction are excluded — their bottleneck is the fetch, which this
+    # pass cannot fix.
+    for retry_round in range(1, DEEP_READ_RETRY_PASSES + 1):
+        retry_ids = [
+            paper_id for paper_id in failed_ids
+            if (pool_root / f"arxiv-{paper_id}" / "extraction.json").is_file()
+        ]
+        if not retry_ids:
+            break
+        log(
+            f"[DRIVER] 深读重试第 {retry_round}/{DEEP_READ_RETRY_PASSES} 轮："
+            f"{len(retry_ids)} 篇（首轮失败且全文已恢复，上游不稳定时一次重试多数能过）"
+        )
+        for batch_start in range(0, len(retry_ids), args.agents_parallel):
+            chunk = retry_ids[batch_start : batch_start + args.agents_parallel]
+            with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunk)) as executor:
+                futures = {
+                    paper_id: executor.submit(
+                        deep_read_paper, paper_id, pool_root, cli,
+                        agent_timeout_s=args.agent_timeout,
+                        skeleton_path=run_dir / f"skel-{paper_id}.json",
+                        ledger=ledger,
                     )
-                    outcomes.append((paper_id, "failed", reason))
-                    log(f"[PAPER] {paper_id} 深读失败（{outcome}）")
+                    for paper_id in chunk
+                }
+                for paper_id, future in futures.items():
+                    try:
+                        outcome, deep_reason = future.result()
+                    except Exception as exc:  # noqa: BLE001 — per-paper isolation
+                        outcome = "failed"
+                        deep_reason = f"agent 异常：{exc}"
+                        log(f"[PAPER] {paper_id} 重试 agent 异常：{exc}")
+                    forget_failure(paper_id)
+                    absorb(
+                        paper_id, outcome, deep_reason,
+                        note="重试补读", failure_prefix="重试",
+                    )
+                    log(f"[DRIVER-RETRY] {paper_id} {outcome}"
+                        + (f" · {deep_reason}" if deep_reason else ""))
     # ---- 候补：可投影篇数不足地板时按评分补读 ---------------------------
     # The floor is counted in PROJECTION units, not read units: a needs-review
     # paper is only projectable if at least one card passed, which is unknown
@@ -1171,33 +1410,21 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
                 log(f"[PAPER] {paper_id} 候补 {reason}，跳过")
                 continue
             try:
-                outcome = deep_read_paper(
+                outcome, deep_reason = deep_read_paper(
                     paper_id, pool_root, cli,
                     agent_timeout_s=args.agent_timeout,
                     skeleton_path=run_dir / f"skel-{paper_id}.json",
+                    ledger=ledger,
                 )
             except Exception as exc:  # noqa: BLE001 — per-paper isolation
                 outcome = "failed"
+                deep_reason = f"agent 异常：{exc}"
                 log(f"[PAPER] {paper_id} agent 异常：{exc}")
-            pooled_note = pool_root / f"arxiv-{paper_id}" / "note.json"
-            pooled_audit = pool_root / f"arxiv-{paper_id}" / "note.json.audit.json"
-            if pooled_note.is_file():
-                shutil.copyfile(pooled_note, notes_dir / f"{paper_id}.json")
-                if pooled_audit.is_file():
-                    shutil.copyfile(pooled_audit, notes_dir / f"{paper_id}.audit.json")
             filled.append(paper_id)
-            if outcome == "pass":
-                passed += 1
-                _clear_deep_read_failure(notes_dir, paper_id)
-                outcomes.append((paper_id, "pass", "候补补读"))
-            elif outcome == "needs-review":
-                needs_review += 1
-                _clear_deep_read_failure(notes_dir, paper_id)
-                outcomes.append((paper_id, "needs-review", "候补补读 · 审计 needs-review（可用）"))
-            else:
-                failed += 1
-                _record_deep_read_failure(notes_dir, paper_id, str(outcome), f"候补补读深读失败（{outcome}）")
-                outcomes.append((paper_id, "failed", f"候补补读深读失败（{outcome}）"))
+            absorb(
+                paper_id, outcome, deep_reason,
+                note="候补补读", failure_prefix="候补补读",
+            )
             accepted = projection_units(passed, needs_review)
             log(f"[PAPER] {paper_id} 候补 {outcome}，累计可投影 {accepted}/{floor}")
         log(f"[DRIVER] 候补补读 {len(filled)} 篇，可投影合计 "
@@ -1220,22 +1447,46 @@ def deep_read(run_dir: Path, run_json_path: Path, screening_ids: Path, args, sum
     )
 
 
-def run_skeleton_agent(cli: str, paper_id: str, pool_root: Path, timeout_s: float) -> dict | None:
-    """One one-shot claude call returning the paper's claim skeleton."""
-    try:
-        result = complete(
-            build_skeleton_prompt(paper_id, pool_root), timeout_s=timeout_s, cli=cli,
-            cwd=DRIVER_CWD,
-        )
-    except (subprocess.TimeoutExpired, OSError) as exc:
-        if isinstance(exc, subprocess.TimeoutExpired):
-            log(f"[DRIVER-WARN] {paper_id} 骨架 agent 超时（{timeout_s:.0f}s），该篇深读记 failed")
-        else:
+def run_skeleton_agent(
+    cli: str, paper_id: str, pool_root: Path, timeout_s: float,
+    *, attempts: int | None = None, ledger: SessionLog | None = None,
+) -> dict | None:
+    """One one-shot claude call returning the paper's claim skeleton.
+
+    Non-zero exits, unparseable output AND timeouts retry up to
+    ``SKELETON_AGENT_ATTEMPTS`` total tries. Timeouts used to return
+    immediately ("the budget is already spent"), but deep reads run several
+    agents concurrently and an overloaded upstream surfaces exactly that way:
+    the 2026-10-16 强化学习 run lost 20/43 deep reads to skeleton calls that
+    died mid-stream. A retried paper costs about one extra read; a lost paper
+    costs evidence, so one more timeout budget is the cheaper side. A spawn
+    failure (missing CLI) still fails fast on the first try — retrying it only
+    burns the wall clock."""
+    total = max(1, int(attempts if attempts is not None else SKELETON_AGENT_ATTEMPTS))
+    for attempt in range(1, total + 1):
+        try:
+            result = complete(
+                build_skeleton_prompt(paper_id, pool_root), timeout_s=timeout_s, cli=cli,
+                cwd=DRIVER_CWD, label=f"skeleton:{paper_id}", ledger=ledger,
+            )
+        except subprocess.TimeoutExpired:
+            log(f"[DRIVER-WARN] {paper_id} 骨架 agent 超时（{timeout_s:.0f}s，"
+                f"第 {attempt}/{total} 次）")
+            continue
+        except OSError as exc:
             log(f"[DRIVER-WARN] {paper_id} 骨架 agent 启动失败：{exc}")
-        return None
-    if result.returncode:
-        return None
-    return read_skeleton_output(result.stdout)
+            return None
+        if result.returncode:
+            reason = (result.stderr or result.stdout or "").strip().splitlines()
+            log(f"[DRIVER-WARN] {paper_id} 骨架 agent exit {result.returncode}"
+                f"（第 {attempt}/{total} 次）：{reason[-1] if reason else '无输出'}")
+            continue
+        skeleton = read_skeleton_output(result.stdout)
+        if skeleton is not None:
+            return skeleton
+        head = re.sub(r"\s+", " ", (result.stdout or "").strip())[:100]
+        log(f"[DRIVER-WARN] {paper_id} 骨架 agent 输出不可解析（第 {attempt}/{total} 次）：{head!r}")
+    return None
 
 
 def deep_read_paper(
@@ -1245,15 +1496,17 @@ def deep_read_paper(
     *,
     agent_timeout_s: float = 420.0,
     skeleton_path: Path | None = None,
-) -> str:
+    ledger: SessionLog | None = None,
+) -> tuple[str, str]:
     """Deep-read one pooled paper: skeleton agent → build_paper_note assembly
-    + audit. Returns 'pass' | 'needs-review' | 'failed'. Shared by the batch
-    driver and the single-paper chat preparation (they log differently, so
-    logging stays with the callers)."""
+    + audit. Returns ``(status, reason)`` where status is 'pass' |
+    'needs-review' | 'failed' and reason is a human-readable failure cause
+    (empty on pass). Shared by the batch driver and the single-paper chat
+    preparation (they log differently, so logging stays with the callers)."""
 
-    skeleton = run_skeleton_agent(cli, paper_id, pool_root, agent_timeout_s)
+    skeleton = run_skeleton_agent(cli, paper_id, pool_root, agent_timeout_s, ledger=ledger)
     if not skeleton:
-        return "failed"
+        return "failed", "骨架 agent 失败（详见上文 [DRIVER-WARN]）"
     if skeleton_path is None:
         skeleton_path = Path(tempfile.gettempdir()) / f"skel-{paper_id}-{os.getpid()}.json"
     skeleton_path.write_text(json.dumps(skeleton, ensure_ascii=False), encoding="utf-8")
@@ -1270,10 +1523,17 @@ def deep_read_paper(
     except (json.JSONDecodeError, TypeError):
         pass
     if result.returncode == 0 and outcome == "pass":
-        return "pass"
+        return "pass", ""
     if outcome == "needs-review" or (result.returncode == 3 and outcome == "unknown"):
-        return "needs-review"
-    return "failed"
+        return "needs-review", ""
+    tail = (result.stderr or result.stdout or "").strip().splitlines()
+    reason = (
+        f"build-paper-note exit {result.returncode}"
+        + (f"：{tail[-1]}" if tail else "：无输出")
+        if result.returncode
+        else f"审计 status={outcome}"
+    )
+    return "failed", reason
 
 
 def pool_seed(summary_extra: dict, screening_ids: Path, run_dir: Path, args) -> None:
@@ -1309,7 +1569,7 @@ def pool_seed(summary_extra: dict, screening_ids: Path, run_dir: Path, args) -> 
         if not payload.get("available"):
             held += 1
             continue
-        html_cache = Path(tempfile.gettempdir()) / "embodied-ai-literature-hub" / "html" / f"{paper_id}.html"
+        html_cache = kb_cache_dir(args.kb_root) / "html" / f"{paper_id}.html"
         command = list(add_cmd_base) + ["--extraction", str(extraction), "--force"]
         if html_cache.is_file():
             command += ["--html", str(html_cache)]
@@ -1352,6 +1612,7 @@ def run_stage(
     stream: bool = False,
     on_line: "callable | None" = None,
     soft_exit_codes: frozenset[int] = frozenset(),
+    ledger: "SessionLog | None" = None,
 ) -> str:
     """Idempotent stage runner: skip when outputs exist, else run the built
     command and verify the outputs landed. ``stream=True`` forwards the child's
@@ -1360,9 +1621,17 @@ def run_stage(
     buffering until completion. ``soft_exit_codes`` lists non-zero exits that
     still count as "ran" when the outputs landed (retrieval returns 1 for a
     partial batch: some queries failed, the hits are saved, and the run should
-    proceed with the hole visible rather than abort)."""
+    proceed with the hole visible rather than abort). ``ledger`` receives one
+    ``step`` on entry, a ``metric`` with the stage duration on success, and an
+    ``error`` line on failure (usage-records-format trace layer)."""
+    begun = time.monotonic()
     if not force and outputs_exist(*outputs):
         detail = "skipped (outputs present)"
+        if ledger is not None:
+            ledger.event(
+                level="info", kind="step", text=name,
+                stage=name, skipped=True,
+            )
         log(stage_line(name, detail))
         return detail
     # Announce BEFORE blocking: a stage that runs for minutes with no output
@@ -1370,6 +1639,8 @@ def run_stage(
     # minutes between "注册 558 篇去重候选" and "精读候选 29 篇").
     log(f"[DRIVER] {name} 开始…")
     command = command_builder()
+    if ledger is not None:
+        ledger.step(name, command=command_label(command))
     if stream:
         captured: list[str] = []
         process = subprocess.Popen(
@@ -1387,6 +1658,12 @@ def run_stage(
         except subprocess.TimeoutExpired:
             log(f"[DRIVER-WARN] {name} 阶段超时（{timeout:.0f}s），已 kill；"
                 "可 --force 续跑该阶段或加大其超时")
+            if ledger is not None:
+                ledger.error(
+                    f"{name} stage timed out after {timeout:.0f}s",
+                    stage=name, timeout_s=timeout,
+                    duration_s=round(time.monotonic() - begun, 3),
+                )
             process.kill()
             process.wait()
             returncode = -1
@@ -1397,15 +1674,38 @@ def run_stage(
         except subprocess.TimeoutExpired:
             log(f"[DRIVER-WARN] {name} 阶段超时（{timeout:.0f}s），已中止；"
                 "可 --force 续跑该阶段或加大其超时")
+            if ledger is not None:
+                ledger.error(
+                    f"{name} stage timed out after {timeout:.0f}s",
+                    stage=name, timeout_s=timeout,
+                    duration_s=round(time.monotonic() - begun, 3),
+                )
             raise
     if result.returncode and result.returncode not in soft_exit_codes:
+        if ledger is not None:
+            ledger.error(
+                f"{name} stage exit {result.returncode}: "
+                f"{(result.stderr or result.stdout or '')[-SESSION_EVENT_TEXT_MAX_CHARS:]}",
+                stage=name, exit_code=result.returncode,
+                duration_s=round(time.monotonic() - begun, 3),
+            )
         raise fail(name, f"exit {result.returncode}: {(result.stderr or result.stdout)[-400:]}")
     missing = [str(path) for path in outputs if not outputs_exist(path)]
     if missing:
+        if ledger is not None:
+            ledger.error(
+                f"{name} stage outputs missing: {', '.join(missing)}",
+                stage=name, duration_s=round(time.monotonic() - begun, 3),
+            )
         raise fail(name, f"outputs missing after run: {', '.join(missing)}")
     detail = f"ran: {command_label(command)}"
     if result.returncode in soft_exit_codes:
         detail += f" (exit {result.returncode} tolerated: partial batch, hits kept)"
+    if ledger is not None:
+        ledger.metric(
+            name, time.monotonic() - begun,
+            returncode=result.returncode, detail=detail,
+        )
     log(stage_line(name, detail))
     return detail
 
@@ -1459,6 +1759,21 @@ def run(args: argparse.Namespace) -> int:
         if not Path(path).is_file():
             print(f"external candidates file not found: {path}", file=sys.stderr)
             return 2
+    # smart-jev needs the decision-model endpoint/key. Fail here, before hours
+    # of retrieval and extraction, instead of at the screening stage when the
+    # registry is already paid for (same fail-fast stance as claude_auth_ready).
+    if args.selection_strategy == "smart-jev":
+        from embodied_learning.harness.claude import system_one_ready
+
+        if not system_one_ready():
+            print(
+                "决策模型（System One / jev）未配置：需要 "
+                "EMBODIED_SYSTEM_ONE_URL（或 ANTHROPIC_BASE_URL）与 "
+                "EMBODIED_SYSTEM_ONE_API_KEY（或 ANTHROPIC_AUTH_TOKEN）。"
+                "可改用 --selection-strategy smart（执行模型）。",
+                file=sys.stderr,
+            )
+            return 2
     run_json_path = run_dir / "run.json"
     # The manifest's review_mode is the contract the floors/limits are computed
     # from. A caller passing a different --review-mode silently ran the wrong
@@ -1504,6 +1819,7 @@ def _main_locked(
     end_date: str,
 ) -> int:
     global DRIVER_CWD
+    cache_dir = kb_cache_dir(kb_root)
     log("[DRIVER-PHASE:plan] 查询规划与检索词生成")
     if not args.arxiv_snapshot:
         detected = autodetect_snapshot(kb_root)
@@ -1519,6 +1835,25 @@ def _main_locked(
     stage_seconds: dict[str, float] = {}
     summary_extra: dict[str, object] = {}
     cli = resolve_cli()
+    # One usage/trace ledger for the whole run (monica usage-records-format):
+    # every mechanical stage and every one-shot agent appends here, so a run's
+    # trajectory and its token bill are one file. Caller-owned, closed below.
+    ledger = open_session_log("pipeline", run_dir.name) if session_ledger_enabled() else None
+    # Stage scripts spawn their own agents (smart selection, S2 expansion); the
+    # inherited env makes them append to THIS run ledger instead of opening
+    # sibling files. Restored in the finally block.
+    inherited_ledger = os.environ.get(AGENT_SESSION_LEDGER_ENV)
+    if ledger is not None:
+        os.environ[AGENT_SESSION_LEDGER_ENV] = str(ledger.path)
+        ledger.step(
+            "pipeline",
+            topic=args.topic,
+            review_mode=args.review_mode,
+            search_strategy=args.search_strategy,
+            selection_strategy=args.selection_strategy,
+            kb_root=str(kb_root),
+            run_dir=str(run_dir),
+        )
 
     def mark(stage: str, begun: float) -> None:
         stage_seconds[stage] = round(time.monotonic() - begun, 2)
@@ -1539,7 +1874,17 @@ def _main_locked(
         # merge point for dynamic queries from a prior claude session or the
         # dynamic-query agent: replanning must not silently drop them.
         dynamic_path = run_dir / "dynamic-queries.json"
-        latin_terms = mechanical_terms(args.topic, args.focus)
+        # Pure-Chinese topics carry no Latin token to conjunct — arXiv cannot
+        # match CJK text, and the plan falls to 0 queries whenever the
+        # dynamic-query agent also fails (2026-10-15 强化学习). One MyMemory
+        # translation augments the mechanical terms with English tokens so the
+        # run keeps an English query channel of its own (merged, not replaced).
+        latin_terms, translated_topic = translation_terms(args.topic, args.focus)
+        if translated_topic:
+            log(
+                f"[DRIVER] 纯中文话题无 Latin 检索词，机器翻译自举：{translated_topic} → "
+                f"{' / '.join(t for t in latin_terms if t.isascii())}"
+            )
         merged_queries: list[dict[str, str]] = []
         existing_dynamic: dict[str, Any] = {}
         if dynamic_path.is_file():
@@ -1558,6 +1903,24 @@ def _main_locked(
             if combined not in {str(item.get("query")) for item in merged_queries}:
                 merged_queries.append({"label": "latin-combined", "query": combined, "tier": "dynamic-core"})
 
+        # Idempotent resume: decide whether this run will actually rebuild the
+        # plan BEFORE spending agent calls. When the plan outputs are present
+        # and non-empty and nothing forces a replan, run_stage("plan") skips —
+        # the agent's fresh queries would be stranded in dynamic-queries.json
+        # outside the plan (2026-10-16 强化学习 resume burned two agent retries
+        # before "skipped (outputs present)"). A stale empty plan is the one
+        # exception: there the agent's queries are what justify the forced
+        # replan (2026-10-15).
+        prior_plan: dict[str, Any] = {}
+        plan_outputs_present = outputs_exist(*plan_outputs)
+        if plan_outputs_present:
+            try:
+                prior_plan = json.loads((run_dir / "query-plan.json").read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                prior_plan = {}
+        prior_plan_empty = not (prior_plan.get("queries") or [])
+        plan_will_run = args.force or not plan_outputs_present or prior_plan_empty
+
         # Smart strategy: one-shot agent generates the topic's own arXiv
         # queries (the stage whose absence sank the pure-Chinese topics on
         # 2026-09-11). Failure is non-fatal — the plan falls back to generic.
@@ -1572,12 +1935,19 @@ def _main_locked(
         needs_agent = args.search_strategy == "smart" or (
             not ascii_terms and not merged_queries and not seed_ids
         )
-        if needs_agent and not args.no_dynamic_agent and not args.external_candidates:
+        if needs_agent and not plan_will_run:
+            dynamic_source = "skipped (plan present)"
+            log(
+                f"[DRIVER] 查询计划已存在（{len(prior_plan.get('queries') or [])} 条查询），"
+                "重跑沿用已有计划，跳过动态查询 agent（--force 强制重新规划）"
+            )
+        elif needs_agent and not args.no_dynamic_agent and not args.external_candidates:
             if args.search_strategy != "smart":
                 log(f"[DRIVER] 话题无 Latin 检索词（策略 {args.search_strategy} 无法自举英文查询），"
                     "强制启用动态查询 agent 生成英文检索式")
             agent_payload = agent_dynamic_queries(
-                args.topic, args.focus, seed_ids, args.dynamic_timeout, cli
+                args.topic, args.focus, seed_ids, args.dynamic_timeout, cli,
+                ledger=ledger,
             )
             if agent_payload:
                 known = {str(item.get("query")) for item in merged_queries}
@@ -1611,7 +1981,18 @@ def _main_locked(
                 "--markdown-output", str(run_dir / "query-plan.md"),
             ]
 
-        run_stage("plan", plan_outputs, args.force, plan_cmd_builder)
+        # A stale empty plan must not block replanning: after a dynamic-agent
+        # failure the plan stage would skip on its leftover outputs and strand
+        # the fresh dynamic-queries.json content outside the plan (2026-10-15
+        # 强化学习 resume). Non-empty plans keep the idempotent skip.
+        plan_force = args.force
+        if not plan_force and merged_queries and plan_outputs_present and prior_plan_empty:
+            plan_force = True
+            log("[DRIVER] 旧查询计划为空，丢弃后按 dynamic-queries.json 重新规划")
+            for stale in plan_outputs:
+                stale.unlink(missing_ok=True)
+
+        run_stage("plan", plan_outputs, plan_force, plan_cmd_builder, ledger=ledger)
         mark("plan", begun)
         plan = json.loads((run_dir / "query-plan.json").read_text(encoding="utf-8"))
         knowledge_ids = [str(item) for item in plan.get("knowledge_ids") or []]
@@ -1636,31 +2017,56 @@ def _main_locked(
             query_lines,
         )
 
+        # An empty plan cannot feed search-arxiv: its empty-query guard exits
+        # 1, which the partial-batch tolerance then misreports as "outputs
+        # missing" (2026-10-15 强化学习). When seeds/external candidates can
+        # still feed the registry, skip keyword retrieval and let those
+        # channels carry the run; otherwise this is the sanctioned
+        # retrieval-failure stop — say what is missing. The empty plan
+        # artifacts are dropped so a retry re-runs planning instead of
+        # skipping on stale outputs.
+        seeds_strategy = args.search_strategy == "seeds"
+        external_only = bool(args.external_candidates)
+        citation_capable = bool(seed_ids) and args.search_strategy in ("seeds", "smart")
+        if query_count == 0 and not (external_only or citation_capable):
+            for stale in plan_outputs:
+                stale.unlink(missing_ok=True)
+            raise fail(
+                "plan",
+                "检索计划 0 条查询：动态查询 agent 未产出可用英文检索式，话题无 Latin 检索词"
+                "（纯中文话题 arXiv 无法匹配）且无种子论文。补充 --seed-arxiv-ids、换用含英文"
+                "术语的话题，或把英文检索式写入 dynamic-queries.json 后重试续跑"
+                "（空计划已清空，续跑会重新规划）。",
+            )
+
         # ---- terms selection (overlaps retrieval) -----------------------
         selector = TermsSelector(
             args.topic, args.focus,
             use_agent=not args.no_terms_agent and cli is not None,
             timeout_s=args.terms_timeout,
             cli=cli,
+            fallback_terms=latin_terms,
+            ledger=ledger,
         )
         selector.start()
 
         # ---- retrieval: arXiv single process (S2 keyword opt-in) --------
         begun = time.monotonic()
+        # Open the retrieval block unconditionally (the banner used to fire
+        # only under --with-s2, so recall/registry lines before the mining
+        # banner piled into the plan or mining node).
+        log("[DRIVER-PHASE:retrieval] 开始检索（arXiv 关键词 + 召回扩展）")
         s2_output = run_dir / "search-semantic-scholar.json"
         arxiv_output = run_dir / "search-arxiv.json"
         citation_output = run_dir / "citation-expansion.json"
         s2_detail = "skipped (S2 keyword channel off by default; --with-s2 enables it)"
         s2_process = None
-        seeds_strategy = args.search_strategy == "seeds"
-        external_only = bool(args.external_candidates)
-        skip_arxiv = (seeds_strategy and bool(seed_ids)) or external_only
+        skip_arxiv = (seeds_strategy and bool(seed_ids)) or external_only or query_count == 0
         if external_only:
             log(f"[DRIVER] 外注候选模式：跳过关键词检索，registry 只收 --external-candidates "
                 f"({len(args.external_candidates)} 个文件)")
         if not skip_arxiv:
             if args.with_s2:
-                log("[DRIVER-PHASE:retrieval] 开始检索（Semantic Scholar + arXiv）")
                 s2_detail = "enabled (--with-s2)"
                 s2_cmd = lambda: [  # noqa: E731
                     sys.executable, str(HUB_SCRIPTS / "search.py"), "search-semantic-scholar",
@@ -1700,6 +2106,14 @@ def _main_locked(
                 "--start-date", start_date,
                 "--end-date", end_date,
                 "--batch-label", "r1",
+                # Explicit rather than the CLI default: the per-query cap is a
+                # policy knob (SEARCH_MAX_RESULTS_PER_QUERY[review_mode]) and
+                # the log quotes it when reporting capped queries.
+                "--max-results", str(SEARCH_MAX_RESULTS_PER_QUERY[args.review_mode]),
+                # Relevance-ranked discovery (not newest-first): a wide window
+                # surfaces seminal and highly-related work, not just the latest
+                # submissions. Matches the live API's sortBy=relevance.
+                "--sort-by", "relevance",
                 *([] if not args.arxiv_snapshot else ["--metadata-snapshot", args.arxiv_snapshot]),
                 "--output", str(arxiv_output),
             ]
@@ -1712,6 +2126,7 @@ def _main_locked(
                 # exit 1 = partial batch (some queries failed; hits saved) —
                 # proceed with the hole visible, matching the S2 degrade path.
                 soft_exit_codes=frozenset({1}),
+                ledger=ledger,
             )
             if arxiv_detail.startswith("ran") and arxiv_output.is_file():
                 try:
@@ -1729,6 +2144,7 @@ def _main_locked(
                     arxiv_detail = run_stage(
                         "retrieval-arxiv", [arxiv_output], True, arxiv_cmd,
                         soft_exit_codes=frozenset({1}),
+                        ledger=ledger,
                     )
             if arxiv_output.is_file():
                 try:
@@ -1737,11 +2153,12 @@ def _main_locked(
                 except (json.JSONDecodeError, OSError):
                     pass
         else:
-            arxiv_detail = (
-                "skipped (external candidates replace keyword retrieval)"
-                if external_only
-                else "skipped (seeds strategy: citation-graph expansion replaces keyword retrieval)"
-            )
+            if external_only:
+                arxiv_detail = "skipped (external candidates replace keyword retrieval)"
+            elif query_count == 0:
+                arxiv_detail = "skipped (empty query plan; citation/seed channel carries retrieval)"
+            else:
+                arxiv_detail = "skipped (seeds strategy: citation-graph expansion replaces keyword retrieval)"
             log(stage_line("retrieval-arxiv", arxiv_detail))
         summary_extra["s2_detail"] = s2_detail
         mark("retrieval", begun)
@@ -1795,7 +2212,7 @@ def _main_locked(
         # topic must not silently degrade to unscoped au: harvest.
         recall_terms, _recall_source = selector.join()
         if not any(term.isascii() for term in recall_terms):
-            recall_terms = mechanical_terms(args.topic, args.focus)
+            recall_terms = latin_terms or mechanical_terms(args.topic, args.focus)
         recall_outputs: list[Path] = []
         discovery_papers: list[dict] = []
         for source in (arxiv_output, citation_output):
@@ -1841,6 +2258,7 @@ def _main_locked(
             detail = run_stage(
                 batch_label, [round_output], args.force, recall_cmd,
                 soft_exit_codes=frozenset({1}),
+                ledger=ledger,
             )
             if round_output.is_file():
                 recall_outputs.append(round_output)
@@ -1856,9 +2274,12 @@ def _main_locked(
         ]
         mark("recall", begun)
 
-        # ---- registry ---------------------------------------------------
+        # ---- registry (retrieval consolidation) --------------------------
+        # The registry merge is the tail of retrieval: it fuses the search
+        # channels' hits into one deduped candidate set. Keep it BEFORE the
+        # mining banner so the 检索命中 brief and its skip lines land under
+        # arXiv 检索, not 全文挖掘 (2026-10-16).
         begun = time.monotonic()
-        log("[DRIVER-PHASE:mining] 候选注册、筛选与全文挖掘")
         registry_output = run_dir / "candidate-registry.json"
         # Preserve selection/extraction statuses across the rebuild — without
         # --screening-file every candidate resets to "discovered" and the
@@ -1895,6 +2316,7 @@ def _main_locked(
             "registry", [registry_output],
             args.force or inputs_newer_than(registry_output, registry_inputs),
             registry_cmd,
+            ledger=ledger,
         )
         mark("registry", begun)
         try:
@@ -1907,12 +2329,38 @@ def _main_locked(
             f"Semantic Scholar：{s2_detail or '未启用'}",
             f"引文扩展：{citation_detail}",
         ]
+        if not skip_arxiv and arxiv_output.is_file():
+            # Surface the sort contract, the cap, and the year spread in the
+            # phase brief: "为什么全是 2026" must be answerable from the
+            # workflow log. Retrieval is relevance-ranked; the year histogram
+            # shows what the relevance cut actually surfaced.
+            try:
+                batch = json.loads(arxiv_output.read_text(encoding="utf-8"))
+                sort_by = str(batch.get("sort_by") or "submittedDate")
+                capped = sum(1 for q in batch.get("queries") or [] if q.get("capped"))
+                year_counts: dict[str, int] = {}
+                for paper in batch.get("papers") or []:
+                    year = str(paper.get("published") or "")[:4] or "unknown"
+                    year_counts[year] = year_counts.get(year, 0) + 1
+                years_desc = sorted(year_counts.items(), key=lambda kv: kv[0], reverse=True)
+                year_line = "年份分布：" + "，".join(f"{y}:{n}" for y, n in years_desc[:6])
+                if len(years_desc) > 6:
+                    year_line += "，…"
+                retrieval_lines.append(
+                    f"排序：{sort_by}，per-query cap "
+                    f"{SEARCH_MAX_RESULTS_PER_QUERY[args.review_mode]}"
+                    + (f"（{capped} 条查询触顶）" if capped else "")
+                )
+                retrieval_lines.append(year_line)
+            except (json.JSONDecodeError, OSError, TypeError):
+                pass
         if args.external_candidates:
             retrieval_lines.append(f"外部候选：{len(args.external_candidates)} 个清单")
         brief("retrieval", f"检索命中 · 注册 {registry_size} 篇去重候选", retrieval_lines)
 
         # ---- screening + coverage (joins the terms thread) --------------
         begun = time.monotonic()
+        log("[DRIVER-PHASE:mining] 筛选、全文挖掘与深读")
         terms, terms_source = selector.join()
         # Chinese-only screening terms match nothing against English titles —
         # the second half of the 2026-09-11 failure chain. When the fallback
@@ -1932,7 +2380,10 @@ def _main_locked(
                 terms_source = "dynamic-queries"
         summary_extra["terms"] = terms
         summary_extra["terms_source"] = terms_source
-        screen_limit = SCREEN_LIMITS[args.review_mode]
+        # No screening cap. Selection decides what is relevant; extraction
+        # recovers what selection queued; deep reading (DEEP_READ_LIMITS, with
+        # the 候补 fill) is the funnel's only truncation (2026-10-20: the old
+        # SCREEN_LIMITS=120 cut stranded 232 of 352 relevant papers).
         screening_output = run_dir / "screening.json"
         screening_ids = run_dir / "screening-ids.txt"
         if args.selection_strategy == "keywords":
@@ -1945,7 +2396,6 @@ def _main_locked(
                 sys.executable, str(HUB_SCRIPTS / "search.py"), "screen-candidates",
                 "--candidate-registry", str(registry_output),
                 "--terms", ",".join(terms),
-                "--limit", str(screen_limit),
                 "--output-screening", str(screening_output),
                 "--output-ids", str(screening_ids),
                 "--output-markdown", str(run_dir / "screening.md"),
@@ -1958,8 +2408,17 @@ def _main_locked(
                 "--topic", args.topic,
                 "--focus", args.focus or "",
                 "--terms", ",".join(terms),
-                "--limit", str(screen_limit),
                 "--complete-timeout", str(args.selection_timeout),
+                *(
+                    ["--complete-model", args.selection_model]
+                    if args.selection_strategy == "smart"
+                    and getattr(args, "selection_model", None) else []
+                ),
+                *(
+                    ["--selection-threshold", str(args.selection_threshold)]
+                    if args.selection_strategy == "smart-jev"
+                    and getattr(args, "selection_threshold", None) is not None else []
+                ),
                 "--output-screening", str(screening_output),
                 "--output-ids", str(screening_ids),
                 "--output-markdown", str(run_dir / "screening.md"),
@@ -1967,6 +2426,7 @@ def _main_locked(
         run_stage(
             "screening", [screening_output, screening_ids], args.force, screening_cmd,
             stream=True, on_line=selection_line,
+            ledger=ledger,
         )
         summary_extra["selection_strategy"] = args.selection_strategy
         try:
@@ -1976,7 +2436,13 @@ def _main_locked(
         except (OSError, json.JSONDecodeError):
             selection_detail = ""
         summary_extra["selection_detail"] = selection_detail
-        write_sync(kb_root, run_json_path, lambda m: m.update({"selection_strategy": args.selection_strategy}))
+        write_sync(kb_root, run_json_path, lambda m: m.update({
+            "selection_strategy": args.selection_strategy,
+            "selection_model": (
+                getattr(args, "selection_model", None)
+                or ("jev" if args.selection_strategy == "smart-jev" else "")
+            ),
+        }))
         screened_ids = [
             line.strip()
             for line in screening_ids.read_text(encoding="utf-8").splitlines()
@@ -2028,6 +2494,7 @@ def _main_locked(
             "coverage", [coverage_output],
             args.force or inputs_newer_than(coverage_output, [registry_output]),
             coverage_cmd,
+            ledger=ledger,
         )
         mark("screening", begun)
         coverage = json.loads(coverage_output.read_text(encoding="utf-8"))
@@ -2037,7 +2504,10 @@ def _main_locked(
 
         # ---- abstract-tier evidence (positioning-only, before extraction) --
         begun = time.monotonic()
-        abstract_evidence_stage(kb_root, run_dir, run_json_path, knowledge_ids, args, summary_extra)
+        abstract_evidence_stage(
+            kb_root, run_dir, run_json_path, knowledge_ids, args, summary_extra,
+            screening_ids=screening_ids,
+        )
         mark("abstract-evidence", begun)
 
         # ---- full-text extraction --------------------------------------
@@ -2050,6 +2520,12 @@ def _main_locked(
             "--paper-id-file", str(screening_ids),
             "--terms", ",".join(terms),
             "--output-dir", str(run_dir / "extractions"),
+            # Shared KB cache: a paper fetched by an earlier run (or a
+            # quick-read) is reused instead of re-downloading from arXiv, and
+            # the cache survives /tmp cleanup and is visible to sibling
+            # machines on the same KB mount.
+            "--html-cache-dir", str(cache_dir / "html"),
+            "--pdf-cache-dir", str(cache_dir / "pdfs"),
             "--workers", str(max(1, min(args.workers, 4))),
             "--ocr-mode", "never",
             "--include-full-text",
@@ -2069,6 +2545,7 @@ def _main_locked(
             "extraction", [extraction_summary], extraction_force, extraction_cmd,
             timeout=EXTRACTION_STAGE_TIMEOUT_S,
             stream=True, on_line=extraction_queue_line,
+            ledger=ledger,
         )
         mark("extraction", begun)
         try:
@@ -2119,8 +2596,12 @@ def _main_locked(
                 "--output", str(packet_output),
             ])
             if result.returncode:
-                # One unrecoverable paper must not sink the queue.
-                log(f"[DRIVER-WARN] packet {paper_id}: exit {result.returncode}")
+                # One unrecoverable paper must not sink the queue — but the
+                # reason must be visible (2026-10-16: 16 bare "exit 2" lines
+                # with no way to tell low-quality extraction from a crash).
+                reason = (result.stderr or result.stdout or "").strip().splitlines()
+                log(f"[DRIVER-WARN] packet {paper_id}: exit {result.returncode}"
+                    f"：{reason[-1] if reason else '无输出'}")
             else:
                 packet_count += 1
             log(f"[DRIVER-PROGRESS:packets:{packet_count}/{len(extraction_files)}]")
@@ -2130,7 +2611,7 @@ def _main_locked(
         # ---- deep read (skeleton agents + local assembly) ---------------
         if not args.skip_deep_read:
             begun = time.monotonic()
-            deep_read(run_dir, run_json_path, screening_ids, args, summary_extra)
+            deep_read(run_dir, run_json_path, screening_ids, args, summary_extra, ledger=ledger)
             mark("deep-read", begun)
             begun = time.monotonic()
             project_evidence(kb_root, run_dir, run_json_path, summary_extra)
@@ -2146,6 +2627,30 @@ def _main_locked(
         begun = time.monotonic()
         review_packet_stage(run_dir, args, summary_extra)
         mark("review-packet", begun)
+
+        # ---- funnel (publishable retrieval→evidence accounting) ----------
+        # Layers come from disk only, so a --skip-deep-read re-entry that finds
+        # earlier notes still reports them; `skipped` records what THIS
+        # invocation passed over without changing the numbers.
+        begun = time.monotonic()
+        skipped_stages = ["deep-read"] if args.skip_deep_read else []
+        if summary_extra.get("abstract_basis") == "skipped":
+            skipped_stages.append("abstract-evidence")
+        funnel_payload = build_funnel(
+            run_dir,
+            run=run_dir.name,
+            topic=args.topic,
+            review_mode=args.review_mode,
+            summary=summary_extra,
+            skipped=skipped_stages,
+        )
+        write_funnel(funnel_payload, run_dir)
+        if funnel_payload.get("truncated"):
+            log(f"[DRIVER-WARN] funnel.json 层列表超过 {FUNNEL_LAYER_PAPER_CAP} 篇，已截断（truncated: true）")
+        leaked = (funnel_payload.get("detail") or {}).get("abstract_leaked") or 0
+        if leaked:
+            log(f"[DRIVER-WARN] 摘要级含 {leaked} 篇选文外论文（旧产物），可用 --force 重跑 abstract-evidence 收口")
+        mark("funnel", begun)
 
         # ---- summary ----------------------------------------------------
         registry = json.loads(registry_output.read_text(encoding="utf-8"))
@@ -2175,7 +2680,6 @@ def _main_locked(
             "query_count": query_count,
             "stage_seconds": stage_seconds,
             "candidate_count": int(registry.get("candidate_count") or 0),
-            "screening_limit": screen_limit,
             "screened_count": len(screened_ids),
             "full_text_recovered_count": int(observed.get("full_text_recovered_count") or 0),
             "coverage_dimensions_passed": bool(coverage.get("coverage_dimensions")),
@@ -2189,6 +2693,7 @@ def _main_locked(
                 "candidate_registry": "candidate-registry.json",
                 "screened_list": "screening.md",
                 "citation_graph": "citation-graph.json" if citation_output.is_file() else None,
+                "funnel": FUNNEL_FILENAME,
             },
             **summary_extra,
         }
@@ -2213,13 +2718,30 @@ def _main_locked(
                 f"覆盖维度 {'过' if summary['coverage_dimensions_passed'] else '未过'} · "
                 f"候选地板 {'过' if summary['candidate_floor_passed'] else '未过'} · "
                 f"饱和 {'过' if summary['saturation_passed'] else '未过'}",
-                "产物：query-plan.md / candidate-registry.json / screening.md / pipeline-summary.json",
+                "产物：query-plan.md / candidate-registry.json / screening.md / "
+                "funnel.json / pipeline-summary.json",
             ],
         )
         return 0
     except DriverError as exc:
+        if ledger is not None:
+            ledger.error(f"pipeline failed: {exc}", stage="pipeline")
         print(f"pipeline failed: {exc}", file=sys.stderr)
         return 1
     except (OSError, json.JSONDecodeError, KeyError) as exc:
+        if ledger is not None:
+            ledger.error(f"pipeline failed: {exc}", stage="pipeline")
         print(f"pipeline failed: {exc}", file=sys.stderr)
         return 1
+    finally:
+        if ledger is not None:
+            ledger.metric(
+                "pipeline", time.monotonic() - started,
+                stages=len(stage_seconds),
+                stage_seconds=stage_seconds,
+            )
+            ledger.close()
+        if inherited_ledger is None:
+            os.environ.pop(AGENT_SESSION_LEDGER_ENV, None)
+        else:
+            os.environ[AGENT_SESSION_LEDGER_ENV] = inherited_ledger

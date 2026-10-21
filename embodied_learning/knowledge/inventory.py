@@ -3,6 +3,12 @@
 Answers "how many runs ran, how many papers are deep-read, how many have full
 text" for one kb-root. Library entry is :func:`kb_stats`; the CLI is
 ``wiki.py kb-stats``.
+
+The ``funnel`` block is a **v1 additive extension** (schema_version stays 1):
+the retrieval→evidence funnel is a run product, and consumers that already
+read v1 simply see one more top-level key. Runs settled before the artifact
+existed report ``funnel: null`` in ``runs_detail`` — absence of data, not a
+zero.
 """
 
 from __future__ import annotations
@@ -13,6 +19,7 @@ import json
 import sys
 from typing import Any
 
+from embodied_learning.knowledge.funnel import read_funnel, summarize
 from embodied_learning.knowledge.model import KnowledgeBase
 
 SCHEMA_VERSION = 1
@@ -32,6 +39,7 @@ def kb_stats(kb: KnowledgeBase, *, include_runs: bool = False) -> dict[str, Any]
     sum_full_text = 0
     registered_count = 0
     runs_detail: list[dict[str, Any]] = []
+    funnels = {run.name: read_funnel(run.path) for run in runs}
 
     for run in runs:
         status = run.status or "unknown"
@@ -65,6 +73,7 @@ def kb_stats(kb: KnowledgeBase, *, include_runs: bool = False) -> dict[str, Any]
                     "ledger_papers": len(ledger),
                     "deep_read_count": summary.get("deep_read_count"),
                     "registered": is_registered,
+                    "funnel": funnels[run.name],
                     "path": str(run.path),
                 }
             )
@@ -132,6 +141,7 @@ def kb_stats(kb: KnowledgeBase, *, include_runs: bool = False) -> dict[str, Any]
             "runs_with_summary": runs_with_summary,
             "sum_deep_read_count": sum_deep_read_count,
         },
+        "funnel": summarize(kb, funnels=funnels),
     }
     if include_runs:
         payload["runs_detail"] = runs_detail
@@ -192,6 +202,29 @@ def render(payload: dict[str, Any], *, runs_detail: bool = False) -> str:
         f" / accepted {reading.get('accepted_rows', 0)}"
         f"（{reading.get('runs_with_ledger', 0)} 个 run 含 ledger）"
     )
+    funnel = payload.get("funnel") or {}
+    if funnel:
+        sums_ = funnel.get("sums") or {}
+        rates = funnel.get("rates") or {}
+
+        def pct(value: Any) -> str:
+            return "—" if value is None else f"{value:.0%}"
+
+        lines.append("")
+        lines.append(
+            f"funnel（{funnel.get('runs_with_funnel', 0)} 个 run 有 funnel.json"
+            f" · {funnel.get('runs_without_funnel', 0)} 个旧 run 无）"
+        )
+        lines.append(
+            f"    候选 {sums_.get('candidates', 0)} → 选文 {sums_.get('screened', 0)}"
+            f"（{pct(rates.get('screen'))}）→ 全文 {sums_.get('full_text', 0)}"
+            f"（{pct(rates.get('full_text'))}）→ 深读 {sums_.get('deep_read', 0)}"
+            f"（{pct(rates.get('deep_read'))}）→ 证据论文 {sums_.get('evidence_papers', 0)}"
+            f"（产出率 {pct(rates.get('evidence_yield'))}）"
+        )
+        if not funnel.get("runs_with_funnel"):
+            lines.append("    尚无 run 产出漏斗：逐 run 查询用 wiki.py kb-funnel")
+        lines.append("    " + str(funnel.get("note") or ""))
 
     detail = payload.get("runs_detail") or []
     if runs_detail and detail:

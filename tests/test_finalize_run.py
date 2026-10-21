@@ -51,6 +51,7 @@ class FinalizeRunTest(unittest.TestCase):
             )
         (self.run_dir / "scientific-memo_keyan.md").write_text("# memo\n", encoding="utf-8")
         (self.run_dir / "evidence-appendix.md").write_text("# appendix\n", encoding="utf-8")
+        (self.run_dir / "writing-brief.md").write_text("# brief\n", encoding="utf-8")
         (self.run_dir / "pipeline-summary.json").write_text(json.dumps({
             "review_mode": "rapid", "candidate_count": 421,
             "full_text_recovered_count": 40,
@@ -97,6 +98,7 @@ class FinalizeRunTest(unittest.TestCase):
         )
         self.assertTrue((published / "evidence" / "p0.jsonl").is_file())
         self.assertTrue((published / "scientific-memo_keyan.md").is_file())
+        self.assertTrue((published / "writing-brief.md").is_file())
         # Gates ran with the run dir; catalog registration pointed at the copy.
         commands = [call.args[0] for call in run.call_args_list]
         bundle_cmd = next(cmd for cmd in commands if "check-bundle" in cmd)
@@ -129,6 +131,24 @@ class FinalizeRunTest(unittest.TestCase):
         self.assertEqual("candidate-registry.json", files.get("candidate_registry"))
         self.assertEqual("coverage-report.json", files.get("coverage_report"))
         self.assertEqual("evidence.jsonl", files.get("evidence"))
+
+    def test_publishes_funnel_artifact_and_stamps_files_funnel(self):
+        """funnel.json is a run artifact like the appendix: published with the
+        bundle and declared in files.* — but its absence is not an error
+        (historical runs predate it)."""
+        (self.run_dir / "funnel.json").write_text(
+            json.dumps({"schema_version": 1, "stages": {}}), encoding="utf-8"
+        )
+        code, _run, _register, _trace = self.finalize()
+        self.assertEqual(0, code)
+        self.assertEqual("funnel.json", self.manifest()["files"].get("funnel"))
+        published = self.kb_root / "evidence" / "literature-review-demo-20260101"
+        self.assertTrue((published / "funnel.json").is_file())
+
+    def test_run_without_funnel_publishes_fine_and_declares_nothing(self):
+        code, _run, _register, _trace = self.finalize()
+        self.assertEqual(0, code)
+        self.assertNotIn("funnel", self.manifest()["files"])
 
     def test_declare_gate_exception_writes_manifest_and_notes(self):
         code, run, register, trace = self.finalize(

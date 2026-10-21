@@ -308,6 +308,9 @@ def try_pdf(options: ContentOptions,
         include_pages=bool(
             getattr(options, "include_selected_text", False) or want_full_text),
         terms=",".join(terms),
+        # Without this the PDF tier silently used pdf.py's own 90s default
+        # even when the caller asked for a different budget.
+        timeout=float(getattr(options, "timeout", 90.0)),
     )
     output["title"] = ""
     output["source_format"] = "pdf"

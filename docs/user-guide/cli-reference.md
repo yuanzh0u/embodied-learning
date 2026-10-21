@@ -49,6 +49,10 @@ run 目录命名即契约：`literature-review-<topic>-<date>/`，其他命名�
 | `build-knowledge-map` | 渲染知识库图谱 |
 | `build-mind-omni-reader` | 为单个 run 构建 mind-omni 阅读页 |
 | `check-kb-links` | 审计 `knowledge/` 链接、source ID、locator（需完整 git 历史） |
+| `kb-stats` | KB 盘点：runs / pool / wiki 数量与检索漏斗汇总 |
+| `kb-search` | 跨 KB 子串检索（runs / papers / events / topics） |
+| `kb-funnel` | 检索→证据漏斗：逐 run 统计，或 `--layer` 查某一层论文 |
+| `kb-merge` | 把多个 KB 根的成果合并进目标根（先 `--dry-run`） |
 | `serve` | 本地研究 Wiki |
 
 快照 schema：

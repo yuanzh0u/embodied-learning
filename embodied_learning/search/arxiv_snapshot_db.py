@@ -319,7 +319,7 @@ class SnapshotDbSearch:
         end_date: str,
         max_results: int = 25,
         batch_label: str = "",
-        sort_by: str = "submittedDate",
+        sort_by: str = "relevance",
         sort_order: str = "descending",
         output: str | None = None,
     ) -> None:
@@ -372,32 +372,60 @@ class SnapshotDbSearch:
         else:
             lo_iso = None
         rows: list[sqlite3.Row]
+        matched = 0
+        # Relevance ranking: FTS5's bm25() is lower-is-better. Date sorts fall
+        # back to the published instant. Ties always resolve newest-first.
+        if self.sort_by == "relevance":
+            order_sql = "bm25(fts) ASC, p.v1_date DESC, p.id"
+        elif self.sort_order == "ascending":
+            order_sql = "p.v1_date ASC, p.id"
+        else:
+            order_sql = "p.v1_date DESC, p.id"
         if sql_expr and date_table is not None and lo_iso:
             # Two-phase plan (fast over a network filesystem): the FTS scan
-            # itself is index-only, date filtering/sorting happens against the
-            # in-process date table, and only the top rows are fetched from
-            # papers — instead of one random row read per FTS match.
-            hits: list[tuple[int, int]] = []
-            for (docid,) in connection.execute(
-                "SELECT rowid FROM fts WHERE fts MATCH ?", (sql_expr,)
+            # itself is index-only (and yields the bm25 score), date filtering
+            # happens against the in-process date table, and only the selected
+            # rows are fetched from papers — instead of one random row read per
+            # FTS match.
+            hits: list[tuple[float, int, int]] = []  # (rank, v1_date, docid)
+            for docid, rank in connection.execute(
+                "SELECT rowid, bm25(fts) FROM fts WHERE fts MATCH ?", (sql_expr,)
             ):
                 v1_date = date_table[docid]
                 if params[0] <= v1_date <= params[1]:
-                    hits.append((v1_date, docid))
-            hits.sort(reverse=True)  # newest first; ties resolved after fetch
-            top = [docid for _, docid in hits[: self.max_results + 64]]
+                    hits.append((rank, v1_date, docid))
+            matched = len(hits)
+            if self.sort_by == "relevance":
+                hits.sort(key=lambda hit: (hit[0], -hit[1], hit[2]))
+            elif self.sort_order == "ascending":
+                hits.sort(key=lambda hit: (hit[1], hit[2]))
+            else:
+                hits.sort(key=lambda hit: (-hit[1], hit[2]))
+            top = [docid for _, _, docid in hits[: self.max_results]]
             if not top:
-                meta = {"label": item["label"], "query": item["query"], "result_count": 0}
+                meta = {"label": item["label"], "query": item["query"], "result_count": 0, "matched": 0}
                 return meta, []
+            rank_by_docid = {docid: rank for rank, _, docid in hits[: self.max_results]}
             rowmarks = ",".join("?" * len(top))
             rows = connection.execute(
                 f"SELECT p.* FROM papers p WHERE p.rowid_alias IN ({rowmarks})", top
             ).fetchall()
-            rows.sort(key=lambda row: (-(row["v1_date"] or 0), row["id"]))
-            rows = rows[: self.max_results]
+            # Same ordering the single-SQL plan emits.
+            if self.sort_by == "relevance":
+                rows.sort(
+                    key=lambda row: (
+                        rank_by_docid.get(row["rowid_alias"], 0.0),
+                        -(row["v1_date"] or 0),
+                        row["id"],
+                    )
+                )
+            elif self.sort_order == "ascending":
+                rows.sort(key=lambda row: ((row["v1_date"] or 0), row["id"]))
+            else:
+                rows.sort(key=lambda row: (-(row["v1_date"] or 0), row["id"]))
         else:
             # Single-SQL plan: date-only queries and dbs without the covering
-            # index (sorted by SQLite; NULL dates last, as with DESC above).
+            # index. One statement, top-``max_results`` by the same ordering.
             sql = "SELECT p.* FROM papers p"
             if sql_expr:
                 sql += " JOIN fts f ON f.rowid = p.rowid_alias WHERE fts MATCH ?"
@@ -406,13 +434,14 @@ class SnapshotDbSearch:
                 sql += " WHERE 1=1"
             if lo_iso:
                 sql += " AND p.v1_date >= ? AND p.v1_date <= ?"
-            sql += " ORDER BY p.v1_date DESC, p.id LIMIT ?"
+            sql += f" ORDER BY {order_sql} LIMIT ?"
             params.append(self.max_results)
             try:
                 rows = connection.execute(sql, params).fetchall()
             except sqlite3.OperationalError as exc:
                 meta = {"label": item["label"], "query": item["query"], "result_count": 0, "error": f"fts match failed: {exc}"}
                 return meta, []
+            matched = len(rows)
         papers = []
         for row in rows:
             record = {
@@ -437,7 +466,14 @@ class SnapshotDbSearch:
                 paper["published"] = dt.datetime.fromtimestamp(
                     row["v1_date"], tz=dt.timezone.utc
                 ).strftime("%Y-%m-%dT%H:%M:%SZ")
-        meta = {"label": item["label"], "query": item["query"], "result_count": len(papers)}
+        meta = {
+            "label": item["label"],
+            "query": item["query"],
+            "result_count": len(papers),
+            "matched": matched,
+        }
+        if matched > self.max_results:
+            meta["capped"] = True
         return meta, papers
 
     def run(self, queries: list[dict[str, str]], max_workers: int = 8) -> int:

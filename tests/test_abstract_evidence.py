@@ -93,6 +93,39 @@ class BuildAbstractEventsTest(unittest.TestCase):
         )
         self.assertEqual(events[0]["paper"]["arxiv_id"], "2402.10329")
 
+    def test_include_restricts_events_to_the_selection_set(self):
+        """Only selection-accepted papers become positioning evidence: the
+        registry also holds candidates the selector judged off-topic."""
+        registry = registry_with(
+            candidate("2402.10329", "Selected one."),
+            candidate("2311.18259", "Selected two."),
+            candidate("2305.01111", "Rejected off-topic paper."),
+        )
+        events = build_abstract_events(
+            registry, topic="demo", topic_id="EA-DATA", prefix="EA-DEMO-2026",
+            start_seq=1, include_arxiv_ids={"2402.10329", "2311.18259"},
+        )
+        self.assertEqual(
+            [event["paper"]["arxiv_id"] for event in events],
+            ["2402.10329", "2311.18259"],
+        )
+        self.assertEqual(
+            [event["event_id"] for event in events],
+            ["EA-DEMO-2026-0001", "EA-DEMO-2026-0002"],
+        )
+
+    def test_include_and_exclude_compose(self):
+        registry = registry_with(
+            candidate("2402.10329", "One."),
+            candidate("2311.18259", "Two."),
+        )
+        events = build_abstract_events(
+            registry, topic="demo", topic_id="EA-DATA", prefix="EA-DEMO-2026",
+            start_seq=1, include_arxiv_ids={"2402.10329", "2311.18259"},
+            exclude_arxiv_ids={"2311.18259"},
+        )
+        self.assertEqual([event["paper"]["arxiv_id"] for event in events], ["2402.10329"])
+
     def test_prefix_trailing_dash_is_normalized(self):
         events = build_abstract_events(
             registry_with(candidate("2402.10329", "s.")),

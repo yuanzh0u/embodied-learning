@@ -100,10 +100,12 @@ def run(args: argparse.Namespace) -> int:
     appendix_path = run_dir / APPENDIX_NAME
     source_path = run_dir / SOURCE_NAME
     if not (run_dir / "run.json").is_file():
-        print(f"不是 run 目录（缺 run.json）：{run_dir}", file=sys.stderr)
+        log(f"不是 run 目录（缺 run.json）：{run_dir}")
         return 2
     if not brief_path.is_file() or not appendix_path.is_file():
-        print(f"run 目录缺少 {BRIEF_NAME} 或 {APPENDIX_NAME}：{run_dir}", file=sys.stderr)
+        missing = [n for n, p in ((BRIEF_NAME, brief_path), (APPENDIX_NAME, appendix_path))
+                   if not p.is_file()]
+        log(f"run 目录缺少{'、'.join(missing)}：{run_dir}")
         return 2
 
     try:
@@ -155,6 +157,7 @@ def run(args: argparse.Namespace) -> int:
                 build_agent_prompt(run_dir, refs),
                 timeout_s=psd.SOURCE_TIMEOUT_S,
                 cli=cli,
+                label=f"deck-source-{run_dir.name}",
             )
         except subprocess.TimeoutExpired:
             log(f"slide-source 写作 agent 超时（{psd.SOURCE_TIMEOUT_S:.0f}s）")

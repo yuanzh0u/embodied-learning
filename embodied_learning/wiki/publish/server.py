@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import errno
+import html
 import json
 import os
 import re
@@ -21,18 +22,20 @@ from functools import partial
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, quote, urlparse
 
 from embodied_learning.wiki.publish.snapshot import resolve_snapshot_directory
 from embodied_learning.wiki.run.manifest import run_folder_name, slugify_topic
 # AI-model capability goes through the harness binding (pybind-style).
 from embodied_learning.harness.claude import resolve_cli as agent_cli_available
+from embodied_learning.harness.claude import system_one_ready
 from embodied_learning.knowledge import arxiv_reader
 from embodied_learning.atomicio import atomic_copy, atomic_write_json, atomic_write_text
 from embodied_learning import locks
 from embodied_learning.utils.layout import find_roots
 from embodied_learning.wiki.publish import chat as wiki_chat
 from embodied_learning.config import (
+    DEFAULT_SELECTION_STRATEGY,
     FIRST_EVENT_TIMEOUT_S,
     INIT_RUN_TIMEOUT_S,
     PAPER_DECK_TIMEOUT_S,
@@ -54,6 +57,12 @@ SKILLS_ROOT, SCRIPT_DIR = find_roots()[1], find_roots()[2]
 # (site-packages/wiki_scripts/) and a repo checkout behave identically.
 BUILDER = SCRIPT_DIR / "wiki.py"  # subcommands: build-wiki / build-knowledge-map
 GRAPH_BUILDER = SCRIPT_DIR / "wiki.py"
+# Skill dispatchers do NOT live in the scripts root — read.py is a skill entry
+# (ADR 0005: six dispatchers, three of them under skills/*/scripts/). Spawn
+# paths must follow that layout or every quick-read / prepare-chat exits with
+# "can't open file …/scripts/read.py" in milliseconds.
+READ_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "read.py"
+WRITE_SCRIPT = SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "write.py"
 # Frontend serving rule: an *editable* install (or a plain repo run) serves the
 # repo checkout's wiki/ in place — code edits show up on refresh. A *non-editable*
 # install has no repo next to it, so it serves <kb-root>/wiki (the copy beside the
@@ -67,6 +76,18 @@ IS_REPO_CHECKOUT = (REPO_ROOT / "pyproject.toml").is_file()
 FRONTEND_ASSETS = SCRIPT_DIR / "wiki_assets"
 CATALOG_RELPATH = Path("knowledge") / "literature-review-catalog.md"
 REFRESH_LOCK = threading.Lock()
+
+
+def _is_error_line(detail: str) -> bool:
+    """True for stderr/traceback lines that must surface as SSE stage events.
+
+    Spawned scripts print their own diagnostics without a progress prefix;
+    swallowing them made every failure look like the same generic message."""
+    return (
+        "Traceback" in detail
+        or "can't open file" in detail
+        or detail.startswith(("OSError", "LockTimeout", "LockBusy", "python: can't", "run 目录缺少", "不是 run 目录"))
+    )
 
 
 def resolve_pipeline_root() -> Path | None:
@@ -169,8 +190,10 @@ WORKFLOW_REVIEW_MODES = {"rapid", "scoping", "systematic"}
 WORKFLOW_STYLES = {"all", "scientific-memo", "expert-explainer"}
 WORKFLOW_SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
 # Deep-read queue selection (the interview card's 选文策略; keywords keeps the
-# legacy term-matching screen-candidates inside the driver).
-WORKFLOW_SELECTION_STRATEGIES = {"smart", "keywords", "influence", "bm25"}
+# legacy term-matching screen-candidates inside the driver). ``smart`` runs the
+# execution model (the kickoff model the card picked); ``smart-jev`` runs the
+# decision model through the harness's System One binding.
+WORKFLOW_SELECTION_STRATEGIES = {"smart", "smart-jev", "keywords", "influence", "bm25"}
 PIPELINE_DRIVER = SCRIPT_DIR / "run.py"  # subcommand: pipeline
 # Chat model: the browser's composer picks per conversation; this is the
 # default shown there and used when no explicit model arrives. Empty string
@@ -400,6 +423,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         path = urlparse(self.path).path
         if path in {"/knowledge-map", "/knowledge-map/", "/knowledge-map/index.html"}:
             self._serve_knowledge_map()
+            return
+        if path in {"/research", "/research/", "/research/index.html"}:
+            self._serve_research_directory()
             return
         if path.startswith("/api/reader/"):
             self._handle_reader()
@@ -719,8 +745,8 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
     @staticmethod
     def _next_revision_number(run_dir: Path, style_key: str) -> int:
-        """Next revision number; the settled base deliverable counts as v1,
-        so the first chat revision is v2."""
+        """Next revision number; the settled base deliverable counts as v0,
+        so the first chat revision is v1."""
         pattern = re.compile(rf"^{re.escape(style_key)}-v(\d+)$")
         revisions_dir = run_dir / "revisions"
         numbers = [
@@ -728,7 +754,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
             for path in revisions_dir.glob(f"{style_key}-v*.md")
             if (match := pattern.match(path.stem))
         ]
-        return max(numbers, default=1) + 1
+        return max(numbers, default=0) + 1
 
     @staticmethod
     def _append_revision_index(run_dir: Path, entry: dict) -> None:
@@ -786,18 +812,46 @@ class WikiHandler(SimpleHTTPRequestHandler):
         try:
             self._send_sse_headers()
             registry = self.chat_sessions
+            # Mirror the dialog into the run dir so a reload can replay the
+            # stage cards (same contract as _handle_workflow).
+            journal = wiki_chat.DialogJournal(run_dir)
+            journal.start()
+            journal.user(message)
+            self._dialog_journal = journal
             self._write_sse_event({
                 "type": "status", "stage": "revision",
                 "detail": f"正在生成修订版 {version_key}",
             })
+            # Stage-view contract: the revision agent emits [STAGE:*] markers
+            # just like the workflow agent; the cards re-activate on the topic
+            # chat's node board (plan / retrieval / writing / audit).
+            self._write_sse_event({
+                "type": "brief", "stage": "plan",
+                "title": f"修订{wiki_chat.REVISION_STYLE_LABEL.get(style_key, style_key)}",
+                "lines": [
+                    f"基底成稿：{base_filename or ''}",
+                    f"目标文件：revisions/{version_key}.md",
+                    f"修订要求：{message.strip()[:120]}",
+                ],
+            })
+            self._write_sse_event({"type": "stage", "stage": "plan", "detail": "规划修订方案"})
             resumed = (registry.get(topic_id) or {}).get("session_id")
             turn, session_was_reset = self._spawn_workflow_turn(
                 prompt, resumed, model, system_prompt=system_prompt)
             if session_was_reset:
                 registry.reset(topic_id)
                 self._write_sse_event({"type": "session_reset"})
+            emitted_stages: set[str] = set()
+
+            def on_delta(text: str) -> None:
+                for stage, detail in wiki_chat.extract_stage_markers(text):
+                    if stage not in emitted_stages:
+                        emitted_stages.add(stage)
+                        self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+
             full_text = self._stream_chat_turn(
-                key=topic_id, turn=turn, registry=registry, record_user_message=message
+                key=topic_id, turn=turn, registry=registry, on_delta=on_delta,
+                record_user_message=message,
             )
             marker = next(
                 (match.group(1)
@@ -981,7 +1035,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
         command = [
             sys.executable,
-            str(SCRIPT_DIR / "read.py"), "quick-read",
+            str(READ_SCRIPT), "quick-read",
             "--arxiv-id", paper_id,
             "--kb-root", str(self.kb_root),
         ]
@@ -1002,7 +1056,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                         )
                         break
                 else:
-                    if "Traceback" in detail or detail.startswith(("OSError", "LockTimeout", "LockBusy")):
+                    if _is_error_line(detail):
                         self._write_sse_event(
                             {"type": "stage", "stage": "quickread", "detail": detail}
                         )
@@ -1127,7 +1181,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 self._write_sse_event(
                     {
                         "type": "topic_error",
-                        "message": f"汇报生成失败：run {run_dir.name} 缺少写作简报/证据附录，或写作与编译出错，请稍后重试。",
+                        "message": f"汇报生成失败：run {run_dir.name} 生成出错，请查看上方错误详情后重试。",
                     }
                 )
                 return
@@ -1137,27 +1191,39 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
     def _run_run_deck_generation(self, run_dir: Path) -> bool:
         """Run run_slide_deck.py, forwarding [SLIDE-DECK] and [PAPER-CHAT]
-        progress lines. Slide-source (600s) + compile/audit + slack → 900s."""
+        progress lines. Slide-source (600s) + compile/audit + slack → 900s.
+
+        stderr is merged into the stream (a PIPE nobody reads can deadlock the
+        child) and lock/traceback/missing-file lines are surfaced as stage
+        events — previously they were swallowed and every failure looked like
+        the same generic message."""
 
         command = [
             sys.executable,
-            str(SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "write.py"), "run-deck",
+            str(WRITE_SCRIPT), "run-deck",
             "--run-dir", str(run_dir),
         ]
         try:
             process = subprocess.Popen(
                 command, cwd=str(self.kb_root), text=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             )
             assert process.stdout is not None
             for line in process.stdout:
                 detail = line.strip()
-                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] "):
+                if not detail or detail.startswith("{"):
+                    continue  # final machine-readable JSON
+                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] ", "[kb-lock] "):
                     if detail.startswith(prefix):
                         self._write_sse_event(
                             {"type": "stage", "stage": "rundeck", "detail": detail.removeprefix(prefix)}
                         )
                         break
+                else:
+                    if _is_error_line(detail):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "rundeck", "detail": detail}
+                        )
             try:
                 returncode = process.wait(timeout=RUN_DECK_TIMEOUT_S)
             except subprocess.TimeoutExpired:
@@ -1234,7 +1300,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 self._write_sse_event(
                     {
                         "type": "topic_error",
-                        "message": f"汇报生成失败：论文 {paper_id} 未通过深读审计或写作/编译出错，请稍后重试。",
+                        "message": f"汇报生成失败：论文 {paper_id} 生成出错，请查看上方错误详情后重试。",
                     }
                 )
                 return
@@ -1251,28 +1317,40 @@ class WikiHandler(SimpleHTTPRequestHandler):
     def _run_slide_deck_generation(self, paper_id: str) -> bool:
         """Run paper_slide_deck.py, forwarding [SLIDE-DECK] and [PAPER-CHAT]
         progress lines. Deep read (420s) + slide-source (600s) + compile/audit
-        + slack → 1500s. Only returncode 0 is success."""
+        + slack → 1500s. Only returncode 0 is success.
+
+        stderr is merged into the stream (a PIPE nobody reads can deadlock the
+        child) and lock/traceback/missing-file lines are surfaced as stage
+        events — previously they were swallowed and every failure looked like
+        the same generic message."""
 
         command = [
             sys.executable,
-            str(SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "write.py"), "paper-deck",
+            str(WRITE_SCRIPT), "paper-deck",
             "--arxiv-id", paper_id,
             "--kb-root", str(self.kb_root),
         ]
         try:
             process = subprocess.Popen(
                 command, cwd=str(self.kb_root), text=True,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             )
             assert process.stdout is not None
             for line in process.stdout:
                 detail = line.strip()
-                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] "):
+                if not detail or detail.startswith("{"):
+                    continue  # final machine-readable JSON
+                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] ", "[kb-lock] "):
                     if detail.startswith(prefix):
                         self._write_sse_event(
                             {"type": "stage", "stage": "slidedeck", "detail": detail.removeprefix(prefix)}
                         )
                         break
+                else:
+                    if _is_error_line(detail):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "slidedeck", "detail": detail}
+                        )
             try:
                 returncode = process.wait(timeout=PAPER_DECK_TIMEOUT_S)
             except subprocess.TimeoutExpired:
@@ -1362,7 +1440,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
         command = [
             sys.executable,
-            str(SCRIPT_DIR / "read.py"), "prepare-chat",
+            str(READ_SCRIPT), "prepare-chat",
             "--arxiv-id", paper_id,
             "--kb-root", str(self.kb_root),
         ]
@@ -1533,9 +1611,17 @@ class WikiHandler(SimpleHTTPRequestHandler):
         search_strategy = str(params.get("search_strategy") or "smart")
         if search_strategy not in WORKFLOW_SEARCH_STRATEGIES:
             raise ChatBadRequest("检索策略无效（smart / fast / seeds）。")
-        selection_strategy = str(params.get("selection_strategy") or "smart")
+        selection_strategy = str(params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY)
         if selection_strategy not in WORKFLOW_SELECTION_STRATEGIES:
-            raise ChatBadRequest("选文策略无效（smart / keywords / influence / bm25）。")
+            raise ChatBadRequest(
+                "选文策略无效（smart / smart-jev / keywords / influence / bm25）。")
+        if selection_strategy == "smart-jev" and not system_one_ready():
+            # Preflight the decision-model channel: failing here is a clear
+            # 400; failing inside the driver would waste the retrieval stage.
+            raise ChatBadRequest(
+                "决策模型（jev）未配置：请设置 EMBODIED_SYSTEM_ONE_URL"
+                "（或 ANTHROPIC_BASE_URL）与 EMBODIED_SYSTEM_ONE_API_KEY"
+                "（或 ANTHROPIC_AUTH_TOKEN），或改用「智能相关性 · 执行模型」。")
         seed_raw = str(params.get("seed_arxiv_ids") or "").strip()
         return {
             "topic": topic,
@@ -1608,6 +1694,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
             "focus": params.get("focus") or "",
             "search_strategy": params.get("search_strategy") or "",
             "selection_strategy": params.get("selection_strategy") or "",
+            "selection_model": params.get("selection_model") or "",
             "seed_arxiv_ids": params.get("seed_arxiv_ids") or "",
         }
         for candidate in sorted(work_dir.glob(f"{prefix}-*")):
@@ -1882,6 +1969,11 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 return
             ws_id = f"ws-{secrets.token_hex(4)}"
             ws_style = str(params.get("target_style") or "all")
+            # The card's 执行模型 is the run's execution model: the writing
+            # session uses it AND the smart selection stage must use it too
+            # (otherwise "智能相关性·执行模型" would silently mean the driver's
+            # pinned default). smart-jev ignores it (decision model instead).
+            params["selection_model"] = ws_model or ""
             system_prompt, prompt = wiki_chat.workflow_turn_prompts(
                 params=params,
                 run_dir=run_dir,
@@ -2080,8 +2172,13 @@ class WikiHandler(SimpleHTTPRequestHandler):
             "--time-range", str(params.get("time_range") or ""),
             "--kb-root", str(self.kb_root),
             "--search-strategy", str(params.get("search_strategy") or "smart"),
-            "--selection-strategy", str(params.get("selection_strategy") or "smart"),
+            "--selection-strategy", str(params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY),
         ]
+        selection_model = str(params.get("selection_model") or "")
+        if selection_model and str(
+            params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY
+        ) == "smart":
+            command += ["--selection-model", selection_model]
         focus = str(params.get("focus") or "")
         if focus:
             command += ["--focus", focus]
@@ -2140,8 +2237,12 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 brief = wiki_chat.extract_driver_brief(line)
                 if brief:
                     brief_stage, title, lines = brief
+                    # The brief is tagged with its own stage — use it (mapped to
+                    # a workflow section) so a retrieval brief emitted after the
+                    # mining banner still lands under arXiv 检索 (2026-10-16).
+                    node = wiki_chat.DRIVER_STAGE_TO_WORKFLOW.get(brief_stage, current_stage)
                     self._write_sse_event(
-                        {"type": "brief", "stage": current_stage, "brief_stage": brief_stage,
+                        {"type": "brief", "stage": node, "brief_stage": brief_stage,
                          "title": title, "lines": lines}
                     )
                     continue
@@ -2263,6 +2364,97 @@ class WikiHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(payload)
 
+    def _serve_research_directory(self) -> None:
+        """``/research/``: the topic directory for the local Wiki.
+
+        The crawlable static site (``wiki.py build-site``) owns this path on
+        GitHub Pages, but the local server serves the interactive snapshot,
+        which on a local KB is schema v1 and carries no slugs. Render the
+        directory straight from the active manifest and link each card into
+        the in-wiki topic route, so the topbar 专题目录 entry is never dead.
+        """
+
+        try:
+            snapshot_dir = resolve_snapshot_directory(self.data_dir)
+        except RuntimeError as exc:
+            self.send_error(HTTPStatus.NOT_FOUND, explain=str(exc))
+            return
+        manifest_path = snapshot_dir / "manifest.json"
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            topics = [item for item in manifest.get("topics") or [] if isinstance(item, dict)]
+            fields = manifest.get("fields") or []
+        except (OSError, json.JSONDecodeError):
+            # A snapshot without a manifest is still readable topic-by-topic;
+            # degrade to the topic files rather than failing the nav entry.
+            topics, fields = [], []
+            for path in sorted((snapshot_dir / "topics").glob("topic-*.json")):
+                try:
+                    item = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if isinstance(item, dict):
+                    topics.append(item)
+        topics.sort(key=lambda item: (str(item.get("date") or ""), str(item.get("title") or "")), reverse=True)
+        cards = []
+        for topic in topics:
+            identifier = str(topic.get("id") or "")
+            if not identifier:
+                continue
+            version = str(topic.get("latest_version") or topic.get("default_version") or "zhihu")
+            href = f"../#/topic/{quote(identifier)}?version={quote(version)}"
+            cards.append(
+                '<article class="research-card">'
+                f'<p>{html.escape(str(topic.get("field") or "研究领域"))}</p>'
+                f'<h2><a href="{html.escape(href, quote=True)}">{html.escape(str(topic.get("title") or identifier))}</a></h2>'
+                f'<small>{html.escape(str(topic.get("date") or ""))}</small>'
+                "</article>"
+            )
+        directory = "\n".join(cards) or '<p class="lede">还没有可发布的完整成果。</p>'
+        payload = f"""<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>研究专题目录｜Embodied AI Evidence Hub</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root {{ --paper:#f5f4f0; --ink:#222421; --muted:#686c65; --line:#d7d8d1; --panel:#fffef9; --green:#1f5b4d; --amber:#b9662d; }}
+  * {{ box-sizing:border-box; }}
+  body {{ margin:0; background:var(--paper); color:var(--ink); line-height:1.75; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }}
+  a {{ color:var(--green); text-underline-offset:3px; }}
+  .site-header {{ min-height:72px; padding:14px clamp(20px,5vw,72px); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:24px; }}
+  .site-brand {{ color:var(--ink); text-decoration:none; display:grid; line-height:1.25; }}
+  .site-brand strong {{ font-size:16px; }}
+  .site-brand span {{ color:var(--muted); font-size:12px; }}
+  .site-header nav {{ display:flex; gap:20px; font-size:14px; }}
+  .site-header nav a {{ color:var(--ink); text-decoration:none; }}
+  main {{ width:min(1160px,calc(100% - 40px)); margin:0 auto; padding:72px 0 96px; }}
+  .eyebrow {{ margin:0 0 10px; color:var(--amber); font-size:12px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }}
+  h1 {{ margin:0 0 18px; font-family:Georgia,"Noto Serif SC",serif; font-size:clamp(34px,6vw,62px); line-height:1.12; }}
+  .lede {{ max-width:760px; color:var(--muted); }}
+  .research-directory {{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:48px; }}
+  .research-card {{ padding:22px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }}
+  .research-card > p {{ margin:0 0 10px; color:var(--amber); font-size:12px; }}
+  .research-card h2 {{ margin:0; font-size:18px; line-height:1.45; }}
+  .research-card h2 a {{ color:var(--ink); text-decoration:none; }}
+  .research-card small {{ display:block; margin-top:10px; color:var(--muted); font-size:13px; }}
+  footer {{ padding:28px 20px; border-top:1px solid var(--line); color:var(--muted); text-align:center; font-size:13px; }}
+  @media (max-width:800px) {{ .research-directory {{ grid-template-columns:repeat(2,1fr); }} }}
+  @media (max-width:520px) {{ .research-directory {{ grid-template-columns:1fr; }} }}
+</style>
+</head><body>
+<header class="site-header"><a class="site-brand" href="../"><strong>Embodied AI Evidence Hub</strong><span>具身智能证据知识库</span></a>
+<nav aria-label="全站导航"><a href="../knowledge-map/">知识图谱</a><a href="../">交互阅读</a></nav></header>
+<main class="directory-page"><p class="eyebrow">Research directory</p><h1>研究专题目录</h1>
+<p class="lede">共 {len(topics)} 个专题，覆盖 {len(fields)} 个研究领域。每个专题连接完整正文、精读论文与正式证据事件。</p>
+<div class="research-directory">{directory}</div></main>
+<footer><p>Research → Audit → Evidence</p></footer></body></html>
+""".encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(payload)
+
     def _send_json(self, status: HTTPStatus, value: object) -> None:
         payload = json.dumps(value, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -2294,8 +2486,16 @@ def refresh_snapshot(kb_root: Path, data_dir: Path) -> None:
 
 def build_knowledge_map(output: Path, kb_root: Path) -> None:
     command = [sys.executable, str(GRAPH_BUILDER), "build-knowledge-map", "--no-open", "--output", str(output)]
-    if (kb_root / "knowledge" / "index.md").is_file():
+    index_path = kb_root / "knowledge" / "index.md"
+    if index_path.is_file():
         command += ["--root", str(kb_root)]
+    elif (kb_root / CATALOG_RELPATH).is_file():
+        # Local KBs that only route runs through the catalog have no
+        # knowledge/index.md. Without --root the builder falls back to its own
+        # install root and exits "start file not found", so the graph silently
+        # never renders (the /knowledge-map/ nav entry stays 404). Anchor the
+        # graph on the catalog instead — it is this KB's routing entry point.
+        command += ["--root", str(kb_root), "--start", CATALOG_RELPATH.as_posix()]
     result = subprocess.run(
         command,
         cwd=str(kb_root),

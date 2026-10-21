@@ -62,7 +62,7 @@ class SearchCliDispatchTest(unittest.TestCase):
         with mock.patch.object(self.module, "run_select", return_value=0) as run_select:
             code = self.module._select_candidates_main(
                 ["--registry", "/tmp/r.json", "--strategy", "bm25", "--topic", "umi",
-                 "--focus", "data", "--limit", "10",
+                 "--focus", "data",
                  "--output-screening", "/tmp/scr.json", "--output-ids", "/tmp/ids.txt"]
             )
         self.assertEqual(code, 0)
@@ -71,9 +71,20 @@ class SearchCliDispatchTest(unittest.TestCase):
         self.assertEqual(args[1], "bm25")
         self.assertEqual(args[2], "umi")
         self.assertEqual(args[3], "data")
-        self.assertEqual(args[4], 10)
+        self.assertEqual(args[4], "/tmp/scr.json")
+        self.assertEqual(args[5], "/tmp/ids.txt")
         self.assertEqual(kwargs.get("cli"), None)
         self.assertEqual(kwargs.get("model"), None)
+
+    def test_select_candidates_has_no_limit_flag(self):
+        """Selection never truncates (2026-10-20): deep reading owns the only
+        cut in the funnel, so the flag table must not offer --limit."""
+        with self.assertRaises(SystemExit), mock.patch("sys.stderr"):
+            self.module._select_candidates_main(
+                ["--registry", "/tmp/r.json", "--strategy", "bm25", "--topic", "umi",
+                 "--output-screening", "/tmp/scr.json", "--output-ids", "/tmp/ids.txt",
+                 "--limit", "10"]
+            )
 
     def test_assess_review_coverage_dispatches_to_coverage_run(self):
         with mock.patch.object(self.module.coverage, "run", return_value=0) as run:

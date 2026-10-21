@@ -11,6 +11,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+from embodied_learning.knowledge.funnel import write_funnel
 from embodied_learning.knowledge.inventory import kb_stats
 from embodied_learning.knowledge.model import KnowledgeBase
 from embodied_learning.knowledge.query import kb_search
@@ -107,6 +108,27 @@ class KbStatsTest(unittest.TestCase):
         # .locks is not counted as a paper
         self.assertEqual(payload["pool"]["papers"], 3)
 
+    def test_funnel_block_reports_runs_with_and_without_data(self):
+        write_funnel({
+            "schema_version": 1,
+            "stages": {"candidates": 10, "screened": 5, "full_text": 4,
+                       "deep_read": 2, "evidence_papers": 2, "abstract_papers": 5},
+        }, self.root / "evidence" / "run-a")
+        payload = kb_stats(self.kb)
+        self.assertEqual(payload["schema_version"], 1)  # additive v1 key
+        funnel = payload["funnel"]
+        self.assertEqual(funnel["runs_with_funnel"], 1)
+        self.assertEqual(funnel["runs_without_funnel"], 1)
+        self.assertEqual(funnel["sums"]["candidates"], 10)
+        self.assertEqual(funnel["rates"]["screen"], 0.5)
+        self.assertIn("note", funnel)
+
+    def test_runs_detail_funnel_is_null_for_runs_without_the_artifact(self):
+        write_funnel({"schema_version": 1, "stages": {}}, self.root / "evidence" / "run-a")
+        rows = {row["run"]: row for row in kb_stats(self.kb, include_runs=True)["runs_detail"]}
+        self.assertIsNotNone(rows["run-a"]["funnel"])
+        self.assertIsNone(rows["run-b"]["funnel"])
+
 
 class KbSearchTest(unittest.TestCase):
     def setUp(self):
@@ -198,6 +220,48 @@ class KbInventoryCliTest(unittest.TestCase):
             self.assertEqual(code, 0)
             hits = json.loads(buf.getvalue())
             self.assertTrue(any(h["id"] == "run-a" for h in hits))
+
+    def test_kb_funnel_json_and_layer_query(self):
+        from tests._entry import invoke
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            run_dir = write_run(root, "run-a", events=1, topic="HelloWorld")
+            write_funnel({
+                "schema_version": 1,
+                "stages": {"candidates": 4, "screened": 2},
+                "papers": {"2401.1": {"title": "P", "published": "2025-01-01", "reason": "r"}},
+                "layers": {"screened": ["2401.1"]},
+            }, run_dir)
+            cases = {
+                "stats": (["--kb-root", str(root), "--json"], None),
+                "layer": (["--layer", "screened", "--kb-root", str(root), "--json"], "2401.1"),
+            }
+            for name, (argv, paper_id) in cases.items():
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    code = invoke("wiki.py", "kb-funnel", argv)
+                self.assertEqual(code, 0, name)
+                rows = json.loads(buf.getvalue())
+                self.assertTrue(rows, name)
+                if paper_id:
+                    self.assertEqual(rows[0]["arxiv_id"], paper_id)
+
+    def test_kb_funnel_on_a_kb_without_funnels_exits_zero(self):
+        """135 historical runs have no funnel.json: an empty result is data,
+        not an error."""
+        from tests._entry import invoke
+        import contextlib
+        import io
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            write_run(root, "run-a", events=1)
+            for argv in (["--kb-root", str(root)], ["--layer", "screened", "--kb-root", str(root)]):
+                buf = io.StringIO()
+                with contextlib.redirect_stdout(buf):
+                    self.assertEqual(invoke("wiki.py", "kb-funnel", argv), 0)
+                self.assertIn("无", buf.getvalue())
 
     def test_kb_stats_parse_defaults(self):
         from tests._entry import parse

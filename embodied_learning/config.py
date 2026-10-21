@@ -26,7 +26,18 @@ SEARCH_STRATEGIES: tuple[str, ...] = ("smart", "fast", "seeds")
 
 # Deep-read queue selection vocabulary (driver --selection-strategy).
 # ``keywords`` keeps the legacy term-matching screen-candidates path.
-SELECTION_STRATEGIES: tuple[str, ...] = ("keywords", "influence", "bm25", "smart")
+# ``smart`` and ``smart-jev`` are the two model-driven variants: the first uses
+# the execution model of the run (claude one-shot), the second a decision model
+# (System One / jev) through the harness's second binding.
+SELECTION_STRATEGIES: tuple[str, ...] = ("keywords", "influence", "bm25", "smart", "smart-jev")
+
+# Default deep-read queue selection. ``smart-jev`` is the decision model: it
+# answers one typed per-paper question in seconds instead of spending minutes
+# on an execution-model pass, and the strict "core contribution" wording keeps
+# precision at ~80% at threshold 0.60 (2026-10-20 A/B, 455 candidates).
+# It fails fast when the System One channel is unconfigured; ``smart`` (the
+# execution model) stays available as the explicit fallback.
+DEFAULT_SELECTION_STRATEGY: str = "smart-jev"
 
 # Accepted-evidence floor per review mode (deep-read / evidence sufficiency).
 EVIDENCE_FLOORS: dict[str, int] = {"rapid": 8, "scoping": 15, "systematic": 30}
@@ -34,21 +45,34 @@ EVIDENCE_FLOORS: dict[str, int] = {"rapid": 8, "scoping": 15, "systematic": 30}
 # Distinct cited-paper floor per review mode (finalize gate).
 CITED_PAPER_FLOORS: dict[str, int] = {"rapid": 6, "scoping": 10, "systematic": 15}
 
-# Registry screen budget per review mode (driver screening stage). A
-# runaway guard on extraction cost only — it must not cut a quality shortlist
-# (2026-10-10: smart picked 68, cap 48, 20 never even reached extraction).
-SCREEN_LIMITS: dict[str, int] = {"rapid": 80, "scoping": 120, "systematic": 200}
-
-# Deep-read queue limit per review mode (driver deep-read stage). Deep-read
-# throughput is the real review breadth (screening only triages). Sized so
-# BOTH paper floors clear at the observed ~70% skeleton-audit pass rate:
-# the cited-paper floor AND the evidence floor. When audited passes still
-# fall short, the driver pulls 候补 from the scored extraction pool until the
+# Deep-read queue limit per review mode (driver deep-read stage). This is the
+# ONLY truncation in the funnel: selection queues every paper the strategy
+# judges relevant and extraction recovers all of them (2026-10-20: the old
+# SCREEN_LIMITS cap duplicated this cut and stranded 232 of 352 relevant
+# papers before extraction). Deep-read throughput is the real review breadth
+# (screening only triages). Sized so BOTH paper floors clear at the observed
+# ~70% skeleton-audit pass rate: the cited-paper floor AND the evidence floor.
+# It is a FIRST-PASS budget, not the stopping rule — when audited passes fall
+# short, the driver pulls 候补 from the rest of the extracted queue until the
 # evidence floor is met.
 DEEP_READ_LIMITS: dict[str, int] = {"rapid": 12, "scoping": 22, "systematic": 43}
 
 # Soft deep-read budget offset above the evidence floor (check-deep-read-budget).
 DEEP_READ_BUDGET_OFFSET: int = 10
+
+# Per-layer paper-id cap in funnel.json (runaway guard for a pathological
+# registry). Truncation is recorded (``truncated: true``) and logged, never
+# silent; normal runs sit far below it (largest observed registry: 308).
+FUNNEL_LAYER_PAPER_CAP: int = 5000
+
+# Per-query retrieval cap by review mode (search-arxiv --max-results, driver
+# passes the mode's value). This is a *discovery* budget, not a corpus census:
+# n_queries x this value is why every topic's initial retrieval lands near a
+# few hundred papers. Retrieval is relevance-ranked (not newest-first), so a
+# wider window surfaces seminal and highly-related work instead of just the
+# latest submissions — raise the mode's value for a wider pool rather than
+# piling on more queries.
+SEARCH_MAX_RESULTS_PER_QUERY: dict[str, int] = {"rapid": 25, "scoping": 35, "systematic": 45}
 
 # ---- writer contract ---------------------------------------------------------
 
@@ -83,14 +107,31 @@ DEFAULT_WRITER_STANCE_CAPS: dict[str, int] = {
 
 TERMS_AGENT_TIMEOUT_S: float = 180.0
 DYNAMIC_AGENT_TIMEOUT_S: float = 480.0
+# Total tries for the dynamic-query agent on parse/exit failures (a timeout
+# does not retry: that budget is already spent). The completion channel
+# occasionally truncates the response head or drops JSON quoting
+# (2026-10-13/14/15 runs); a second call almost always lands.
+DYNAMIC_AGENT_ATTEMPTS: int = 2
+# Total tries for the deep-read skeleton agent on parse/exit failures AND
+# timeouts. Deep reads run several agents concurrently, so an upstream stall
+# under load frequently surfaces as a timeout rather than a clean error; the
+# 2026-10-16 强化学习 run lost 20/43 deep reads to skeleton calls that died on
+# truncated streams. One extra timeout budget per paper is the cheaper side of
+# that trade (a retried paper costs ~2x one read; a lost paper costs evidence).
+SKELETON_AGENT_ATTEMPTS: int = 2
+# Whole-queue retry passes after the first deep-read pass: papers that still
+# failed but DO have full text are re-read once more (transient upstream
+# failures dominate under parallel load). Papers without an extraction are
+# never retried here — the bottleneck is the fetch, not the model.
+DEEP_READ_RETRY_PASSES: int = 1
 S2_BUDGET_S: float = 480.0
 DEFAULT_AGENT_TIMEOUT_S: float = 900.0
 DEFAULT_AGENTS_PARALLEL: int = 5
 DEFAULT_EXTRACTION_WORKERS: int = 4
-# One smart-selection chunk is ONE agent call judging up to
-# SMART_CANDIDATES_PER_CALL abstracts; the 2026-10-14 时空智能体 run lost its
-# whole older half (2024-01..2026-08) to a 900s chunk timeout, which then
-# starved the full-text and accepted-paper floors. Keep this generous.
+# One smart-selection chunk is ONE agent call; chunks are packed by rendered
+# candidate length (SMART_CANDIDATE_CHARS_PER_CALL). The 2026-10-14 时空智能体
+# run lost its whole older half (2024-01..2026-08) to a 900s chunk timeout, which
+# then starved the full-text and accepted-paper floors. Keep this generous.
 SELECTION_TIMEOUT_S: float = 3600.0
 
 # ---- network: retry, pacing, circuit breaking -------------------------------
@@ -105,15 +146,35 @@ DEFAULT_INTERVALS: dict[str, float] = {
     "arxiv": 3.0,
     "semanticscholar": 1.0,
     "arxiv2md": 2.0,
+    "mymemory": 1.0,
+    # Decision-model (System One) traffic: 1200 req/min upstream, so a light
+    # machine-wide spacing is plenty and keeps sibling runs from stampeding.
+    "systemone": 0.25,
 }
 
 # S2 request pacing passed to expand-via-citations (driver --sleep-seconds).
 S2_SLEEP_S: float = 3.0
 
+# MyMemory bootstrap translation (pure-Chinese topic → English query terms).
+TRANSLATE_TIMEOUT_S: float = 15.0
+# Anonymous MyMemory requests cap q at 500 bytes; stay well under.
+TRANSLATE_MAX_CHARS: int = 400
+
 DEFAULT_RETRY_BASE_SECONDS: float = 20.0
-DEFAULT_RETRY_CAP_SECONDS: float = 600.0
+# Cap on a 429/503 cooldown recorded machine-wide. Deliberately far below
+# EXTRACTION_PAPER_TIMEOUT_S (600s): when both were 600 a single long
+# ``Retry-After`` turned into a full per-paper hard timeout — every fetch
+# worker blocked in the gate until the subprocess was killed (2026-10-20
+# 视频流式重建 run: 5 papers x 600s, 4 of them recovered instantly on retry).
+DEFAULT_RETRY_CAP_SECONDS: float = 120.0
 MAX_RETRIES: int = 3
 LOCK_POLL_SECONDS: float = 0.05
+
+# How long one fetch may block in the machine-wide gate before giving up and
+# letting the extraction queue's retry pass try again. Must stay below the
+# per-paper extraction budget so a cooldown becomes a fast HELD (seconds),
+# not a burned subprocess slot.
+FETCH_GATE_MAX_WAIT_S: float = 60.0
 
 # Consecutive connection-level failures before the extraction queue gives up
 # on a dead channel instead of spending every paper's full budget on it.
@@ -143,6 +204,20 @@ STOP_GRACE_S: float = 5.0
 # stay compact so the live status spinner remains readable.
 TOOL_DETAIL_MAX_CHARS: int = 120
 TOOL_COMMAND_DETAIL_MAX_CHARS: int = 2000
+# Why the agent made a mutating call (Edit/Write/...): the stream-json
+# tool_use block carries no reason, so the harness attaches the narration
+# text that preceded it. Without this the dialog journal shows "Edit：<path>"
+# with no way to tell a style fix from a citation fix (2026-10-20 审计门).
+TOOL_REASON_MAX_CHARS: int = 300
+# Usage/trace ledger (monica usage-records-format): set to 0/false to disable.
+# Every claude invocation writes one JSONL session file directly under the
+# machine-local conversation store (``usage-<kind>-*.jsonl``). A parent process
+# can point spawned stage scripts at its own run ledger with the env below, so
+# subprocess agents append to the same file instead of opening a sibling.
+AGENT_SESSION_LOG_ENV: str = "EMBODIED_AGENT_SESSION_LOG"
+AGENT_SESSION_LEDGER_ENV: str = "EMBODIED_AGENT_LEDGER"
+# Diagnostic event text cap in the ledger (no prompt/response bodies — D9).
+SESSION_EVENT_TEXT_MAX_CHARS: int = 300
 SKELETON_TIMEOUT_S: float = 900.0
 ARTICLE_TIMEOUT_S: float = 600.0
 SOURCE_TIMEOUT_S: float = 900.0
@@ -176,8 +251,46 @@ MIN_EVENTS_FOR_STANCE_TRIGGER: int = 10
 K1: float = 1.5  # BM25 term-frequency saturation
 B: float = 0.75  # BM25 length normalisation
 DEFAULT_FIELD_WEIGHTS: str = "title=2.0,abstract=1.0,introduction=1.5,related_work=1.5"
-SMART_CANDIDATES_PER_CALL: int = 300
+# Smart-selection chunk packing: bound ONE agent call by the rendered
+# candidate-block size (primary) and by candidate count (secondary ceiling).
+# Fixed-count chunks ignored how long abstracts actually run — the 2026-10-16
+# 强化学习 run's two chunks (300 / 150 papers) rendered 157KB / 78KB prompts and
+# BOTH lost their completion stream mid-response (upstream EOF after 44660 /
+# 30074 frames). With SMART_MAX_ABSTRACT_CHARS applied a line runs ~500 chars,
+# so 24k ≈ 45 papers: one call's prompt and generation stay short enough to
+# land. The count ceiling only bites when lines are tiny (empty abstracts).
+SMART_CANDIDATE_CHARS_PER_CALL: int = 24_000
+SMART_CANDIDATES_PER_CALL: int = 60
 SMART_MAX_ABSTRACT_CHARS: int = 400
+
+# ---- decision model (System One / jev) selection ---------------------------
+#
+# ``smart-jev`` asks a decision model one typed yes/no question per candidate
+# and keeps the papers whose probability clears a threshold. It is NOT a claude
+# call: jev speaks TypeSafe's System One protocol, so the harness owns a second
+# binding (harness/claude.system_one) beside complete(). One request carries
+# many questions (the model answers them in one forward pass), which is why the
+# whole registry fits in a handful of calls.
+SYSTEM_ONE_MODEL: str = "jev-1.14.0"
+# Endpoint is ``<base>/v1/systemone``; the base URL and the key are read from
+# the environment ONLY (never written to config): the repo's own vars first,
+# then the gateway vars the claude CLI already uses.
+SYSTEM_ONE_ENDPOINT_SUFFIX: str = "/v1/systemone"
+SYSTEM_ONE_URL_ENV: str = "EMBODIED_SYSTEM_ONE_URL"
+SYSTEM_ONE_KEY_ENV: str = "EMBODIED_SYSTEM_ONE_API_KEY"
+SYSTEM_ONE_URL_FALLBACK_ENVS: tuple[str, ...] = ("ANTHROPIC_BASE_URL",)
+SYSTEM_ONE_KEY_FALLBACK_ENVS: tuple[str, ...] = ("ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY")
+# One request carries up to SMART_JEV_QUESTIONS_PER_CALL questions; the char
+# budget below keeps the request body inside System One's 32k state+question cap.
+SMART_JEV_QUESTIONS_PER_CALL: int = 60
+SMART_JEV_CHARS_PER_CALL: int = 24_000
+# Keep a candidate when the Noul probability clears this. 0.60 measured
+# precision 0.88 / recall 0.73 against the smart (glm) baseline on the 455-
+# candidate 视频流式重建 registry (2026-10-20); lower = more recall, more drift.
+SMART_JEV_RELEVANCE_THRESHOLD: float = 0.60
+SYSTEM_ONE_TIMEOUT_S: float = 120.0
+SYSTEM_ONE_RETRIES: int = 2
+SYSTEM_ONE_BACKOFF_BASE: float = 1.5
 BATCH_MAX_IDS: int = 500
 PAGE_SIZE: int = 100
 DEFAULT_MAX_QUERIES: int = 50
@@ -198,6 +311,14 @@ LINK_BUDGETS: dict[str, tuple[int, int | None]] = {
     "xiaohongshu": (3, 5),
     "quickread": (1, 1),
 }
+# Zhihu long-sentence gate. The audit reports EVERY sentence over the limit in
+# one pass (longest first): reporting only the single longest made the writer
+# whack one mole per round — fix the 93-char sentence and the 76-char one takes
+# its place, five audit rounds later the draft still had one at 72 (2026-10-20
+# 视频流式重建). The cap keeps one audit message readable; the message names
+# how many it withheld.
+LONG_SENTENCE_MAX_CHARS: int = 70
+LONG_SENTENCE_REPORT_LIMIT: int = 8
 
 # ---- slide / reader rendering caps ------------------------------------------
 

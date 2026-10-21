@@ -59,6 +59,7 @@ class RunFlagTableTest(unittest.TestCase):
         self.assertEqual(_options(self.mod, "pipeline"), {
             "-h", "--help", "--run-dir", "--topic", "--review-mode", "--time-range",
             "--focus", "--kb-root", "--search-strategy", "--selection-strategy",
+            "--selection-model", "--selection-threshold",
             "--seed-arxiv-ids", "--external-candidates", "--with-s2",
             "--arxiv-snapshot", "--no-terms-agent", "--no-dynamic-agent",
             "--terms-timeout", "--dynamic-timeout", "--s2-budget", "--workers",
@@ -70,6 +71,7 @@ class RunFlagTableTest(unittest.TestCase):
         self.assertEqual(_options(self.mod, "launch"), {
             "-h", "--help", "--topic", "--review-mode", "--time-range", "--focus",
             "--search-strategy", "--selection-strategy", "--seed-arxiv-ids",
+            "--selection-model", "--selection-threshold",
             "--external-candidates", "--agents-parallel", "--arxiv-snapshot",
             "--kb-root", "--knowledge-id", "--target-style", "--scope-note",
             "--run-dir", "--run-version", "--deep-read-limit", "--mechanical-retries",
@@ -110,6 +112,12 @@ class WikiFlagTableTest(unittest.TestCase):
     def test_kb_search(self):
         self.assertEqual(_options(self.mod, "kb-search"), {
             "-h", "--help", "--scope", "--limit", "--kb-root", "--json",
+        })
+
+    def test_kb_funnel(self):
+        self.assertEqual(_options(self.mod, "kb-funnel"), {
+            "-h", "--help", "--layer", "--kb-root", "--run", "--topic",
+            "--review-mode", "--sort", "--limit", "--json",
         })
 
     def test_kb_merge(self):

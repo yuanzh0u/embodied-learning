@@ -13,7 +13,6 @@ class ConfigContractTest(unittest.TestCase):
         for table_name in (
             "EVIDENCE_FLOORS",
             "CITED_PAPER_FLOORS",
-            "SCREEN_LIMITS",
             "DEEP_READ_LIMITS",
         ):
             table = getattr(config, table_name)
@@ -41,6 +40,12 @@ class ConfigContractTest(unittest.TestCase):
             set(config.DEFAULT_WRITER_STANCE_CAPS),
             {"support", "limit", "conditional", "gap"},
         )
+
+    def test_default_selection_strategy_is_a_known_vocabulary_member(self) -> None:
+        """The CLI/server/prompt defaults all read this constant; it must stay
+        a real strategy (smart-jev = decision model)."""
+        self.assertEqual(config.DEFAULT_SELECTION_STRATEGY, "smart-jev")
+        self.assertIn(config.DEFAULT_SELECTION_STRATEGY, config.SELECTION_STRATEGIES)
 
 
 if __name__ == "__main__":

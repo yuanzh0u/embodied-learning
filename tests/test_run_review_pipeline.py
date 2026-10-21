@@ -11,6 +11,7 @@ from _entry import invoke, parse
 
 import importlib.util
 import inspect
+import io
 import json
 import os
 import sys
@@ -35,6 +36,13 @@ def load_driver():
 class TermsTest(unittest.TestCase):
     def setUp(self):
         self.driver = load_driver()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        env = mock.patch.dict(
+            os.environ, {"EMBODIED_CONVERSATION_STORE": str(Path(self.tmp.name) / "store")}
+        )
+        env.start()
+        self.addCleanup(env.stop)
 
     def test_mechanical_terms_prefer_latin_words(self):
         # Screening is substring matching against English titles/abstracts:
@@ -89,6 +97,40 @@ class TermsTest(unittest.TestCase):
         self.assertEqual(source, "mechanical")
         self.assertEqual(terms, ["erasor"])
 
+    def test_terms_selector_prefers_precomputed_fallback_terms(self):
+        # The caller already merged a translation into the mechanical terms; a
+        # second mechanical pass over the raw Chinese topic would drop back to
+        # CJK tokens that English titles never match.
+        selector = self.driver.TermsSelector(
+            "强化学习", "", use_agent=False, timeout_s=1.0, cli="/fake/claude",
+            fallback_terms=["reinforcement", "learning", "强化学习"],
+        )
+        selector.start()
+        terms, source = selector.join()
+        self.assertEqual(source, "mechanical")
+        self.assertEqual(terms, ["reinforcement", "learning", "强化学习"])
+
+    def test_translation_terms_merges_english_with_topic_tokens(self):
+        # Merge, never replace: the topic's own tokens stay in the list (call
+        # sites filter to Latin where it matters), English first so the 12-cap
+        # and the recall scope clause prefer them.
+        with mock.patch.object(self.driver, "translate_text", return_value="reinforcement learning"):
+            terms, translated = self.driver.translation_terms("强化学习", "")
+        self.assertEqual(translated, "reinforcement learning")
+        self.assertEqual(terms, ["reinforcement", "learning", "强化学习"])
+
+    def test_translation_terms_passthrough_when_latin_present_or_unavailable(self):
+        with mock.patch.object(self.driver, "translate_text", return_value="image segmentation") as called:
+            terms, translated = self.driver.translation_terms("图像分割 Gaussian", "")
+        self.assertEqual(translated, "")
+        self.assertEqual(terms, ["gaussian"])
+        called.assert_not_called()  # already has Latin tokens — no network call
+
+        with mock.patch.object(self.driver, "translate_text", return_value=None):
+            terms, translated = self.driver.translation_terms("点云去动态", "")
+        self.assertEqual(translated, "")
+        self.assertEqual(terms, ["点云去动态"])
+
 
 class ExtractionQueueLineTest(unittest.TestCase):
     """The extraction queue's stdout becomes progress ticks; only HELD papers
@@ -124,6 +166,13 @@ class DriverPipelineTest(unittest.TestCase):
         self.driver = load_driver()
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
+        # The usage/trace ledger is machine-local; keep test runs out of the
+        # real ~/.claude/projects archive.
+        env = mock.patch.dict(
+            os.environ, {"EMBODIED_CONVERSATION_STORE": str(Path(self.tmp.name) / "store")}
+        )
+        env.start()
+        self.addCleanup(env.stop)
         self.run_dir = Path(self.tmp.name) / "work" / "literature-review-demo-20260101"
         self.run_dir.mkdir(parents=True)
         (self.run_dir / "run.json").write_text(
@@ -176,8 +225,8 @@ class DriverPipelineTest(unittest.TestCase):
             "screen-candidates": {},
             "select-candidates": {
                 "selection_rule": {
-                    "strategy": "smart",
-                    "detail": "smart selected 2/42 considered; shortfall: only 2 relevant (limit 24), not padded",
+                    "strategy": "smart-jev",
+                    "detail": "smart-jev selected 2/42 considered; kept those above 0.60 (jev)",
                 },
                 "candidates": [],
             },
@@ -246,22 +295,40 @@ class DriverPipelineTest(unittest.TestCase):
             out.write_text(json.dumps(payload), encoding="utf-8")
         return mock.Mock(stdout=iter(["OK 2402.10329 (1/2)", "HELD 2302.01109 (2/2)"]), wait=lambda timeout=None: 0)
 
-    def run_driver(self, argv: list[str], *, agent_dynamic=None) -> tuple[int, dict]:
+    def run_driver(self, argv: list[str], *, agent_dynamic=None, fake_run=None,
+                   translate_en=None, system_one: bool = True) -> tuple[int, dict]:
         """agent_dynamic=None keeps the default patch (agent returns None);
-        pass a Mock to observe/override the dynamic-query agent."""
+        pass a Mock to observe/override the dynamic-query agent. fake_run
+        overrides the stage-subprocess fake (e.g. to write an empty plan).
+        translate_en is the MyMemory stand-in (default None = translation
+        unavailable, so tests never touch the network). system_one=True is the
+        default patch for the decision-model preflight (smart-jev is the CLI
+        default); pass False to exercise the fail-fast path. The driver's
+        stderr is captured on ``self.last_stderr``; a failed pipeline writes no
+        pipeline-summary.json, so the summary is ``{}``."""
         agent_patch = (
             mock.patch.object(self.driver, "agent_dynamic_queries", return_value=None)
             if agent_dynamic is None
             else mock.patch.object(self.driver, "agent_dynamic_queries", new=agent_dynamic)
         )
-        with mock.patch.object(self.driver, "run_command", side_effect=self.fake_run), \
+        stderr = io.StringIO()
+        with mock.patch.object(self.driver, "run_command", side_effect=fake_run or self.fake_run), \
              mock.patch.object(self.driver.subprocess, "Popen", side_effect=self.fake_popen), \
              mock.patch.object(self.driver.TermsSelector, "join", return_value=(["demo"], "mechanical")), \
+             mock.patch.object(self.driver, "translate_text", return_value=translate_en), \
+             mock.patch("embodied_learning.harness.claude.system_one_ready", return_value=system_one), \
              agent_patch, \
              mock.patch.object(self.driver.time, "sleep"), \
-             mock.patch.object(Path, "glob", return_value=iter([])):
+             mock.patch.object(Path, "glob", return_value=iter([])), \
+             mock.patch.object(sys, "stderr", stderr):
             code = invoke("run.py", "pipeline", argv)
-        summary = json.loads((self.run_dir / "pipeline-summary.json").read_text(encoding="utf-8"))
+        self.last_stderr = stderr.getvalue()
+        summary_path = self.run_dir / "pipeline-summary.json"
+        summary = (
+            json.loads(summary_path.read_text(encoding="utf-8"))
+            if summary_path.is_file()
+            else {}
+        )
         return code, summary
 
     def argv(self, *extra: str) -> list[str]:
@@ -320,9 +387,9 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertGreaterEqual(names.count("search-arxiv"), 2)
         self.assertEqual(summary["knowledge_ids"], ["EA-SENSOR"])
         self.assertEqual(summary["candidate_count"], 42)
-        self.assertEqual(summary["screening_limit"], 80)  # rapid
-        self.assertEqual(summary["selection_strategy"], "smart")
-        self.assertIn("smart selected", summary["selection_detail"])
+        self.assertNotIn("screening_limit", summary)
+        self.assertEqual(summary["selection_strategy"], "smart-jev")
+        self.assertIn("smart-jev selected", summary["selection_detail"])
         self.assertEqual(summary["abstract_events"], 0)
         self.assertTrue(summary["coverage_dimensions_passed"])
         self.assertTrue(summary["candidate_floor_passed"])
@@ -333,7 +400,53 @@ class DriverPipelineTest(unittest.TestCase):
         # did the selection strategy the run was born with.
         manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["knowledge_ids"], ["EA-SENSOR"])
-        self.assertEqual(manifest["selection_strategy"], "smart")
+        self.assertEqual(manifest["selection_strategy"], "smart-jev")
+
+    def test_driver_writes_funnel_artifact(self):
+        """The funnel is a run artifact: derived from disk, listed in the
+        summary, and self-contained enough to publish."""
+        code, summary = self.run_driver(self.argv("--no-terms-agent"))
+        self.assertEqual(code, 0)
+        funnel_path = self.run_dir / "funnel.json"
+        self.assertTrue(funnel_path.is_file())
+        funnel = json.loads(funnel_path.read_text(encoding="utf-8"))
+        self.assertEqual(funnel["schema_version"], 1)
+        # The fixture registry carries only a count — the stage still knows it.
+        self.assertEqual(funnel["stages"]["candidates"], 42)
+        self.assertEqual(funnel["stages"]["screened"], 2)
+        self.assertEqual(funnel["stages"]["deep_read"], 2)
+        self.assertEqual(funnel["detail"]["abstract_basis"], "screened")
+        self.assertEqual(funnel["detail"]["deep_read_failed"], 2)
+        self.assertEqual(summary["artifacts"]["funnel"], "funnel.json")
+        self.assertIn("funnel", summary["stage_seconds"])
+
+    def test_driver_writes_one_run_ledger_with_stage_trace(self):
+        """Every mechanical stage appends step + metric lines to ONE pipeline
+        ledger (usage-records-format trace layer), so a run's trajectory is
+        one file and its stages are machine-readable."""
+        code, _ = self.run_driver(self.argv("--no-terms-agent"))
+        self.assertEqual(code, 0)
+        ledgers = list((Path(self.tmp.name) / "store").glob("usage-pipeline-*.jsonl"))
+        self.assertEqual(len(ledgers), 1)
+        entries = [
+            json.loads(line)
+            for line in ledgers[0].read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        stages = {
+            entry.get("attrs", {}).get("stage")
+            for entry in entries
+            if entry.get("kind") == "step"
+        }
+        for expected in ("pipeline", "plan", "registry", "screening", "coverage", "extraction"):
+            self.assertIn(expected, stages)
+        metrics = [
+            entry for entry in entries
+            if entry.get("kind") == "metric"
+            and entry.get("attrs", {}).get("stage") == "pipeline"
+        ]
+        self.assertEqual(len(metrics), 1)
+        self.assertIn("stage_seconds", metrics[0]["attrs"])
 
     def test_driver_emits_per_stage_result_briefs(self):
         """Each mechanical stage closes with a [DRIVER-BRIEF:<stage>] JSON
@@ -366,36 +479,74 @@ class DriverPipelineTest(unittest.TestCase):
         # One process for the whole plan: no --query repetition here.
         self.assertNotIn("--query", arxiv)
 
-    def test_selection_strategy_defaults_to_smart(self):
+    def test_selection_strategy_defaults_to_smart_jev(self):
         args = parse("run.py", "pipeline", self.argv())
-        self.assertEqual(args.selection_strategy, "smart")
+        self.assertEqual(args.selection_strategy, "smart-jev")
         self.assertEqual(
             sorted(self.driver.SELECTION_STRATEGIES),
-            ["bm25", "influence", "keywords", "smart"],
+            ["bm25", "influence", "keywords", "smart", "smart-jev"],
         )
 
-    def test_smart_selection_dispatches_select_candidates(self):
-        """Default (smart): screening goes through search.py select-candidates
+    def test_default_selection_strategy_dispatches_select_candidates(self):
+        """Default (smart-jev): screening goes through search.py select-candidates
         with the registry + topic + focus; the terms thread still runs but the
         screening command does not consume it."""
         self.run_driver(self.argv("--no-terms-agent"))
         screen = next(c for c in self.commands if "select-candidates" in " ".join(c))
         self.assertIn("--registry", screen)
-        self.assertEqual(screen[screen.index("--strategy") + 1], "smart")
+        self.assertEqual(screen[screen.index("--strategy") + 1], "smart-jev")
+        self.assertIn("--selection-threshold", screen)
         self.assertEqual(screen[screen.index("--topic") + 1], "demo topic ERASOR")
-        self.assertEqual(screen[screen.index("--limit") + 1], "80")
+        self.assertNotIn("--limit", screen)  # selection never truncates
         self.assertIn("--terms", screen)  # English terms augment the bm25/smart query
         self.assertFalse(any("screen-candidates" in " ".join(c) for c in self.commands))
 
-    def test_screening_uses_terms_and_mode_limit(self):
-        """The keywords strategy keeps the legacy term-matching screen."""
+    def test_smart_selection_forwards_the_execution_model(self):
+        """The card's 执行模型 reaches select-candidates --complete-model; the
+        decision-model strategy must not inherit it."""
+        self.run_driver(
+            self.argv("--no-terms-agent", "--selection-strategy", "smart",
+                      "--selection-model", "deepseek-v4-flash-vision-exp")
+        )
+        screen = next(c for c in self.commands if "select-candidates" in " ".join(c))
+        self.assertEqual(screen[screen.index("--strategy") + 1], "smart")
+        self.assertEqual(
+            screen[screen.index("--complete-model") + 1], "deepseek-v4-flash-vision-exp"
+        )
+
+    def test_smart_jev_forwards_threshold_not_complete_model(self):
+        with mock.patch(
+            "embodied_learning.harness.claude.system_one_ready", return_value=True
+        ):
+            self.run_driver(
+                self.argv("--no-terms-agent", "--selection-strategy", "smart-jev",
+                          "--selection-model", "ignored", "--selection-threshold", "0.55")
+            )
+        screen = next(c for c in self.commands if "select-candidates" in " ".join(c))
+        self.assertEqual(screen[screen.index("--strategy") + 1], "smart-jev")
+        self.assertEqual(screen[screen.index("--selection-threshold") + 1], "0.55")
+        self.assertNotIn("--complete-model", screen)
+
+    def test_smart_jev_fails_fast_before_retrieval_when_unconfigured(self):
+        """An unconfigured decision model must stop the driver up front — not
+        after a paid retrieval/registry round, and never as silent downtime.
+        This is also the default strategy's preflight: no flag needed."""
+        code, summary = self.run_driver(self.argv("--no-terms-agent"), system_one=False)
+        self.assertEqual(code, 2)
+        self.assertEqual(self.commands, [])
+        self.assertEqual(summary, {})
+        self.assertIn("决策模型", self.last_stderr)
+
+    def test_screening_uses_terms_and_has_no_mode_limit(self):
+        """The keywords strategy keeps the legacy term-matching screen, but it
+        queues every match — deep reading owns the funnel's only truncation."""
         self.run_driver(self.argv("--no-terms-agent", "--selection-strategy", "keywords"))
         screen = next(c for c in self.commands if "screen-candidates" in " ".join(c))
         self.assertIn("demo", screen[screen.index("--terms") + 1].split(","))
-        self.assertEqual(screen[screen.index("--limit") + 1], "80")
+        self.assertNotIn("--limit", screen)
         self.assertFalse(any("select-candidates" in " ".join(c) for c in self.commands))
         scoping = self.run_driver(self.argv("--no-terms-agent", "--review-mode", "scoping"))
-        self.assertEqual(scoping[1]["screening_limit"], 120)
+        self.assertNotIn("screening_limit", scoping[1])
         self.assertEqual(self.driver.DEEP_READ_LIMITS, {"rapid": 12, "scoping": 22, "systematic": 43})
         self.assertEqual(self.driver.EVIDENCE_FLOORS, {"rapid": 8, "scoping": 15, "systematic": 30})
 
@@ -481,6 +632,17 @@ class DriverPipelineTest(unittest.TestCase):
         self.assertEqual(extraction[extraction.index("--workers") + 1], "4")
         self.assertIn("--include-full-text", extraction)
         self.assertEqual(extraction[extraction.index("--ocr-mode") + 1], "never")
+
+    def test_extraction_uses_the_shared_kb_cache(self):
+        """Full text is cached under <kb-root>/.cache, not /tmp: a paper fetched
+        by an earlier run or a quick-read is reused, and sibling machines on
+        the same KB mount see the cache."""
+        self.run_driver(self.argv("--no-terms-agent"))
+        extraction = next(c for c in self.commands if "extract-content-queue" in " ".join(c))
+        html_dir = extraction[extraction.index("--html-cache-dir") + 1]
+        pdf_dir = extraction[extraction.index("--pdf-cache-dir") + 1]
+        self.assertEqual(html_dir, str(Path(self.tmp.name) / ".cache" / "html"))
+        self.assertEqual(pdf_dir, str(Path(self.tmp.name) / ".cache" / "pdfs"))
 
     def test_latin_terms_become_one_conjunctive_query_not_bare_words(self):
         """机械拉丁词合成一条 AND 查询：单词裸查询（absolute/pose/estimation）
@@ -617,6 +779,265 @@ class SearchStrategyTest(DriverPipelineTest):
         self.assertEqual(payload["queries"][0]["label"], "direct-anchor")
         self.assertIsNone(self.driver.extract_dynamic_queries_json("no json"))
 
+    def test_dynamic_agent_output_repairs_truncated_head(self):
+        """The completion channel occasionally drops the first bytes of the
+        response (2026-10-13/14/15 runs arrived as ``queries":[{…`` / ``":[{…``
+        instead of ``{"queries":[{…``). The extractor must repair the wrapper
+        instead of discarding 20 good queries."""
+        body = '{"label": "direct-anchor", "tier": "direct", "query": "all:\\"rl\\"", "why": "w"}]}'
+        for truncated in (
+            "queries\":[" + body,   # missing {"
+            "\":[" + body,          # missing {"queries
+            "[" + body,             # missing {"queries":
+            body,                   # missing {"queries": [ — first element only
+        ):
+            payload = self.driver.extract_dynamic_queries_json(truncated)
+            self.assertIsNotNone(payload, msg=repr(truncated))
+            self.assertEqual(payload["queries"][0]["query"], 'all:"rl"', msg=repr(truncated))
+
+    def test_dynamic_agent_output_accepts_fences_and_bare_list(self):
+        fenced = '```json\n{"queries": [{"label": "x", "tier": "direct", "query": "q", "why": "w"}]}\n```'
+        self.assertEqual(self.driver.extract_dynamic_queries_json(fenced)["queries"][0]["label"], "x")
+        bare = '[{"label": "y", "tier": "direct", "query": "all:y", "why": "w"}]'
+        self.assertEqual(self.driver.extract_dynamic_queries_json(bare)["queries"][0]["label"], "y")
+        self.assertIsNone(self.driver.extract_dynamic_queries_json('{"queries": [{"label": "x"}]}'))
+
+    def test_dynamic_agent_retries_unparseable_output(self):
+        # Mode seen 2026-10-15 (VGGT run): a bare unquoted "query" value makes
+        # the payload invalid JSON; a second call lands.
+        bad = mock.Mock(
+            returncode=0, stderr="",
+            stdout='{"queries": [{"label": "x", "query": (all:a OR all:b), "why": "w"}]}',
+        )
+        good = mock.Mock(
+            returncode=0, stderr="",
+            stdout='{"queries": [{"label": "direct-x", "tier": "direct", "query": "all:rl"}]}',
+        )
+        with mock.patch.object(self.driver, "complete", side_effect=[bad, good]) as complete, \
+             mock.patch.object(self.driver, "log") as logs:
+            payload = self.driver.agent_dynamic_queries("强化学习", "", [], 5.0, "/fake/claude")
+        self.assertEqual(payload["queries"][0]["label"], "direct-x")
+        self.assertEqual(complete.call_count, 2)
+        joined = " ".join(str(call) for call in logs.call_args_list)
+        self.assertIn("无法解析", joined)
+
+    def test_dynamic_agent_retries_nonzero_exit_and_gives_up_loudly(self):
+        def failing(command, **kwargs):
+            return mock.Mock(returncode=1, stdout="", stderr="api error")
+
+        with mock.patch.object(self.driver.subprocess, "run", side_effect=failing) as run, \
+             mock.patch.object(self.driver, "log") as logs, \
+             mock.patch.dict(os.environ, {"EMBODIED_CONVERSATION_STORE": self.tmp.name}):
+            payload = self.driver.agent_dynamic_queries("主题", "", [], 5.0, "/fake/claude")
+        self.assertIsNone(payload)
+        self.assertEqual(run.call_count, 2)  # DYNAMIC_AGENT_ATTEMPTS total tries
+        joined = " ".join(str(call) for call in logs.call_args_list)
+        self.assertIn("退出 1", joined)
+
+    def test_dynamic_agent_timeout_does_not_retry(self):
+        def timing_out(command, **kwargs):
+            raise self.driver.subprocess.TimeoutExpired(cmd="x", timeout=1)
+
+        with mock.patch.object(self.driver.subprocess, "run", side_effect=timing_out) as run, \
+             mock.patch.dict(os.environ, {"EMBODIED_CONVERSATION_STORE": self.tmp.name}):
+            self.assertIsNone(self.driver.agent_dynamic_queries("主题", "", [], 5.0, "/fake/claude"))
+        self.assertEqual(run.call_count, 1)
+
+    def test_skeleton_agent_retries_unparseable_output(self):
+        """2026-10-16 强化学习: 20/43 deep reads produced no skel-*.json at all
+        — one-shot skeleton calls died on truncated streams. The skeleton
+        agent retries parse/exit failures, timeouts and spawn failures
+        differently: see the three dedicated tests below."""
+        bad = mock.Mock(returncode=0, stderr="", stdout="stream cut mid-object {")
+        good = mock.Mock(
+            returncode=0, stderr="",
+            stdout='{"arxiv_id": "2401.00001", "cards": []}',
+        )
+        with mock.patch.object(self.driver, "complete", side_effect=[bad, good]) as complete, \
+             mock.patch.object(self.driver, "log") as logs:
+            skeleton = self.driver.run_skeleton_agent("/fake/claude", "2401.00001", Path("/pool"), 5.0)
+        self.assertEqual(skeleton["arxiv_id"], "2401.00001")
+        self.assertEqual(complete.call_count, 2)
+        joined = " ".join(str(call) for call in logs.call_args_list)
+        self.assertIn("不可解析", joined)
+
+    def test_skeleton_agent_retries_nonzero_exit_and_gives_up_loudly(self):
+        # Not a stream-truncation error: that one is now healed INSIDE complete()
+        # with a fallback-model switch (2026-10-20), so it would double the
+        # driver-level SKELETON_AGENT_ATTEMPTS budget. This keeps the two retry
+        # layers testable in isolation.
+        def failing(command, **kwargs):
+            return mock.Mock(returncode=1, stdout="", stderr="API Error: model blew up")
+
+        with mock.patch.object(self.driver.subprocess, "run", side_effect=failing) as run, \
+             mock.patch.object(self.driver, "log") as logs, \
+             mock.patch.dict(os.environ, {"EMBODIED_CONVERSATION_STORE": self.tmp.name}):
+            skeleton = self.driver.run_skeleton_agent("/fake/claude", "2401.00001", Path("/pool"), 5.0)
+        self.assertIsNone(skeleton)
+        self.assertEqual(run.call_count, 2)  # SKELETON_AGENT_ATTEMPTS total tries
+        joined = " ".join(str(call) for call in logs.call_args_list)
+        self.assertIn("exit 1", joined)
+
+    def test_skeleton_agent_retries_timeout(self):
+        """Deep reads run several agents at once; an overloaded upstream
+        surfaces as a timeout, so a timeout gets the same retry budget as a
+        broken stream. A spawn failure still fails fast (OSError below)."""
+        def timing_out(command, **kwargs):
+            raise self.driver.subprocess.TimeoutExpired(cmd="x", timeout=1)
+
+        with mock.patch.object(self.driver.subprocess, "run", side_effect=timing_out) as run, \
+             mock.patch.object(self.driver, "log") as logs, \
+             mock.patch.dict(os.environ, {"EMBODIED_CONVERSATION_STORE": self.tmp.name}):
+            self.assertIsNone(self.driver.run_skeleton_agent("/fake/claude", "2401.00001", Path("/pool"), 5.0))
+        self.assertEqual(run.call_count, 2)  # SKELETON_AGENT_ATTEMPTS total tries
+        joined = " ".join(str(call) for call in logs.call_args_list)
+        self.assertIn("超时", joined)
+
+    def test_skeleton_agent_timeout_then_success(self):
+        bad = mock.Mock(returncode=0, stderr="", stdout="")
+        good = mock.Mock(
+            returncode=0, stderr="",
+            stdout='{"arxiv_id": "2401.00001", "cards": []}',
+        )
+        def flaky(command, **kwargs):
+            if flaky.calls == 0:
+                flaky.calls += 1
+                raise self.driver.subprocess.TimeoutExpired(cmd="x", timeout=1)
+            return good
+
+        flaky.calls = 0
+        with mock.patch.object(self.driver.subprocess, "run", side_effect=flaky), \
+             mock.patch.dict(os.environ, {"EMBODIED_CONVERSATION_STORE": self.tmp.name}):
+            skeleton = self.driver.run_skeleton_agent("/fake/claude", "2401.00001", Path("/pool"), 5.0)
+        self.assertEqual(skeleton["arxiv_id"], "2401.00001")
+
+    def test_skeleton_agent_spawn_failure_fails_fast(self):
+        with mock.patch.object(self.driver.subprocess, "run", side_effect=OSError("no cli")) as run, \
+             mock.patch.dict(os.environ, {"EMBODIED_CONVERSATION_STORE": self.tmp.name}):
+            self.assertIsNone(self.driver.run_skeleton_agent("/fake/claude", "2401.00001", Path("/pool"), 5.0))
+        self.assertEqual(run.call_count, 1)  # retrying a missing CLI only burns the clock
+
+    def test_empty_plan_without_seeds_stops_with_actionable_error(self):
+        """2026-10-15 强化学习: agent output was unparseable, the pure-Chinese
+        topic had no Latin tokens or seeds, and search-arxiv died on the empty
+        plan with a misleading "outputs missing". Stop at the plan stage with
+        what-is-missing guidance and drop the empty plan outputs so a retry
+        re-plans instead of skipping on stale artifacts."""
+
+        def empty_plan_run(command, timeout=None):
+            self.commands.append(command)
+            if "build-query-plan" in " ".join(command):
+                plan = json.loads(self._stage_payload("build-query-plan"))
+                plan["queries"] = []
+                (self.run_dir / "query-plan.json").write_text(
+                    json.dumps(plan), encoding="utf-8")
+                (self.run_dir / "query-plan.md").write_text("# 0 queries\n", encoding="utf-8")
+                return mock.Mock(returncode=0, stdout="", stderr="")
+            return self.fake_run(command, timeout=timeout)
+
+        code, summary = self.run_driver(
+            ["--run-dir", str(self.run_dir), "--topic", "强化学习",
+             "--review-mode", "rapid", "--time-range", "2023-01-01..2026-06-06",
+             "--kb-root", str(self.tmp.name), "--no-terms-agent"],
+            fake_run=empty_plan_run,
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("检索计划 0 条查询", self.last_stderr)
+        self.assertIn("dynamic-queries.json", self.last_stderr)
+        self.assertFalse(any("search-arxiv" in c for c in self.commands))
+        self.assertFalse((self.run_dir / "query-plan.json").exists())
+        self.assertFalse((self.run_dir / "query-plan.md").exists())
+
+    def test_empty_plan_with_seeds_skips_keyword_retrieval(self):
+        """With seed papers the citation channel can still feed the registry:
+        an empty plan must skip search-arxiv (its empty-query guard would exit
+        1) and let the seed/citation channel carry retrieval, not stop."""
+
+        def empty_plan_run(command, timeout=None):
+            self.commands.append(command)
+            if "build-query-plan" in " ".join(command):
+                plan = json.loads(self._stage_payload("build-query-plan"))
+                plan["queries"] = []
+                (self.run_dir / "query-plan.json").write_text(
+                    json.dumps(plan), encoding="utf-8")
+                (self.run_dir / "query-plan.md").write_text("# 0 queries\n", encoding="utf-8")
+                return mock.Mock(returncode=0, stdout="", stderr="")
+            return self.fake_run(command, timeout=timeout)
+
+        code, summary = self.run_driver(
+            ["--run-dir", str(self.run_dir), "--topic", "强化学习",
+             "--review-mode", "rapid", "--time-range", "2023-01-01..2026-06-06",
+             "--kb-root", str(self.tmp.name), "--no-terms-agent",
+             "--seed-arxiv-ids", "2402.14207"],
+            fake_run=empty_plan_run,
+        )
+        self.assertEqual(code, 0)
+        self.assertFalse(any("search-arxiv" in c for c in self.commands))
+        self.assertEqual(summary["seed_ids"], ["2402.14207"])
+
+    def test_stale_empty_plan_replans_when_dynamic_queries_arrive(self):
+        """Resume path (2026-10-15 强化学习): a failed run left an empty
+        query-plan.json behind; a retry whose dynamic-query agent succeeds must
+        re-run planning instead of skipping on the stale outputs and stranding
+        the fresh dynamic-queries.json content outside the plan."""
+        plan = json.loads(self._stage_payload("build-query-plan"))
+        plan["queries"] = []
+        (self.run_dir / "query-plan.json").write_text(json.dumps(plan), encoding="utf-8")
+        (self.run_dir / "query-plan.md").write_text("# 0 queries\n", encoding="utf-8")
+
+        agent = mock.Mock(return_value={"queries": [
+            {"label": "direct-rl", "tier": "direct", "query": 'all:"reinforcement learning"'},
+        ]})
+        code, _ = self.run_driver(
+            ["--run-dir", str(self.run_dir), "--topic", "强化学习",
+             "--review-mode", "rapid", "--time-range", "2023-01-01..2026-06-06",
+             "--kb-root", str(self.tmp.name), "--no-terms-agent"],
+            agent_dynamic=agent,
+        )
+        self.assertEqual(code, 0)
+        # planning re-ran (the fake writes a non-empty plan) and the merged
+        # dynamic queries persisted for the next resume
+        planned = json.loads((self.run_dir / "query-plan.json").read_text(encoding="utf-8"))
+        self.assertTrue(planned["queries"])
+        merged = json.loads((self.run_dir / "dynamic-queries.json").read_text(encoding="utf-8"))
+        self.assertIn("direct-rl", {q["label"] for q in merged["queries"]})
+
+    def test_resume_with_complete_plan_skips_dynamic_agent(self):
+        """Resume path (2026-10-16 强化学习): query-plan.json already carried 21
+        queries, so run_stage("plan") skipped — but the dynamic-query agent ran
+        first and burned two API retries before that skip. A complete non-empty
+        plan with no --force must not call the agent at all: its fresh queries
+        would be stranded in dynamic-queries.json outside the plan."""
+        plan = json.loads(self._stage_payload("build-query-plan"))
+        (self.run_dir / "query-plan.json").write_text(json.dumps(plan), encoding="utf-8")
+        (self.run_dir / "query-plan.md").write_text("# plan\n", encoding="utf-8")
+        agent = mock.Mock(return_value={"queries": [
+            {"label": "direct-x", "tier": "direct-x", "query": "all:demo"},
+        ]})
+        code, summary = self.run_driver(self.argv("--no-terms-agent"), agent_dynamic=agent)
+        self.assertEqual(code, 0)
+        agent.assert_not_called()
+        self.assertEqual(summary["dynamic_source"], "skipped (plan present)")
+        self.assertFalse(any("build-query-plan" in " ".join(c) for c in self.commands))
+        # the existing plan is reused verbatim — nothing rewrote it
+        planned = json.loads((self.run_dir / "query-plan.json").read_text(encoding="utf-8"))
+        self.assertEqual(planned["queries"], [{"label": "a", "query": "all:demo"}])
+
+    def test_force_reruns_agent_despite_complete_plan(self):
+        """--force re-plans everything, so a complete plan must not suppress the
+        dynamic-query agent (the escape hatch for the skip above)."""
+        plan = json.loads(self._stage_payload("build-query-plan"))
+        (self.run_dir / "query-plan.json").write_text(json.dumps(plan), encoding="utf-8")
+        (self.run_dir / "query-plan.md").write_text("# plan\n", encoding="utf-8")
+        agent = mock.Mock(return_value={"queries": [
+            {"label": "direct-x", "tier": "direct-x", "query": "all:demo"},
+        ]})
+        code, summary = self.run_driver(self.argv("--no-terms-agent", "--force"), agent_dynamic=agent)
+        self.assertEqual(code, 0)
+        agent.assert_called_once()
+        self.assertEqual(summary["dynamic_source"], "agent")
+        self.assertTrue(any("build-query-plan" in " ".join(c) for c in self.commands))
+
     def test_smart_strategy_runs_agent_and_records_source(self):
         agent = mock.Mock(return_value={"queries": [{"label": "direct-x", "tier": "direct-x", "query": "all:demo"}]})
         _, summary = self.run_driver(self.argv("--no-terms-agent"), agent_dynamic=agent)
@@ -649,6 +1070,38 @@ class SearchStrategyTest(DriverPipelineTest):
         )
         agent.assert_called_once()
         self.assertEqual(summary["dynamic_source"], "agent-forced")
+
+    def test_pure_chinese_topic_merges_translation_into_latin_queries(self):
+        """Problem #2 (2026-10-15 强化学习): the agent failed and the
+        pure-Chinese topic had no Latin token, so the plan fell to 0 queries.
+        The MyMemory translation must supply the mechanical English channel —
+        merged with the topic's own tokens — even without the agent."""
+        code, _ = self.run_driver(
+            ["--run-dir", str(self.run_dir), "--topic", "强化学习",
+             "--review-mode", "rapid", "--time-range", "2023-01-01..2026-06-06",
+             "--kb-root", str(self.tmp.name), "--no-terms-agent"],
+            translate_en="reinforcement learning",
+        )
+        self.assertEqual(code, 0)
+        merged = json.loads((self.run_dir / "dynamic-queries.json").read_text(encoding="utf-8"))
+        labels = {q["label"]: q for q in merged["queries"]}
+        self.assertIn('all:"reinforcement"', labels["latin-combined"]["query"])
+        self.assertIn('all:"learning"', labels["latin-combined"]["query"])
+
+    def test_translation_satisfies_fast_strategy_without_forcing_agent(self):
+        # With the translated English channel in place, a pure-Chinese topic no
+        # longer needs to force the dynamic agent under fast strategy.
+        agent = mock.Mock()
+        _, summary = self.run_driver(
+            ["--run-dir", str(self.run_dir), "--topic", "强化学习",
+             "--review-mode", "rapid", "--time-range", "2023-01-01..2026-06-06",
+             "--kb-root", str(self.tmp.name), "--no-terms-agent",
+             "--search-strategy", "fast"],
+            agent_dynamic=agent,
+            translate_en="reinforcement learning",
+        )
+        agent.assert_not_called()
+        self.assertEqual(summary["dynamic_source"], "disabled (fast strategy)")
 
     def test_seeds_strategy_with_ids_skips_arxiv_keyword_search(self):
         argv = self.argv(
@@ -737,14 +1190,21 @@ class AbstractEvidenceStageTest(unittest.TestCase):
             json.dumps({"status": "in-progress", "topic": "demo"}), encoding="utf-8"
         )
         (self.run_dir / "candidate-registry.json").write_text(json.dumps({
-            "candidate_count": 3,
+            "candidate_count": 4,
             "candidates": [
                 {"arxiv_id": "2402.10329", "title": "UMI", "summary": "Universal manipulation interface. It collects data with a gripper.",
                  "authors": ["Alice"], "published": "2024-02-01"},
                 {"arxiv_id": "2302.01109", "title": "No abstract candidate"},
                 {"arxiv_id": "2311.18259", "title": "Ego-Exo4D", "summary": "Ego-exo dataset.", "authors": []},
+                {"arxiv_id": "2305.01111", "title": "Off-topic BEV", "summary": "Bird's-eye-view segmentation for driving.",
+                 "authors": [], "published": "2023-05-01"},
             ],
         }), encoding="utf-8")
+        # The selection rejected 2305.01111: its abstract must never become
+        # positioning evidence.
+        (self.run_dir / "screening-ids.txt").write_text(
+            "2402.10329\n2302.01109\n2311.18259\n", encoding="utf-8"
+        )
         self.args = parse("run.py", "pipeline", [
             "--run-dir", str(self.run_dir), "--topic", "demo topic",
         ])
@@ -774,6 +1234,23 @@ class AbstractEvidenceStageTest(unittest.TestCase):
         self.assertEqual({event["stance"] for event in events}, {""})
         self.assertEqual(events[0]["topic_id"], "EA-SENSOR")
         self.assertEqual(self.summary["abstract_events"], 2)
+        self.assertEqual(self.summary["abstract_basis"], "screened")
+
+    def test_selection_rejected_candidates_never_become_abstract_evidence(self):
+        """The registry's 2305.01111 was screened out: abstract-tier scope is
+        the selection, not the registry (the 2026-10-13 leak)."""
+        self.run_stage()
+        self.assertEqual(
+            {event["paper"]["arxiv_id"] for event in self.events()},
+            {"2402.10329", "2311.18259"},
+        )
+
+    def test_missing_screening_ids_skips_instead_of_falling_back_to_registry(self):
+        (self.run_dir / "screening-ids.txt").unlink()
+        self.run_stage()
+        self.assertFalse((self.run_dir / "evidence" / "abstract-tier.jsonl").exists())
+        self.assertEqual(self.summary["abstract_events"], 0)
+        self.assertEqual(self.summary["abstract_basis"], "skipped")
 
     def test_idempotent_on_existing_output(self):
         self.run_stage()
@@ -784,6 +1261,7 @@ class AbstractEvidenceStageTest(unittest.TestCase):
             (self.run_dir / "evidence" / "abstract-tier.jsonl").read_text(encoding="utf-8"), first
         )
         self.assertEqual(self.summary["abstract_events"], 2)
+        self.assertEqual(self.summary["abstract_basis"], "screened")
 
     def test_stamp_counts_abstract_papers_separately(self):
         """event_count is the whole set; evidence_papers (the cited-paper floor
@@ -1118,6 +1596,83 @@ class StageAnnounceTest(unittest.TestCase):
         self.assertLess(start, done)
 
 
+class DeepReadRetryTest(unittest.TestCase):
+    """Upstream instability under parallel deep reads: a failed paper whose
+    full text is on disk gets one whole-queue retry pass; a paper without an
+    extraction does not (its bottleneck is the fetch)."""
+
+    def setUp(self):
+        self.driver = load_driver()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        root = Path(self.tmp.name)
+        self.kb = root / "kb"
+        self.pool = self.kb / "pool"
+        self.run_dir = root / "work" / "literature-review-demo"
+        self.run_dir.mkdir(parents=True)
+        self.ids = ["2401.00001", "2401.00002", "2401.00003"]
+        for paper_id in self.ids[:2]:  # 00003 never gets full text
+            pool_dir = self.pool / f"arxiv-{paper_id}"
+            pool_dir.mkdir(parents=True)
+            (pool_dir / "extraction.json").write_text(
+                json.dumps({"available": True}), encoding="utf-8"
+            )
+        (self.run_dir / "screening-ids.txt").write_text(
+            "\n".join(self.ids) + "\n", encoding="utf-8"
+        )
+        self.run_json = self.run_dir / "run.json"
+        self.run_json.write_text("{}", encoding="utf-8")
+        self.args = mock.Mock(
+            kb_root=str(self.kb), review_mode="rapid", deep_read_limit=10,
+            agents_parallel=2, agent_timeout=5.0, force=False,
+        )
+
+    def _run(self, fake_deep_read):
+        summary: dict = {"seed_ids": []}
+        with mock.patch.object(self.driver, "resolve_cli", return_value="/fake/claude"), \
+             mock.patch.object(self.driver, "deep_read_paper", side_effect=fake_deep_read), \
+             mock.patch.object(self.driver, "log"):
+            self.driver.deep_read(
+                self.run_dir, self.run_json, self.run_dir / "screening-ids.txt",
+                self.args, summary,
+            )
+        return summary
+
+    def test_failed_paper_is_retried_and_counted_once(self):
+        calls: dict[str, int] = {}
+
+        def fake(paper_id, *args, **kwargs):
+            calls[paper_id] = calls.get(paper_id, 0) + 1
+            if paper_id == "2401.00001" and calls[paper_id] == 1:
+                return "failed", "骨架 agent 失败"
+            return "pass", ""
+
+        summary = self._run(fake)
+        self.assertEqual(calls["2401.00001"], 2)  # first pass + retry pass
+        self.assertEqual(calls["2401.00002"], 1)
+        self.assertEqual(
+            summary["deep_read"],
+            {"total": 3, "pass": 2, "needs_review": 0, "failed": 1},
+        )
+        # 00003 has no full text: failed once, never retried.
+        self.assertNotIn("2401.00003", calls)
+        self.assertTrue((self.run_dir / "paper-notes" / "2401.00003.failed.json").is_file())
+        # The recovered paper's transient failure marker is cleared.
+        self.assertFalse((self.run_dir / "paper-notes" / "2401.00001.failed.json").is_file())
+
+    def test_still_failing_paper_is_not_double_counted(self):
+        def always_fail(paper_id, *args, **kwargs):
+            if paper_id == "2401.00001":
+                return "failed", "骨架 agent 失败"
+            return "pass", ""
+
+        summary = self._run(always_fail)
+        self.assertEqual(
+            summary["deep_read"],
+            {"total": 3, "pass": 1, "needs_review": 0, "failed": 2},
+        )  # 00001 counted once + 00003 without full text
+
+
 class SelectionProgressTest(unittest.TestCase):
     """smart selection makes one agent call per chunk — minutes each. The
     chunk lines must become wiki progress ticks, not be swallowed."""
@@ -1149,7 +1704,7 @@ class SelectionProgressTest(unittest.TestCase):
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
                 selection.smart_select(
-                    registry, topic="t", focus="", limit=5,
+                    registry, topic="t", focus="",
                     complete_fn=fake_complete, cli="x", model="x",
                 )
         finally:

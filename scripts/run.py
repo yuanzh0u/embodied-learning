@@ -21,6 +21,7 @@ for _root in (_HERE.parents[3], _HERE.parents[1]):
 
 from embodied_learning.config import (
     DEFAULT_AGENT_TIMEOUT_S,
+    DEFAULT_SELECTION_STRATEGY,
     DYNAMIC_AGENT_TIMEOUT_S,
     EXTRACTION_PAPER_TIMEOUT_S,
     REVIEW_MODES,
@@ -28,6 +29,7 @@ from embodied_learning.config import (
     SELECTION_STRATEGIES,
     SELECTION_TIMEOUT_S,
     S2_BUDGET_S,
+    SMART_JEV_RELEVANCE_THRESHOLD,
     STYLE_TO_FILE,
     TERMS_AGENT_TIMEOUT_S,
 )
@@ -225,10 +227,23 @@ def _pipeline_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--selection-strategy",
         choices=sorted(SELECTION_STRATEGIES),
-        default="smart",
-        help="How the deep-read queue is chosen from the registry: smart (one-shot "
-        "agent relevance pass, default), bm25, influence (degrades to bm25 without "
-        "citation data), or keywords (legacy term-matching screen-candidates).",
+        default=DEFAULT_SELECTION_STRATEGY,
+        help="How the deep-read queue is chosen from the registry: smart-jev "
+        "(decision model / System One, default: the same full-coverage "
+        "judgement in seconds instead of minutes), smart (one-shot agent "
+        "relevance pass on the execution model), bm25, influence (degrades to "
+        "bm25 without citation data), or keywords (legacy term-matching "
+        "screen-candidates).",
+    )
+    parser.add_argument(
+        "--selection-model",
+        default=None,
+        help="Execution model for smart selection (default: harness DRIVER_AGENT_MODEL). "
+             "Ignored by smart-jev, which uses the decision model.",
+    )
+    parser.add_argument(
+        "--selection-threshold", type=float, default=SMART_JEV_RELEVANCE_THRESHOLD,
+        help="smart-jev only: keep candidates whose decision-model probability clears this.",
     )
     parser.add_argument(
         "--seed-arxiv-ids",
@@ -295,10 +310,20 @@ def _launch_parser() -> argparse.ArgumentParser:
     parser.add_argument("--search-strategy", choices=["smart", "fast", "seeds"], default="smart")
     parser.add_argument(
         "--selection-strategy",
-        choices=["keywords", "influence", "bm25", "smart"],
-        default="smart",
-        help="Deep-read queue selection (forwarded to the driver; keywords keeps the "
-        "legacy term-matching screen-candidates).",
+        choices=sorted(SELECTION_STRATEGIES),
+        default=DEFAULT_SELECTION_STRATEGY,
+        help="Deep-read queue selection (forwarded to the driver; default smart-jev "
+        "= decision model, keywords keeps the legacy term-matching screen-candidates).",
+    )
+    parser.add_argument(
+        "--selection-model",
+        default=None,
+        help="Execution model for smart selection (default: harness DRIVER_AGENT_MODEL). "
+             "Ignored by smart-jev.",
+    )
+    parser.add_argument(
+        "--selection-threshold", type=float, default=SMART_JEV_RELEVANCE_THRESHOLD,
+        help="smart-jev only: keep candidates whose decision-model probability clears this.",
     )
     parser.add_argument("--seed-arxiv-ids")
     parser.add_argument("--external-candidates", action="append", default=[],

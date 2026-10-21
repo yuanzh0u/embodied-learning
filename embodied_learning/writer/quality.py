@@ -10,7 +10,13 @@ from collections import Counter
 from dataclasses import asdict, dataclass
 from difflib import SequenceMatcher
 from pathlib import Path
-from embodied_learning.config import LENGTH_CEILINGS, LENGTH_FLOORS, LINK_BUDGETS
+from embodied_learning.config import (
+    LENGTH_CEILINGS,
+    LENGTH_FLOORS,
+    LINK_BUDGETS,
+    LONG_SENTENCE_MAX_CHARS,
+    LONG_SENTENCE_REPORT_LIMIT,
+)
 
 
 EVENT_ID_RE = re.compile(r"\b(?:EA|ERR)-[A-Z0-9]+(?:-[A-Z0-9]+)*-\d{4}\b")
@@ -132,7 +138,7 @@ RULE_SPECS: dict[str, RuleSpec] = {
         _r("zhihu-length", "error", _ZHIHU, "知乎科普正文至少 1000 个中文字符（地板不是上限；过短=过度压缩）。"),
         _r("unannotated-reading-list", "error", _ZHIHU, "「延伸阅读」每条链接都要附一句读者价值注记，不能是纯书目堆砌。"),
         _r("acronym-load", "warning", _ZHIHU, "正文领域缩写不超过 5 个，首次出现给一句人话解释。"),
-        _r("long-sentence", "warning", _ZHIHU, "单句不超过 70 个中文字符（长句拆从句，降推断负载）。"),
+        _r("long-sentence", "warning", _ZHIHU, f"单句不超过 {LONG_SENTENCE_MAX_CHARS} 个中文字符（长句拆从句，降推断负载）。"),
         _r("body-citation-load", "warning", _ZHIHU, "正文内嵌引用控制在 3–12 篇；支撑性覆盖挪进「延伸阅读」注记。"),
         # ---- xiaohongshu ----
         _r("xiaohongshu-length", "error", _XHS, "小红书正文至少 300 个中文字符，至多 1400。"),
@@ -302,20 +308,50 @@ def chinese_count(text: str) -> int:
     return len(CHINESE_RE.findall(linguistic_text(text)))
 
 
+def chinese_sentences(text: str) -> list[tuple[int, str]]:
+    """Every sentence of ``text`` as ``(Chinese-character count, verbatim
+    slice)``, longest first.
+
+    The slice is copied straight out of the source, trailing delimiter
+    included, so the audit message quotes exactly the string the writer has to
+    pass to Edit. The old splitter discarded the delimiter: the message showed
+    a sentence ending in ``^[5]^`` while the file had ``^[5]^；AirGS …``, which
+    cost two failed Edits and an ``od -c`` byte dump before the writer spotted
+    it (2026-10-20 视频流式重建).
+
+    Links and bare URLs are masked before splitting (same length, so offsets
+    still line up) — a ``?`` or ``;`` inside an arXiv URL is not punctuation,
+    and rewriting the text first (the old approach) destroyed the verbatim
+    quote that Edit needs."""
+
+    masked = list(text)
+    for match in re.finditer(r"\[[^\]]*\]\([^\)]+\)|https?://\S+", text):
+        for index in range(match.start(), match.end()):
+            if masked[index] != "\n":
+                masked[index] = "x"
+    sentences: list[tuple[int, str]] = []
+    for match in re.finditer(r"[^。！？!?；;\n]+[。！？!?；;]?", "".join(masked)):
+        piece = text[match.start() : match.end()].strip()
+        count = len(CHINESE_RE.findall(linguistic_text(piece)))
+        if count:
+            sentences.append((count, piece))
+    sentences.sort(key=lambda item: item[0], reverse=True)
+    return sentences
+
+
 def longest_chinese_sentence(text: str) -> int:
-    sentences = re.split(r"[。！？!?；;\n]+", linguistic_text(text))
-    return max((len(CHINESE_RE.findall(sentence)) for sentence in sentences), default=0)
+    sentences = chinese_sentences(text)
+    return sentences[0][0] if sentences else 0
 
 
-def longest_chinese_sentence_text(text: str) -> str:
-    """The longest Chinese sentence itself (trimmed), so the long-sentence
-    warning names the exact text the writer must Edit — no inline-python
-    sentence hunt (2026-09-30 absolute-pose burned ~8 calls finding it)."""
-    sentences = re.split(r"[。！？!?；;\n]+", linguistic_text(text))
-    if not sentences:
-        return ""
-    longest = max(sentences, key=lambda s: len(CHINESE_RE.findall(s)))
-    return " ".join(longest.split())
+def long_chinese_sentences(text: str) -> list[tuple[int, str]]:
+    """Sentences over the long-sentence limit, longest first."""
+
+    return [
+        item
+        for item in chinese_sentences(text)
+        if item[0] > LONG_SENTENCE_MAX_CHARS
+    ]
 
 
 def domain_acronyms(text: str) -> list[str]:
@@ -541,16 +577,23 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
                 "acronym-load",
                 f"Zhihu body uses {len(acronyms)} domain acronyms; review first-use explanations and reader memory load: {', '.join(acronyms[:10])}",
             )
-        longest_sentence = longest_chinese_sentence(body)
-        if longest_sentence > 70:
-            offender = longest_chinese_sentence_text(body)
+        offenders = long_chinese_sentences(body)
+        if offenders:
+            shown = offenders[:LONG_SENTENCE_REPORT_LIMIT]
+            more = len(offenders) - len(shown)
+            header = (
+                f"Zhihu body contains {len(offenders)} sentence(s) over {LONG_SENTENCE_MAX_CHARS}"
+                f" Chinese characters; split clauses to lower inference load"
+            )
             add(
                 findings,
                 "warning",
                 path,
                 "long-sentence",
-                f"Zhihu body contains a sentence with {longest_sentence} Chinese characters; review clauses and inference load above 70"
-                + (f" — 待修句：{offender}" if offender else ""),
+                header
+                + (f" (+{more} more beyond the first {LONG_SENTENCE_REPORT_LIMIT})" if more else "")
+                + " — 待修句（照抄整句，含句末标点）："
+                + " ‖ ".join(f"({count}字){sent}" for count, sent in shown),
             )
         body_sources = set(ARXIV_LINK_RE.findall(body))
         if len(body_sources) >= 10:

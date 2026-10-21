@@ -39,12 +39,21 @@ from embodied_learning.config import (
     STYLE_TO_FILE,
 )
 from embodied_learning.knowledge.evidence import consolidate_evidence
+from embodied_learning.knowledge.funnel import FUNNEL_FILENAME
 from embodied_learning.utils.jsonio import load_json as _load_json
 from embodied_learning.utils.layout import default_kb_root, find_roots, infer_kb_root
 from embodied_learning.wiki.run.catalog import build_trace_map, register_run_in_catalog
 
 APPENDIX = "evidence-appendix.md"
-PUBLISH_FILES = [APPENDIX, "trace-map.json", "evidence.jsonl", "pipeline-summary.json"]
+BRIEF = "writing-brief.md"
+PUBLISH_FILES = [
+    APPENDIX,
+    BRIEF,  # run-deck (汇报放映) treats it as the content basis; must ship with the run
+    "trace-map.json",
+    "evidence.jsonl",
+    "pipeline-summary.json",
+    FUNNEL_FILENAME,
+]
 # Positioning-only tier inside evidence/: its per-paper JSONL is one virtual
 # file (abstract-tier.jsonl), never a deep-read paper, so both the per-file and
 # the consolidated counting paths must skip it.
@@ -233,6 +242,9 @@ def run(args: argparse.Namespace) -> int:
         ("query_plan", "query-plan.json"),
         ("candidate_registry", "candidate-registry.json"),
         ("coverage_report", "coverage-report.json"),
+        # Optional: runs predating the funnel artifact (or hand-run bundles)
+        # simply never declare it, and check-bundle only validates declared files.
+        ("funnel", FUNNEL_FILENAME),
     ):
         if (run_dir / filename).is_file():
             manifest["files"][key] = filename

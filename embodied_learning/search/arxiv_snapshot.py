@@ -363,7 +363,7 @@ class SnapshotArxivSearch:
         end_date: str,
         max_results: int = 25,
         batch_label: str = "",
-        sort_by: str = "submittedDate",
+        sort_by: str = "relevance",
         sort_order: str = "descending",
         output: str | None = None,
         prefilter: bool = True,
@@ -381,7 +381,8 @@ class SnapshotArxivSearch:
         self.progress_every = progress_every
 
     def run(self, queries: list[dict[str, str]]) -> int:
-        """Single streaming pass; per query keep the newest ``max_results`` hits."""
+        """Single streaming pass; per query keep the top ``max_results`` by
+        ``sort_by`` (relevance by default, matching the live API)."""
         from embodied_learning.search.arxiv import with_date_filter  # noqa: E402  # local: avoids import at module load
 
         compiled: list[dict[str, Any]] = []
@@ -406,18 +407,19 @@ class SnapshotArxivSearch:
                 "query": item["query"],
                 "effective": effective,
                 "node": node,
-                # keep a slack pool of newest candidates before final truncation
-                "heap": [],  # min-heap of (sort_key, seq, paper_dict); size <= slack
-                "slack": max(self.max_results * 20, 100),
+                # min-heap of (retention_key, seq, paper_dict); size <= max_results
+                "heap": [],
+                "literals": node.literals(),
+                "matched": 0,
                 "seq": 0,  # monotonic tiebreaker: heap tuples must never reach the dict
             })
         literals: list[str] = []
         for entry in compiled:
-            literals.extend(entry["node"].literals())
+            literals.extend(entry["literals"])
         use_prefilter = (
             self.prefilter
             and literals
-            and all(entry["node"].literals() for entry in compiled)
+            and all(entry["literals"] for entry in compiled)
             and all(re.fullmatch(r"[\w][\w .\-/:]*", lit) for lit in literals)
         )
 
@@ -449,12 +451,18 @@ class SnapshotArxivSearch:
                     if not entry["node"].evaluate(doc):
                         continue
                     paper = record_to_paper(record, entry["label"], entry["effective"])
-                    sort_key = _sort_key(paper)
-                    item = (sort_key, entry["seq"], paper)
+                    entry["matched"] += 1
+                    key = retention_key(
+                        paper,
+                        sort_by=self.sort_by,
+                        sort_order=self.sort_order,
+                        literals=entry["literals"],
+                    )
+                    item = (key, entry["seq"], paper)
                     entry["seq"] += 1
-                    if len(entry["heap"]) < entry["slack"]:
+                    if len(entry["heap"]) < self.max_results:
                         heapq.heappush(entry["heap"], item)
-                    elif sort_key > entry["heap"][0][0]:
+                    elif key > entry["heap"][0][0]:
                         heapq.heapreplace(entry["heap"], item)
 
         papers_by_id: dict[str, dict[str, Any]] = {}
@@ -464,14 +472,16 @@ class SnapshotArxivSearch:
                 query_results.append(failed_by_index[index])
                 continue
             entry = next(e for e in compiled if e["label"] == item["label"])
-            heap = entry["heap"]
-            top = sorted(heap, key=lambda item: item[0], reverse=self.sort_order == "descending")
-            top = top[: self.max_results]
-            query_results.append({
+            top = sorted(entry["heap"], key=lambda item: item[0], reverse=True)
+            meta = {
                 "label": entry["label"],
                 "query": entry["query"],
                 "result_count": len(top),
-            })
+                "matched": entry["matched"],
+            }
+            if entry["matched"] > self.max_results:
+                meta["capped"] = True
+            query_results.append(meta)
             for _, _, paper in top:
                 existing = papers_by_id.setdefault(str(paper["arxiv_id"]), paper)
                 if existing is not paper:
@@ -508,6 +518,56 @@ class SnapshotArxivSearch:
 def _sort_key(paper: dict[str, Any]) -> str:
     """Newest-first ordering key; ISO ``published`` sorts lexicographically."""
     return paper.get("published") or ""
+
+
+def _timestamp(published: str) -> float:
+    """Numeric instant for ``published`` (ISO) — 0.0 when absent/unparseable."""
+    if not published:
+        return 0.0
+    try:
+        return dt.datetime.fromisoformat(published.replace("Z", "+00:00")).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def relevance_score(paper: dict[str, Any], literals: list[str]) -> float:
+    """Simple TF relevance over the query's literals (offline stand-in for the
+    live API's ``sortBy=relevance`` / FTS5 ``bm25()``).
+
+    Title hits weigh more than abstract hits; repeated hits count. Returns 0.0
+    when the query has no literals (pure date-range queries fall back to date
+    order at the call site).
+    """
+    title = (paper.get("title") or "").lower()
+    abstract = (paper.get("summary") or "").lower()
+    score = 0.0
+    for literal in literals:
+        needle = literal.lower()
+        if not needle:
+            continue
+        score += 4.0 * title.count(needle)
+        score += 1.0 * abstract.count(needle)
+    return score
+
+
+def retention_key(
+    paper: dict[str, Any],
+    *,
+    sort_by: str,
+    sort_order: str,
+    literals: list[str],
+) -> tuple[float, float]:
+    """Uniform "larger is better" heap key for the top-``max_results`` cut.
+
+    - ``relevance``: relevance score, newest paper breaks ties.
+    - date sorts: the ``published`` instant (negated for ascending), so a
+      single comparison replaces both retention and final ordering.
+    """
+    published = _sort_key(paper)
+    instant = _timestamp(published)
+    if sort_by == "relevance":
+        return (relevance_score(paper, literals), instant)
+    return (instant if sort_order != "ascending" else -instant, 0.0)
 
 
 def yyyymmdd_snapshot(value: str) -> str:

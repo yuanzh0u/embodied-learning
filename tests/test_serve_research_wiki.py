@@ -393,6 +393,12 @@ class WorkflowEndpointTest(ChatServerHarness):
         super().setUp()
         self.addCleanup(self._cleanup_work_dir)
         self._install_fake_driver()
+        # smart-jev is the interview card's default answer and the server
+        # preflights it; tests must not depend on the host's System One env
+        # (individual tests re-patch to exercise the missing-channel 400).
+        ready = mock.patch.object(server_module, "system_one_ready", return_value=True)
+        ready.start()
+        self.addCleanup(ready.stop)
 
     def _cleanup_work_dir(self):
         shutil.rmtree(self.kb_root / "work", ignore_errors=True)
@@ -475,8 +481,8 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(events[0]["type"], "status")
         self.assertEqual(events[0]["stage"], "driver")
         stage_events = [e for e in events if e["type"] == "stage" and e.get("detail")]
-        self.assertIn(("retrieval", "ok ran"), [(e["stage"], e.get("detail")) for e in stage_events])
-        self.assertIn(("mining", "ok 8/8 packets"), [(e["stage"], e.get("detail")) for e in stage_events])
+        self.assertIn(("retrieval", "retrieval-arxiv: ran"), [(e["stage"], e.get("detail")) for e in stage_events])
+        self.assertIn(("mining", "packets: 8/8 packets"), [(e["stage"], e.get("detail")) for e in stage_events])
         # The fake driver was invoked with the kickoff params and run dir.
         self.assertEqual(len(self.driver_calls), 1)
         driver_params, driver_run_dir = self.driver_calls[0]
@@ -658,16 +664,45 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertEqual(driver_params["selection_strategy"], "bm25")
         kickoff_prompt = FakeTurn.instances[0].kwargs["prompt"]
         self.assertIn("选文策略：bm25", kickoff_prompt)
-
-    def test_selection_strategy_defaults_to_smart_and_rejects_unknown(self):
+    def test_selection_strategy_defaults_to_smart_jev_and_rejects_unknown(self):
         params = self.params()
         params.pop("selection_strategy", None)
         self.request("POST", "/api/workflow", {"params": params})
-        self.assertEqual(self.driver_calls[0][0]["selection_strategy"], "smart")
+        self.assertEqual(self.driver_calls[0][0]["selection_strategy"], "smart-jev")
         bad = self.params()
         bad["selection_strategy"] = "bogus"
         status, _, _ = self.request("POST", "/api/workflow", {"params": bad})
         self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+
+    def test_selection_model_flows_to_driver_for_smart_only(self):
+        """⑧ 执行模型 is the run's execution model: smart selection must use it
+        (not the driver's pinned default). smart-jev ignores it by design."""
+        params = self.params()
+        params["selection_strategy"] = "smart"
+        self.request("POST", "/api/workflow", {
+            "params": params, "message": params["topic"], "model": "deepseek-v4-flash-vision-exp",
+        })
+        self.assertEqual(
+            self.driver_calls[0][0].get("selection_model"), "deepseek-v4-flash-vision-exp"
+        )
+
+    def test_smart_jev_strategy_is_accepted(self):
+        params = self.params()
+        params["selection_strategy"] = "smart-jev"
+        with mock.patch.object(server_module, "system_one_ready", return_value=True):
+            self.request("POST", "/api/workflow", {"params": params})
+        self.assertEqual(self.driver_calls[0][0]["selection_strategy"], "smart-jev")
+
+    def test_smart_jev_without_configuration_is_rejected_up_front(self):
+        """A missing decision-model channel fails the kickoff with a 400 — before
+        retrieval burns time on a run that cannot select anything."""
+        params = self.params()
+        params["selection_strategy"] = "smart-jev"
+        with mock.patch.object(server_module, "system_one_ready", return_value=False):
+            status, body, _ = self.request("POST", "/api/workflow", {"params": params})
+        self.assertEqual(status, HTTPStatus.BAD_REQUEST)
+        self.assertIn("决策模型", body["error"])
+        self.assertEqual(self.driver_calls, [])
 
     def test_unsettled_segment_auto_continues_to_settle(self):
         """One-shot contract: a segment that ends without settling (e.g. the
@@ -1440,6 +1475,15 @@ class QuickReadEndpointTest(ChatServerHarness):
     """The 速读 routes: state probe (no article / with article / bad id) and
     the SSE generate endpoint backed by a stubbed quick_read_paper.py run."""
 
+    def test_spawn_scripts_exist(self):
+        """Skill dispatchers live under skills/<name>/scripts/, never the
+        scripts root — a wrong path makes every generate exit in milliseconds
+        with "can't open file" while the UI shows a generic 写作出错."""
+        self.assertTrue(server_module.READ_SCRIPT.is_file(), server_module.READ_SCRIPT)
+        self.assertTrue(server_module.WRITE_SCRIPT.is_file(), server_module.WRITE_SCRIPT)
+        from embodied_learning.knowledge import deepread
+        self.assertTrue(deepread.READ_SCRIPT.is_file(), deepread.READ_SCRIPT)
+
     def seed_pool(self, paper_id: str = "2402.10329", *, with_article: bool = False):
         pool_dir = self.kb_root / "pool" / f"arxiv-{paper_id}"
         pool_dir.mkdir(parents=True, exist_ok=True)
@@ -1480,7 +1524,10 @@ class QuickReadEndpointTest(ChatServerHarness):
 
         def fake_popen(command, **kwargs):
             # The stub run reports success; the article file must already
-            # exist for the handler to read it back.
+            # exist for the handler to read it back. The command must aim at
+            # the real skill dispatcher, not a scripts-root ghost.
+            self.assertEqual(Path(command[1]), server_module.READ_SCRIPT)
+            self.assertTrue(Path(command[1]).is_file(), command[1])
             pool_dir = self.kb_root / "pool" / "arxiv-2402.10329"
             (pool_dir / "quick-read_sudu.md").write_text(
                 "# 速读：生成结果\n\n## 一句话定位\n\n新卡。\n", encoding="utf-8"
@@ -1762,7 +1809,8 @@ class RevisionEndpointTest(ChatServerHarness):
         server_module.wiki_chat.ChatTurn = original
 
     def test_revision_happy_path_writes_index_and_refreshes(self):
-        self._install_writing_turn("revisions/keyan-v2.md")
+        # Base deliverable = v0, so the first chat revision targets keyan-v1.
+        self._install_writing_turn("revisions/keyan-v1.md")
         status, _raw, headers = self._collect_sse(
             self.request("POST", "/api/topic/revise", {
                 "topic_id": self.topic_id, "version": "keyan",
@@ -1774,18 +1822,21 @@ class RevisionEndpointTest(ChatServerHarness):
         events = self.sse_events()
         types = [e["type"] for e in events]
         self.assertIn("revision_ready", types)
+        # The revision stage board lights up: plan brief + stage events.
+        self.assertIn("brief", types)
+        self.assertIn("stage", types)
         ready = next(e for e in events if e["type"] == "revision_ready")
-        self.assertEqual(ready["version_key"], "keyan-v2")
+        self.assertEqual(ready["version_key"], "keyan-v1")
         # Provenance index appended; snapshot refresh triggered.
         index = json.loads(
             (self.run_dir / "revisions" / "index.json").read_text(encoding="utf-8")
         )
-        self.assertEqual(index[0]["version_key"], "keyan-v2")
+        self.assertEqual(index[0]["version_key"], "keyan-v1")
         self.assertEqual(index[0]["request"], "开头加落地建议")
         self.assertEqual(len(self.refresh_calls), 1)
         # The agent turn carried the revision contract and a long timeout.
         turn = FakeTurn.instances[-1]
-        self.assertIn("[REVISION:revisions/keyan-v2.md]", turn.kwargs["system_prompt"])
+        self.assertIn("[REVISION:revisions/keyan-v1.md]", turn.kwargs["system_prompt"])
         self.assertGreaterEqual(turn.kwargs["timeout_s"], 5400)
 
     def test_next_revision_number_increments_from_disk(self):
@@ -1855,6 +1906,33 @@ class HttpEdgeCaseTest(ChatServerHarness):
     def test_knowledge_map_missing_is_404(self):
         status, _, _ = self.request("GET", "/knowledge-map")
         self.assertEqual(status, HTTPStatus.NOT_FOUND)
+
+    def test_knowledge_map_builds_from_catalog_when_index_missing(self):
+        """A local KB with only knowledge/literature-review-catalog.md must
+        still render: the builder is anchored on --root/--start instead of
+        falling back to its install root ("start file not found")."""
+
+        with mock.patch.object(server_module.subprocess, "run") as run:
+            run.return_value = mock.Mock(returncode=0, stdout="", stderr="")
+            server_module.build_knowledge_map(
+                Path(self.kb_tmp.name) / "graph" / "index.html", self.kb_root
+            )
+        command = run.call_args.args[0]
+        self.assertIn("--root", command)
+        self.assertEqual(command[command.index("--root") + 1], str(self.kb_root))
+        self.assertEqual(
+            command[command.index("--start") + 1],
+            "knowledge/literature-review-catalog.md",
+        )
+
+    def test_research_directory_renders_snapshot_topics(self):
+        status, body, headers = self.request("GET", "/research/")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertIn("text/html", headers.get("Content-Type", ""))
+        self.assertIn("演示话题", body)
+        # schema-v1 topics carry no slug: cards link into the in-wiki route.
+        self.assertIn(f"#/topic/{self.topic_id}", body)
+        self.assertNotIn("STATIC_RESEARCH_DIRECTORY", body)
 
     def test_post_unknown_path_is_404(self):
         status, _, _ = self.request("POST", "/api/other")
