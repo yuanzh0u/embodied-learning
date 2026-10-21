@@ -88,6 +88,12 @@ def _member_is_safe(member: tarfile.TarInfo) -> bool:
     return path.suffix.lower() in ALLOWED_SUFFIXES
 
 
+# `filter="data"` is 3.12+, backported to 3.10.12 / 3.11.4. requires-python is
+# >=3.10, so older patch levels still install this package; there the per-member
+# allowlist above is the only guard and covers the same link/traversal cases.
+_EXTRACT_KWARGS: dict = {"filter": "data"} if hasattr(tarfile, "data_filter") else {}
+
+
 def safe_extract(tar_path: Path, dest: Path) -> list[str]:
     """Extract only text-bearing TeX members, guarding paths and total size."""
     extracted: list[str] = []
@@ -103,7 +109,7 @@ def safe_extract(tar_path: Path, dest: Path) -> list[str]:
             total += int(member.size)
             if total > MAX_EXTRACT_BYTES:
                 raise ValueError(f"tarball exceeds the {MAX_EXTRACT_BYTES} byte extraction cap")
-            archive.extract(member, dest, filter="data")
+            archive.extract(member, dest, **_EXTRACT_KWARGS)
             extracted.append(member.name)
     return extracted
 
