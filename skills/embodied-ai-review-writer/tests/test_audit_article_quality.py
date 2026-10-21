@@ -370,6 +370,34 @@ class AuditArticleQualityTests(unittest.TestCase):
             )
         self.assertNotEqual(0, completed.returncode)
         self.assertIn("unannotated-reading-list", completed.stdout)
+        # The error quotes each offending bullet verbatim so the writer can
+        # Edit it directly instead of grepping the audit source and rewriting
+        # the file with a regex (2026-10-21 点云表面重建).
+        self.assertIn("待补注记的行（照抄整行", completed.stdout)
+        self.assertIn("[数据筛选研究](https://arxiv.org/abs/2603.09056)", completed.stdout)
+
+    def test_em_dash_annotations_count_as_annotated(self) -> None:
+        """Editorial Chinese annotates with `—` / `——` as often as `：`; the gate
+        used to accept only the colon and failed a correctly annotated list,
+        sending the writer into an inline-python rewrite that corrupted the
+        links (2026-10-21 点云表面重建)."""
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            self.write_good_bundle(root)
+            zhihu = root / "zhihu-explainer_zhihu.md"
+            text = zhihu.read_text(encoding="utf-8")
+            text = text.replace("](https://arxiv.org/abs/2603.09056)：", "](https://arxiv.org/abs/2603.09056) — ")
+            text = text.replace("](https://arxiv.org/abs/2606.16208)：", "](https://arxiv.org/abs/2606.16208) —— 读法：")
+            zhihu.write_text(text, encoding="utf-8")
+            completed = subprocess.run(
+                [sys.executable, str(SCRIPT), "audit-article-quality", "--bundle-dir", str(root)],
+                cwd=ROOT,
+                text=True,
+                capture_output=True,
+            )
+        self.assertEqual(0, completed.returncode, completed.stdout + completed.stderr)
+        self.assertNotIn("unannotated-reading-list", completed.stdout)
 
     def test_one_line_zhihu_reference_dump_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

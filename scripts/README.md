@@ -70,7 +70,7 @@
 | `run.py init` | 生成 run 出生证明（`run.json` status=in-progress），防“管线烂尾无痕迹” | `run.py init --topic ... --knowledge-id EA-DATA --time-range A..B --review-mode systematic`（launcher 内部也调它） |
 | `run.py pipeline` | 机械阶段 driver（见上表）；`--skip-deep-read` 可把深读交给外部编排 | `run.py pipeline --run-dir work/<run> --topic ... --review-mode systematic --time-range A..B --focus ... --arxiv-snapshot <sqlite>` |
 | `run.py next-event-id` | 扫描 evidence/**/evidence.jsonl，给出下一个无冲突事件 ID；`--claim-prefix` 预留前缀 | `run.py next-event-id --prefix EA-XXX-2026` |
-| `run.py check-bundle` | **settle 前门禁**：bundle 完整性（三风格或声明的 style+scope_note、files 清单、事件数、coverage ready_to_stop） | `run.py check-bundle <run-dir>` |
+| `run.py check-bundle` | **settle 前门禁**：bundle 完整性（三风格或声明的 style+scope_note、files 清单、事件数、coverage ready_to_stop）。成稿阶段 run 仍是 `in-progress`，必须加 `--pre-settle`（跳过生命周期行，其余照检）；不加时该门必定因 `run not settled` exit 1，而翻转 settled 是 finalize 的职责 | `run.py check-bundle <run-dir> --pre-settle` |
 | `run.py audit-citations` | **settle 前门禁**：成稿引用审计（死锚点、超出加载证据集的引用、run.json 漂移） | `run.py audit-citations --article <成稿> --appendix evidence-appendix.md --evidence-jsonl <jsonl>` |
 | `run.py finalize` | **机械 settle 一条龙**：盖章 run.json（event_count/evidence_papers/candidate_count/full_text_count、files.evidence、单风格 style+scope_note）→ 引用篇数下限门禁（rapid 6 / scoping 10 / systematic 15，不足则提示续跑 driver 补深读）→ 两道门 → 拷贝 evidence/ → 翻 settled → 登记 catalog → 重建 wiki 快照。幂等；门禁失败打印缺失项（修复重跑，不是停止理由） | `run.py finalize --run-dir work/<run> --kb-root <kb-root>` |
 | `run.py status` | **run 现状一次性摘要**（替代 agent 逐文件循环）：漏斗数字、逐篇证据与 claim 摘要、从 candidate-registry join 的 References 作者/年份元数据、逐篇深读漏斗（held / deep-read-failed 及筛选命中词）、产物清单、引用篇数下限核对、建议命令——含**逐字可执行的综述包完整命令**；`--json` 出机器可读 | `run.py status --run-dir work/<run>` |

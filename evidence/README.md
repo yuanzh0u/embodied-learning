@@ -64,7 +64,7 @@
 - `event_count` = 文章**实际可引用**的去重后事件总数(新挖 + 复用),不是只数新挖的。
 - 复用的 evidence.jsonl 一并拷入 run 文件夹(如 `reused/` 子目录)或在 `files.reused_evidence` 中登记相对路径,保证 run 文件夹自含可审计。
 - 结算前两道闸门都必须通过:
-  - `python3 scripts/run.py check-bundle <run-dir>`:bundle 完整性(默认三风格 + appendix,或已声明 `style`+`scope_note` 的缩减交付)、证据自含、run.json 标准字段(`selected_event_count`、`files.memo` 等自创字段会被拒)。
+  - `python3 scripts/run.py check-bundle <run-dir> --pre-settle`:bundle 完整性(默认三风格 + appendix,或已声明 `style`+`scope_note` 的缩减交付)、证据自含、run.json 标准字段(`selected_event_count`、`files.memo` 等自创字段会被拒)。成稿阶段 run 仍是 `in-progress`,必须带 `--pre-settle`(跳过生命周期行;翻转 settled 是 `run.py finalize` 的职责,不要手改 run.json)。
   - `python3 scripts/run.py audit-citations --article <各成稿> --appendix evidence-appendix.md --evidence-jsonl <各证据文件> --run-json run.json`:无死锚、无越界引用、manifest 一致。
 
 ## Agent 加载方式

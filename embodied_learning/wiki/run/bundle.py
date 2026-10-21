@@ -79,7 +79,14 @@ def load_local_event_ids(run_dir: Path, files: dict) -> tuple[set[str], list[str
     return ids, problems
 
 
-def check_run_bundle(run_dir: Path) -> list[str]:
+def check_run_bundle(run_dir: Path, *, pre_settle: bool = False) -> list[str]:
+    """Problems in the bundle contract.
+
+    ``pre_settle=True`` audits a run that is still ``in-progress`` (the writer
+    stage, before ``run.py finalize``): the lifecycle line and the
+    published-bundle-only checks are skipped, everything the writer can fix is
+    still reported. Without it an in-progress run always fails by design.
+    """
     problems: list[str] = []
     manifest_path = run_dir / "run.json"
     if not manifest_path.is_file():
@@ -93,10 +100,11 @@ def check_run_bundle(run_dir: Path) -> list[str]:
     status = str(manifest.get("status") or "").strip()
     if status and status not in {"in-progress", "settled"}:
         problems.append(f"run.json: unknown status `{status}` (use `in-progress` or `settled`)")
-    if status == "in-progress":
+    if status == "in-progress" and not pre_settle:
         problems.append(
             "run not settled: status is `in-progress` — finish the bundle (promote evidence, "
-            "write the three articles, pass both gates) and flip status to `settled`"
+            "write the three articles, pass both gates) and flip status to `settled` "
+            "(run.py finalize does the flip; for a pre-settle audit use --pre-settle)"
         )
 
     # Standard schema: required fields present, drifted names rejected.
@@ -231,11 +239,14 @@ def run(args: argparse.Namespace) -> int:
         return 1
     if not re.match(r"literature-review-.+", run_dir.name):
         print(f"note: {run_dir.name} does not match literature-review-<topic>-<date>; contract still applied")
-    problems = check_run_bundle(run_dir)
+    problems = check_run_bundle(run_dir, pre_settle=bool(getattr(args, "pre_settle", False)))
     if problems:
         print(f"{len(problems)} problem(s):")
         for item in problems:
             print(f"- {item}")
         return 1
-    print("run bundle OK")
+    if getattr(args, "pre_settle", False):
+        print("run bundle OK (pre-settle: lifecycle and published-bundle fields are finalize's job)")
+    else:
+        print("run bundle OK")
     return 0

@@ -62,7 +62,7 @@ python3 scripts/wiki.py kb-merge --kb-root <target> --source <src> [--source ...
 python3 scripts/run.py next-event-id --prefix EA-TWM-2026   # next collision-free evidence event ID
 python3 scripts/run.py init --topic "..." --knowledge-id EA-...   # run birth certificate (status: in-progress)
 python3 scripts/run.py pipeline --run-dir <run-dir> --topic "..." --review-mode ...   # mechanical stages driver: plan -> retrieval -> registry -> screening -> coverage -> extraction -> packets -> deep read (skeleton agents; seeds forced to the front, limit mode-aware: rapid 12 / scoping 22 / systematic 43) -> projection (stamps run.json event_count/evidence_papers) -> funnel.json (six-layer retrieval funnel, published by finalize) -> pipeline-summary.json; idempotent/resumable; --skip-deep-read hands deep reading to an external orchestrator
-python3 scripts/run.py check-bundle <run-dir>           # bundle completeness gate (pre-settle)
+python3 scripts/run.py check-bundle <run-dir> --pre-settle   # bundle completeness gate (writer stage: run is still in-progress; the bare form is finalize's post-flip re-check)
 python3 scripts/run.py audit-citations --article ... --appendix ... --evidence-jsonl ...   # citation gate
 python3 scripts/run.py finalize --run-dir <run-dir> --kb-root <kb-root>   # mechanical settle: stamp run.json fields -> cited-paper floor gate (rapid 6 / scoping 10 / systematic 15 distinct papers) -> both gates -> publish evidence/ -> settled -> catalog row -> wiki snapshot
 python3 scripts/run.py status --run-dir <run-dir>   # one-shot run digest (funnel, per-paper evidence + References metadata, artifact checklist, next commands) — agents read this instead of looping over evidence/*.jsonl
@@ -159,8 +159,9 @@ deliberate — do not blur them:
   ship the script's mechanical renders (`--emit-scaffold` produces bannered `*.scaffold.md` only).
   Use `--style survey` for the packet alone; `--select-event`/`--select-events-file` +
   `--consolidate-evidence` for targeted reuse of prior runs' evidence. Before settling a run into
-  `evidence/`, two gates must pass: `scripts/run.py check-bundle` (three styles or declared
-  `style`+`scope_note` in run.json; self-contained evidence; standard manifest fields) and
+  `evidence/`, two gates must pass: `scripts/run.py check-bundle --pre-settle` (three styles or declared
+  `style`+`scope_note` in run.json; self-contained evidence; standard manifest fields; `--pre-settle`
+  because the run is still `in-progress` — never hand-flip the status) and
   `scripts/run.py audit-citations` (dead anchors, citations outside the loaded evidence, run.json drift).
   The `literature-review-<topic>-<date>` folder name IS the bundle contract trigger — non-review
   artifacts use a different naming.

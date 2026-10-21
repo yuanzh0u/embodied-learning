@@ -141,6 +141,21 @@ class CheckRunBundleTest(unittest.TestCase):
         problems = check_run_bundle.check_run_bundle(run_dir)
         self.assertTrue(any("run not settled" in p for p in problems))
 
+    def test_pre_settle_skips_lifecycle_but_keeps_real_problems(self) -> None:
+        """The writer stage runs this gate while the run is still in-progress;
+        finalize owns the status flip. Without --pre-settle the command can
+        never pass, and its message told the writer to flip run.json by hand
+        (2026-10-21 点云表面重建)."""
+
+        run_dir = make_run(self.tmp, manifest_extra={"status": "in-progress"})
+        self.assertEqual(check_run_bundle.check_run_bundle(run_dir, pre_settle=True), [])
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        del manifest["event_count"]
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        problems = check_run_bundle.check_run_bundle(run_dir, pre_settle=True)
+        self.assertFalse(any("run not settled" in p for p in problems))
+        self.assertTrue(any("missing required field `event_count`" in p for p in problems))
+
     def test_settled_status_passes(self) -> None:
         run_dir = make_run(self.tmp, manifest_extra={"status": "settled"})
         self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])

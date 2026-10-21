@@ -400,7 +400,11 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
     else:
         gate_articles = list(STANDARD_ARTICLES)
     lines.append("[next] 审计门（写完对应成稿后逐字执行，参数勿猜；写完不要自检，直接跑门禁按消息修）：")
-    lines.append(f"  python3 {scripts_root / 'run.py'} check-bundle {run_dir}")
+    # --pre-settle: the run is still in-progress here, and finalize is the only
+    # thing allowed to flip status. Without the flag this gate ALWAYS exits 1
+    # on the lifecycle line and tells the writer to flip run.json by hand —
+    # the exact move the contract forbids (2026-10-21 点云表面重建).
+    lines.append(f"  python3 {scripts_root / 'run.py'} check-bundle {run_dir} --pre-settle")
     art = " ".join(f"--article {run_dir / name}" for name in gate_articles)
     lines.append(
         f"  python3 {scripts_root / 'run.py'} audit-citations {art} "

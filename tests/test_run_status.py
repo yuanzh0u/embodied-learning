@@ -171,6 +171,9 @@ class RunStatusTest(unittest.TestCase):
         report = run_status.build_report(self.run_dir)
         text = run_status.render(report, self.run_dir, Path("/scripts"), Path("/skills"))
         self.assertIn("check-bundle", text)
+        # Pre-settle flag: without it the gate always fails on the lifecycle
+        # line the writer must not touch (finalize flips the status).
+        self.assertIn("--pre-settle", text)
         self.assertIn("--article", text)
         self.assertIn("audit-citations", text)
         self.assertIn("audit-article-quality", text)

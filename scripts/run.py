@@ -150,6 +150,13 @@ def _next_event_id_parser() -> argparse.ArgumentParser:
 def _check_bundle_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=bundle.__doc__)
     parser.add_argument("run_dir", help="Path to a literature-review-<topic>-<date> run folder.")
+    parser.add_argument(
+        "--pre-settle",
+        action="store_true",
+        help="Audit a run that is still `in-progress` (the writer stage, before finalize): "
+        "the lifecycle line is skipped and every writer-fixable problem is still reported. "
+        "Without this flag an in-progress run always exits 1 by design.",
+    )
     return parser
 
 

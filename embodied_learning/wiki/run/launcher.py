@@ -302,14 +302,15 @@ def collect_gate_problems(run_dir: Path) -> list[str]:
             line for line in audit.stdout.splitlines()
             if line.strip() and not gate_header.match(line.strip()))
     bundle = subprocess.run(
-        [sys.executable, str(SCRIPTS_ROOT / "run.py"), "check-bundle", str(run_dir)],
+        [sys.executable, str(SCRIPTS_ROOT / "run.py"), "check-bundle", str(run_dir), "--pre-settle"],
         capture_output=True, text=True,
     )
     if bundle.returncode:
         # The gate loop runs BEFORE run.py finalize, so the run is still
-        # in-progress and check_run_bundle's "run not settled" line is timing
-        # noise that would burn a --max-agent-retries round; settle semantics
-        # are re-checked by finalize under the settled status.
+        # in-progress: --pre-settle keeps the lifecycle line out of the output
+        # (settle semantics are re-checked by finalize under the settled
+        # status). The "run not settled" filter stays as a belt-and-braces for
+        # an older scripts root that does not know the flag yet.
         problems.extend(
             line for line in bundle.stdout.splitlines()
             if line.strip() and "run not settled" not in line

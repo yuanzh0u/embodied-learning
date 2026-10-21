@@ -914,7 +914,11 @@ def render_style_contract() -> list[str]:
                 "arXiv 链接只出现在文末 References。"
             )
         if style_key == "zhihu":
-            lines.append("- 延伸阅读：至少 3 条链接 bullet，每条附一句读者价值注记。")
+            lines.append(
+                "- 延伸阅读：至少 3 条链接 bullet，每条附一句读者价值注记；"
+                "注记紧跟链接、用「：」或「—— 」起头（例：`- [题名](https://arxiv.org/abs/2400.00001)：为什么值得读`），"
+                "门禁按此格式判定，纯书目堆砌会报 ERROR。"
+            )
             lines.append(
                 f"- 句长：单句不超过 {LONG_SENTENCE_MAX_CHARS} 个中文字符（长句拆从句、降推断负载；"
                 "审计门一次点名全部待修句，照抄整句改，不要只改最长的一句）。"

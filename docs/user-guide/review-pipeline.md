@@ -105,8 +105,8 @@ python3 skills/embodied-ai-review-writer/scripts/write.py review-packet \
   --evidence-jsonl <run-dir>/evidence.jsonl
 
 # 2. 人工/代理成稿（三文体，见 writing-brief.md）
-# 3. 审计门
-python3 scripts/run.py check-bundle <run-dir>
+# 3. 审计门（成稿阶段 run 还是 in-progress，check-bundle 必须带 --pre-settle）
+python3 scripts/run.py check-bundle <run-dir> --pre-settle
 python3 scripts/run.py audit-citations \
   --article <run-dir>/scientific-memo_keyan.md \
   --article <run-dir>/zhihu-explainer_zhihu.md \

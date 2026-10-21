@@ -406,22 +406,35 @@ def source_line_share(text: str) -> float:
     return (len(lines) - start) / max(1, len(lines))
 
 
-def zhihu_reading_list_findings(text: str) -> tuple[int, int]:
+# Separator accepted between the link and its reader-value annotation. Editorial
+# Chinese uses the em dash as often as the colon (`— 代表作…`, `—— 读法：…`);
+# accepting only `：` made a correctly annotated list fail as unannotated, and
+# the agent then rewrote the file with an inline-python regex (2026-10-21
+# 点云表面重建: `](]https://…` bullets, six repair edits).
+READING_LIST_ANNOTATION_RE = re.compile(r"\]\([^)]*\)\s*(?:[：:]|[—–]{1,2}|-(?=\s))\s*\S")
+
+
+def zhihu_reading_list_items(text: str) -> tuple[list[str], list[str]]:
+    """``(linked bullets, bullets without a reader-value annotation)`` under
+    ``## 延伸阅读`` / ``## References``, both verbatim so a finding can quote
+    the exact line for an Edit (same contract as the long-sentence gate)."""
+
     heading = re.search(r"^##\s+(?:延伸阅读|References)\s*$", text, flags=re.MULTILINE)
     if not heading:
-        return 0, 0
+        return [], []
     tail = text[heading.end() :]
     linked_bullets = [
         line.strip()
         for line in tail.splitlines()
         if re.match(r"^[-*]\s+", line.strip()) and ARXIV_LINK_RE.search(line)
     ]
-    annotated = [
-        line
-        for line in linked_bullets
-        if re.search(r"\]\([^)]*\)\s*[：:]\s*\S", line)
-    ]
-    return len(linked_bullets), len(annotated)
+    missing = [line for line in linked_bullets if not READING_LIST_ANNOTATION_RE.search(line)]
+    return linked_bullets, missing
+
+
+def zhihu_reading_list_findings(text: str) -> tuple[int, int]:
+    linked, missing = zhihu_reading_list_items(text)
+    return len(linked), len(linked) - len(missing)
 
 
 def add(findings: list[Finding], severity: str, path: Path, rule: str, message: str) -> None:
@@ -604,15 +617,22 @@ def audit_file(path: Path, style: str, min_chinese_share: float) -> tuple[str, l
                 "body-citation-load",
                 f"Zhihu body cites {len(body_sources)} unique papers; review whether supporting coverage belongs in annotated further reading",
             )
-        reading_items, annotated_items = zhihu_reading_list_findings(text)
-        if reading_items < 3 or annotated_items != reading_items:
-            add(
-                findings,
-                "error",
-                path,
-                "unannotated-reading-list",
-                f"Zhihu further reading has {reading_items} linked bullet(s), {annotated_items} with reader-value annotations; expected at least 3 and every item annotated",
-            )
+        reading_bullets, missing_items = zhihu_reading_list_items(text)
+        reading_items = len(reading_bullets)
+        annotated_items = reading_items - len(missing_items)
+        if reading_items < 3 or missing_items:
+            # Quote every offending bullet verbatim (same contract as the
+            # long-sentence gate): a message that only says "expected every
+            # item annotated" sent the writer to grep the audit source, then
+            # to an inline-python rewrite that corrupted six links
+            # (2026-10-21 点云表面重建).
+            details = f"Zhihu further reading has {reading_items} linked bullet(s), {annotated_items} with reader-value annotations; expected at least 3 and every item annotated"
+            if missing_items:
+                details += (
+                    " — 待补注记的行（照抄整行，链接后用 `：` 或 `—— ` 接一句读者价值）："
+                    + " ‖ ".join(f"{number}. {line}" for number, line in enumerate(missing_items, start=1))
+                )
+            add(findings, "error", path, "unannotated-reading-list", details)
     elif style == "quickread":
         if zh_count < LENGTH_FLOORS["quickread"]:
             add(findings, "error", path, "quickread-length", f"Quick-read card has only {zh_count} Chinese characters; expected at least {LENGTH_FLOORS['quickread']}")

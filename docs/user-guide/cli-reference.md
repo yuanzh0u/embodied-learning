@@ -29,7 +29,7 @@ flag 表与退出码全部在上面六个 dispatcher 里。`pip install .` 注�
 | `pipeline` | 机械阶段 driver：plan → 检索 → 注册 → 筛选 → 覆盖 → 抽取 → 包 → 深读 → 投影 |
 | `launch` | 无头端到端：init → driver → 写作代理 → 审计门 → finalize；`--status` / `--resume` / `--stop` |
 | `status` | 一次性 run 摘要（漏斗、逐篇证据、产物清单、下一步命令） |
-| `check-bundle` | 打包完整性门（settle 前） |
+| `check-bundle` | 打包完整性门（settle 前）；成稿阶段加 `--pre-settle` 跳过生命周期行 |
 | `audit-citations` | 引用审计门（死锚、越界引用、run.json 漂移） |
 | `finalize` | 机械 settle：盖章 → 引用篇数地板门 → 两道门 → 发布 `evidence/` → catalog → wiki 快照 |
 | `register` | 把已 settle 的 run 手工登记进 catalog |

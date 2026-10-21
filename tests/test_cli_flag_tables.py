@@ -83,7 +83,7 @@ class RunFlagTableTest(unittest.TestCase):
         self.assertEqual(_options(self.mod, "status"), {"-h", "--help", "--run-dir", "--json"})
 
     def test_check_bundle(self):
-        self.assertEqual(_options(self.mod, "check-bundle"), {"-h", "--help"})
+        self.assertEqual(_options(self.mod, "check-bundle"), {"-h", "--help", "--pre-settle"})
 
 
 class WikiFlagTableTest(unittest.TestCase):
