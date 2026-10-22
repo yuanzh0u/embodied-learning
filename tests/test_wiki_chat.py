@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = "embodied_learning.wiki.publish.chat"  # implementation module
@@ -965,9 +966,15 @@ class ResolveCliTest(unittest.TestCase):
 
     def test_falls_back_when_explicit_path_missing(self):
         # A missing explicit path falls through to PATH / the standard
-        # install location — the desktop-launcher scenario.
-        cli = wiki_chat.resolve_cli("/nonexistent/claude-binary")
-        self.assertTrue(Path(cli).exists())
+        # install location — the desktop-launcher scenario. The harness lookup
+        # is stubbed so the delegation is tested without a machine install
+        # (CI runners have no claude binary at all).
+        with mock.patch.object(
+            wiki_chat, "_harness_resolve_cli", return_value="/resolved/claude"
+        ) as resolve:
+            cli = wiki_chat.resolve_cli("/nonexistent/claude-binary")
+        resolve.assert_called_once_with("/nonexistent/claude-binary")
+        self.assertEqual(cli, "/resolved/claude")
 
     def test_some_cli_is_resolvable(self):
         try:

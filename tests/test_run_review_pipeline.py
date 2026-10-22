@@ -371,6 +371,7 @@ class DriverPipelineTest(unittest.TestCase):
              mock.patch.object(self.driver.TermsSelector, "join", return_value=(["demo"], "mechanical")), \
              mock.patch.object(self.driver, "translate_text", return_value=translate_en), \
              mock.patch("embodied_learning.harness.claude.system_one_ready", return_value=system_one), \
+             mock.patch.object(self.driver, "resolve_cli", return_value="/fake/claude"), \
              agent_patch, \
              mock.patch.object(self.driver.time, "sleep"), \
              mock.patch.object(Path, "glob", return_value=iter([])), \
@@ -1219,6 +1220,8 @@ class SearchStrategyTest(DriverPipelineTest):
             with mock.patch.object(self.driver, "agent_dynamic_queries", return_value=None), \
                  mock.patch.object(self.driver.subprocess, "Popen", side_effect=self.fake_popen), \
                  mock.patch.object(self.driver.TermsSelector, "join", return_value=(["demo"], "mechanical")), \
+                 mock.patch("embodied_learning.harness.claude.system_one_ready", return_value=True), \
+                 mock.patch.object(self.driver, "resolve_cli", return_value="/fake/claude"), \
                  mock.patch.object(self.driver.time, "sleep"), \
                  mock.patch.object(Path, "glob", return_value=iter([])):
                 code = invoke("run.py", "pipeline", self.argv(

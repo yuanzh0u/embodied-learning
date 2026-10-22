@@ -93,7 +93,8 @@ class PreparePipelineTest(unittest.TestCase):
             return mock.Mock(returncode=0, stdout=json.dumps({"cards": []}), stderr="")
 
         with mock.patch.object(self.module.subprocess, "run", side_effect=fake_run), \
-             mock.patch.object(self.module, "run_command", side_effect=fake_run):
+             mock.patch.object(self.module, "run_command", side_effect=fake_run), \
+             mock.patch.object(self.module, "resolve_cli", return_value="/fake/claude"):
             code = invoke("read.py", "prepare-chat", argv)
         return code
 
