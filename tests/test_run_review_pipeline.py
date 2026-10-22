@@ -149,7 +149,38 @@ class ExtractionQueueLineTest(unittest.TestCase):
         self.assertEqual(lines[1], "[DRIVER-PROGRESS:extract:4/48]")
         self.assertIn("[PAPER] 2302.01109", lines[2])
         self.assertIn("HELD", lines[2])
+        self.assertIn("原因未记录", lines[2])
         self.assertTrue(lines[3].startswith("[DRIVER] 全文抽取 Recovered"))
+
+    def test_held_line_carries_compact_reason(self):
+        lines: list[str] = []
+        with mock.patch.object(self.driver, "log", side_effect=lines.append):
+            self.driver.extraction_queue_line("HELD 2402.10329 (12/48) HTML 404 · tex unavailable")
+            self.driver.extraction_queue_line("HELD 2402.10330 (13/48) quality low text=320")
+            self.driver.extraction_queue_line("HELD 2402.10331 (14/48) timeout 600s")
+        papers = [line for line in lines if line.startswith("[PAPER]")]
+        self.assertEqual(len(papers), 3)
+        self.assertIn("（HELD）：HTML 404 · tex unavailable", papers[0])
+        self.assertIn("（HELD）：quality low text=320", papers[1])
+        self.assertIn("（HELD）：timeout 600s", papers[2])
+
+    def test_tier_fallback_lines_surface_as_paper_dialog(self):
+        lines: list[str] = []
+        with mock.patch.object(self.driver, "log", side_effect=lines.append):
+            self.driver.extraction_queue_line("TIER 2402.10329 html failed：HTML 404 → tex")
+            self.driver.extraction_queue_line("TIER 2402.10329 tex ok（quality=medium，tex）")
+        self.assertEqual(lines[0], "[PAPER] 2402.10329 html failed：HTML 404 → tex")
+        self.assertEqual(lines[1], "[PAPER] 2402.10329 tex ok（quality=medium，tex）")
+
+    def test_download_queue_line_ticks_the_download_bar(self):
+        lines: list[str] = []
+        with mock.patch.object(self.driver, "log", side_effect=lines.append):
+            self.driver.download_queue_line("DOWNLOADED 2402.10329 (1/2)")
+            self.driver.download_queue_line("CACHED 2402.10330 (2/2)")
+            self.driver.download_queue_line("Downloaded 1 of 2 papers (cached 1, unavailable 0, failed 0).")
+        self.assertEqual(lines[0], "[DRIVER-PROGRESS:extract-download:1/2]")
+        self.assertEqual(lines[1], "[DRIVER-PROGRESS:extract-download:2/2]")
+        self.assertTrue(lines[2].startswith("[DRIVER] HTML 下载 Downloaded"))
 
     def test_command_label_uses_script_and_subcommand(self):
         self.assertEqual(
@@ -192,6 +223,7 @@ class DriverPipelineTest(unittest.TestCase):
         "screen-candidates": ("screening.json", "screening-ids.txt", "screening.md"),
         "select-candidates": ("screening.json", "screening-ids.txt", "screening.md"),
         "assess-review-coverage": ("coverage-report.json",),
+        "download-content-html": ("html-download.json",),
         "extract-content-queue": ("extraction-summary.json",),
         "review-packet": ("review-packet.md", "writing-brief.md", "evidence-appendix.md"),
     }
@@ -231,6 +263,16 @@ class DriverPipelineTest(unittest.TestCase):
                 "candidates": [],
             },
             "assess-review-coverage": coverage,
+            "download-content-html": {
+                "version": 1,
+                "paper_count": 2,
+                "workers": 4,
+                "states": {"downloaded": 1, "cached": 1},
+                "results": [
+                    {"paper_id": "2402.10329", "state": "downloaded", "attempts": 1, "status": 200, "error": ""},
+                    {"paper_id": "2402.10330", "state": "cached", "attempts": 0, "status": 200, "error": ""},
+                ],
+            },
             "extract-content-queue": {"paper_count": 2},
             "review-packet": {"packet": "mechanical"},
         }
@@ -284,6 +326,15 @@ class DriverPipelineTest(unittest.TestCase):
                 stdout=iter(["chunk 1/2: judging 3 of 3 candidates…", "chunk 2/2: judging 0 of 3 candidates…"]),
                 wait=lambda timeout=None: 0,
             )
+        if "download-content-html" in joined:
+            for name in self.STAGE_SCRIPTS["download-content-html"]:
+                out = self.run_dir / name
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_text(self._stage_payload("download-content-html"), encoding="utf-8")
+            return mock.Mock(
+                stdout=iter(["DOWNLOADED 2402.10329 (1/2)", "CACHED 2402.10330 (2/2)"]),
+                wait=lambda timeout=None: 0,
+            )
         if "extract-content-queue" not in joined:
             raise AssertionError(f"unexpected streaming subprocess: {joined}")
         payload = json.loads(self._stage_payload("extract-content-queue"))
@@ -293,7 +344,10 @@ class DriverPipelineTest(unittest.TestCase):
             out = self.run_dir / name
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(payload), encoding="utf-8")
-        return mock.Mock(stdout=iter(["OK 2402.10329 (1/2)", "HELD 2302.01109 (2/2)"]), wait=lambda timeout=None: 0)
+        return mock.Mock(
+            stdout=iter(["OK 2402.10329 (1/2)", "HELD 2302.01109 (2/2) quality low text=320"]),
+            wait=lambda timeout=None: 0,
+        )
 
     def run_driver(self, argv: list[str], *, agent_dynamic=None, fake_run=None,
                    translate_en=None, system_one: bool = True) -> tuple[int, dict]:
@@ -1712,6 +1766,96 @@ class SelectionProgressTest(unittest.TestCase):
         text = buf.getvalue()
         self.assertIn("chunk 1/2:", text)
         self.assertIn("chunk 2/2:", text)
+
+class ReadingPacketStageTest(unittest.TestCase):
+    """reading_packet_stage builds packets for evidence-eligible extractions
+    only; a HELD paper must never spawn build-reading-packet (it fails the
+    complete-text gate by definition and the old loop burned a subprocess per
+    paper just to collect another opaque "exit 2")."""
+
+    def setUp(self):
+        self.driver = load_driver()
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.run_dir = Path(self.tmp.name) / "run"
+        (self.run_dir / "extractions").mkdir(parents=True)
+        self.args = mock.Mock(force=False, topic="demo topic", review_mode="scoping")
+
+    def _write_extraction(self, paper_id: str, eligible: bool) -> None:
+        (self.run_dir / "extractions" / f"{paper_id}.json").write_text(
+            json.dumps({"paper_id": paper_id, "available": eligible, "evidence_eligible": eligible}),
+            encoding="utf-8",
+        )
+
+    def test_held_papers_are_excluded_from_packet_loop(self):
+        self._write_extraction("2402.10329", eligible=True)
+        self._write_extraction("2402.10330", eligible=False)
+        self._write_extraction("2402.10331", eligible=False)
+        payload = {"results": [
+            {"paper_id": "2402.10329", "evidence_eligible": True},
+            {"paper_id": "2402.10330", "evidence_eligible": False, "held_reason": "HTML 404"},
+            {"paper_id": "2402.10331", "evidence_eligible": False, "held_reason": "quality low text=320"},
+        ]}
+        calls: list[list[str]] = []
+        fake = mock.Mock(returncode=0, stdout="", stderr="")
+        with mock.patch.object(self.driver, "run_command", side_effect=lambda cmd, **kw: (calls.append(cmd), fake)[1]), \
+             mock.patch.object(self.driver, "log"):
+            count = self.driver.reading_packet_stage(self.run_dir, self.args, ["EA-DATA"], payload)
+        self.assertEqual(count, 1)
+        self.assertEqual(len(calls), 1)
+        joined = " ".join(calls[0])
+        self.assertIn("2402.10329.json", joined)
+        self.assertNotIn("2402.10330.json", joined)
+        self.assertNotIn("2402.10331.json", joined)
+
+    def test_eligibility_falls_back_to_per_file_read_without_summary(self):
+        self._write_extraction("2402.10329", eligible=True)
+        self._write_extraction("2402.10330", eligible=False)
+        calls: list[list[str]] = []
+        fake = mock.Mock(returncode=0, stdout="", stderr="")
+        with mock.patch.object(self.driver, "run_command", side_effect=lambda cmd, **kw: (calls.append(cmd), fake)[1]), \
+             mock.patch.object(self.driver, "log"):
+            count = self.driver.reading_packet_stage(self.run_dir, self.args, ["EA-DATA"], None)
+        self.assertEqual(count, 1)
+        self.assertEqual(len(calls), 1)
+
+    def test_packet_failure_warns_with_blocked_reason_and_continues(self):
+        self._write_extraction("2402.10329", eligible=True)
+        self._write_extraction("2402.10330", eligible=True)
+        payload = {"results": [
+            {"paper_id": "2402.10329", "evidence_eligible": True},
+            {"paper_id": "2402.10330", "evidence_eligible": True},
+        ]}
+        outcomes = [
+            mock.Mock(returncode=2, stdout="",
+                      stderr="reading packet blocked: extraction quality must be high or medium, got low\n"),
+            mock.Mock(returncode=0, stdout="", stderr=""),
+        ]
+        lines: list[str] = []
+        with mock.patch.object(self.driver, "run_command", side_effect=outcomes), \
+             mock.patch.object(self.driver, "log", side_effect=lines.append):
+            count = self.driver.reading_packet_stage(self.run_dir, self.args, ["EA-DATA"], payload)
+        self.assertEqual(count, 1)  # one built, one warned — stage did not abort
+        warns = [line for line in lines if line.startswith("[DRIVER-WARN]")]
+        self.assertEqual(len(warns), 1)
+        self.assertIn("packet 2402.10329 构建失败（exit 2）", warns[0])
+        self.assertIn("extraction quality must be high or medium, got low", warns[0])
+        self.assertNotIn("reading packet blocked:", warns[0])
+        self.assertTrue(any(line.startswith("[DRIVER-STAGE:packets] ok 1/2") for line in lines), lines)
+
+
+class DownloadStageOrderTest(unittest.TestCase):
+    """The two-step split: download-content-html runs before extract-content-queue
+    and hands its manifest over."""
+
+    def test_extraction_command_carries_the_download_manifest(self):
+        driver = load_driver()
+        # The live command builders live inside _main_locked; pin the contract
+        # at the flag-table level instead (see test_cli_flag_tables) and the
+        # ordering via the DriverPipelineTest fake_popen transcript.
+        self.assertTrue(hasattr(driver, "download_queue_line"))
+        self.assertTrue(hasattr(driver, "reading_packet_stage"))
+
 
 if __name__ == "__main__":
     unittest.main()

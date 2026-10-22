@@ -53,7 +53,12 @@ from embodied_learning.config import (
     SYSTEM_ONE_URL_FALLBACK_ENVS,
     TOOL_COMMAND_DETAIL_MAX_CHARS,
     TOOL_DETAIL_MAX_CHARS,
+    TOOL_OUTPUT_MAX_CHARS,
+    TOOL_OUTPUT_STAGES,
+    TOOL_OUTPUT_TOOLS,
+    TOOL_REASON_CARRIED_MAX_CHARS,
     TOOL_REASON_MAX_CHARS,
+    TOOL_STAGE_RULES,
 )
 from embodied_learning.harness.session_log import (
     SessionLog,
@@ -87,6 +92,12 @@ STREAM_TRUNCATION_KEYWORDS = ("upstream stream ended", "without a terminal frame
 STREAM_RETRIES = 2         # retries after the first attempt (same as monica)
 STREAM_BACKOFF_BASE = 2.0  # first retry wait, then x2 (2s -> 4s)
 # Grace before SIGKILL after a requested stop (ChatTurn).
+
+# Workflow markers the agent prints as standalone lines. They are stripped
+# from narration before it becomes a tool-call reason, otherwise the journal
+# reads "原因：[STAGE:packet] 综述包已就绪…" on a writing-stage edit.
+_STAGE_MARKER_RE = re.compile(r"\[STAGE:[a-z_]+\]")
+_TOPIC_MARKER_RE = re.compile(r"\[TOPIC:[^\]]*\]")
 
 # Environment markers of a running claude session — a spawned headless agent
 # must never think it is nested inside one.
@@ -883,7 +894,12 @@ def build_claude_command(
     return argv
 
 
-def parse_stream_line(line: str, *, prior_text: str = "") -> list[dict]:
+def parse_stream_line(
+    line: str,
+    *,
+    prior_text: str = "",
+    tool_index: dict[str, dict] | None = None,
+) -> list[dict]:
     """Translate one stream-json line into 0..n normalized events
     (session / delta / status / done).
 
@@ -892,7 +908,15 @@ def parse_stream_line(line: str, *, prior_text: str = "") -> list[dict]:
     tool event as ``reason`` — the dialog journal then answers "why was this
     file edited?" instead of only "which file" (2026-10-20 审计门).
     ``reason_source`` says whether that text came from the call's own message
-    (``inline``) or is a carried-over narration (``carried``)."""
+    (``inline``), is the previous narration (``carried``), or the tool call
+    stated no motive at all (``none``).
+
+    ``user`` frames carrying ``tool_result`` blocks become ``tool_output``
+    events: gate stdout (PASS/ERROR lines, ``run.py status`` digests) reaches
+    the dialog, which otherwise showed only "正在运行" for every audit gate
+    (2026-10-21 hdmap生成 / 深度图补全). ``tool_index`` maps ``tool_use_id`` →
+    ``{"name": ..., "workflow_stage": ...}`` so the output line says which
+    tool produced it and lands in the same workflow card."""
 
     stripped = line.strip()
     if not stripped:
@@ -933,22 +957,59 @@ def parse_stream_line(line: str, *, prior_text: str = "") -> list[dict]:
             elif block_type == "thinking":
                 events.append({"type": "status", "stage": "thinking"})
             elif block_type == "tool_use" and block.get("name"):
-                reason = _tool_reason(narration, prior_text)
-                events.append(
-                    {
-                        "type": "status",
-                        "stage": "tool",
-                        "tool": block["name"],
-                        "detail": _tool_detail(block),
-                        "reason": reason,
-                        # A tool-only message has no narration of its own; the
-                        # reason is then the tail of the previous narration and
-                        # says nothing new about THIS call. Without the marker
-                        # fifteen consecutive edits looked like fifteen
-                        # identical motives (2026-10-20 视频流式重建 audit loop).
-                        "reason_source": _reason_source(narration, reason),
+                stage = _tool_stage(block)
+                if tool_index is not None and block.get("id"):
+                    # Remember which tool (and node) a later tool_result belongs to.
+                    tool_index[str(block["id"])] = {
+                        "name": str(block["name"]),
+                        "workflow_stage": stage,
                     }
-                )
+                reason = _tool_reason(narration, prior_text)
+                event = {
+                    "type": "status",
+                    "stage": "tool",
+                    "tool": block["name"],
+                    "detail": _tool_detail(block),
+                    "reason": reason,
+                    # A tool-only message has no narration of its own; the
+                    # reason is then the tail of the previous narration and
+                    # says nothing new about THIS call. Without the marker
+                    # fifteen consecutive edits looked like fifteen
+                    # identical motives (2026-10-20 视频流式重建 audit loop).
+                    "reason_source": _reason_source(narration, reason),
+                }
+                # The workflow node this call belongs to, inferred from the
+                # file/command it touches. Absent = keep the announced stage.
+                if stage:
+                    event["workflow_stage"] = stage
+                events.append(event)
+        return events
+
+    if kind == "user":
+        # Tool stdout/stderr (Bash results, gate verdicts) comes back as a
+        # user frame with ``tool_result`` blocks. Until 2026-10-21 these were
+        # dropped, so the audit-gate card showed only "正在运行" and the writer
+        # could not see in the dialog whether a gate passed.
+        blocks = (raw.get("message") or {}).get("content") or []
+        if not isinstance(blocks, list):
+            return []
+        events = []
+        for block in blocks:
+            if not isinstance(block, dict) or block.get("type") != "tool_result":
+                continue
+            origin = (tool_index or {}).get(str(block.get("tool_use_id") or ""), {})
+            output = _tool_output_text(block)
+            if not output:
+                continue
+            events.append(
+                {
+                    "type": "tool_output",
+                    "tool": origin.get("name", ""),
+                    "workflow_stage": origin.get("workflow_stage", ""),
+                    "output": output,
+                    "is_error": block.get("is_error") is True,
+                }
+            )
         return events
 
     if kind == "result":
@@ -967,29 +1028,48 @@ def parse_stream_line(line: str, *, prior_text: str = "") -> list[dict]:
 
 
 def _tail_text(prior: str, text: str) -> str:
-    """Rolling narration buffer for tool-call reasons — bounded so a long
-    writer turn cannot grow it without limit."""
+    """Narration buffer for tool-call reasons — the latest narration only.
 
-    merged = f"{prior} {text}" if prior else text
-    merged = " ".join(merged.split())
-    return merged[-TOOL_REASON_MAX_CHARS:] if len(merged) > TOOL_REASON_MAX_CHARS else merged
+    It used to append every message's text, so a long writer turn carried
+    stale recaps (and their ``[STAGE:*]`` markers) into the reason of
+    unrelated edits: the 2026-10-21 hdmap run showed "首先是科研备忘录：" as
+    the motive for zhihu edits. Each narration replaces the buffer instead
+    and markers are stripped."""
+
+    fresh = _narration_text(text)[-TOOL_REASON_CARRIED_MAX_CHARS:]
+    return fresh or prior
+
+
+def _narration_text(text: str) -> str:
+    """Strip workflow markers and compact a narration for the journal."""
+
+    cleaned = _STAGE_MARKER_RE.sub(" ", str(text or ""))
+    cleaned = _TOPIC_MARKER_RE.sub(" ", cleaned)
+    return " ".join(cleaned.split())
 
 
 def _tool_reason(narration: str, prior_text: str) -> str:
     """The agent's stated motive for a tool call, compacted for the journal.
 
     Prefer the text of the same assistant message (that is where the agent
-    explains the call it is about to make); fall back to the last narration
-    the turn saw. Collapse whitespace and keep the tail — the sentence
-    immediately before the call carries the intent, and long narrations
-    usually open with recap."""
+    explains the call it is about to make); fall back to the latest prior
+    narration, clipped shorter because that text talks about the PREVIOUS
+    call, not this one. A trailing colon is dropped — the agent's lead-in
+    ("首先是科研备忘录：") otherwise reads as a truncated sentence."""
 
-    text = " ".join(str(narration or prior_text or "").split())
+    text = _narration_text(narration or prior_text)
     if not text:
         return ""
-    if len(text) > TOOL_REASON_MAX_CHARS:
-        text = "…" + text[-TOOL_REASON_MAX_CHARS:]
-    return text
+    limit = TOOL_REASON_MAX_CHARS if narration else TOOL_REASON_CARRIED_MAX_CHARS
+    if len(text) > limit:
+        tail = text[-limit:]
+        boundary = re.search(r"[。！？；!?;]\s*", tail)
+        # Cut on the first complete sentence inside the window so the reason
+        # never starts mid-clause.
+        if boundary and boundary.end() < len(tail):
+            tail = tail[boundary.end():]
+        text = "…" + tail
+    return text.rstrip("：:，,、 ")
 
 
 def _reason_source(narration: str, reason: str) -> str:
@@ -1000,6 +1080,32 @@ def _reason_source(narration: str, reason: str) -> str:
     if not reason:
         return "none"
     return "inline" if str(narration or "").strip() else "carried"
+
+
+_TOOL_STAGE_RES = tuple((stage, re.compile(pattern)) for stage, pattern in TOOL_STAGE_RULES)
+
+
+def _tool_stage(block: dict) -> str:
+    """The workflow node a tool call belongs to, or "" to defer to the UI.
+
+    The agent only emits ``[STAGE:*]`` between phases, so a long writing
+    stretch used to file every write/edit/gate under whatever stage line came
+    last (2026-10-21 hdmap生成: all three articles and the audit gates landed
+    in 综述包). Classify by the file or command actually touched instead.
+
+    The earliest match wins: ``audit-citations ... && run.py finalize`` is one
+    shell step whose output is the gates' verdicts, so it belongs on the audit
+    card, not the settle card (the server logs 已落盘 itself)."""
+
+    target = _tool_detail(block)
+    if not target:
+        return ""
+    best: tuple[int, str] | None = None
+    for stage, pattern in _TOOL_STAGE_RES:
+        match = pattern.search(target)
+        if match and (best is None or match.start() < best[0]):
+            best = (match.start(), stage)
+    return best[1] if best else ""
 
 
 def _tool_detail(block: dict) -> str:
@@ -1026,6 +1132,32 @@ def _tool_detail(block: dict) -> str:
             )
             return value[:limit]
     return ""
+
+
+def _tool_output_text(block: dict) -> str:
+    """The visible part of a ``tool_result``: string content, or the text
+    blocks of a list content. Clipped to the TAIL (``TOOL_OUTPUT_MAX_CHARS``)
+    because gate verdicts land at the end of the output."""
+
+    content = block.get("content")
+    if isinstance(content, str):
+        text = content
+    elif isinstance(content, list):
+        text = "\n".join(
+            str(item.get("text") or "")
+            for item in content
+            if isinstance(item, dict) and item.get("type") == "text"
+        )
+    else:
+        text = ""
+    text = text.strip()
+    if not text:
+        return ""
+    if len(text) > TOOL_OUTPUT_MAX_CHARS:
+        text = "…" + text[-TOOL_OUTPUT_MAX_CHARS:]
+    if block.get("is_error") is True and not text.startswith("ERROR"):
+        text = f"退出码非 0：\n{text}"
+    return text
 
 
 def is_resume_failure(stderr_text: str) -> bool:
@@ -1207,17 +1339,45 @@ class ChatTurn:
         the consumer think the turn already ended."""
 
         assert self._process is not None and self._process.stdout is not None
-        # Last narration in this turn — the fallback "why" for a tool call that
-        # arrives in its own message with no text block.
+        # Latest narration in this turn — the fallback "why" for a tool call
+        # that arrives in its own message with no text block.
         prior_text = ""
+        # tool_use_id -> {name, workflow_stage}, so a later tool_result says
+        # which tool produced the output and where it belongs in the log.
+        tool_index: dict[str, dict] = {}
         held_done: dict | None = None
         try:
             for line in self._process.stdout:
                 stream_lines.append(line)
                 self._observe_stream(line)
-                for event in parse_stream_line(line, prior_text=prior_text):
+                for event in parse_stream_line(
+                    line, prior_text=prior_text, tool_index=tool_index
+                ):
                     if event.get("type") == "delta":
                         prior_text = _tail_text(prior_text, event.get("text") or "")
+                    elif (
+                        event.get("type") == "status"
+                        and event.get("stage") == "tool"
+                        and event.get("reason_source") == "carried"
+                    ):
+                        # The narration explained the message it followed; a
+                        # tool-only message reuses it once, then the buffer is
+                        # spent. Otherwise the memo's lead-in kept reappearing
+                        # under zhihu/xiaohongshu edits and audit commands
+                        # (2026-10-21 hdmap生成) — a motive those calls never
+                        # stated. They now log `none` instead.
+                        prior_text = ""
+                    elif event.get("type") == "tool_output":
+                        # Echo the tool's stdout into the dialog (audit gates,
+                        # status digests) — capped, Bash-only, and only for the
+                        # gate nodes or a failed call. An unknown origin is
+                        # skipped too: file contents are not dialog.
+                        if event.get("tool") not in TOOL_OUTPUT_TOOLS:
+                            continue
+                        if not event.get("is_error") and event.get(
+                            "workflow_stage"
+                        ) not in TOOL_OUTPUT_STAGES:
+                            continue
                     if (
                         event.get("type") == "done"
                         and event.get("is_error")

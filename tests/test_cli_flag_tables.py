@@ -166,5 +166,31 @@ class ReaderFlagTableTest(unittest.TestCase):
         self.assertIn("--kb-root", opts)
 
 
+class HubFetchFlagTableTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.mod = _load("fetch.py")
+
+    def test_download_content_html(self):
+        self.assertEqual(_options(self.mod, "download-content-html"), {
+            "-h", "--help", "--paper-id-file", "--html-cache-dir", "--workers",
+            "--timeout", "--retries", "--force", "--summary-output",
+        })
+
+    def test_extract_content_queue(self):
+        opts = _options(self.mod, "extract-content-queue")
+        self.assertIn("--download-manifest", opts)
+        for flag in ("--paper-id-file", "--terms", "--output-dir", "--workers",
+                     "--timeout", "--paper-timeout", "--summary-output"):
+            self.assertIn(flag, opts)
+
+    def test_extract_content(self):
+        opts = _options(self.mod, "extract-content")
+        self.assertIn("--html-cache-only", opts)
+        for flag in ("--paper-id", "--terms", "--preferred-source",
+                     "--tex-transport", "--include-full-text"):
+            self.assertIn(flag, opts)
+
+
 if __name__ == "__main__":
     unittest.main()

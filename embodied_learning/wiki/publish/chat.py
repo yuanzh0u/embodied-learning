@@ -108,6 +108,32 @@ WORKFLOW_STAGE_NAMES = (
     "settle",
 )
 
+
+def stage_is_regression(high_water: str | None, incoming: str) -> bool:
+    """True when ``incoming`` names a node the workflow has already passed.
+
+    ``[STAGE:*]`` markers are meant to be printed BEFORE a stage starts, but
+    the writer also recaps the whole chain in its closing message, so a
+    marker can land after finalize (2026-10-21 自动化标注: ``[STAGE:writing]``
+    arrived at 15:45:21, 22s after finalize published). Acting on it moved
+    the workflow back to a finished node and appended a line to that node's
+    card — timestamped after the downstream card's first line, i.e. exactly
+    "上一阶段的最后一条日志排在下一阶段第一条前面". A recap is narration,
+    not a transition, so the caller drops it.
+
+    An empty ``high_water`` never regresses (nothing to compare against), and
+    unknown names never regress either — the UI still renders them."""
+
+    if not high_water or not incoming:
+        return False
+    try:
+        return (
+            WORKFLOW_STAGE_NAMES.index(incoming)
+            < WORKFLOW_STAGE_NAMES.index(high_water)
+        )
+    except ValueError:
+        return False
+
 # Driver-stage lines emitted by scripts/run.py pipeline (the mechanical
 # stages run in code before claude starts). Reuse the [STAGE:*] vocabulary so
 # the frontend timeline lights the same pills: plan/retrieval/mining map from
@@ -131,6 +157,7 @@ DRIVER_STAGE_TO_WORKFLOW = {
     "selection": "mining",
     "coverage": "mining",
     "coverage-final": "mining",
+    "extract-download": "mining",
     "extraction": "mining",
     "packets": "mining",
     "deep-read": "mining",
@@ -565,7 +592,8 @@ def journalable_event(event: dict) -> bool:
     if kind == "status":
         return event.get("stage") == "tool"
     return kind in (
-        "stage", "brief", "awaiting_input", "topic_ready", "topic_error", "session_reset", "error",
+        "stage", "brief", "tool_output", "awaiting_input", "topic_ready", "topic_error",
+        "session_reset", "error",
     )
 
 

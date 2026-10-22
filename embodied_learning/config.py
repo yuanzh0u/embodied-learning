@@ -180,6 +180,15 @@ FETCH_GATE_MAX_WAIT_S: float = 60.0
 # on a dead channel instead of spending every paper's full budget on it.
 CHANNEL_DOWN_LIMIT: int = 6
 
+# ---- HTML download phase (two-step extraction, step 1) -----------------------
+# 批量 HTML 下载阶段（download-content-html）：单请求超时、显式重试与整段预算。
+# Step 2 (extract-content-queue) reuses the cache and only touches the network
+# for the tex/pdf fallback tier, so this budget is download-only.
+HTML_DOWNLOAD_TIMEOUT_S: float = 30.0
+HTML_DOWNLOAD_RETRIES: int = 3
+HTML_DOWNLOAD_RETRY_BASE_S: float = 2.0
+HTML_DOWNLOAD_STAGE_TIMEOUT_S: float = 1800.0
+
 # ---- extraction caps ---------------------------------------------------------
 
 MAX_TERM_MATCHES: int = 120
@@ -209,6 +218,47 @@ TOOL_COMMAND_DETAIL_MAX_CHARS: int = 2000
 # text that preceded it. Without this the dialog journal shows "Edit：<path>"
 # with no way to tell a style fix from a citation fix (2026-10-20 审计门).
 TOOL_REASON_MAX_CHARS: int = 300
+# Tool stdout/stderr echoed into the dialog (gate results, `status` digests).
+# Before this the audit-gate card only showed "正在运行" and its actual
+# PASS/ERROR lines never reached the journal or the UI (2026-10-21 审计门).
+# Keep the tail: command output puts the verdict on the last lines.
+TOOL_OUTPUT_MAX_CHARS: int = 1500
+# Tool-call → workflow-stage inference. The agent only prints `[STAGE:*]`
+# between phases, so tool lines used to inherit whatever stage was last
+# announced — the 2026-10-21 hdmap run filed every Write/Edit and every
+# audit-gate Bash under 综述包 because the writing marker arrived only in the
+# final message. These regexes classify by the command/file the call actually
+# touches; a non-match keeps the announced stage. The EARLIEST match in a
+# chained command wins: `audit-citations ... && run.py finalize` is one step
+# whose output is gate verdicts first, so it belongs to the audit card (the
+# settle card gets the server's own 已落盘 line).
+TOOL_STAGE_RULES: tuple[tuple[str, str], ...] = (
+    ("settle", r"run\.py\s+finalize|--declare-gate-exception"),
+    ("audit", r"check-bundle|audit-citations|audit-article-quality|audit-zhihu-corpus|audit-slide-deck"),
+    ("packet", r"write\.py\s+review-packet|build-trace-map|"
+               r"review-packet\.md|writing-brief\.md"),
+    ("writing", r"project-outline-evidence|writing-outline\.json|"
+                r"scientific-memo_keyan\.md|zhihu-explainer_zhihu\.md|"
+                r"xiaohongshu-post_xiaohongshu\.md|survey-[\w-]+\.md|"
+                # The writer's own contract files. Not the whole skill tree:
+                # its scripts/ holds the audit gates (write.py
+                # audit-article-quality), and an earlier match would pull
+                # those out of 审计门 (2026-10-21 自动化标注).
+                r"embodied-ai-review-writer/(?:SKILL\.md|references/)"),
+    ("mining", r"run\.py\s+(?:status|pipeline|next-event-id|init)|"
+               r"search\.py|fetch\.py|read\.py\s+(?:build-|quick-read|pool-)"),
+)
+# Only these tools' stdout is echoed into the dialog. Read/Grep results are
+# file contents (noise, and often the whole paper); gate output is the point.
+TOOL_OUTPUT_TOOLS: tuple[str, ...] = ("Bash", "BashOutput")
+# ...and only for these workflow nodes, plus any failed call. A `status`
+# digest or a grep result stays in the agent's own reply; audit/finalize
+# output is what the dialog was missing.
+TOOL_OUTPUT_STAGES: tuple[str, ...] = ("audit", "settle")
+# Carried reasons name the previous narration, which may belong to another
+# file ("首先是科研备忘录：" attached to zhihu edits) — keep them short and
+# explicitly labelled instead of repeating a paragraph of stale recap.
+TOOL_REASON_CARRIED_MAX_CHARS: int = 120
 # Usage/trace ledger (monica usage-records-format): set to 0/false to disable.
 # Every claude invocation writes one JSONL session file directly under the
 # machine-local conversation store (``usage-<kind>-*.jsonl``). A parent process
@@ -237,6 +287,10 @@ PAPER_DECK_TIMEOUT_S: float = 3600.0
 PAPER_PREP_TIMEOUT_S: float = 2400.0
 REFRESH_TIMEOUT_S: float = 300.0
 INIT_RUN_TIMEOUT_S: float = 120.0
+# Identity probe against the Wiki that already holds the port. A second
+# `serve` asks it which KB it serves before deciding reuse-vs-refuse;
+# localhost only, so the budget is short.
+PORT_PROBE_TIMEOUT_S: float = 5.0
 # Hard per-paper full-text extraction budget (queue entry point).
 EXTRACTION_PAPER_TIMEOUT_S: float = 600.0
 # Whole extraction-queue stage budget (the driver wraps it in one run_stage).

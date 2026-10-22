@@ -777,6 +777,23 @@ class BuildResearchWikiTest(unittest.TestCase):
         self.assertIn(".home-chat-hero", styles)
         self.assertIn(".interview-card", styles)
 
+    def test_wiki_stage_cards_stay_chronological(self) -> None:
+        """A tool call with no stage of its own must not land in the last
+        announced node, and a card opened late must not be appended below a
+        newer one: both produced the "上一阶段的最后一条日志排在下一阶段第一条
+        前面" inversion (2026-10-21 自动化标注)."""
+        script = (Path(__file__).resolve().parents[1] / "wiki" / "assets" / "wiki.js").read_text(encoding="utf-8")
+
+        # No `state.chat.stage` fallback for tool / tool_output attribution.
+        self.assertNotIn('evt.workflow_stage || state.chat.stage', script)
+        self.assertIn('const stage = evt.workflow_stage || "other";', script)
+        # The neutral bucket has a readable label rather than a raw key.
+        self.assertIn('if (stage === "other") return "其他动作";', script)
+        # Cards are inserted by first-line timestamp, not always appended.
+        self.assertIn("card.dataset.firstTs = ts || \"\";", script)
+        self.assertIn("nodes.chatMessages.insertBefore(card, later);", script)
+
+
     def test_wiki_sidebar_toc_contract(self) -> None:
         """The per-page TOC lives under the left research navigation, not as a
         right-hand panel; the JS render targets keep their ids."""

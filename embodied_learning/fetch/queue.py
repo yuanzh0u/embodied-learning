@@ -83,6 +83,98 @@ def _is_connection_failure(error: str) -> bool:
     )
 
 
+_HELD_REASON_MAX = 120
+
+
+def held_reason(
+    data: dict[str, Any],
+    *,
+    manifest_state: str | None = None,
+    manifest_status: int | None = None,
+    paper_timeout: float | None = None,
+) -> str:
+    """One-line compact reason a paper came out HELD (`` · ``-joined, ≤120 chars).
+
+    Priority: channel-down → hard timeout → queue-synthesized error →
+    unavailable (HTML manifest state + tex/pdf fallback attempts) →
+    low quality → raw error tail.
+    """
+    error = str(data.get("error") or "").strip()
+    quality = data.get("quality") if isinstance(data.get("quality"), dict) else {}
+    has_quality = bool(quality)
+
+    def short(text: str, limit: int = 60) -> str:
+        text = " ".join(text.split())
+        return text[:limit]
+
+    if error.startswith("channel down"):
+        return "channel-down"
+    if error.startswith("hard timeout after"):
+        # "hard timeout after 600s: tail" → "timeout 600s"
+        match = re.search(r"hard timeout after\s+([0-9]+)s", error)
+        if match:
+            return f"timeout {match.group(1)}s"
+        return f"timeout {int(paper_timeout)}s" if paper_timeout else "timeout"
+    if error and not has_quality:
+        return f"error {short(error)}"
+    if not data.get("available"):
+        parts: list[str] = []
+        if manifest_state == "unavailable":
+            status = manifest_status if manifest_status is not None else 404
+            parts.append(f"HTML {status}" if status in {404, 410} else "HTML unavailable")
+        elif manifest_state == "failed":
+            parts.append("HTML fetch failed")
+        elif manifest_state in {"downloaded", "cached"}:
+            parts.append("HTML cache missing")
+        for attempt in data.get("attempts") or []:
+            if not isinstance(attempt, dict):
+                continue
+            method = str(attempt.get("method") or "")
+            if method.startswith("html") or not method:
+                continue
+            if attempt.get("available"):
+                continue
+            # Tier vocabulary: arxiv2md / tex-pandoc ride the tex tier;
+            # pdf-text / pdf-ocr ride the pdf tier.
+            if method.startswith("tex") or method.startswith("arxiv2md"):
+                parts.append("tex unavailable")
+            elif method.startswith("pdf"):
+                err = short(str(attempt.get("error") or ""), 40)
+                parts.append(f"pdf: {err}" if err else "pdf unavailable")
+            else:
+                parts.append(f"{method} unavailable")
+        if not parts:
+            parts.append("unavailable")
+        if error:
+            parts.append(short(error, 40))
+        reason = " · ".join(parts)
+    elif quality.get("grade") not in {"high", "medium"}:
+        reason = f"quality {quality.get('grade', 'low')} text={quality.get('text_chars', 0)}"
+        if quality.get("structure") and quality.get("structure") != "latexml":
+            reason += f" structure={quality['structure']}"
+    else:
+        reason = f"error {short(error)}" if error else "held"
+    return reason[:_HELD_REASON_MAX]
+
+
+def _write_channel_down(paper_id: str, target: Path, error: str) -> dict[str, Any]:
+    data = {
+        "paper_id": paper_id,
+        "available": False,
+        "evidence_eligible": False,
+        "error": error,
+    }
+    target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return {
+        "paper_id": paper_id,
+        "state": "channel-down",
+        "evidence_eligible": False,
+        "path": str(target),
+        "error": error,
+        "held_reason": "channel-down",
+    }
+
+
 class QueueOptions:
     """CLI-option state for one :func:`run_queue` recovery run.
 
@@ -111,6 +203,7 @@ class QueueOptions:
         curl_timeout: float = 120.0,
         tex_cache_dir: str | None = None,
         summary_output: str | None = None,
+        download_manifest: str | None = None,
     ) -> None:
         self.paper_id_file = paper_id_file
         self.terms = terms
@@ -130,6 +223,7 @@ class QueueOptions:
         self.curl_timeout = curl_timeout
         self.tex_cache_dir = tex_cache_dir
         self.summary_output = summary_output
+        self.download_manifest = download_manifest
 
 
 def load_ids(path: Path) -> list[str]:
@@ -177,28 +271,36 @@ def extract_one(
     options: QueueOptions,
     output_dir: Path,
     circuit: _ChannelCircuit | None = None,
+    html_cache_only: bool = False,
+    manifest_state: str | None = None,
+    manifest_status: int | None = None,
 ) -> dict[str, Any]:
     target = output_dir / f"{paper_id}.json"
     if target.is_file() and not options.force:
         data = json.loads(target.read_text(encoding="utf-8"))
         if data.get("evidence_eligible"):
-            return {"paper_id": paper_id, "state": "cached", "evidence_eligible": True, "path": str(target)}
+            return {"paper_id": paper_id, "state": "cached", "evidence_eligible": True, "path": str(target), "held_reason": ""}
         # A previously HELD paper is retryable, not cached: the fetch may have
         # failed transiently (rate limit) and a driver rerun should supplement
         # it instead of skipping it forever. Falls through to a fresh extract;
         # a paper that is genuinely unrecoverable just re-checkpoints as HELD.
+    # Download phase already declared the channel down for this paper — do not
+    # spawn a subprocess that will only re-discover the same dead network.
+    if manifest_state == "channel-down":
+        return _write_channel_down(
+            paper_id,
+            target,
+            "channel down: skipped after consecutive connection failures",
+        )
     # Channel already declared down by an earlier run of consecutive
     # connection failures — do not spend this paper's full budget on a
     # network that is not answering. The driver rerun retries these.
     if circuit is not None and circuit.tripped:
-        data = {
-            "paper_id": paper_id,
-            "available": False,
-            "evidence_eligible": False,
-            "error": "channel down: skipped after consecutive connection failures",
-        }
-        target.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        return {"paper_id": paper_id, "state": "channel-down", "evidence_eligible": False, "path": str(target), "error": data["error"]}
+        return _write_channel_down(
+            paper_id,
+            target,
+            "channel down: skipped after consecutive connection failures",
+        )
     temporary = target.with_suffix(".json.tmp")
     command = [
         *_EXTRACT_CMD,
@@ -222,8 +324,18 @@ def extract_one(
     command.extend(["--curl-timeout", str(options.curl_timeout)])
     if options.include_full_text:
         command.append("--include-full-text")
+    if html_cache_only:
+        command.append("--html-cache-only")
+    tier_lines: list[str] = []
     try:
         completed = subprocess.run(command, capture_output=True, text=True, timeout=max(1.0, options.paper_timeout), check=False)
+        # The extract-content subprocess logs tier fallbacks (html→tex→pdf) on
+        # stderr so its stdout stays pure JSON; forward them so the driver can
+        # show which fallback path recovered (or failed) this paper.
+        for line in (completed.stderr or "").splitlines():
+            if line.startswith("TIER "):
+                tier_lines.append(line.strip())
+                print(line.strip(), flush=True)
         data = None
         if temporary.is_file():
             # extract-content writes its full result JSON (quality grade,
@@ -277,7 +389,22 @@ def extract_one(
     # per-paper failure) resets it.
     if circuit is not None:
         circuit.record(_is_connection_failure(str(data.get("error") or "")))
-    return {"paper_id": paper_id, "state": "extracted", "evidence_eligible": bool(data.get("evidence_eligible")), "path": str(target), "error": data.get("error", "")}
+    eligible = bool(data.get("evidence_eligible"))
+    return {
+        "paper_id": paper_id,
+        "state": "extracted",
+        "evidence_eligible": eligible,
+        "path": str(target),
+        "error": data.get("error", ""),
+        "held_reason": ""
+        if eligible
+        else held_reason(
+            data,
+            manifest_state=manifest_state,
+            manifest_status=manifest_status,
+            paper_timeout=options.paper_timeout,
+        ),
+    }
 
 
 def run_queue(options: QueueOptions) -> dict[str, Any]:
@@ -287,16 +414,45 @@ def run_queue(options: QueueOptions) -> dict[str, Any]:
     workers = max(1, min(int(options.workers), 4))
     results: list[dict[str, Any]] = []
     circuit = _ChannelCircuit()
+    # Download-phase manifest (step 1): decides html_cache_only and carries the
+    # sticky 404 status into held_reason. Missing file = legacy single-step run.
+    manifest: dict[str, tuple[str, int | None]] = {}
+    if options.download_manifest:
+        try:
+            payload = json.loads(Path(options.download_manifest).read_text(encoding="utf-8"))
+            for item in payload.get("results") or []:
+                if isinstance(item, dict) and item.get("paper_id"):
+                    manifest[str(item["paper_id"])] = (
+                        str(item.get("state") or ""),
+                        item.get("status") if isinstance(item.get("status"), int) else None,
+                    )
+        except (OSError, json.JSONDecodeError):
+            manifest = {}
+
+    def _submit(paper_id: str) -> dict[str, Any]:
+        state, status = manifest.get(paper_id, (None, None))
+        # downloaded/cached/unavailable: HTML already settled in step 1 — parse
+        # from cache only. failed: one last network chance inside the chain.
+        cache_only = state in {"downloaded", "cached", "unavailable"}
+        return extract_one(
+            paper_id,
+            options,
+            output_dir,
+            circuit,
+            html_cache_only=cache_only,
+            manifest_state=state,
+            manifest_status=status,
+        )
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-        futures = {
-            executor.submit(extract_one, paper_id, options, output_dir, circuit): paper_id
-            for paper_id in paper_ids
-        }
+        futures = {executor.submit(_submit, paper_id): paper_id for paper_id in paper_ids}
         for future in concurrent.futures.as_completed(futures):
             result = future.result()
             results.append(result)
             state = "OK" if result["evidence_eligible"] else ("CHANNEL-DOWN" if result["state"] == "channel-down" else "HELD")
-            print(f"{state} {result['paper_id']} ({len(results)}/{len(paper_ids)})", flush=True)
+            reason = str(result.get("held_reason") or "")
+            suffix = f" {reason}" if state == "HELD" and reason else ""
+            print(f"{state} {result['paper_id']} ({len(results)}/{len(paper_ids)}){suffix}", flush=True)
     # Second pass over HELD papers while the channel is still up. Most HELD
     # outcomes are transient (rate-limited HTML fetch, a 600s hard timeout under
     # load, a subprocess that died before writing its result) — on 2026-10-16
@@ -307,10 +463,12 @@ def run_queue(options: QueueOptions) -> dict[str, Any]:
     if held and not circuit.tripped:
         print(f"retry: {len(held)} HELD paper(s) get one more attempt", flush=True)
         for item in held:
-            result = extract_one(str(item["paper_id"]), options, output_dir, circuit)
+            result = _submit(str(item["paper_id"]))
             results[results.index(item)] = result
             state = "OK" if result["evidence_eligible"] else ("CHANNEL-DOWN" if result["state"] == "channel-down" else "HELD")
-            print(f"RETRY-{state} {result['paper_id']}", flush=True)
+            reason = str(result.get("held_reason") or "")
+            suffix = f" {reason}" if state == "HELD" and reason else ""
+            print(f"RETRY-{state} {result['paper_id']}{suffix}", flush=True)
             if circuit.tripped:
                 print("retry: channel down mid-pass, leaving the rest HELD for a rerun", flush=True)
                 break

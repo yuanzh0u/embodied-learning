@@ -41,6 +41,31 @@ def parse_run_folder_version(name: str) -> int:
     return int(match.group(1)) if match else 1
 
 
+def declared_style(manifest: dict) -> str:
+    """The run's reduced single-style scope, as declared so far ("" = three).
+
+    Two declaration points, in order of authority:
+
+    * ``style`` — the settled-scope field stamped by ``run.py finalize``;
+    * ``inputs.target_style`` — the interview/CLI choice recorded at run birth.
+
+    The birth input matters because the writer's gates run BEFORE finalize:
+    ``check-bundle --pre-settle`` used to see only ``style`` and therefore
+    demanded the full three-style bundle from a run the user explicitly asked
+    to write in one style (2026-10-21 点云匹配: two phantom "missing
+    deliverable" problems). ``all`` / blank keeps the standard triplet.
+    """
+    style = manifest.get("style")
+    if isinstance(style, str) and style.strip():
+        return style.strip()
+    inputs = manifest.get("inputs")
+    if isinstance(inputs, dict):
+        style = inputs.get("target_style")
+        if isinstance(style, str) and style.strip() not in ("", "all"):
+            return style.strip()
+    return ""
+
+
 def run(args: argparse.Namespace) -> int:
     """Create the run folder + birth-certificate run.json.
 

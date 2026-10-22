@@ -718,6 +718,36 @@ class WorkflowDriverContractTest(unittest.TestCase):
         self.assertIsNone(wiki_chat.extract_driver_stage("[STAGE:plan] claude line"))
         self.assertIsNone(wiki_chat.extract_driver_stage("plain text"))
 
+    def test_stage_is_regression_flags_recap_markers(self):
+        """The writer's closing recap prints the whole stage chain after
+        settle. Acting on those markers moved the workflow back to 综述包 /
+        成稿撰写 after 落盘发布 had already run (2026-10-21 自动化标注)."""
+
+        self.assertTrue(wiki_chat.stage_is_regression("settle", "packet"))
+        self.assertTrue(wiki_chat.stage_is_regression("settle", "writing"))
+        self.assertTrue(wiki_chat.stage_is_regression("audit", "packet"))
+        self.assertFalse(wiki_chat.stage_is_regression("packet", "writing"))
+        self.assertFalse(wiki_chat.stage_is_regression("packet", "packet"))
+        # Unknown names and an empty high-water mark are never regressions:
+        # the UI still renders unknown stages, and the first marker has
+        # nothing to compare against.
+        self.assertFalse(wiki_chat.stage_is_regression("", "packet"))
+        self.assertFalse(wiki_chat.stage_is_regression("packet", "revision"))
+        self.assertFalse(wiki_chat.stage_is_regression("custom", "writing"))
+
+    def test_extract_download_maps_to_mining(self):
+        # Two-step extraction: the HTML download stage is still mining work in
+        # the workflow pane, and its progress name must survive the regex.
+        self.assertEqual(wiki_chat.DRIVER_STAGE_TO_WORKFLOW["extract-download"], "mining")
+        self.assertEqual(
+            wiki_chat.extract_driver_stage("[DRIVER-STAGE:extract-download] ok 12/40"),
+            ("mining", "extract-download: 12/40"),
+        )
+        self.assertEqual(
+            wiki_chat.extract_driver_progress("[DRIVER-PROGRESS:extract-download:3/40]"),
+            ("extract-download", 3, 40, ""),
+        )
+
     def test_extract_driver_detail_forwards_warnings(self):
         self.assertEqual(wiki_chat.extract_driver_detail("[DRIVER] 检索计划完成"), "检索计划完成")
         self.assertEqual(
@@ -1030,6 +1060,7 @@ class JournalableEventTest(unittest.TestCase):
             {"type": "delta", "text": "x"},
             {"type": "stage", "stage": "plan", "detail": "d"},
             {"type": "status", "stage": "tool", "tool": "Bash", "detail": "d"},
+            {"type": "tool_output", "tool": "Bash", "output": "gate OK"},
             {"type": "awaiting_input", "stage": "packet"},
             {"type": "topic_ready", "topic_id": "topic-1"},
             {"type": "topic_error", "message": "m"},

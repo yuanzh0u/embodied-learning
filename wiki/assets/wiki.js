@@ -34,14 +34,19 @@
   const CHAT_WIDTH_KEY = "wiki.chat.width";
   const CHAT_WIDTH_MIN = 340;
   // Tool calls worth a permanent dialog line in the workflow pane (everything
-  // else only ticks the transient status spinner).
+  // else only ticks the transient status spinner). Read joins them only for
+  // the packet node: reading review-packet.md / writing-brief.md IS the 综述包
+  // step, and a run whose model never printed [STAGE:packet] otherwise shows
+  // an empty packet card (2026-10-21 深度图补全).
   const WORKFLOW_LOG_TOOLS = new Set(["Bash", "Write", "Edit", "MultiEdit", "NotebookEdit", "Task"]);
+  const WORKFLOW_LOG_READ_STAGES = new Set(["packet"]);
   // Path-only tool calls whose journal line carries the agent's stated reason
   // (`evt.reason`, captured by the harness from the preceding narration).
   // Bash already logs its whole command, so it needs none.
   const WORKFLOW_REASON_TOOLS = new Set(["Write", "Edit", "MultiEdit", "NotebookEdit"]);
   // Per-item progress bar labels, keyed by the driver's [DRIVER-PROGRESS:name].
   const WORKFLOW_PROGRESS_LABELS = {
+    "extract-download": "HTML 下载",
     extract: "全文抽取",
     packets: "阅读包",
     "deep-read": "论文深读",
@@ -2292,15 +2297,25 @@ Canonical: ${absoluteCanonical(topic)}
   }
 
   function workflowNodeLabel(stage) {
+    // Neutral bucket for calls whose own file/command names no stage (a
+    // scratch Write, `find /`, a bare `ls`). They must NOT inherit the last
+    // announced stage: unless the agent prints a new [STAGE:*] marker, that
+    // inherited stage is a finished one, so its card would grow lines whose
+    // timestamps are later than the next card's first line — exactly the
+    // "previous step's last log above the next step's first log" inversion
+    // (2026-10-21 自动化标注: packet card grew 15:40–15:43 entries while the
+    // writing card had already opened at 15:40:35).
+    if (stage === "other") return "其他动作";
     return WORKFLOW_STAGES.find(([name]) => name === stage)?.[1] || stage || "工作流";
   }
 
-  function workflowNodeCard(stage) {
+  function workflowNodeCard(stage, ts) {
     const key = stage || "other";
     const existing = workflowNodeCards.get(key);
     if (existing && existing.isConnected) return existing;
     const card = document.createElement("div");
     card.className = "chat-msg chat-msg-node";
+    card.dataset.firstTs = ts || "";
     const head = document.createElement("div");
     head.className = "chat-node-head";
     head.textContent = workflowNodeLabel(key);
@@ -2308,14 +2323,22 @@ Canonical: ${absoluteCanonical(topic)}
     body.className = "chat-node-body";
     card.appendChild(head);
     card.appendChild(body);
-    nodes.chatMessages.appendChild(card);
+    // A card opened by a LATE event still belongs where its first line sits
+    // on the clock, not at the bottom: the writer's closing recap printed
+    // [STAGE:writing] after finalize had already run, and appending that card
+    // put 成稿撰写's 15:45 line below 落盘发布's 15:44 one. Replay and live
+    // streaming share this path, so both stay chronological.
+    const later = ts && Array.from(nodes.chatMessages.querySelectorAll(".chat-msg-node"))
+      .find((node) => node.dataset.firstTs && node.dataset.firstTs > ts);
+    if (later) nodes.chatMessages.insertBefore(card, later);
+    else nodes.chatMessages.appendChild(card);
     workflowNodeCards.set(key, card);
     chatScrollToBottom(true);
     return card;
   }
 
   function appendNodeLine(stage, text, ts) {
-    const card = workflowNodeCard(stage);
+    const card = workflowNodeCard(stage, ts);
     const line = document.createElement("p");
     line.className = "chat-node-line";
     const clock = formatEventTime(ts);
@@ -2325,8 +2348,29 @@ Canonical: ${absoluteCanonical(topic)}
     return line;
   }
 
+  function appendNodeOutput(stage, tool, output, isError, ts) {
+    // Tool stdout for one call: a collapsed block inside the same node card.
+    // The audit-gate card used to say only "正在运行" and show no verdict at
+    // all (2026-10-21 审计门); this is where PASS/ERROR lines live now.
+    const card = workflowNodeCard(stage, ts);
+    const details = document.createElement("details");
+    details.className = `chat-tool-output${isError ? " is-error" : ""}`;
+    const summary = document.createElement("summary");
+    const clock = formatEventTime(ts);
+    const head = tool ? `${tool} 输出` : "工具输出";
+    summary.textContent = `${clock ? `[${clock}] ` : ""}${isError ? "⚠ " : ""}${head}`;
+    details.appendChild(summary);
+    const pre = document.createElement("pre");
+    pre.className = "chat-tool-output-text";
+    pre.textContent = output;
+    details.appendChild(pre);
+    card.querySelector(".chat-node-body").appendChild(details);
+    chatScrollToBottom(true);
+    return details;
+  }
+
   function appendNodeBrief(stage, title, lines, ts) {
-    const card = workflowNodeCard(stage);
+    const card = workflowNodeCard(stage, ts);
     const details = document.createElement("details");
     details.className = "chat-brief";
     const summary = document.createElement("summary");
@@ -2450,9 +2494,19 @@ Canonical: ${absoluteCanonical(topic)}
     if (evt.type === "status" && evt.stage === "tool") {
       // Writer-agent activity: Bash/Write/Edit/Task are the visible steps
       // (packet build, audits, file writes); Read/Grep noise stays in the
-      // status spinner only. Log into the CURRENT workflow stage's card —
-      // evt.stage is the literal "tool" sentinel, not a real node key.
-      if (WORKFLOW_LOG_TOOLS.has(evt.tool)) {
+      // status spinner only. The card is the call's OWN node
+      // (`workflow_stage`, inferred by the harness from the file/command it
+      // touches). No fallback to the last announced stage: that stage is
+      // usually already finished, so a call it cannot name (scratch write,
+      // `find /`, bare `ls`) belonged nowhere near that card — it opened a
+      // card under a later stage while the old card kept growing lines with
+      // later timestamps (2026-10-21 自动化标注). Unnamed calls land in the
+      // neutral 其他动作 card instead.
+      const stage = evt.workflow_stage || "other";
+      const loggable =
+        WORKFLOW_LOG_TOOLS.has(evt.tool) ||
+        (evt.tool === "Read" && WORKFLOW_LOG_READ_STAGES.has(stage));
+      if (loggable) {
         // `inline` = the narration of the same message (a motive for this
         // call); `carried` = the previous narration repeated because the call
         // arrived without text. Marking the carried case keeps the log honest:
@@ -2463,12 +2517,23 @@ Canonical: ${absoluteCanonical(topic)}
             ? `｜原因${carried ? "（承上文）" : ""}：${evt.reason}`
             : "";
         appendNodeLine(
-          state.chat.stage || "other",
+          stage,
           `↳ ${evt.tool}${evt.detail ? `：${evt.detail}` : ""}${reason}`,
           evt.ts,
         );
       }
       handleChatEvent(evt, renderer);
+      return;
+    }
+    if (evt.type === "tool_output") {
+      // Tool stdout (audit-gate verdicts, status digests). Collapsed by
+      // default: it is evidence for debugging a gate, not reading prose.
+      // Same attribution rule as the tool line it belongs to: the call's own
+      // node, else the neutral card — never the stage the agent happened to
+      // announce last.
+      const stage = evt.workflow_stage || "other";
+      const output = String(evt.output || "");
+      if (output) appendNodeOutput(stage, evt.tool, output, evt.is_error, evt.ts);
       return;
     }
     if (evt.type === "awaiting_input") {

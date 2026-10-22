@@ -5,17 +5,20 @@ from _entry import invoke
 
 import http.client
 import importlib.util
+import io
 import json
 import shutil
+import socket
 import sys
 import tempfile
 import threading
 import unittest
+import contextlib
 from contextlib import contextmanager
 from functools import partial
 from http import HTTPStatus
 from http.client import HTTPConnection
-from http.server import ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Iterator
@@ -704,6 +707,104 @@ class WorkflowEndpointTest(ChatServerHarness):
         self.assertIn("决策模型", body["error"])
         self.assertEqual(self.driver_calls, [])
 
+    def test_settled_run_is_not_auto_continued_without_marker(self):
+        """A writer whose closing prose forgot ``[TOPIC:...]`` still closed the
+        run: run.json says settled, so no extra continuation round may fire
+        (2026-10-21 深度图补全 fired "上一段未完成，自动继续（第 1/2 轮）" after
+        finalize had already published)."""
+
+        def settle_on_disk():
+            run_dir = next((self.kb_root / "work").glob("literature-review-*"))
+            settled = self.kb_root / "evidence" / run_dir.name
+            if settled.exists():
+                return
+            shutil.copytree(run_dir, settled)
+            for name in ("scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"):
+                (settled / name).write_text("# 成稿\n", encoding="utf-8")
+            manifest = json.loads((settled / "run.json").read_text(encoding="utf-8"))
+            manifest["status"] = "settled"
+            manifest["files"] = {"evidence": "evidence.jsonl"}
+            (settled / "evidence.jsonl").write_text("", encoding="utf-8")
+            (settled / "run.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+            catalog = self.kb_root / "knowledge" / "literature-review-catalog.md"
+            catalog.write_text(
+                "# catalog\n\n| ID | 主题 | 卡 | 规模 | 审计入口 |\n|---|---|---|---:|---|\n"
+                f"| X | 演示话题 | — | — | [run](../evidence/{run_dir.name}/run.json) |\n",
+                encoding="utf-8",
+            )
+
+        def script(turn_self, kwargs):
+            settle_on_disk()
+            # No [TOPIC:...] marker: only the manifest records the settle.
+            turn_self._events = [
+                {"type": "session", "session_id": "ws-fresh-1", "model": "fake"},
+                {"type": "delta", "text": "[STAGE:settle] 综述已完成并落盘。\n"},
+                {"type": "done", "session_id": "ws-fresh-1", "is_error": False},
+            ]
+
+        self._seed_turn_factory(script)
+        status, _, _ = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "高斯溅射SLAM综述", "params": self.params()})
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        auto = [e for e in events if e["type"] == "stage" and "自动继续" in str(e.get("detail") or "")]
+        self.assertEqual(auto, [])
+        self.assertEqual(len(FakeTurn.instances), 1)
+        self.assertEqual(events[-1]["type"], "topic_ready")
+
+    def test_stage_recap_in_closing_message_does_not_move_backwards(self):
+        """The writer recaps the whole chain in its closing message. Acting on
+        a recap marker re-opened a finished node's card with lines timestamped
+        after the settle card (2026-10-21 自动化标注: [STAGE:writing] arrived
+        22s after finalize). Only forward transitions may emit stage events."""
+
+        def settle_on_disk():
+            run_dir = next((self.kb_root / "work").glob("literature-review-*"))
+            settled = self.kb_root / "evidence" / run_dir.name
+            if settled.exists():
+                return
+            shutil.copytree(run_dir, settled)
+            for name in ("scientific-memo_keyan.md", "zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"):
+                (settled / name).write_text("# 成稿\n", encoding="utf-8")
+            manifest = json.loads((settled / "run.json").read_text(encoding="utf-8"))
+            manifest["status"] = "settled"
+            manifest["files"] = {"evidence": "evidence.jsonl"}
+            (settled / "evidence.jsonl").write_text("", encoding="utf-8")
+            (settled / "run.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+            catalog = self.kb_root / "knowledge" / "literature-review-catalog.md"
+            catalog.write_text(
+                "# catalog\n\n| ID | 主题 | 卡 | 规模 | 审计入口 |\n|---|---|---|---:|---|\n"
+                f"| X | 演示话题 | — | — | [run](../evidence/{run_dir.name}/run.json) |\n",
+                encoding="utf-8",
+            )
+
+        def script(turn_self, kwargs):
+            settle_on_disk()
+            turn_self._events = [
+                {"type": "session", "session_id": "ws-fresh-1", "model": "fake"},
+                {"type": "delta", "text": "[STAGE:packet] 读取综述包\n"},
+                {"type": "delta", "text": "[STAGE:audit] 审计门全过\n"},
+                {"type": "delta", "text": "[STAGE:settle] 落盘完成\n"},
+                # Closing recap — these are narration, not transitions.
+                {"type": "delta", "text": "[STAGE:writing] 回顾：成稿已写\n"},
+                {"type": "delta", "text": "[STAGE:packet] 回顾：综述包已读\n"},
+                {"type": "done", "session_id": "ws-fresh-1", "is_error": False},
+            ]
+
+        self._seed_turn_factory(script)
+        status, _, _ = self._collect_sse(
+            self.request("POST", "/api/workflow", {"message": "高斯溅射SLAM综述", "params": self.params()})
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        emitted = [e["stage"] for e in self.sse_events() if e["type"] == "stage"]
+        self.assertIn("packet", emitted)
+        self.assertIn("audit", emitted)
+        # The recap's writing marker must not fire after settle; the settle
+        # node itself is announced by the server once the turn ends.
+        self.assertNotIn("writing", emitted)
+        self.assertEqual(emitted[-1], "settle")
+
     def test_unsettled_segment_auto_continues_to_settle(self):
         """One-shot contract: a segment that ends without settling (e.g. the
         writer stops after the packet) is auto-continued in the same session —
@@ -814,6 +915,52 @@ class WorkflowEndpointTest(ChatServerHarness):
         )
         entry = registry.get_workspace(ws_id)
         self.assertEqual(entry["topic_id"], ready["topic_id"])
+        self.assertFalse(entry["workflow"]["awaiting_input"])
+        return ws_id
+
+    def test_follow_up_on_published_run_neither_republishes_nor_parks(self):
+        """A free question after settle is ordinary chat: no snapshot rebuild,
+        no second topic_ready, no awaiting_input re-park — the run has no work
+        left (2026-10-21: a post-settle turn restarted the loop)."""
+        ws_id = self.test_continuation_resumes_and_emits_topic_ready()
+        turns_before = len(FakeTurn.instances)
+        refresh = mock.patch.object(server_module, "refresh_snapshot")
+        refresh_mock = refresh.start()
+        self.addCleanup(refresh.stop)
+
+        def script(turn_self, kwargs):
+            # A plain answer — no [TOPIC:...], no [STOP:...].
+            turn_self._events = [
+                {"type": "session", "session_id": "ws-fresh-1", "model": "fake"},
+                {"type": "delta", "text": "核心结论有三点。\n"},
+                {"type": "done", "session_id": "ws-fresh-1", "is_error": False},
+            ]
+
+        self._seed_turn_factory(script)
+        status, _, _ = self._collect_sse(
+            self.request("POST", "/api/workflow",
+                         {"message": "这篇综述的核心结论是什么？", "ws_id": ws_id})
+        )
+        self.assertEqual(status, HTTPStatus.OK)
+        events = self.sse_events()
+        types = [e["type"] for e in events]
+        self.assertNotIn("topic_ready", types)
+        self.assertNotIn("awaiting_input", types)
+        auto = [e for e in events if e["type"] == "stage" and "自动继续" in str(e.get("detail") or "")]
+        self.assertEqual(auto, [])
+        self.assertEqual(types[-1], "done")
+        # The follow-up turn ran once, on the session the settle turn left
+        # behind, with the "already published" framing (not a continuation
+        # prompt).
+        self.assertEqual(len(FakeTurn.instances), turns_before + 1)
+        turn = FakeTurn.instances[-1]
+        self.assertEqual(turn.kwargs["session_id"], "ws-fresh-2")
+        self.assertIn("综述已完成并发布", turn.kwargs["prompt"])
+        refresh_mock.assert_not_called()
+        entry = server_module.wiki_chat.ChatSessionRegistry(
+            server_module.wiki_chat.local_registry_path(self.kb_root)
+        ).get_workspace(ws_id)
+        self.assertEqual(entry["workflow"]["stage"], "settle")
         self.assertFalse(entry["workflow"]["awaiting_input"])
 
     def test_state_endpoint_reports_workflow(self):
@@ -1934,9 +2081,121 @@ class HttpEdgeCaseTest(ChatServerHarness):
         self.assertIn(f"#/topic/{self.topic_id}", body)
         self.assertNotIn("STATIC_RESEARCH_DIRECTORY", body)
 
+    def test_kb_identity_reports_this_servers_kb(self):
+        status, payload, _ = self.request("GET", "/api/kb")
+        self.assertEqual(status, HTTPStatus.OK)
+        self.assertEqual(payload["kind"], "embodied-learning-wiki")
+        self.assertEqual(Path(payload["kb_root"]), self.kb_root.resolve())
+
     def test_post_unknown_path_is_404(self):
         status, _, _ = self.request("POST", "/api/other")
         self.assertEqual(status, HTTPStatus.NOT_FOUND)
+
+
+class PortConflictTest(ChatServerHarness):
+    """A second `serve` on an occupied port must check *which* KB the running
+    instance serves. Reusing the port for a different --kb-root used to be
+    silent: the operator's new KB never took effect (a 8092 instance serving
+    ~/Documents/arxiv answered a --kb-root /mount/... start with 'already
+    running')."""
+
+    chat_enabled = False
+
+    def owner_kb(self) -> Path:
+        """The KB the harness server (already listening) serves."""
+        return self.kb_root.resolve()
+
+    def test_probe_reports_the_running_kb(self):
+        self.assertEqual(server_module.probe_running_kb(self.port), self.owner_kb())
+
+    def test_probe_returns_none_for_free_port(self):
+        # Bind-then-close: the port was occupied a moment ago, now nobody.
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        self.assertIsNone(server_module.probe_running_kb(port))
+
+    def test_same_kb_reuses_the_running_instance(self):
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            action = server_module.port_conflict_action(self.port, self.owner_kb())
+        self.assertEqual(action, 0)
+        self.assertIn("同一知识库", out.getvalue())
+
+    def test_different_kb_is_refused_with_both_ways_out(self):
+        other = Path(self.kb_tmp.name) / "other-kb"
+        other.mkdir()
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            action = server_module.port_conflict_action(self.port, other.resolve())
+        self.assertEqual(action, 2)
+        message = err.getvalue()
+        self.assertIn(str(self.owner_kb()), message)
+        self.assertIn(str(other.resolve()), message)
+        self.assertIn("--close", message)
+
+    def test_free_port_starts_normally(self):
+        with socket.socket() as sock:
+            sock.bind(("127.0.0.1", 0))
+            port = sock.getsockname()[1]
+        self.assertIsNone(server_module.port_conflict_action(port, self.owner_kb()))
+
+    def test_old_build_identity_is_read_from_its_cmdline(self):
+        """An instance built before /api/kb answers 404. Its KB must still be
+        identified — otherwise the fix only works one upgrade later, and the
+        exact case that prompted it (a wheel-old 8092) stays silent."""
+
+        other = Path(self.kb_tmp.name) / "old-build-kb"
+        other.mkdir()
+
+        class NoIdentityHandler(BaseHTTPRequestHandler):
+            def do_GET(self):  # noqa: N802
+                self.send_error(HTTPStatus.NOT_FOUND)
+
+            def log_message(self, *args):
+                pass
+
+        httpd = ThreadingHTTPServer(("127.0.0.1", 0), NoIdentityHandler)
+        self.addCleanup(httpd.server_close)
+        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(thread.join, 5)
+        self.addCleanup(httpd.shutdown)
+        port = httpd.server_address[1]
+
+        with mock.patch.object(server_module, "find_listener_pid", return_value=4242), \
+             mock.patch.object(
+                 server_module.Path, "read_bytes",
+                 lambda _self: b"/usr/bin/python3\0/bin/serve_research_wiki\0"
+                               b"--port\0" + str(port).encode() + b"\0"
+                               b"--kb-root\0" + str(other).encode() + b"\0",
+             ):
+            self.assertEqual(server_module.probe_running_kb(port), other.resolve())
+
+    def test_refused_start_does_not_rebuild_the_snapshot(self):
+        """The conflict check runs before refresh_snapshot: an aborted start
+        must not spend minutes rebuilding a shared KB's snapshot on CIFS."""
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        other = Path(tmp.name) / "other-kb"
+        (other / "knowledge").mkdir(parents=True)
+        (other / "knowledge" / "literature-review-catalog.md").write_text("# c\n", encoding="utf-8")
+
+        class FakeServer:
+            def __init__(self, addr, handler):
+                raise AssertionError("must not bind after a refusal")
+
+        with mock.patch.object(server_module, "refresh_snapshot") as refresh, \
+             mock.patch.object(server_module, "build_knowledge_map"), \
+             mock.patch.object(server_module, "resolve_wiki_root", lambda kb: kb / "wiki"), \
+             mock.patch.object(server_module, "ThreadingHTTPServer", FakeServer), \
+             contextlib.redirect_stderr(io.StringIO()) as err:
+            code = invoke(
+                "wiki.py", "serve",
+                ["--kb-root", str(other), "--port", str(self.port), "--no-chat"],
+            )
+        self.assertEqual(code, 2)
+        refresh.assert_not_called()
+        self.assertIn("--close", err.getvalue())
 
 
 if __name__ == "__main__":

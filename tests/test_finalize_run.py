@@ -248,6 +248,32 @@ class FinalizeRunTest(unittest.TestCase):
         merged = (self.run_dir / "evidence.jsonl").read_text(encoding="utf-8").splitlines()
         self.assertEqual(len(merged), 6)
 
+    def test_birth_style_declares_the_single_article_scope(self):
+        """A memo-only run born from a single-style interview answer must
+        settle: the writer wrote exactly what was asked, and finalize used to
+        refuse it with 成稿不足三种 because `style` is stamped by finalize
+        itself (2026-10-21 点云匹配)."""
+        manifest = self.manifest()
+        manifest["inputs"] = {"source": "wiki-interview", "target_style": "scientific-memo"}
+        (self.run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        code, _, _, _ = self.finalize()
+        self.assertEqual(code, 0)
+        manifest = self.manifest()
+        self.assertEqual(manifest["style"], "scientific-memo")
+        self.assertTrue(manifest["scope_note"])
+
+    def test_birth_style_does_not_shrink_a_three_article_bundle(self):
+        # The declaration is a required minimum, not a cap: a run asked for one
+        # face but shipping all three keeps the standard three-style contract.
+        manifest = self.manifest()
+        manifest["inputs"] = {"source": "wiki-interview", "target_style": "scientific-memo"}
+        (self.run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        for name in ("zhihu-explainer_zhihu.md", "xiaohongshu-post_xiaohongshu.md"):
+            (self.run_dir / name).write_text(f"# {name}\n", encoding="utf-8")
+        code, _, _, _ = self.finalize()
+        self.assertEqual(code, 0)
+        self.assertNotIn("style", self.manifest())
+
     def test_declared_style_never_sweeps_the_packet_in(self):
         # A declared style must not have the disk scan's survey mapping
         # (survey → review-packet.md) sweep the mechanically generated packet

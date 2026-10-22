@@ -221,7 +221,7 @@ from embodied_learning.config import EXTRACTION_PAPER_TIMEOUT_S  # noqa: E402
 from embodied_learning.fetch.queue import QueueOptions, run_queue  # noqa: E402
 
 
-def _extract_content_queue_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+def _extract_content_queue_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--paper-id-file", required=True)
     parser.add_argument("--terms", required=True)
@@ -265,7 +265,15 @@ def _extract_content_queue_parse_args(argv: list[str] | None = None) -> argparse
         help="[s3-tex] Cache directory for S3 TeX source tarballs, forwarded to the extract-content gateway.",
     )
     parser.add_argument("--summary-output")
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--download-manifest",
+        help="Step-1 html-download.json manifest: drives --html-cache-only and sticky 404 states.",
+    )
+    return parser
+
+
+def _extract_content_queue_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    return _extract_content_queue_parser().parse_args(argv)
 
 
 def _extract_content_queue_main(argv: list[str] | None = None) -> int:
@@ -289,10 +297,73 @@ def _extract_content_queue_main(argv: list[str] | None = None) -> int:
         curl_timeout=args.curl_timeout,
         tex_cache_dir=args.tex_cache_dir,
         summary_output=args.summary_output,
+        download_manifest=args.download_manifest,
     )
     summary = run_queue(options)
     print(f"Recovered {summary['evidence_eligible_count']} of {summary['paper_count']} papers; held {summary['held_count']}.")
     return 0 if summary["evidence_eligible_count"] else 2
+
+
+
+# ---- download-content-html (two-step extraction, step 1: batch HTML fetch) ----
+
+from embodied_learning.config import (  # noqa: E402
+    HTML_DOWNLOAD_RETRIES,
+    HTML_DOWNLOAD_TIMEOUT_S,
+)
+from embodied_learning.fetch.html_queue import (  # noqa: E402
+    HtmlDownloadOptions,
+    run_download_queue,
+)
+
+
+def _download_content_html_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Batch-download arXiv HTML into the shared cache (extraction step 1).")
+    parser.add_argument("--paper-id-file", required=True)
+    parser.add_argument(
+        "--html-cache-dir",
+        help="Shared HTML cache directory (driver passes <kb-root>/.cache/html).",
+    )
+    parser.add_argument("--workers", type=int, default=4, help="Bounded I/O workers; capped at 4.")
+    parser.add_argument("--timeout", type=float, default=HTML_DOWNLOAD_TIMEOUT_S,
+                        help="Per-request timeout in seconds.")
+    parser.add_argument("--retries", type=int, default=HTML_DOWNLOAD_RETRIES,
+                        help="Transient-failure retries per paper (capped at MAX_RETRIES).")
+    parser.add_argument("--force", action="store_true",
+                        help="Re-request sticky-unavailable (404/410) papers from a prior manifest.")
+    parser.add_argument("--summary-output",
+                        help="Write the download manifest JSON here (run-dir/html-download.json).")
+    return parser
+
+
+def _download_content_html_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    return _download_content_html_parser().parse_args(argv)
+
+
+def _download_content_html_main(argv: list[str] | None = None) -> int:
+    args = _download_content_html_parse_args(argv)
+    options = HtmlDownloadOptions(
+        paper_id_file=args.paper_id_file,
+        html_cache_dir=args.html_cache_dir,
+        workers=args.workers,
+        timeout=args.timeout,
+        retries=args.retries,
+        force=args.force,
+        summary_output=args.summary_output,
+    )
+    summary = run_download_queue(options)
+    states = summary["states"]
+    ok = states.get("downloaded", 0) + states.get("cached", 0) + states.get("unavailable", 0)
+    print(
+        f"Downloaded {states.get('downloaded', 0)} of {summary['paper_count']} papers "
+        f"(cached {states.get('cached', 0)}, unavailable {states.get('unavailable', 0)}, "
+        f"failed {states.get('failed', 0)})."
+    )
+    # Exit 2 only when nothing usable came out (channel dead), matching the
+    # extraction queue's zero-eligible rule. unavailable papers are "done" —
+    # the fallback tier owns their fate in step 2.
+    return 0 if ok else 2
 
 
 
@@ -307,7 +378,7 @@ from embodied_learning.fetch.chain import (  # noqa: E402
 )
 
 
-def _extract_content_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+def _extract_content_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -384,6 +455,14 @@ def _extract_content_parse_args(argv: list[str] | None = None) -> argparse.Names
         "Include complete HTML text or every text-layer PDF page for $embodied-ai-paper-reader.",
     )
     parser.add_argument(
+        "--html-cache-only",
+        action="store_true",
+        help=
+        "Parse the HTML tier from the local cache only (no network); used by "
+        "extraction step 2 after download-content-html. Fallback tiers (tex/pdf) "
+        "still fetch when the cache is missing or below quality.",
+    )
+    parser.add_argument(
         "-o",
         "--output",
         help=("Write result here instead of stdout. Defaults to "
@@ -391,6 +470,11 @@ def _extract_content_parse_args(argv: list[str] | None = None) -> argparse.Names
               "<paper-id>.md appended (.md implies markdown under --format auto)."
               ),
     )
+    return parser
+
+
+def _extract_content_parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = _extract_content_parser()
     args = parser.parse_args(argv)
     if args.paper_id_pos and not args.paper_id:
         args.paper_id = args.paper_id_pos
@@ -402,6 +486,21 @@ def _extract_content_parse_args(argv: list[str] | None = None) -> argparse.Names
         args.output = f"{DEFAULT_OUTPUT_DIR}/{paper_id}.md"  # interactive default
     args.output = resolve_output_path(args.output, paper_id)
     return args
+
+
+_PARSER_BUILDERS = {
+    "download-content-html": _download_content_html_parser,
+    "extract-content-queue": _extract_content_queue_parser,
+    "extract-content": _extract_content_parser,
+}
+
+
+def _parser_for(name: str) -> argparse.ArgumentParser:
+    """Build the argparse parser for one subcommand (flag table lives here)."""
+    builder = _PARSER_BUILDERS.get(name)
+    if builder is None:
+        raise KeyError(f"fetch.py: no parser builder registered for {name!r}")
+    return builder()
 
 
 
@@ -433,6 +532,7 @@ def _extract_content_main(argv: list[str] | None = None) -> int:
         force_pdf=args.force_pdf,
         include_selected_text=args.include_selected_text,
         include_full_text=args.include_full_text,
+        html_cache_only=args.html_cache_only,
         output=args.output,
     )
     output_format = resolve_format(options)
@@ -525,6 +625,7 @@ _SUBCOMMANDS = {
     "extract-arxiv-pdf": _extract_arxiv_pdf_main,
     "extract-arxiv-tex": _extract_arxiv_tex_main,
     "download-arxiv-source": _download_arxiv_source_main,
+    "download-content-html": _download_content_html_main,
     "extract-content-queue": _extract_content_queue_main,
     "extract-content": _extract_content_main,
     "write-lit-outputs": _write_lit_outputs_main,

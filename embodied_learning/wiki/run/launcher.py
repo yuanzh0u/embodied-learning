@@ -39,10 +39,11 @@ import sys
 import time
 from pathlib import Path
 
-from embodied_learning.config import STYLE_TO_FILE
+from embodied_learning.config import STYLE_TO_FILE, STANDARD_ARTICLES
 from embodied_learning.knowledge.evidence import consolidate_evidence
 from embodied_learning.utils.layout import default_kb_root, find_roots
 from embodied_learning.wiki.run.catalog import build_trace_map
+from embodied_learning.wiki.run.manifest import declared_style
 # AI-model capability goes through the harness binding (pybind-style); prompts and KB layout stay with the feature module.
 from embodied_learning.harness.claude import (
     DRIVER_AGENT_MODEL,
@@ -276,6 +277,24 @@ def editorial_problems(run_dir: Path) -> list[str]:
     return problems
 
 
+def gate_articles(run_dir: Path) -> list[str]:
+    """Deliverables the citation gate must audit: the declared single style,
+    else every standard face that exists. A zhihu-only or xiaohongshu-only run
+    has no memo file, so auditing a hard-coded memo path reported
+    "article missing" for an article this run never promised."""
+    manifest: dict = {}
+    try:
+        loaded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            manifest = loaded
+    except (OSError, json.JSONDecodeError):
+        pass
+    style = declared_style(manifest)
+    if style in STYLE_TO_FILE:
+        return [STYLE_TO_FILE[style]]
+    return [name for name in STANDARD_ARTICLES if (run_dir / name).is_file()]
+
+
 def collect_gate_problems(run_dir: Path) -> list[str]:
     problems: list[str] = []
     # The gates print a bare "N problem(s):" header before the itemized
@@ -283,20 +302,23 @@ def collect_gate_problems(run_dir: Path) -> list[str]:
     # continuation rounds on nothing.
     gate_header = re.compile(r"^\d+ problem\(s\):$")
     prepare_gate_inputs(run_dir)
-    if not (run_dir / "scientific-memo_keyan.md").is_file() and not (run_dir / "zhihu-explainer_zhihu.md").is_file():
-        return ["run 目录没有成稿（scientific-memo_keyan.md / zhihu-explainer_zhihu.md 均缺失）"]
+    articles = gate_articles(run_dir)
+    if not articles:
+        return ["run 目录没有成稿（scientific-memo_keyan.md / zhihu-explainer_zhihu.md / "
+                "xiaohongshu-post_xiaohongshu.md 均缺失）"]
     problems.extend(editorial_problems(run_dir))
     trace_ok, trace_problems = build_trace_map(run_dir, SKILLS_ROOT)
     if not trace_ok:
         problems.extend(f"trace-map: {line}" for line in trace_problems)
         problems.append("trace-map 未生成：删改成稿中无证据支撑的 arXiv 引用（UNCOVERED 行），或补证据后重跑；勿手写 trace-map.json")
-    audit = subprocess.run(
-        [sys.executable, str(SCRIPTS_ROOT / "run.py"), "audit-citations",
-         "--article", str(run_dir / "scientific-memo_keyan.md"),
-         "--appendix", str(run_dir / "evidence-appendix.md"),
-         "--evidence-jsonl", str(run_dir / "evidence.jsonl")],
-        capture_output=True, text=True,
-    )
+    audit_command = [sys.executable, str(SCRIPTS_ROOT / "run.py"), "audit-citations"]
+    for name in articles:
+        audit_command += ["--article", str(run_dir / name)]
+    audit_command += [
+        "--appendix", str(run_dir / "evidence-appendix.md"),
+        "--evidence-jsonl", str(run_dir / "evidence.jsonl"),
+    ]
+    audit = subprocess.run(audit_command, capture_output=True, text=True)
     if audit.returncode:
         problems.extend(
             line for line in audit.stdout.splitlines()
@@ -407,6 +429,13 @@ def backfill_reentry_params(args: argparse.Namespace, run_dir: Path) -> None:
         args.topic = manifest.get("topic") or args.topic
         args.review_mode = manifest.get("review_mode") or args.review_mode
         args.time_range = manifest.get("time_range") or args.time_range
+        # A bare --resume leaves --target-style at the parser default
+        # (scientific-memo) and run_finalize would forward that as --style,
+        # shrinking a three-style run at settle. The birth input is the run's
+        # real scope; "all"/missing keeps the CLI value for legacy runs.
+        inputs = manifest.get("inputs")
+        if isinstance(inputs, dict) and str(inputs.get("target_style") or "").strip():
+            args.target_style = str(inputs["target_style"]).strip()
     if not args.kb_root:
         # init_run places runs at <kb-root>/work/<run>; infer the root from
         # the run dir so publish steps land in the right KB.
@@ -437,10 +466,25 @@ def launch(args: argparse.Namespace) -> int:
     # fresh launch: create the run birth certificate via run.py init
     if run_dir is None:
         kb_root = resolve_kb_root(args)
+        # The interview answers must reach run.json `inputs`, like the wiki
+        # kickoff's payload: the writer's --pre-settle gates run before
+        # finalize stamps `style`, so `inputs.target_style` is the only scope
+        # declaration on disk at that point. Without it a CLI single-style
+        # launch was told to ship the whole triplet.
+        inputs_payload = {
+            "source": "cli",
+            "requested_review_mode": args.review_mode,
+            "target_style": getattr(args, "target_style", "") or "",
+            "focus": getattr(args, "focus", "") or "",
+            "search_strategy": getattr(args, "search_strategy", "") or "",
+            "selection_strategy": getattr(args, "selection_strategy", "") or "",
+            "seed_arxiv_ids": getattr(args, "seed_arxiv_ids", "") or "",
+        }
         init_command = [
             sys.executable, str(SCRIPTS_ROOT / "run.py"), "init",
             "--topic", args.topic, "--review-mode", args.review_mode,
             "--work-dir", str(kb_root / "work"),
+            "--inputs-json", json.dumps(inputs_payload, ensure_ascii=False),
         ]
         if getattr(args, "run_version", 1) > 1:
             init_command += ["--run-version", str(args.run_version)]

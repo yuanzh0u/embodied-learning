@@ -184,6 +184,7 @@ class ContentOptions:
         force_pdf: bool = False,
         include_selected_text: bool = False,
         include_full_text: bool = False,
+        html_cache_only: bool = False,
         output: str | None = None,
         render_markdown: bool = False,
     ) -> None:
@@ -212,6 +213,7 @@ class ContentOptions:
         self.force_pdf = force_pdf
         self.include_selected_text = include_selected_text
         self.include_full_text = include_full_text
+        self.html_cache_only = html_cache_only
         self.output = output
         self.render_markdown = render_markdown
 
@@ -262,7 +264,12 @@ def try_html(options: ContentOptions,
     url = options.html_url or f"https://arxiv.org/html/{normalize_id(options.paper_id)}"
     target = Path(options.html_cache_dir).expanduser(
     ) / f"{normalize_id(options.paper_id)}.html"
-    available, html = extract_arxiv_html.fetch_html(url, target, options.timeout)
+    available, html = extract_arxiv_html.fetch_html(
+        url,
+        target,
+        options.timeout,
+        cache_only=bool(getattr(options, "html_cache_only", False)),
+    )
     if want_full_text is None:
         want_full_text = bool(getattr(options, "include_full_text", False))
     output = extract_arxiv_html.build_output(
@@ -344,6 +351,15 @@ def try_tex(options: ContentOptions, terms: list[str]) -> dict[str, Any]:
     return output
 
 
+def _tier_log(paper_id: str, message: str) -> None:
+    """One-line fallback trace on stderr (stdout may carry the result JSON).
+
+    The extraction queue forwards these lines to its own stdout as
+    ``TIER <id> ...``; the driver surfaces them as ``[PAPER]`` dialog lines.
+    """
+    print(f"TIER {paper_id} {message}", file=sys.stderr, flush=True)
+
+
 def extract_content(options: ContentOptions) -> dict[str, Any]:
     terms = [
         term.strip() for term in (options.terms or "").split(",") if term.strip()
@@ -355,6 +371,7 @@ def extract_content(options: ContentOptions) -> dict[str, Any]:
         or getattr(options, "_render_markdown", False))
     attempts: list[dict[str, Any]] = []
     preferred = getattr(options, "preferred_source", "html") or "html"
+    paper_id = normalize_id(options.paper_id)
 
     def run_html() -> dict[str, Any]:
         html = try_html(options, terms, want_full_text=want_full_text)
@@ -397,17 +414,37 @@ def extract_content(options: ContentOptions) -> dict[str, Any]:
     else:
         tiers = [("html", run_html), ("pdf", run_pdf)]
 
+    def tier_reason(output: dict[str, Any]) -> str:
+        """Compact failure/quality reason for the TIER fallback log line."""
+        error = str(output.get("error") or "").strip().splitlines()
+        if error:
+            return error[-1][:60]
+        grade = str((output.get("quality") or {}).get("grade") or "low")
+        chars = int((output.get("quality") or {}).get("text_chars") or 0)
+        return f"quality={grade} text={chars}"
+
     fallback_reason = ""
-    for tier_name, runner in tiers:
+    for index, (tier_name, runner) in enumerate(tiers):
         if tier_name == "pdf" and options.force_pdf:
             fallback_reason = "PDF path forced by caller."
         try:
             output = runner()
             if output.get("evidence_eligible"):
+                quality = output.get("quality") or {}
+                _tier_log(
+                    paper_id,
+                    f"{tier_name} ok（quality={quality.get('grade', '?')}，"
+                    f"{output.get('source_format', tier_name)}）",
+                )
                 output["attempts"] = attempts
                 output["fallback_reason"] = ""
                 return output
             fallback_reason = f"{tier_name.upper()} unavailable or below the minimum full-text quality gate."
+            next_tier = tiers[index + 1][0] if index + 1 < len(tiers) else ""
+            if next_tier:
+                _tier_log(paper_id, f"{tier_name} failed：{tier_reason(output)} → {next_tier}")
+            else:
+                _tier_log(paper_id, f"{tier_name} failed：{tier_reason(output)}")
         except SystemExit:
             # Missing optional dependency (boto3/pypandoc) for this tier —
             # fall through to the next tier instead of killing the chain.
@@ -418,6 +455,11 @@ def extract_content(options: ContentOptions) -> dict[str, Any]:
                 "error": "optional dependency missing for this tier",
             })
             fallback_reason = f"{tier_name.upper()} tier unavailable: optional dependency missing."
+            next_tier = tiers[index + 1][0] if index + 1 < len(tiers) else ""
+            if next_tier:
+                _tier_log(paper_id, f"{tier_name} failed：optional dependency missing → {next_tier}")
+            else:
+                _tier_log(paper_id, f"{tier_name} failed：optional dependency missing")
         except Exception as exc:  # pragma: no cover - network/parser dependent
             attempts.append({
                 "method": tier_name,
@@ -426,6 +468,12 @@ def extract_content(options: ContentOptions) -> dict[str, Any]:
                 "error": str(exc),
             })
             fallback_reason = f"{tier_name.upper()} extraction failed: {exc}"
+            next_tier = tiers[index + 1][0] if index + 1 < len(tiers) else ""
+            tail = str(exc).strip().splitlines()[-1][:60] if str(exc).strip() else "unknown error"
+            if next_tier:
+                _tier_log(paper_id, f"{tier_name} failed：{tail} → {next_tier}")
+            else:
+                _tier_log(paper_id, f"{tier_name} failed：{tail}")
 
     return {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),

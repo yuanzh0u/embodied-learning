@@ -23,6 +23,7 @@ from pathlib import Path
 from embodied_learning.knowledge.funnel import FUNNEL_FILENAME
 from embodied_learning.utils.layout import default_kb_root, find_roots, infer_kb_root
 from embodied_learning.config import CITED_PAPER_FLOORS, STANDARD_ARTICLES, STYLE_TO_FILE
+from embodied_learning.wiki.run.manifest import declared_style
 
 STYLE_FILES = {
     "scientific-memo": "scientific-memo_keyan.md",
@@ -272,7 +273,12 @@ def build_report(run_dir: Path) -> dict:
         # separate from `review_mode` (the effective contract) so a drift
         # between the two is visible without opening logs.
         "inputs": manifest.get("inputs") or {},
-        "style": manifest.get("style"),
+        # Single-style scope: `style` once finalize stamps it, else the
+        # interview/CLI answer recorded at run birth. The writer reads status
+        # before finalize runs, so the birth input is what makes the gate
+        # commands name one article instead of three (2026-10-21 点云匹配).
+        "style": declared_style(manifest) or None,
+        "style_declared_in_manifest": bool(str(manifest.get("style") or "").strip()),
         "scope_note": manifest.get("scope_note"),
         "funnel": {
             "candidates": candidates,
@@ -295,9 +301,14 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
     lines: list[str] = []
     funnel = report["funnel"]
     deep_read = funnel["deep_read"] or {}
+    style_note = (
+        "（scope_note 已声明）" if report.get("style_declared_in_manifest") and report.get("scope_note")
+        else "（采访选择的风格；scope_note 由 run.py finalize 补齐）" if report.get("style")
+        else ""
+    )
     lines.append(
         f"[run] {report['run']}  status={report['status']}  mode={report['review_mode'] or '—'}"
-        + (f"  style={report['style']}（scope_note 已声明）" if report.get("style") else "")
+        + (f"  style={report['style']}{style_note}" if report.get("style") else "")
     )
     inputs = report.get("inputs") or {}
     requested = inputs.get("requested_review_mode") or inputs.get("review_mode")
@@ -394,9 +405,9 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
         "zhihu-explainer_zhihu.md": "zhihu",
         "xiaohongshu-post_xiaohongshu.md": "xiaohongshu",
     }
-    declared_style = report.get("style")
-    if declared_style and declared_style in STYLE_TO_FILE:
-        gate_articles = [STYLE_TO_FILE[declared_style]]
+    scope_style = report.get("style")
+    if scope_style and scope_style in STYLE_TO_FILE:
+        gate_articles = [STYLE_TO_FILE[scope_style]]
     else:
         gate_articles = list(STANDARD_ARTICLES)
     lines.append("[next] 审计门（写完对应成稿后逐字执行，参数勿猜；写完不要自检，直接跑门禁按消息修）：")
@@ -420,7 +431,7 @@ def render(report: dict, run_dir: Path, scripts_root: Path, skills_root: Path) -
         )
     else:
         lines.append(
-            f"  （style={declared_style}：交付物是机械渲染包/编译产物，无 editorial 质量门——"
+            f"  （style={scope_style}：交付物是机械渲染包/编译产物，无 editorial 质量门——"
             "上面 check-bundle / audit-citations 过门即可）"
         )
     kb_root = infer_kb_root(run_dir) or default_kb_root()

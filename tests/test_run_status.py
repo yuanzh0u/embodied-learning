@@ -179,6 +179,24 @@ class RunStatusTest(unittest.TestCase):
         self.assertIn("audit-article-quality", text)
         self.assertIn("--declare-gate-exception", text)
 
+    def test_single_style_scope_comes_from_the_birth_input(self):
+        """The writer reads status before finalize stamps `style`; the
+        interview answer must already narrow the gate commands to one article
+        (2026-10-21 点云匹配: status listed all three, check-bundle demanded
+        all three)."""
+        manifest = json.loads((self.run_dir / "run.json").read_text(encoding="utf-8"))
+        manifest["inputs"] = {"source": "wiki-interview", "target_style": "scientific-memo"}
+        (self.run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        (self.run_dir / "scientific-memo_keyan.md").write_text("# memo\n", encoding="utf-8")
+        report = run_status.build_report(self.run_dir)
+        self.assertEqual(report["style"], "scientific-memo")
+        self.assertFalse(report["style_declared_in_manifest"])
+        text = run_status.render(report, self.run_dir, Path("/scripts"), Path("/skills"))
+        citation_lines = [line for line in text.splitlines() if "audit-citations" in line]
+        self.assertEqual(len(citation_lines), 1)
+        self.assertIn("scientific-memo_keyan.md", citation_lines[0])
+        self.assertNotIn("zhihu-explainer_zhihu.md", citation_lines[0])
+
     def test_next_block_prints_resolved_kb_root_not_placeholder(self):
         """The [next] finalize command carries the real --kb-root (inferred from
         the <kb-root>/work/<run> layout), never the literal <kb-root> placeholder

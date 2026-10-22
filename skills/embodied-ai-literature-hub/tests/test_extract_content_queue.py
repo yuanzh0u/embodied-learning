@@ -247,5 +247,204 @@ class ChannelCircuitTest(unittest.TestCase):
             self.assertIn("hard timeout after", result["error"])
             self.assertIn("cooldown 90.0s", result["error"])
 
+
+class HeldReasonTest(unittest.TestCase):
+    """held_reason() compresses a HELD payload to one  · -joined line."""
+
+    def test_channel_down_and_timeout_win(self) -> None:
+        self.assertEqual(
+            extract_content_queue.held_reason({"error": "channel down: skipped after consecutive connection failures"}),
+            "channel-down",
+        )
+        self.assertEqual(
+            extract_content_queue.held_reason({"error": "hard timeout after 600s: gate cooldown"}),
+            "timeout 600s",
+        )
+        self.assertEqual(
+            extract_content_queue.held_reason({"error": "hard timeout after"}, paper_timeout=300),
+            "timeout 300s",
+        )
+
+    def test_queue_synthesized_error_is_copied(self) -> None:
+        self.assertEqual(
+            extract_content_queue.held_reason({"error": "extractor exit 2: boom"}),
+            "error extractor exit 2: boom",
+        )
+
+    def test_unavailable_combines_manifest_and_fallback_attempts(self) -> None:
+        data = {
+            "available": False,
+            "attempts": [
+                {"method": "html-latexml", "available": False, "quality": "low"},
+                {"method": "arxiv2md", "available": False, "quality": "low"},
+                {"method": "pdf-text", "available": False, "quality": "low"},
+            ],
+        }
+        self.assertEqual(
+            extract_content_queue.held_reason(data, manifest_state="unavailable", manifest_status=404),
+            "HTML 404 · tex unavailable · pdf unavailable",
+        )
+        self.assertEqual(
+            extract_content_queue.held_reason(data, manifest_state="failed"),
+            "HTML fetch failed · tex unavailable · pdf unavailable",
+        )
+
+    def test_low_quality_names_grade_chars_and_structure(self) -> None:
+        data = {
+            "available": True,
+            "quality": {"grade": "low", "text_chars": 320, "structure": "flat"},
+        }
+        self.assertEqual(
+            extract_content_queue.held_reason(data),
+            "quality low text=320 structure=flat",
+        )
+
+    def test_reason_is_capped_at_120_chars(self) -> None:
+        data = {"error": "x" * 300}
+        self.assertLessEqual(len(extract_content_queue.held_reason(data)), 120)
+
+
+class ManifestCacheOnlyTest(unittest.TestCase):
+    """The download manifest (step 1) decides html_cache_only and channel-down
+    short-circuits in extract_one."""
+
+    def _opts(self, output_dir: Path, manifest: Path | None = None) -> "extract_content_queue.QueueOptions":
+        return extract_content_queue.QueueOptions(
+            paper_id_file="ids.txt", terms="t", output_dir=str(output_dir),
+            download_manifest=str(manifest) if manifest else None,
+        )
+
+    def test_manifest_states_drive_html_cache_only_and_channel_down(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            output_dir = tmp / "extractions"
+            output_dir.mkdir()
+            manifest = tmp / "html-download.json"
+            manifest.write_text(json.dumps({"results": [
+                {"paper_id": "a", "state": "downloaded", "status": 200},
+                {"paper_id": "b", "state": "unavailable", "status": 404},
+                {"paper_id": "c", "state": "failed", "status": None, "error": "timeout"},
+                {"paper_id": "d", "state": "channel-down", "status": None},
+            ]}), encoding="utf-8")
+            ids = tmp / "ids.txt"
+            ids.write_text("a\nb\nc\nd\n", encoding="utf-8")
+            commands: list[list[str]] = []
+
+            def fake_run(command, capture_output, text, timeout, check):
+                commands.append(command)
+                target = Path(command[command.index("--output") + 1])
+                paper_id = command[command.index("--paper-id") + 1]
+                target.write_text(json.dumps({
+                    "paper_id": paper_id, "available": True, "evidence_eligible": True,
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            options = extract_content_queue.QueueOptions(
+                paper_id_file=str(ids), terms="t", output_dir=str(output_dir),
+                download_manifest=str(manifest),
+            )
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_run):
+                summary = extract_content_queue.run_queue(options)
+            by_id = {c[c.index("--paper-id") + 1]: c for c in commands}
+            self.assertIn("--html-cache-only", by_id["a"])
+            self.assertIn("--html-cache-only", by_id["b"])
+            self.assertNotIn("--html-cache-only", by_id["c"], "failed gets one last network chance")
+            self.assertNotIn("d", by_id, "channel-down must not spawn a subprocess")
+            states = {item["paper_id"]: item["state"] for item in summary["results"]}
+            self.assertEqual(states["d"], "channel-down")
+            self.assertEqual(states["a"], "extracted")
+
+    def test_missing_manifest_keeps_legacy_single_step(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            output_dir = tmp / "extractions"
+            output_dir.mkdir()
+            ids = tmp / "ids.txt"
+            ids.write_text("a\n", encoding="utf-8")
+            commands: list[list[str]] = []
+
+            def fake_run(command, capture_output, text, timeout, check):
+                commands.append(command)
+                target = Path(command[command.index("--output") + 1])
+                target.write_text(json.dumps({
+                    "paper_id": "a", "available": True, "evidence_eligible": True,
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 0, "", "")
+
+            options = extract_content_queue.QueueOptions(
+                paper_id_file=str(ids), terms="t", output_dir=str(output_dir),
+                download_manifest=str(tmp / "nope.json"),
+            )
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_run):
+                extract_content_queue.run_queue(options)
+            self.assertNotIn("--html-cache-only", commands[0])
+
+
+class TierForwardingTest(unittest.TestCase):
+    """TIER fallback lines from the extract-content subprocess reach the queue's
+    stdout so the driver can show which path recovered the paper."""
+
+    def test_tier_lines_on_stderr_are_forwarded(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            output_dir = tmp / "extractions"
+            output_dir.mkdir()
+
+            def fake_run(command, capture_output, text, timeout, check):
+                target = Path(command[command.index("--output") + 1])
+                target.write_text(json.dumps({
+                    "paper_id": "2110.10805", "available": True, "evidence_eligible": True,
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(
+                    command, 0, "",
+                    "TIER 2110.10805 html failed：HTML 404 → tex\n"
+                    "TIER 2110.10805 tex ok（quality=medium，tex）\n",
+                )
+
+            import contextlib, io
+            buf = io.StringIO()
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_run), \
+                 contextlib.redirect_stdout(buf):
+                extract_content_queue.extract_one("2110.10805", self._opts(output_dir), output_dir)
+            text = buf.getvalue()
+            self.assertIn("TIER 2110.10805 html failed：HTML 404 → tex", text)
+            self.assertIn("TIER 2110.10805 tex ok（quality=medium，tex）", text)
+
+    def _opts(self, output_dir: Path) -> "extract_content_queue.QueueOptions":
+        return extract_content_queue.QueueOptions(
+            paper_id_file="ids.txt", terms="t", output_dir=str(output_dir),
+        )
+
+    def test_held_stdout_line_carries_reason(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            output_dir = tmp / "extractions"
+            output_dir.mkdir()
+            ids = tmp / "ids.txt"
+            ids.write_text("2110.10805\n", encoding="utf-8")
+
+            def fake_run(command, capture_output, text, timeout, check):
+                target = Path(command[command.index("--output") + 1])
+                target.write_text(json.dumps({
+                    "paper_id": "2110.10805", "available": False, "evidence_eligible": False,
+                    "error": "HTML unavailable",
+                }), encoding="utf-8")
+                return subprocess.CompletedProcess(command, 2, "", "")
+
+            options = extract_content_queue.QueueOptions(
+                paper_id_file=str(ids), terms="t", output_dir=str(output_dir),
+            )
+            import contextlib, io
+            buf = io.StringIO()
+            with mock.patch.object(extract_content_queue.subprocess, "run", side_effect=fake_run), \
+                 contextlib.redirect_stdout(buf):
+                summary = extract_content_queue.run_queue(options)
+            text = buf.getvalue()
+            held_lines = [line for line in text.splitlines() if line.startswith("HELD ")]
+            self.assertEqual(len(held_lines), 1)
+            self.assertRegex(held_lines[0], r"^HELD 2110\.10805 \(1/1\) \S")
+            self.assertEqual(summary["results"][0]["held_reason"], "error HTML unavailable")
+
+
 if __name__ == "__main__":
     unittest.main()

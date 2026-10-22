@@ -187,6 +187,102 @@ class ChatTurnInHarnessTest(unittest.TestCase):
                 os.environ.pop("EMBODIED_CONVERSATION_STORE", None)
 
 
+class ToolOutputStreamTest(unittest.TestCase):
+    """Bash stdout reaches the dialog; Read file contents do not. The audit
+    gate used to show "正在运行" with no verdict because every tool_result
+    frame was dropped (2026-10-21 hdmap生成 / 深度图补全)."""
+
+    def _run(self, frames: list[dict]) -> list[dict]:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = os.environ.get("EMBODIED_CONVERSATION_STORE")
+            os.environ["EMBODIED_CONVERSATION_STORE"] = tmp
+            try:
+                stream = "".join(json.dumps(frame) + "\n" for frame in frames)
+                turn = claude.ChatTurn(cli="claude", prompt=stream, cwd=Path(tmp), model="m")
+                real_popen = claude.subprocess.Popen
+
+                def fake_popen(command, **kwargs):
+                    return real_popen(
+                        ["/bin/cat"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE, text=True,
+                    )
+
+                with mock.patch.object(claude.subprocess, "Popen", side_effect=fake_popen):
+                    turn.start()
+                return list(turn.events())
+            finally:
+                if store is None:
+                    os.environ.pop("EMBODIED_CONVERSATION_STORE", None)
+                else:
+                    os.environ["EMBODIED_CONVERSATION_STORE"] = store
+
+    def _use(self, tool_id: str, name: str, payload: dict) -> dict:
+        return {"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "id": tool_id, "name": name, "input": payload},
+        ]}}
+
+    def _result(self, tool_id: str, text: str, *, is_error: bool = False) -> dict:
+        return {"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": tool_id, "content": text,
+             "is_error": is_error},
+        ]}}
+
+    def test_bash_output_is_streamed_and_read_output_is_not(self) -> None:
+        events = self._run([
+            self._use("b1", "Bash", {"command": "run.py check-bundle /run --pre-settle"}),
+            self._result("b1", "run bundle OK"),
+            self._use("r1", "Read", {"file_path": "/run/review-packet.md"}),
+            self._result("r1", "# packet\n" + "long paper prose"),
+            {"type": "result", "session_id": "s", "is_error": False, "result": "done"},
+        ])
+        outputs = [e for e in events if e["type"] == "tool_output"]
+        self.assertEqual(len(outputs), 1)
+        self.assertEqual(outputs[0]["tool"], "Bash")
+        self.assertEqual(outputs[0]["workflow_stage"], "audit")
+        self.assertEqual(outputs[0]["output"], "run bundle OK")
+
+    def test_non_gate_bash_output_stays_out_of_the_dialog(self) -> None:
+        """Only hub/audit nodes (plus failures) echo their stdout. A `status`
+        digest or a grep result is recap the agent already renders in prose;
+        echoing every Bash call flooded the card with mining noise."""
+
+        events = self._run([
+            self._use("s1", "Bash", {"command": "run.py status --run-dir /run"}),
+            self._result("s1", "run digest ..."),
+            self._use("g1", "Bash", {"command": "run.py finalize --run-dir /run"}),
+            self._result("g1", "settled"),
+            self._use("u1", "Bash", {"command": "ls /run"}),
+            self._result("u1", "boom", is_error=True),
+            {"type": "result", "session_id": "s", "is_error": False, "result": "done"},
+        ])
+        outputs = [e for e in events if e["type"] == "tool_output"]
+        # mining -> dropped, settle -> kept, unknown stage + failure -> kept.
+        self.assertEqual([o["workflow_stage"] for o in outputs], ["settle", ""])
+        self.assertTrue(outputs[1]["is_error"])
+
+    def test_a_narration_explains_one_call_only(self) -> None:
+        """The reason buffer is spent after the first tool-only message, so
+        the memo's lead-in never reappears under zhihu/xiaohongshu edits."""
+
+        events = self._run([
+            {"type": "assistant", "message": {"content": [
+                {"type": "text", "text": "首先是科研备忘录："},
+                {"type": "tool_use", "id": "w1", "name": "Write",
+                 "input": {"file_path": "/run/scientific-memo_keyan.md"}},
+            ]}},
+            self._use("w2", "Write", {"file_path": "/run/zhihu-explainer_zhihu.md"}),
+            self._use("w3", "Write", {"file_path": "/run/xiaohongshu-post_xiaohongshu.md"}),
+            {"type": "result", "session_id": "s", "is_error": False, "result": "done"},
+        ])
+        tools = [e for e in events if e.get("stage") == "tool"]
+        self.assertEqual([t["reason_source"] for t in tools], ["inline", "carried", "none"])
+        self.assertEqual(
+            [t.get("workflow_stage") for t in tools], ["writing", "writing", "writing"])
+        # The trailing colon is dropped: "首先是科研备忘录：" read as a
+        # truncated sentence in the dialog.
+        self.assertEqual(tools[0]["reason"], "首先是科研备忘录")
+
+
 class CompleteFallbackRetryTest(unittest.TestCase):
     """Stream truncation switches to the fallback model and retries (2026-10-20,
     mirrors monica's harness). The dmxapi glm upstream cut is a LINK problem —
@@ -486,6 +582,105 @@ class ToolReasonTest(unittest.TestCase):
     def test_tool_without_narration_has_empty_reason(self) -> None:
         events = self._events([{"type": "tool_use", "name": "Edit", "input": {"file_path": "/x"}}])
         self.assertEqual(next(e for e in events if e.get("stage") == "tool")["reason"], "")
+
+    def test_reason_strips_workflow_markers_and_trailing_colon(self) -> None:
+        """`[STAGE:*]` markers are UI instructions, not part of the motive, and
+        a lead-in ending in a colon looked like a truncated sentence in the
+        dialog (2026-10-21 hdmap生成 "首先是科研备忘录：")."""
+
+        events = self._events([
+            {"type": "text", "text": "[STAGE:writing] 现在我正在起草这三个交付成果。首先是科研备忘录："},
+            {"type": "tool_use", "name": "Write", "input": {"file_path": "/run/scientific-memo_keyan.md"}},
+        ])
+        tool = next(e for e in events if e.get("stage") == "tool")
+        self.assertEqual(tool["reason"], "现在我正在起草这三个交付成果。首先是科研备忘录")
+        self.assertNotIn("[STAGE:", tool["reason"])
+
+    def test_carried_reason_is_clipped_shorter_than_inline(self) -> None:
+        """A carried reason describes the PREVIOUS call; it is clipped at
+        ``TOOL_REASON_CARRIED_MAX_CHARS`` so it cannot dump a paragraph of
+        stale recap under an unrelated edit."""
+
+        prior = "旧结论。" * 60
+        events = self._events(
+            [{"type": "tool_use", "name": "Edit", "input": {"file_path": "/run/zhihu.md"}}],
+            prior_text=prior,
+        )
+        tool = next(e for e in events if e.get("stage") == "tool")
+        self.assertLessEqual(len(tool["reason"]), claude.TOOL_REASON_CARRIED_MAX_CHARS + 1)
+        self.assertEqual(tool["reason_source"], "carried")
+
+    def test_tool_output_event_carries_stdout_and_stage(self) -> None:
+        """Bash stdout comes back as a `user` frame with a tool_result block.
+        Dropping it left the audit-gate card with no verdict at all
+        (2026-10-21 审计门)."""
+
+        use = json.dumps({"type": "assistant", "message": {"content": [
+            {"type": "tool_use", "id": "call_1", "name": "Bash",
+             "input": {"command": "run.py check-bundle /run --pre-settle"}},
+        ]}})
+        index: dict[str, dict] = {}
+        claude.parse_stream_line(use, tool_index=index)
+        result = json.dumps({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": "call_1", "is_error": False,
+             "content": "run bundle OK"},
+        ]}})
+        events = claude.parse_stream_line(result, tool_index=index)
+        self.assertEqual(
+            events,
+            [{"type": "tool_output", "tool": "Bash", "workflow_stage": "audit",
+              "output": "run bundle OK", "is_error": False}],
+        )
+
+    def test_tool_output_error_is_marked_and_tailed(self) -> None:
+        result = json.dumps({"type": "user", "message": {"content": [
+            {"type": "tool_result", "tool_use_id": "x", "is_error": True,
+             "content": "字" * (claude.TOOL_OUTPUT_MAX_CHARS + 20) + "\nERROR gate failed"},
+        ]}})
+        event = claude.parse_stream_line(result)[0]
+        self.assertTrue(event["is_error"])
+        self.assertTrue(event["output"].startswith("退出码非 0"))
+        self.assertLessEqual(len(event["output"]), claude.TOOL_OUTPUT_MAX_CHARS + 20)
+        self.assertTrue(event["output"].endswith("ERROR gate failed"))
+
+    def test_tool_use_is_filed_under_its_own_workflow_stage(self) -> None:
+        """Stage attribution follows the file/command, not the last announced
+        [STAGE:*] line: all three articles and the audit gates used to land in
+        综述包 (2026-10-21 hdmap生成)."""
+
+        def stage_for(tool: str, payload: dict) -> str:
+            events = self._events([{"type": "tool_use", "name": tool, "input": payload}])
+            return next(e for e in events if e.get("stage") == "tool").get("workflow_stage", "")
+
+        self.assertEqual(
+            stage_for("Write", {"file_path": "/run/scientific-memo_keyan.md"}), "writing")
+        self.assertEqual(
+            stage_for("Bash", {"command": "run.py check-bundle /run --pre-settle"}), "audit")
+        self.assertEqual(
+            stage_for("Bash", {"command": "write.py review-packet --run-dir /run"}), "packet")
+        self.assertEqual(
+            stage_for("Bash", {"command": "run.py finalize --run-dir /run"}), "settle")
+        self.assertEqual(
+            stage_for("Bash", {"command": "run.py status --run-dir /run"}), "mining")
+        # Unknown target keeps the announced stage.
+        self.assertEqual(stage_for("Read", {"file_path": "/run/run.json"}), "")
+        # The writer's own contract files are writing work — it reads SKILL.md
+        # before drafting, and that read used to inherit the finished packet
+        # node (2026-10-21 自动化标注). Its scripts/ are NOT: those are the
+        # audit gates, which must stay on 审计门.
+        self.assertEqual(
+            stage_for("Read", {"file_path": "/repo/skills/embodied-ai-review-writer/SKILL.md"}),
+            "writing")
+        self.assertEqual(
+            stage_for("Bash", {"command": "write.py audit-article-quality --memo /run/memo.md"}),
+            "audit")
+        # A chained command lands on the FIRST step's node: audit → finalize is
+        # one gate run whose output is the verdicts, so it belongs to 审计门.
+        self.assertEqual(
+            stage_for("Bash", {"command":
+                "run.py audit-citations --article /run/memo.md && "
+                "run.py finalize --run-dir /run"}),
+            "audit")
 
 
 class SystemOneBindingTest(unittest.TestCase):

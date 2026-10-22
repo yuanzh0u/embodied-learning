@@ -91,6 +91,7 @@ from embodied_learning.config import (
     EVIDENCE_FLOORS,
     EXTRACTION_STAGE_TIMEOUT_S,
     FUNNEL_LAYER_PAPER_CAP,
+    HTML_DOWNLOAD_STAGE_TIMEOUT_S,
     REVIEW_MODES,
     S2_BUDGET_S,
     S2_SLEEP_S,
@@ -118,23 +119,55 @@ FALLBACK_STOPWORDS = {
 DRIVER_CWD = Path.cwd()
 
 
-QUEUE_LINE_RE = re.compile(r"^(OK|HELD) (\S+) \((\d+)/(\d+)\)$")
+# Queue stdout protocol: `OK|HELD <id> (n/m)` optionally followed by the
+# compact held_reason (2026-10-21). The reason group is optional so a mixed
+# fleet (old queue + new driver) still parses.
+QUEUE_LINE_RE = re.compile(r"^(OK|HELD) (\S+) \((\d+)/(\d+)\)(?:\s+(.*))?$")
 
 
 def extraction_queue_line(line: str) -> None:
     """Translate one extract-content-queue stdout line: per-paper OK/HELD
-    becomes a progress tick (HELD additionally notes why it matters); any
+    becomes a progress tick (HELD carries a compact reason); TIER fallback
+    lines surface which path (html→tex→pdf) is recovering the paper; any
     other line (summary, warnings) stays a plain dialog line."""
-    match = QUEUE_LINE_RE.match(line.strip())
+    text = line.strip()
+    match = QUEUE_LINE_RE.match(text)
     if match:
-        state, paper_id, done_s, total_s = match.groups()
+        state, paper_id, done_s, total_s, reason = match.groups()
         log(f"[DRIVER-PROGRESS:extract:{done_s}/{total_s}]")
         if state == "HELD":
-            log(f"[PAPER] {paper_id} 全文不满足证据条件（HELD）")
-    elif line.strip().startswith("[DRIVER-"):
-        log(line.strip())  # already protocol-formatted (e.g. [DRIVER-WARN])
+            suffix = f"：{reason.strip()}" if reason and reason.strip() else "：原因未记录"
+            log(f"[PAPER] {paper_id} 全文不满足证据条件（HELD）{suffix}")
+    elif text.startswith("TIER "):
+        # Fallback trace from the extract-content subprocess (chain tier log).
+        log(f"[PAPER] {text[5:].strip()}")
+    elif text.startswith("[DRIVER-"):
+        log(text)  # already protocol-formatted (e.g. [DRIVER-WARN])
     else:
         log(f"[DRIVER] 全文抽取 {line}")
+
+
+# Step-1 download queue protocol: `DOWNLOADED|CACHED|UNAVAILABLE|FAILED|CHANNEL-DOWN <id> (n/m)`.
+DOWNLOAD_LINE_RE = re.compile(
+    r"^(DOWNLOADED|CACHED|UNAVAILABLE|FAILED|CHANNEL-DOWN) (\S+) \((\d+)/(\d+)\)$"
+)
+
+
+def download_queue_line(line: str) -> None:
+    """Translate one download-content-html stdout line into a progress tick on
+    the `extract-download` bar. Per-paper states stay out of the dialog (the
+    download brief carries the counts); TIER lines pass through for the parse
+    stage's fallback visibility."""
+    text = line.strip()
+    if DOWNLOAD_LINE_RE.match(text):
+        done_s, total_s = DOWNLOAD_LINE_RE.match(text).groups()[2:4]
+        log(f"[DRIVER-PROGRESS:extract-download:{done_s}/{total_s}]")
+    elif text.startswith("TIER "):
+        log(f"[PAPER] {text[5:].strip()}")
+    elif text.startswith("[DRIVER-"):
+        log(text)
+    else:
+        log(f"[DRIVER] HTML 下载 {line}")
 
 
 SELECTION_CHUNK_RE = re.compile(r"^chunk\s+(\d+)/(\d+)\s*[:\-]?\s*(.*)$", re.IGNORECASE)
@@ -1028,6 +1061,95 @@ def project_evidence(kb_root: Path, run_dir: Path, run_json_path: Path, summary_
         f"证据投影 · 全文 {deep_read_events} 条 / 摘要 {abstract_events} 条",
         projection_lines,
     )
+
+
+def reading_packet_stage(
+    run_dir: Path,
+    args,
+    knowledge_ids: list[str] | None,
+    extraction_payload: dict | None = None,
+) -> int:
+    """Stage: packets — build reading packets for evidence-eligible extractions
+    only. A HELD paper fails the complete-text gate by definition; spawning
+    build-reading-packet for it burned a subprocess per paper just to collect
+    another opaque "exit 2" (2026-10-21). Eligible failures still warn and
+    continue — one unrecoverable paper must not sink the queue — but the WARN
+    now carries the packet gate's own ``reading packet blocked:`` reason.
+
+    Returns the number of packets present (built or already cached)."""
+    packets_dir = run_dir / "reading-packets"
+    packets_dir.mkdir(parents=True, exist_ok=True)
+    extraction_files = sorted((run_dir / "extractions").glob("*.json"))
+    if not extraction_files:
+        log(stage_line("packets", "0/0 packets"))
+        return 0
+
+    # Prefer the summary's eligible set (already loaded by the extraction
+    # stage); fall back to reading each extraction when the summary is gone.
+    eligible_ids: set[str] = set()
+    results = (extraction_payload or {}).get("results") if extraction_payload else None
+    if isinstance(results, list):
+        eligible_ids = {
+            str(item.get("paper_id") or "")
+            for item in results
+            if isinstance(item, dict) and item.get("evidence_eligible") and item.get("paper_id")
+        }
+
+    def is_eligible(path: Path) -> bool:
+        if eligible_ids:
+            return path.stem in eligible_ids
+        try:
+            return bool(json.loads(path.read_text(encoding="utf-8")).get("evidence_eligible"))
+        except (OSError, json.JSONDecodeError):
+            return False
+
+    targets = [path for path in extraction_files if is_eligible(path)]
+    skipped = len(extraction_files) - len(targets)
+    log(
+        f"[DRIVER] 阅读包：{len(targets)} 篇可用"
+        + (f"（跳过 {skipped} 篇 HELD/不可用）" if skipped else "")
+    )
+    packet_count = 0
+    total = len(targets)
+    for extraction_path in targets:
+        paper_id = extraction_path.stem
+        packet_output = packets_dir / f"{paper_id}.md"
+        if not args.force and packet_output.is_file() and packet_output.stat().st_size > 0:
+            packet_count += 1
+            log(f"[DRIVER-PROGRESS:packets:{packet_count}/{total}]")
+            continue
+        result = run_command([
+            sys.executable, str(PACKET_SCRIPT),
+            "build-reading-packet",
+            "--extraction", str(extraction_path),
+            "--review-question", args.topic,
+            "--topic-id", *(knowledge_ids or ["EA-DATA"]),
+            "--review-mode", args.review_mode,
+            "--output", str(packet_output),
+        ])
+        if result.returncode:
+            # One unrecoverable paper must not sink the queue — but the reason
+            # must be the packet gate's own words, not a bare "exit 2" tail.
+            err_lines = [line for line in (result.stderr or "").splitlines() if line.strip()]
+            blocked = next(
+                (line for line in err_lines if line.startswith("reading packet blocked:")),
+                None,
+            )
+            reason = (
+                blocked.removeprefix("reading packet blocked:").strip()
+                if blocked
+                else (
+                    err_lines[-1]
+                    if err_lines
+                    else (result.stdout or "").strip()[-120:] or "无输出"
+                )
+            )
+            log(f"[DRIVER-WARN] packet {paper_id} 构建失败（exit {result.returncode}）：{reason}")
+        else:
+            packet_count += 1
+        log(f"[DRIVER-PROGRESS:packets:{packet_count}/{total}]")
+    log(stage_line("packets", f"{packet_count}/{total} packets"))
+    return packet_count
 
 
 def review_packet_stage(run_dir: Path, args, summary_extra: dict) -> None:
@@ -2510,10 +2632,18 @@ def _main_locked(
         )
         mark("abstract-evidence", begun)
 
-        # ---- full-text extraction --------------------------------------
+        # ---- full-text extraction (two steps: HTML download, then parse) ---
         begun = time.monotonic()
+        download_manifest = run_dir / "html-download.json"
         extraction_summary = run_dir / "extraction-summary.json"
-        log(f"[DRIVER] 开始全文抽取（HTML→Markdown，阶段上限 {EXTRACTION_STAGE_TIMEOUT_S/60:.0f} 分钟，候选 {len(screened_ids)} 篇）…")
+        log(f"[DRIVER] 开始全文抽取（HTML 下载→解析，阶段上限 {HTML_DOWNLOAD_STAGE_TIMEOUT_S/60:.0f}+{EXTRACTION_STAGE_TIMEOUT_S/60:.0f} 分钟，候选 {len(screened_ids)} 篇）…")
+        download_cmd = lambda: [  # noqa: E731
+            sys.executable, str(HUB_SCRIPTS / "fetch.py"), "download-content-html",
+            "--paper-id-file", str(screening_ids),
+            "--html-cache-dir", str(cache_dir / "html"),
+            "--workers", str(max(1, min(args.workers, 4))),
+            "--summary-output", str(download_manifest),
+        ]
         extraction_cmd = lambda: [  # noqa: E731
             sys.executable, str(HUB_SCRIPTS / "fetch.py"), "extract-content-queue",
             "--paper-timeout", str(args.extraction_timeout),
@@ -2530,10 +2660,14 @@ def _main_locked(
             "--ocr-mode", "never",
             "--include-full-text",
             "--summary-output", str(extraction_summary),
+            # Step-1 manifest: cached/404 papers parse with --html-cache-only;
+            # failed ones get one last network chance inside the chain.
+            "--download-manifest", str(download_manifest),
         ]
-        # HELD papers are retryable, not settled: a rerun re-runs the queue so
+        # HELD papers are retryable, not settled: a rerun re-runs both steps so
         # transient fetch failures (rate limiting) get supplemented. The queue
-        # itself caches evidence-eligible papers, so only HELD ones re-fetch.
+        # itself caches evidence-eligible papers and the download queue treats
+        # 404s as sticky, so reruns are mostly cache hits.
         extraction_force = args.force
         if not extraction_force and extraction_summary.is_file():
             try:
@@ -2542,25 +2676,47 @@ def _main_locked(
             except (OSError, ValueError):
                 extraction_force = False
         run_stage(
+            "extract-download", [download_manifest], extraction_force, download_cmd,
+            timeout=HTML_DOWNLOAD_STAGE_TIMEOUT_S,
+            stream=True, on_line=download_queue_line,
+            ledger=ledger,
+        )
+        mark("extract-download", begun)
+        try:
+            download_payload = json.loads(download_manifest.read_text(encoding="utf-8"))
+            states = download_payload.get("states") or {}
+            brief(
+                "extract-download",
+                f"HTML 下载 · {states.get('downloaded', 0)} 新下 / {states.get('cached', 0)} 缓存 / "
+                f"{states.get('unavailable', 0)} 无 HTML / {states.get('failed', 0)} 失败",
+                [f"{key}  {value}" for key, value in states.items()] or ["无下载记录"],
+            )
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            pass
+        begun = time.monotonic()
+        run_stage(
             "extraction", [extraction_summary], extraction_force, extraction_cmd,
             timeout=EXTRACTION_STAGE_TIMEOUT_S,
             stream=True, on_line=extraction_queue_line,
             ledger=ledger,
         )
         mark("extraction", begun)
+        extraction_payload: dict[str, Any] = {}
         try:
             extraction_payload = json.loads(extraction_summary.read_text(encoding="utf-8"))
             eligible = int(extraction_payload.get("evidence_eligible_count") or 0)
             held = int(extraction_payload.get("held_count") or 0)
-            held_ids = [
-                str(item.get("paper_id") or "")
+            held_lines = [
+                f"HELD  {item.get('paper_id')} — {item.get('held_reason') or '原因未记录'}"
                 for item in extraction_payload.get("results") or []
-                if isinstance(item, dict) and not item.get("evidence_eligible")
+                if isinstance(item, dict)
+                and not item.get("evidence_eligible")
+                and item.get("paper_id")
             ]
             brief(
                 "extraction",
                 f"全文恢复 · {eligible} 篇可用 / {held} 篇 HELD（共 {eligible + held} 篇）",
-                ([f"HELD  {paper_id}" for paper_id in held_ids if paper_id] or ["无 HELD 篇目"]),
+                held_lines or ["无 HELD 篇目"],
             )
         except (OSError, json.JSONDecodeError, TypeError, ValueError):
             pass
@@ -2571,42 +2727,10 @@ def _main_locked(
         refresh_coverage_inplace(run_dir, coverage_output)
         log_gates(coverage_output, "抽取后")
 
-        # ---- reading packets --------------------------------------------
+        # ---- reading packets (eligible extractions only) -------------------
         begun = time.monotonic()
-        packets_dir = run_dir / "reading-packets"
-        packets_dir.mkdir(parents=True, exist_ok=True)
-        packet_count = 0
-        extraction_files = sorted((run_dir / "extractions").glob("*.json"))
-        if extraction_files:
-            log(f"[DRIVER] 生成阅读包（{len(extraction_files)} 篇抽取结果）…")
-        for extraction_path in extraction_files:
-            paper_id = extraction_path.stem
-            packet_output = packets_dir / f"{paper_id}.md"
-            if not args.force and packet_output.is_file() and packet_output.stat().st_size > 0:
-                packet_count += 1
-                log(f"[DRIVER-PROGRESS:packets:{packet_count}/{len(extraction_files)}]")
-                continue
-            result = run_command([
-                sys.executable, str(PACKET_SCRIPT),
-                "build-reading-packet",
-                "--extraction", str(extraction_path),
-                "--review-question", args.topic,
-                "--topic-id", *(knowledge_ids or ["EA-DATA"]),
-                "--review-mode", args.review_mode,
-                "--output", str(packet_output),
-            ])
-            if result.returncode:
-                # One unrecoverable paper must not sink the queue — but the
-                # reason must be visible (2026-10-16: 16 bare "exit 2" lines
-                # with no way to tell low-quality extraction from a crash).
-                reason = (result.stderr or result.stdout or "").strip().splitlines()
-                log(f"[DRIVER-WARN] packet {paper_id}: exit {result.returncode}"
-                    f"：{reason[-1] if reason else '无输出'}")
-            else:
-                packet_count += 1
-            log(f"[DRIVER-PROGRESS:packets:{packet_count}/{len(extraction_files)}]")
+        packet_count = reading_packet_stage(run_dir, args, knowledge_ids, extraction_payload)
         mark("packets", begun)
-        log(stage_line("packets", f"{packet_count}/{len(extraction_files)} packets"))
 
         # ---- deep read (skeleton agents + local assembly) ---------------
         if not args.skip_deep_read:

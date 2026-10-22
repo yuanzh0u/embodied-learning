@@ -786,6 +786,33 @@ noscript { position: fixed; z-index: 100; inset: auto 20px 20px; padding: 14px; 
   margin: 2px 0 0;
   background: var(--surface-muted);
 }
+/* Tool stdout (audit-gate verdicts): collapsed, monospace, scrollable. */
+.chat-tool-output { margin: 2px 0 0; font-size: 11.5px; }
+.chat-tool-output > summary {
+  cursor: pointer;
+  color: var(--ink-faint);
+  padding: 2px 0;
+  list-style: none;
+}
+.chat-tool-output > summary::marker,
+.chat-tool-output > summary::-webkit-details-marker { display: none; }
+.chat-tool-output > summary::before { content: "▸ "; }
+.chat-tool-output[open] > summary::before { content: "▾ "; }
+.chat-tool-output.is-error > summary { color: var(--arxiv); }
+.chat-tool-output-text {
+  margin: 2px 0 4px;
+  padding: 8px 10px;
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: var(--surface-muted);
+  border-radius: 8px;
+  color: var(--ink-soft);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
 .chat-msg-assistant .markdown-body pre { margin: 8px 0; padding: 10px 12px; overflow-x: auto; background: var(--surface-muted); border-radius: 8px; font-size: 12.5px; }
 .chat-msg-assistant .markdown-body code { font-size: 12.5px; }
 .chat-system-note { margin: 0; align-self: center; color: var(--ink-faint); background: var(--surface-muted); border-radius: 999px; padding: 4px 12px; font-size: 11.5px; }

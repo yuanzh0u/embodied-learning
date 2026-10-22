@@ -39,7 +39,7 @@ python3 scripts/run.py launch \
 | `--seed-arxiv-ids` | 给定种子论文，强制排到深读队列最前 |
 | `--arxiv-snapshot` | 离线检索：OAI 快照 JSONL 或 SQLite/FTS5 库 |
 | `--kb-root` | 目标知识库；run 落在 `<kb-root>/work/` |
-| `--target-style` + `--scope-note` | 只交付单一文体（否则三文体） |
+| `--target-style` + `--scope-note` | 只交付单一文体（否则三文体）。`--target-style` 在 init 时就写进 run.json 的 `inputs.target_style`，成稿阶段的 `check-bundle --pre-settle` 与 `run.py status` 的审计门命令都按它只要求那一篇；`style`/`scope_note` 两个落盘字段仍由 finalize 盖章 |
 
 `smart-jev` 是默认选文策略，需要 System One 端点的环境变量（只走环境，不写配置文件）：
 `EMBODIED_SYSTEM_ONE_URL`（缺省时取 `ANTHROPIC_BASE_URL` + `/v1/systemone`）与

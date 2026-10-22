@@ -102,6 +102,64 @@ class BackfillReentryParamsTest(unittest.TestCase):
             self.assertEqual(args.time_range, "2016-09-22..2026-09-22")
             self.assertEqual(args.kb_root, str(kb_root))
 
+    def test_manifest_backfills_target_style(self) -> None:
+        """A bare --resume leaves --target-style at the parser default
+        (scientific-memo), which run_finalize forwards as --style and would
+        shrink a three-style run at settle. The birth interview answer is the
+        authority (2026-10-21 点云匹配)."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp) / "work" / "run"
+            run_dir.mkdir(parents=True)
+            (run_dir / "run.json").write_text(
+                json.dumps({"topic": "t", "inputs": {"target_style": "all"}}),
+                encoding="utf-8",
+            )
+            args = mock.Mock(topic=None, review_mode=None, time_range=None,
+                             kb_root=str(tmp), target_style="scientific-memo")
+            launcher.backfill_reentry_params(args, run_dir)
+            self.assertEqual(args.target_style, "all")
+
+    def test_launch_init_carries_the_interview_inputs(self) -> None:
+        """The CLI launch must stamp the same `inputs` payload the wiki kickoff
+        does — otherwise run.json has no target_style for the pre-settle gates
+        to read."""
+        with tempfile.TemporaryDirectory() as tmp:
+            kb_root = Path(tmp)
+            run_dir = kb_root / "work" / "literature-review-demo-20261021"
+            run_dir.mkdir(parents=True)
+            (run_dir / "run.json").write_text(
+                json.dumps({"topic": "demo", "review_mode": "rapid", "status": "in-progress",
+                            "inputs": {"target_style": "scientific-memo"}}),
+                encoding="utf-8",
+            )
+            captured: list[list[str]] = []
+
+            def fake_run(command, **kwargs):
+                captured.append([str(part) for part in command])
+                if "init" in command:
+                    return mock.Mock(returncode=0, stdout=f"Initialized run: {run_dir}\n", stderr="")
+                return mock.Mock(returncode=0, stdout="", stderr="")
+
+            with mock.patch.object(launcher, "system_one_ready", return_value=True), \
+                    mock.patch.object(launcher.subprocess, "run", side_effect=fake_run), \
+                    mock.patch.object(launcher, "stage_done", return_value=None), \
+                    mock.patch.object(launcher, "run_mechanical"), \
+                    mock.patch.object(launcher, "writer_prompts", return_value=("s", "u")), \
+                    mock.patch.object(launcher, "run_writer", return_value=False), \
+                    mock.patch.object(launcher, "collect_gate_problems", return_value=[]), \
+                    mock.patch.object(launcher, "run_finalize"), \
+                    mock.patch.object(launcher, "verify_publish", return_value=[]), \
+                    mock.patch.object(launcher, "mark_stage"):
+                code = invoke("run.py", "launch", [
+                    "--topic", "demo", "--kb-root", str(kb_root),
+                    "--target-style", "scientific-memo",
+                ])
+            self.assertEqual(code, 0)
+            init = next(cmd for cmd in captured if "init" in cmd)
+            payload = json.loads(init[init.index("--inputs-json") + 1])
+            self.assertEqual(payload["target_style"], "scientific-memo")
+            self.assertEqual(payload["source"], "cli")
+
     def test_explicit_kb_root_not_overridden(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             run_dir = Path(tmp) / "work" / "run"
@@ -185,6 +243,31 @@ class CollectGateProblemsTest(unittest.TestCase):
                 problems = launcher.collect_gate_problems(run_dir)
         self.assertTrue(any("missing required field" in problem for problem in problems))
         self.assertFalse(any("run not settled" in problem for problem in problems))
+
+    def test_single_style_run_audits_only_its_own_article(self) -> None:
+        """A run born with inputs.target_style=expert-explainer ships no memo;
+        the launcher used to hard-code the memo path into audit-citations and
+        report "article missing" for a file the run never promised."""
+        with tempfile.TemporaryDirectory() as tmp:
+            run_dir = Path(tmp)
+            (run_dir / "run.json").write_text(json.dumps({
+                "status": "in-progress",
+                "inputs": {"source": "wiki-interview", "target_style": "expert-explainer"},
+            }), encoding="utf-8")
+            (run_dir / "zhihu-explainer_zhihu.md").write_text("# 知乎\n", encoding="utf-8")
+            captured: list[list[str]] = []
+
+            def fake_run(command, **kwargs):
+                captured.append([str(part) for part in command])
+                return mock.Mock(returncode=0, stdout="{}", stderr="")
+
+            with mock.patch.object(launcher.subprocess, "run", side_effect=fake_run):
+                problems = launcher.collect_gate_problems(run_dir)
+        self.assertEqual(problems, [])
+        citation = next(cmd for cmd in captured if "audit-citations" in cmd)
+        articles = [b for a, b in zip(citation, citation[1:]) if a == "--article"]
+        self.assertEqual(len(articles), 1)
+        self.assertTrue(articles[0].endswith("zhihu-explainer_zhihu.md"))
 
 
 class WriterPromptsTest(unittest.TestCase):

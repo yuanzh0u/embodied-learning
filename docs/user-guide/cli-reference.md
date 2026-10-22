@@ -83,10 +83,23 @@ CI 的部署 workflow 走第一行——这正是 SEO/GEO 链路的入口，改�
 ## `skills/.../fetch.py`
 
 `extract-arxiv-html`, `extract-arxiv-pdf`, `extract-arxiv-tex`, `download-arxiv-source`,
-`extract-content-queue`, `extract-content`, `write-lit-outputs`, `render-figure-table-block`
+`download-content-html`, `extract-content-queue`, `extract-content`, `write-lit-outputs`,
+`render-figure-table-block`
 
 要点：默认 transport 是 arxiv2md（公开 REST API）；`--transport s3-tex` 需要 AWS 凭证
 （requester-pays 桶，TODO）。全文缓存写在仓库之外。
+
+**全文抽取两步拆分**（2026-10-21）：
+
+1. `download-content-html --paper-id-file … --html-cache-dir <kb>/.cache/html
+   --summary-output <run>/html-download.json` — 批量下载 HTML（机器级 arXiv 限流闸门 +
+   瞬时失败重试 ≤3 次）。404/410 记 `unavailable` 并跨 rerun **sticky**（`--force` 才重发）；
+   连续连接失败熔断余下篇目。stdout 协议：`DOWNLOADED|CACHED|UNAVAILABLE|FAILED|CHANNEL-DOWN <id> (n/m)`。
+2. `extract-content-queue --download-manifest <run>/html-download.json …` — 本地并行解析
+   （manifest 里 `downloaded/cached/unavailable` 的论文加 `--html-cache-only` 纯读缓存；`failed`
+   允许最后一次联网）。HTML 不达标时 chain 走 tex/pdf 兜底并在 stderr 打 `TIER <id> … → tex` 行
+   （queue 转发到 stdout，driver 显示为 `[PAPER]`）。HELD 行携带紧凑原因：
+   `HELD <id> (n/m) quality low text=320`。
 
 ## `skills/.../read.py`
 

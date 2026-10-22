@@ -76,6 +76,32 @@ class CheckRunBundleTest(unittest.TestCase):
         self.assertTrue(any("xiaohongshu-post_xiaohongshu.md" in p for p in problems))
         self.assertTrue(any("three styles are the default" in p for p in problems))
 
+    def test_birth_input_declares_reduced_scope_before_settle(self) -> None:
+        """The writer's --pre-settle gate runs before finalize stamps style +
+        scope_note; the interview answer recorded at run birth is the scope
+        declaration until then. Without the fallback a single-style run was
+        told to ship two deliverables the user never asked for (2026-10-21
+        点云匹配)."""
+        run_dir = make_run(
+            self.tmp,
+            deliverables=["scientific-memo_keyan.md"],
+            manifest_extra={
+                "status": "in-progress",
+                "inputs": {"source": "wiki-interview", "target_style": "scientific-memo"},
+            },
+        )
+        self.assertEqual(check_run_bundle.check_run_bundle(run_dir, pre_settle=True), [])
+
+    def test_birth_input_all_keeps_the_three_style_default(self) -> None:
+        run_dir = make_run(
+            self.tmp,
+            deliverables=["scientific-memo_keyan.md"],
+            manifest_extra={"status": "in-progress", "inputs": {"target_style": "all"}},
+        )
+        problems = check_run_bundle.check_run_bundle(run_dir, pre_settle=True)
+        self.assertTrue(any("zhihu-explainer_zhihu.md" in p for p in problems))
+        self.assertTrue(any("three styles are the default" in p for p in problems))
+
     def test_declared_reduced_scope_passes(self) -> None:
         run_dir = make_run(
             self.tmp,

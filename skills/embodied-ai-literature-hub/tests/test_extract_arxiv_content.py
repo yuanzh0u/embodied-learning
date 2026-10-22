@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib.util
 import sys
 import io
@@ -379,6 +380,74 @@ class PreferredSourceChainTest(unittest.TestCase):
         self.assertTrue(output["evidence_eligible"])
         tex_attempt = next(attempt for attempt in output["attempts"] if attempt["method"] == "tex")
         self.assertFalse(tex_attempt["available"])
+
+
+class TierFallbackLogTest(unittest.TestCase):
+    """Each tier switch emits one ``TIER <id> ...`` line on stderr (the queue
+    forwards them to the driver as ``[PAPER]`` dialog lines)."""
+
+    def run_chain(self, args, patches):
+        err = io.StringIO()
+        with contextlib.ExitStack() as stack:
+            for target, attr, value in patches:
+                stack.enter_context(mock.patch.object(target, attr, value))
+            stack.enter_context(contextlib.redirect_stderr(err))
+            output = content.extract_content(args)
+        return output, err.getvalue()
+
+    def test_html_failure_logs_fallback_to_tex(self) -> None:
+        output, err = self.run_chain(
+            make_args(preferred_source="auto", tex_cache_dir="/tmp/kb-test-src"),
+            [
+                (content.extract_arxiv_html, "fetch_html", mock.Mock(return_value=(False, ""))),
+                (content, "try_tex", mock.Mock(return_value={
+                    "available": True, "evidence_eligible": True,
+                    "quality": {"grade": "high"}, "extraction_method": "tex-pandoc",
+                    "source_format": "markdown", "text": "ok",
+                })),
+            ],
+        )
+        self.assertTrue(output["evidence_eligible"])
+        self.assertIn("TIER 2403.12550 html failed", err)
+        self.assertIn("→ tex", err)
+        self.assertIn("TIER 2403.12550 tex ok（quality=high", err)
+
+    def test_tex_failure_logs_fallback_to_pdf(self) -> None:
+        output, err = self.run_chain(
+            make_args(preferred_source="tex", tex_cache_dir="/tmp/kb-test-src"),
+            [
+                (content, "try_tex", mock.Mock(return_value={
+                    "available": False, "evidence_eligible": False,
+                    "quality": {"grade": "low"}, "extraction_method": "tex-pandoc",
+                    "error": "arxiv2md unavailable",
+                })),
+                (content.extract_arxiv_html, "fetch_html", mock.Mock(return_value=(False, ""))),
+                (content, "try_pdf", mock.Mock(return_value={
+                    "available": False, "evidence_eligible": False,
+                    "quality": {"grade": "low"}, "extraction_method": "pdf-text",
+                    "error": "pdf unavailable",
+                })),
+            ],
+        )
+        self.assertFalse(output["evidence_eligible"])
+        self.assertIn("TIER 2403.12550 tex failed", err)
+        self.assertIn("→ html", err)
+        self.assertIn("TIER 2403.12550 html failed", err)
+        self.assertIn("→ pdf", err)
+        self.assertIn("TIER 2403.12550 pdf failed", err)
+
+    def test_ok_tier_logs_quality_and_format(self) -> None:
+        # minimum_html_chars=1 lets the tiny fixture pass the quality gate so
+        # the html tier actually succeeds and logs the ok line.
+        output, err = self.run_chain(
+            make_args(minimum_html_chars=1),
+            [
+                (content.extract_arxiv_html, "fetch_html", mock.Mock(return_value=(True, HTML_FIXTURE))),
+            ],
+        )
+        self.assertTrue(output["evidence_eligible"])
+        self.assertIn("TIER 2403.12550 html ok（quality=", err)
+        self.assertNotIn("→", err)
 
 
 class MainPlumbingTest(unittest.TestCase):

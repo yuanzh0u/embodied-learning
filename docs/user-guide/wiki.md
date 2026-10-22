@@ -39,6 +39,15 @@ python3 scripts/wiki.py serve --kb-root ~/Documents/arxiv   # 换知识库
 后台跑无头流水线 → 实时进度 → 产出进 wiki 快照。
 
 - 跑的是 `run.py launch` 同一条链路；进度面板显示阶段与漏斗数字（复用 `run.py status`）。
+- **每张阶段卡片只放它自己的动作**：工具行按命令/文件名推断归属（`Write zhihu-explainer_zhihu.md`
+  落「成稿撰写」、`run.py check-bundle` 落「审计门」、`run.py finalize` 落「落盘发布」），
+  链式命令取第一段；模型没打印 `[STAGE:*]` 也不会串卡。推断不出归属的调用（临时文件写入、
+  `find` / 裸 `ls` 之类的探查命令）进中性的「其他动作」卡，**不会**回填到上一个已结束阶段。
+- **卡片按首条日志的时间排序**：某阶段的第一条事件来晚了（模型在收尾时才补打 `[STAGE:*]`），
+  它的卡片仍插在时间对应的位置，不会挂到列表末尾制造「上一阶段最后一条排在下一阶段第一条前面」。
+  收尾消息里重述整条阶段链的标记只是叙述，不会把工作流拨回已完成的阶段。
+- **审计门卡片带输出**：`check-bundle` / `audit-citations` / `audit-article-quality` / `finalize`
+  的 stdout 以折叠块附在对应工具行下（失败调用无论属哪阶段都保留输出，尾部 1500 字）。
 - **开工前查重**：同一主题重复启动会截断 registry。看到已有 in-progress run 就用 `--resume`。
 - 长时间静默是正常的（深读/成稿是长任务）；页面保持可见心跳。
 
@@ -76,7 +85,9 @@ python3 scripts/wiki.py serve --kb-root ~/Documents/arxiv   # 换知识库
 
 ## 常见问题
 
-**页面打不开 / 端口冲突**：换 `--port`，或 `serve --close` 后重启。
+**页面打不开 / 端口冲突**：换 `--port`，或 `serve --close` 后重启。端口被占时会先问占用者
+服务哪个知识库：**同一个库**就复用并提示；**不同的库**直接报错退出（码 2）并给出关闭或换端口两条路
+——不会再出现「传了新 `--kb-root`，页面还是旧库」的静默复用。
 
 **新综述没出现在页面上**：跑完 finalize 会重建快照；手动补
 `python3 scripts/wiki.py build-wiki --kb-root ~/Documents/arxiv`。

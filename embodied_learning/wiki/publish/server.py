@@ -6,12 +6,14 @@ import argparse
 import datetime as dt
 import errno
 import html
+import http.client
 import json
 import os
 import re
 import secrets
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -40,6 +42,7 @@ from embodied_learning.config import (
     INIT_RUN_TIMEOUT_S,
     PAPER_DECK_TIMEOUT_S,
     PAPER_PREP_TIMEOUT_S,
+    PORT_PROBE_TIMEOUT_S,
     QUICKREAD_TIMEOUT_S,
     REFRESH_TIMEOUT_S,
     RUN_DECK_TIMEOUT_S,
@@ -433,6 +436,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         if path == "/api/chat/state":
             self._handle_chat_state()
             return
+        if path == "/api/kb":
+            self._handle_kb_identity()
+            return
         if path == "/api/paper/chat/state":
             self._handle_paper_chat_state()
             return
@@ -631,6 +637,17 @@ class WikiHandler(SimpleHTTPRequestHandler):
         if not run_dir.is_dir():
             raise ChatBadRequest("话题运行目录不存在。")
         return run_dir, topic
+
+    def _handle_kb_identity(self) -> None:
+        """Which knowledge base this instance serves. A second `serve` on an
+        occupied port probes this before deciding to reuse the running Wiki:
+        same KB → reuse; different KB → refuse loudly. Read-only and
+        unauthenticated (localhost only, same as the rest of the server)."""
+
+        self._send_json(
+            HTTPStatus.OK,
+            {"kb_root": str(self.kb_root), "kind": "embodied-learning-wiki"},
+        )
 
     def _handle_chat_state(self) -> None:
         # Capability probe: the frontend calls this once at init to decide
@@ -1813,6 +1830,29 @@ class WikiHandler(SimpleHTTPRequestHandler):
             if isinstance(item.get("source_directory"), str)
         }
 
+    def _run_is_settled(self, run_dir: Path) -> bool:
+        """True when the run manifest already says settled.
+
+        The writer's closing message is prose that does not always carry the
+        ``[TOPIC:...]`` marker, so a finished run used to be auto-continued
+        one extra round (2026-10-21 深度图补全: "上一段未完成，自动继续（第 1/2
+        轮）" fired after finalize had already published). run.json is the
+        machine truth; the marker is only the courtesy signal. The work copy
+        is stamped by finalize and the published copy is its twin — accept
+        either, so the check survives a settle that only reached evidence/."""
+
+        candidates = [run_dir]
+        if run_dir.parent.name == "work":
+            candidates.append(run_dir.parent.parent / "evidence" / run_dir.name)
+        for candidate in candidates:
+            try:
+                manifest = json.loads((candidate / "run.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if isinstance(manifest, dict) and manifest.get("status") == "settled":
+                return True
+        return False
+
     def _find_topic_for_run_dir(self, run_dir: Path, before_dirs: set[str], marker_run: str | None) -> dict | None:
         """After the settle refresh, find the published topic the workflow
         produced. The settled run lands in evidence/ under the same folder
@@ -1920,6 +1960,9 @@ class WikiHandler(SimpleHTTPRequestHandler):
         message = (body.get("message") or "").strip()
         ws_id = body.get("ws_id") if isinstance(body.get("ws_id"), str) else ""
         entry = self.chat_sessions.get_workspace(ws_id) if ws_id else None
+        # True only for a turn that follows an already-published run (a free
+        # question after settle). Such a turn must not publish or park again.
+        already_settled = False
         # The model is chosen at kickoff and sticks for the whole workflow
         # (switching models mid-session is incoherent).
         ws_model = self._resolve_request_model(body.get("model")) if entry is None else (entry.get("model") or None)
@@ -1939,6 +1982,7 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 return
             ws_style = str((workflow.get("params") or {}).get("target_style") or "all")
             ws_stage = str(workflow.get("stage") or "")
+            already_settled = bool(settled)
             if settled:
                 # The survey already published; treat the message as ordinary
                 # follow-up on the same session, not pipeline continuation.
@@ -2024,14 +2068,27 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 registry.record_session(ws_id, None)
                 self._write_sse_event({"type": "session_reset"})
             emitted_stages: set[str] = set()
+            # Highest pipeline node this conversation has reached. A marker
+            # for an EARLIER node is the writer recapping the chain in its
+            # closing message, not a transition: acting on it moved the
+            # workflow back to a finished node (2026-10-21 自动化标注:
+            # [STAGE:writing] 22s after finalize had published).
+            stage_high_water = str(
+                ((registry.get_workspace(ws_id) or {}).get("workflow") or {}).get("stage") or ""
+            )
 
             def on_delta(text: str) -> None:
+                nonlocal stage_high_water
                 for stage, detail in wiki_chat.extract_stage_markers(text):
-                    if stage not in emitted_stages:
-                        emitted_stages.add(stage)
-                        registry.set_workflow_state(
-                            ws_id, stage=stage, awaiting_input=False, require_existing=True)
-                        self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+                    if stage in emitted_stages:
+                        continue
+                    if wiki_chat.stage_is_regression(stage_high_water, stage):
+                        continue
+                    emitted_stages.add(stage)
+                    stage_high_water = stage
+                    registry.set_workflow_state(
+                        ws_id, stage=stage, awaiting_input=False, require_existing=True)
+                    self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
 
             full_text = self._stream_chat_turn(
                 key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
@@ -2041,15 +2098,27 @@ class WikiHandler(SimpleHTTPRequestHandler):
 
             marker_run = wiki_chat.extract_topic_marker(full_text)
             stop_reason = wiki_chat.extract_stop_marker(full_text)
-
+            # A settled run needs no continuation even when the closing prose
+            # forgot the marker: finalize already published it (2026-10-21
+            # 深度图补全 spawned a pointless 1/2 round). The run dir is the
+            # settle marker's fallback source.
+            settled_on_disk = self._run_is_settled(run_dir)
+            if marker_run is None and settled_on_disk:
+                try:
+                    marker_run = run_dir.relative_to(self.kb_root).as_posix()
+                except ValueError:
+                    marker_run = str(run_dir)
             # One-shot contract: no outline stop-and-wait. A segment that ends
             # without settling is auto-continued in the same session until it
             # publishes or the round budget runs out — EXCEPT a deliberate
             # [STOP:<reason>] decision point (e.g. 精读数量不够): that parks for
             # the user and must never be auto-continued (2026-09-30 定案).
+            # A run settled on disk (or one already published before this
+            # turn) has no work left, so it never enters the loop.
             auto_rounds = 0
             while (
                 marker_run is None
+                and not settled_on_disk
                 and stop_reason is None
                 and full_text.strip()
                 and not turn.stop_requested
@@ -2074,7 +2143,13 @@ class WikiHandler(SimpleHTTPRequestHandler):
                 marker_run = wiki_chat.extract_topic_marker(full_text)
                 stop_reason = wiki_chat.extract_stop_marker(full_text)
 
-            if marker_run:
+            if already_settled:
+                # A follow-up question on a published run (the prompt told the
+                # model the survey is done). Nothing to settle and nothing to
+                # park: re-emitting topic_ready or an awaiting_input marker
+                # would restart a pipeline that has no work left.
+                pass
+            elif marker_run:
                 # Settle finished: publish and hand the topic back.
                 registry.set_workflow_state(
                     ws_id, stage="settle", awaiting_input=False, require_existing=True)
@@ -2507,6 +2582,111 @@ def build_knowledge_map(output: Path, kb_root: Path) -> None:
         print("知识图谱本地预览生成失败，Wiki 阅读功能仍可正常使用。", file=sys.stderr)
 
 
+def _kb_root_from_listener_cmdline(port: int) -> Path | None:
+    """Fallback identity for a Wiki built before /api/kb existed: read the
+    listener's own argv and pull out --kb-root. Local-only (the KB may be on a
+    shared mount, but the process is not), same mechanism --close already
+    relies on. None when the process is not ours or the flag is absent."""
+
+    pid = find_listener_pid(port)
+    if pid is None:
+        return None
+    try:
+        raw = Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return None
+    args = [part.decode("utf-8", "replace") for part in raw.split(b"\0") if part]
+    for index, arg in enumerate(args):
+        if arg == "--kb-root" and index + 1 < len(args):
+            return Path(args[index + 1]).expanduser().resolve()
+        if arg.startswith("--kb-root="):
+            return Path(arg.split("=", 1)[1]).expanduser().resolve()
+    return None
+
+
+def probe_running_kb(port: int) -> Path | None:
+    """Ask the Wiki already listening on 127.0.0.1:<port> which KB it serves.
+    None = nothing there, something else holds the port, or the identity could
+    not be read. A same-build instance answers /api/kb; an older build is read
+    off its own command line."""
+
+    connection = http.client.HTTPConnection(
+        "127.0.0.1", port, timeout=PORT_PROBE_TIMEOUT_S
+    )
+    try:
+        connection.request("GET", "/api/kb")
+        response = connection.getresponse()
+        body = response.read()
+        if response.status == HTTPStatus.OK:
+            payload = json.loads(body.decode("utf-8"))
+            raw = payload.get("kb_root")
+            if payload.get("kind") == "embodied-learning-wiki" and raw:
+                return Path(raw).expanduser().resolve()
+        elif response.status != HTTPStatus.NOT_FOUND:
+            return None
+    except (OSError, ValueError, http.client.HTTPException):
+        pass
+    finally:
+        connection.close()
+    return _kb_root_from_listener_cmdline(port)
+
+
+def refuse_different_kb(port: int, owning_kb: Path, requested_kb: Path) -> int:
+    """A second `serve` asked for a KB the running instance does not serve.
+    Silently reusing the port served the *old* KB while the operator believed
+    their --kb-root had taken effect, so this is a hard error with the two
+    ways out spelled out."""
+
+    print(
+        f"端口 {port} 已被另一个 Wiki 实例占用，它服务的是：{owning_kb}\n"
+        f"本次 --kb-root 指定的是：{requested_kb}\n"
+        "两者不同，继续启动不会切换知识库。请二选一：\n"
+        f"  1) 先关闭占用者再启动：serve_research_wiki --close --port {port}\n"
+        f"  2) 换一个端口启动：serve_research_wiki --port <其他端口> --kb-root {requested_kb}",
+        file=sys.stderr,
+    )
+    return 2
+
+
+def port_in_use(port: int) -> bool:
+    """True when something already accepts connections on 127.0.0.1:<port>.
+    Port 0 is 'pick one for me', so it is never in use."""
+
+    if port == 0:
+        return False
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=PORT_PROBE_TIMEOUT_S):
+            return True
+    except OSError:
+        return False
+
+
+def port_conflict_action(port: int, kb_root: Path) -> int | None:
+    """Decide what an occupied port means before doing any work.
+    None = free, start normally. 0 = same KB already serving, reuse it.
+    2 = a different KB holds the port, refuse (see refuse_different_kb).
+    Checked *before* the snapshot rebuild: an aborted start must not spend
+    minutes rebuilding the shared KB's snapshot on CIFS for nothing."""
+
+    if not port_in_use(port):
+        return None
+    url = f"http://127.0.0.1:{port}/"
+    owning_kb = probe_running_kb(port)
+    if owning_kb is None:
+        # Older build (no /api/kb) or a foreign listener: identity unknown.
+        # Keep the historical reuse behaviour rather than breaking a plain
+        # second `serve --open`, but say that the KB was not verified.
+        print(f"已有实例正在运行：{url}（无法确认它服务哪个知识库）")
+        return 0
+    if owning_kb == kb_root:
+        print(
+            f"已有实例正在运行：{url}（同一知识库：{owning_kb}）\n"
+            "未重启它；需要重建快照就在页面点「刷新」。"
+        )
+        return 0
+    return refuse_different_kb(port, owning_kb, kb_root)
+
+
 def find_listener_pid(port: int) -> int | None:
     """Return the pid of the process listening on 127.0.0.1:<port>, or None.
     Used by --close; on this machine that can only be another Wiki instance."""
@@ -2589,6 +2769,16 @@ def run(args: argparse.Namespace) -> int:
         return 1
     wiki_root = resolve_wiki_root(kb_root)
     data_dir = wiki_root / "data"
+    # Occupied port: decide reuse-vs-refuse before the snapshot rebuild, so a
+    # start that cannot bind does not rebuild a shared KB's snapshot for
+    # nothing (CIFS makes that minutes) and never silently serves another KB.
+    conflict = port_conflict_action(args.port, kb_root)
+    if conflict is not None:
+        # Only reuse opens the browser; a refused start must not point the
+        # operator at the other KB's instance.
+        if conflict == 0 and args.open:
+            threading.Timer(0.45, lambda: webbrowser.open(f"http://127.0.0.1:{args.port}/")).start()
+        return conflict
     if not args.no_refresh:
         try:
             refresh_snapshot(kb_root, data_dir)
@@ -2628,15 +2818,24 @@ def run(args: argparse.Namespace) -> int:
             workflow_effort=args.workflow_effort,
         )
         url = f"http://127.0.0.1:{args.port}/"
-        try:
-            server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
-        except OSError as exc:
-            if exc.errno != errno.EADDRINUSE:
-                raise
-            print(f"已有实例正在运行：{url}")
-            if args.open:
-                threading.Timer(0.45, lambda: webbrowser.open(url)).start()
-            return 0
+        server: ThreadingHTTPServer | None = None
+        for _ in (1, 2):
+            try:
+                server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
+                break
+            except OSError as exc:
+                if exc.errno != errno.EADDRINUSE:
+                    raise
+                # Lost the race since the pre-check (or port 0 impossible).
+                # Ask the winner who it is; None = it just exited, retry once.
+                conflict = port_conflict_action(args.port, kb_root)
+                if conflict is not None:
+                    if conflict == 0 and args.open:
+                        threading.Timer(0.45, lambda: webbrowser.open(url)).start()
+                    return conflict
+        if server is None:
+            print(f"无法绑定端口 {args.port}。", file=sys.stderr)
+            return 2
         print(f"空间智能研究 Wiki 已准备好：{url}")
         if chat is not None and chat.enabled:
             model_label = args.chat_model or "默认模型"

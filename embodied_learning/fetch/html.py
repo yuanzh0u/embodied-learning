@@ -421,10 +421,14 @@ def normalize_id(value: str) -> str:
     return re.sub(r"v\d+$", "", value)
 
 
-def fetch_html(url: str, target: Path, timeout: float) -> tuple[bool, str]:
+def fetch_html(url: str, target: Path, timeout: float, *, cache_only: bool = False) -> tuple[bool, str]:
     target.parent.mkdir(parents=True, exist_ok=True)
     if target.exists() and target.stat().st_size > 0:
         return True, target.read_text(encoding="utf-8", errors="replace")
+    if cache_only:
+        # Step-2 parse mode: the download phase owns the network. A missing
+        # cache file means the HTML tier is unavailable for this paper.
+        return False, ""
     request = urllib.request.Request(
         url,
         headers={"User-Agent": "embodied-ai-literature-hub/1.0 (local research workflow)"},

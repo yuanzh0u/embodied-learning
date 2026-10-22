@@ -43,6 +43,7 @@ from embodied_learning.knowledge.funnel import FUNNEL_FILENAME
 from embodied_learning.utils.jsonio import load_json as _load_json
 from embodied_learning.utils.layout import default_kb_root, find_roots, infer_kb_root
 from embodied_learning.wiki.run.catalog import build_trace_map, register_run_in_catalog
+from embodied_learning.wiki.run.manifest import declared_style
 
 APPENDIX = "evidence-appendix.md"
 BRIEF = "writing-brief.md"
@@ -202,8 +203,26 @@ def run(args: argparse.Namespace) -> int:
             value = summary.get(key)
             if isinstance(value, int):
                 manifest["candidate_count" if key == "candidate_count" else "full_text_count"] = value
-    style = args.style or manifest.get("style")
-    if style and style in STYLE_TO_FILE:
+    # Scope declaration: --style / run.json `style` is the settled contract.
+    # A run born with a single-style interview answer records it only under
+    # inputs.target_style; that intent counts as a declaration until the
+    # writer's disk shows the full triplet (a run that was asked for one face
+    # but shipped three keeps the three-style contract, since the declaration
+    # is a required minimum, not a cap). Without the fallback, a memo-only run
+    # born from a single-style interview died with 成稿不足三种.
+    explicit_style = args.style or manifest.get("style")
+    on_disk = [name for name in STANDARD_ARTICLES if (run_dir / name).is_file()]
+    birth_style = declared_style(manifest)
+    if explicit_style:
+        style = explicit_style
+    elif birth_style and len(on_disk) < len(STANDARD_ARTICLES):
+        style = birth_style
+    else:
+        style = None
+    if style and style not in STYLE_TO_FILE:
+        log(f"声明的 style={style} 不是受支持的落盘范围（{'/'.join(sorted(STYLE_TO_FILE))}）。")
+        return 2
+    if style:
         # Declared style → its own file is the only deliverable. A disk scan
         # over STYLE_TO_FILE would sweep in mechanically generated artifacts
         # that happen to share a filename (survey maps to review-packet.md,

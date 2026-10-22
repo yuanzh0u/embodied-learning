@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 from embodied_learning.config import STYLE_TO_FILE
+from embodied_learning.wiki.run.manifest import declared_style
 
 DELIVERABLES = [
     "scientific-memo_keyan.md",
@@ -201,7 +202,13 @@ def check_run_bundle(run_dir: Path, *, pre_settle: bool = False) -> list[str]:
         )
 
     # Bundle completeness: three styles by default, or a declared reduced scope.
-    style = manifest.get("style")
+    # The declaration may live in `inputs.target_style` (the interview/CLI
+    # choice stamped at run birth) because this gate runs at the writer stage,
+    # BEFORE finalize stamps `style` + `scope_note` — reading only `style`
+    # made a single-style run fail on two phantom deliverables (2026-10-21
+    # 点云匹配). scope_note is finalize's field; the recorded interview answer
+    # is the intent until then, so it is only demanded for a settled run.
+    style = str(manifest.get("style") or "").strip()
     if style:
         if style not in STYLE_TO_FILE:
             problems.append(
@@ -210,13 +217,24 @@ def check_run_bundle(run_dir: Path, *, pre_settle: bool = False) -> list[str]:
             required = []
         else:
             required = [STYLE_TO_FILE[style]]
-            if not str(manifest.get("scope_note") or "").strip():
+            if status == "settled" and not str(manifest.get("scope_note") or "").strip():
                 problems.append(
                     "run.json: reduced scope declared via `style` but `scope_note` is missing — "
                     "record why the user asked for a single style"
                 )
     else:
-        required = list(DELIVERABLES)
+        requested = declared_style(manifest)  # inputs.target_style fallback
+        if requested and requested not in STYLE_TO_FILE:
+            problems.append(
+                f"run.json: inputs.target_style `{requested}` is not a supported settled scope "
+                f"({', '.join(sorted(STYLE_TO_FILE))})"
+            )
+            required = []
+        elif requested:
+            style = requested
+            required = [STYLE_TO_FILE[style]]
+        else:
+            required = list(DELIVERABLES)
     for name in required:
         if not (run_dir / name).is_file():
             problems.append(
