@@ -1,0 +1,2853 @@
+"""Serve the research Wiki locally and expose its safe refresh endpoint."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import errno
+import html
+import http.client
+import json
+import os
+import re
+import secrets
+import shutil
+import signal
+import socket
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+import webbrowser
+from functools import partial
+from http import HTTPStatus
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, quote, urlparse
+
+from embodied_learning.wiki.publish.snapshot import resolve_snapshot_directory
+from embodied_learning.wiki.run.manifest import run_folder_name, slugify_topic
+# AI-model capability goes through the harness binding (pybind-style).
+from embodied_learning.harness.claude import resolve_cli as agent_cli_available
+from embodied_learning.harness.claude import system_one_ready
+from embodied_learning.knowledge import arxiv_reader
+from embodied_learning.atomicio import atomic_copy, atomic_write_json, atomic_write_text
+from embodied_learning import locks
+from embodied_learning.utils.layout import find_roots
+from embodied_learning.wiki.publish import chat as wiki_chat
+from embodied_learning.config import (
+    DEFAULT_SELECTION_STRATEGY,
+    FIRST_EVENT_TIMEOUT_S,
+    INIT_RUN_TIMEOUT_S,
+    PAPER_DECK_TIMEOUT_S,
+    PAPER_PREP_TIMEOUT_S,
+    PORT_PROBE_TIMEOUT_S,
+    QUICKREAD_TIMEOUT_S,
+    REFRESH_TIMEOUT_S,
+    RUN_DECK_TIMEOUT_S,
+    WORKFLOW_AUTO_CONTINUE_ROUNDS,
+    WORKFLOW_DRIVER_TIMEOUT_S,
+    WORKFLOW_MIN_TIMEOUT_S,
+)
+
+# SCRIPT_DIR keeps its historical meaning: the scripts root (spawn paths for
+# sibling entry scripts, bundled assets) — now resolved via layout.find_roots.
+SKILLS_ROOT, SCRIPT_DIR = find_roots()[1], find_roots()[2]
+
+
+# Sibling scripts resolve next to this file, so the installed console command
+# (site-packages/wiki_scripts/) and a repo checkout behave identically.
+BUILDER = SCRIPT_DIR / "wiki.py"  # subcommands: build-wiki / build-knowledge-map
+GRAPH_BUILDER = SCRIPT_DIR / "wiki.py"
+# Skill dispatchers do NOT live in the scripts root — read.py is a skill entry
+# (ADR 0005: six dispatchers, three of them under skills/*/scripts/). Spawn
+# paths must follow that layout or every quick-read / prepare-chat exits with
+# "can't open file …/scripts/read.py" in milliseconds.
+READ_SCRIPT = SKILLS_ROOT / "embodied-ai-paper-reader" / "scripts" / "read.py"
+WRITE_SCRIPT = SKILLS_ROOT / "embodied-ai-review-writer" / "scripts" / "write.py"
+# Frontend serving rule: an *editable* install (or a plain repo run) serves the
+# repo checkout's wiki/ in place — code edits show up on refresh. A *non-editable*
+# install has no repo next to it, so it serves <kb-root>/wiki (the copy beside the
+# knowledge base), bootstrapping that copy from the wheel-bundled frontend
+# (packaged as wiki_scripts/wiki_assets, mapped from the repo's wiki/ at build
+# time) or, failing that, the repo checkout.
+DEFAULT_KB_ROOT = Path.home() / "Documents" / "arxiv"
+REPO_ROOT = SCRIPT_DIR.parent
+REPO_WIKI_ROOT = REPO_ROOT / "wiki"
+IS_REPO_CHECKOUT = (REPO_ROOT / "pyproject.toml").is_file()
+FRONTEND_ASSETS = SCRIPT_DIR / "wiki_assets"
+CATALOG_RELPATH = Path("knowledge") / "literature-review-catalog.md"
+REFRESH_LOCK = threading.Lock()
+
+
+def _is_error_line(detail: str) -> bool:
+    """True for stderr/traceback lines that must surface as SSE stage events.
+
+    Spawned scripts print their own diagnostics without a progress prefix;
+    swallowing them made every failure look like the same generic message."""
+    return (
+        "Traceback" in detail
+        or "can't open file" in detail
+        or detail.startswith(("OSError", "LockTimeout", "LockBusy", "python: can't", "run 目录缺少", "不是 run 目录"))
+    )
+
+
+def resolve_pipeline_root() -> Path | None:
+    """The skills/ root the agent-driven pipeline reads its SKILL.mds from.
+    Order: explicit --pipeline-root → the repo checkout next to the script →
+    the wheel's own scripts package dir (contains run.py init and the bundled
+    skills/) → the legacy bundled-skills-only shape. None = workflow
+    unavailable. No machine-specific fallback locations: a wheel install must
+    work from packaged files only.
+
+    The result is static for the process lifetime (PIPELINE_ROOT_OVERRIDE is
+    set in main() before any handler runs), so it is cached after the first
+    lookup — every state probe would otherwise re-stat the candidates."""
+
+    global _PIPELINE_ROOT_CACHE
+    if _PIPELINE_ROOT_CACHE is not _PIPELINE_ROOT_UNSET:
+        return _PIPELINE_ROOT_CACHE
+
+    bundled = SCRIPT_DIR / "skills"
+    candidates = [REPO_ROOT, SCRIPT_DIR, bundled]
+    if PIPELINE_ROOT_OVERRIDE is not None:
+        candidates.insert(0, PIPELINE_ROOT_OVERRIDE)
+    for candidate in candidates:
+        if (candidate / "skills" / "embodied-ai-review-writer" / "SKILL.md").is_file():
+            _PIPELINE_ROOT_CACHE = candidate
+            return candidate
+        # The bundled copy IS the skills root itself (site-packages layout).
+        if candidate == bundled and (bundled / "embodied-ai-review-writer" / "SKILL.md").is_file():
+            _PIPELINE_ROOT_CACHE = bundled
+            return bundled
+    _PIPELINE_ROOT_CACHE = None
+    return None
+
+
+_PIPELINE_ROOT_UNSET = object()
+_PIPELINE_ROOT_CACHE: Path | None | object = _PIPELINE_ROOT_UNSET
+
+
+# Set in main() from --pipeline-root before handler construction.
+PIPELINE_ROOT_OVERRIDE: Path | None = None
+
+# Starter catalog for a brand-new knowledge base: routes zero runs, so the
+# first refresh reports "nothing publishable" and the wiki serves its
+# empty-library state until the first review is settled into evidence/.
+STARTER_CATALOG = """---
+id: KB-LIT-REVIEWS
+title: 文献综述成果目录
+type: evidence-routing-index
+local-only: true  # 本地知识库：仅路由本地 evidence/ 中实际存在的 run
+tags: [literature-review, evidence-routing, paper-reading, provenance]
+---
+
+# 文献综述成果目录
+
+本目录连接主题卡与论文级证据，不重复存放论文摘要。每次综述 run 结算进
+`evidence/` 后，在这里登记一行，Wiki 刷新时即会发布该话题。
+
+## 成果索引
+
+“规模”依次表示候选池 / 可读全文 / 精读并接纳论文数。
+
+| ID | 综述主题 | 主要知识卡 | 规模 | 审计入口 |
+|---|---|---|---:|---|
+"""
+
+
+def ensure_default_kb(kb_root: Path) -> Path:
+    """First run with no knowledge base anywhere: create the minimal skeleton
+    (knowledge/ + a starter catalog routing zero runs) at the default location
+    and say so. Explicit --kb-root never gets auto-created."""
+
+    # Two servers cold-starting against one shared (possibly CIFS) KB must not
+    # interleave the catalog write — hence the kb-bootstrap lock + atomic write.
+    with locks.kb_lock(kb_root, "kb-bootstrap", wait=60):
+        catalog = kb_root / CATALOG_RELPATH
+        catalog.parent.mkdir(parents=True, exist_ok=True)
+        if not catalog.is_file():
+            atomic_write_text(catalog, STARTER_CATALOG)
+            (kb_root / "evidence").mkdir(exist_ok=True)
+            print(f"已初始化本地知识库：{kb_root}（knowledge/ + evidence/）")
+    return kb_root
+
+
+class ChatBadRequest(ValueError):
+    """Malformed chat request (bad topic id, empty message, bad JSON body)."""
+
+
+# ---- literature-review workflow (STORM-style one-click survey) -----------
+# The pipeline itself is agent-driven: the local claude CLI reads the skills'
+# SKILL.mds and executes it. The server only launches it, streams its progress,
+# and the auto-continue rounds. Workflow capability additionally requires
+# the repo checkout (skills/ tree); wheel-only installs disable it honestly.
+WORKFLOW_CHECKPOINT_STAGE = "packet"
+# One-shot contract: a workflow segment that ends without settling is
+# auto-continued with the continuation prompt instead of parking for user
+# input — the user never answers an outline checkpoint mid-run. After this
+# many exhausted rounds (or a manual stop) the workspace parks with
+# awaiting_input for explicit recovery only.
+WORKFLOW_REVIEW_MODES = {"rapid", "scoping", "systematic"}
+WORKFLOW_STYLES = {"all", "scientific-memo", "expert-explainer"}
+WORKFLOW_SEARCH_STRATEGIES = {"smart", "fast", "seeds"}
+# Deep-read queue selection (the interview card's 选文策略; keywords keeps the
+# legacy term-matching screen-candidates inside the driver). ``smart`` runs the
+# execution model (the kickoff model the card picked); ``smart-jev`` runs the
+# decision model through the harness's System One binding.
+WORKFLOW_SELECTION_STRATEGIES = {"smart", "smart-jev", "keywords", "influence", "bm25"}
+PIPELINE_DRIVER = SCRIPT_DIR / "run.py"  # subcommand: pipeline
+# Chat model: the browser's composer picks per conversation; this is the
+# default shown there and used when no explicit model arrives. Empty string
+# or --chat-model overrides change it at the CLI level.
+DEFAULT_CHAT_MODEL = "glm-5.3-flash"
+# Per-conversation locks: a long workflow segment must not block topic chat
+# (and vice versa). Keyed by session key (topic-*/ws-*); one claude process
+# per key at a time.
+CHAT_LOCKS: dict[str, threading.Lock] = {}
+CHAT_LOCKS_GUARD = threading.Lock()
+
+
+def acquire_chat_lock(key: str) -> bool:
+    with CHAT_LOCKS_GUARD:
+        lock = CHAT_LOCKS.setdefault(key, threading.Lock())
+    return lock.acquire(blocking=False)
+
+
+def release_chat_lock(key: str) -> None:
+    with CHAT_LOCKS_GUARD:
+        lock = CHAT_LOCKS.get(key)
+    if lock is not None:
+        lock.release()
+
+
+# In-flight conversations, keyed by conversation key (topic id, ``ws-*``,
+# ``paper-*``) — the same keys the per-conversation locks use. Guarded so
+# /api/chat/stop never blocks on the streaming thread. The pre-claude pipeline
+# driver subprocess is tracked the same way (a kickoff stop kills the driver,
+# not a turn). Keyed rather than a single slot because concurrent conversations
+# are allowed: "stop" must address one of them, not "whatever started last" —
+# a topic-chat stop used to kill a running workflow turn (2026-10-15).
+CHAT_GUARD = threading.Lock()
+IN_FLIGHT_TURNS: dict[str, wiki_chat.ChatTurn] = {}
+IN_FLIGHT_DRIVERS: dict[str, subprocess.Popen] = {}
+
+
+def _track_turn(key: str, turn: wiki_chat.ChatTurn | None) -> None:
+    with CHAT_GUARD:
+        if turn is None:
+            IN_FLIGHT_TURNS.pop(key, None)
+        else:
+            IN_FLIGHT_TURNS[key] = turn
+
+
+def _track_driver(key: str, driver: subprocess.Popen | None) -> None:
+    with CHAT_GUARD:
+        if driver is None:
+            IN_FLIGHT_DRIVERS.pop(key, None)
+        else:
+            IN_FLIGHT_DRIVERS[key] = driver
+
+
+def resolve_kb_root(requested: Path | None) -> Path | None:
+    """KB root: an explicit --kb-root (must carry a catalog, validated by the
+    caller), else ~/Documents/arxiv, else the repo checkout. None = not found."""
+
+    candidates: list[Path] = []
+    if requested is not None:
+        candidates.append(requested)
+    else:
+        candidates.append(DEFAULT_KB_ROOT)
+        candidates.append(REPO_ROOT)
+    for candidate in candidates:
+        resolved = candidate.expanduser().resolve()
+        if (resolved / CATALOG_RELPATH).is_file():
+            return resolved
+    return None
+
+
+def pool_root(kb_root: Path) -> Path:
+    """The shared public paper pool next to the knowledge base."""
+    return kb_root / "pool"
+
+
+def resolve_wiki_root(kb_root: Path) -> Path:
+    """Pick the wiki/ folder to serve. An editable install (repo checkout)
+    serves the repo's own wiki/ so frontend edits show up immediately; a
+    non-editable install serves <kb-root>/wiki, bootstrapping a first-run copy
+    from the wheel-bundled frontend when the folder does not exist yet. An
+    existing copy is refreshed in place on every start (byte-compare) so a
+    reinstall reaches KBs bootstrapped by an older build."""
+
+    if IS_REPO_CHECKOUT and (REPO_WIKI_ROOT / "index.html").is_file():
+        return REPO_WIKI_ROOT
+    kb_wiki = kb_root / "wiki"
+    # Refresh-or-bootstrap on every start; an existing copy is only required
+    # to be servable, so a missing frontend source degrades to the old shell.
+    bootstrap_wiki_frontend(kb_wiki, required=not (kb_wiki / "index.html").is_file())
+    return kb_wiki
+
+
+# Frontend files synced into an existing <kb-root>/wiki on every start, so
+# frontend fixes reach KBs that were bootstrapped by an older build.
+FRONTEND_SYNC_FILES = ("index.html", "assets/wiki.css", "assets/wiki.js", "assets/github-mark.svg")
+
+
+def bootstrap_wiki_frontend(target: Path, required: bool = True) -> None:
+    """First run against a KB without wiki/: copy the frontend shell from the
+    wheel-bundled assets (a non-editable install) or the repo checkout, so the
+    server can serve and later refresh data/ in place next to the KB. An
+    existing copy gets stale files refreshed in place (byte-compare) — without
+    this a KB bootstrapped by an older build silently serves old JS/CSS.
+    ``required=False`` (refresh of an existing copy) tolerates a missing
+    source: keep serving the old shell instead of failing startup."""
+
+    candidates = [FRONTEND_ASSETS, REPO_WIKI_ROOT]
+    source = next((c for c in candidates if (c / "index.html").is_file()), None)
+    if source is None:
+        if not required and (target / "index.html").is_file():
+            return
+        raise RuntimeError(
+            f"未找到 Wiki 前端资源（{FRONTEND_ASSETS} 或 {REPO_WIKI_ROOT}）。"
+            "请重新安装本软件包，或手动复制仓库的 wiki/ 目录到该路径。"
+        )
+    # Two servers (same machine, different ports — or different machines) start
+    # against the same shared KB: serialize the sync so a browser never reads a
+    # half-copied wiki.js. Same lock as ensure_default_kb, keyed on the KB root.
+    with locks.kb_lock(target.parent, "kb-bootstrap", wait=60):
+        if target.is_dir() and (target / "index.html").is_file():
+            synced: list[str] = []
+            for rel in FRONTEND_SYNC_FILES:
+                src, dst = source / rel, target / rel
+                if src.is_file() and (not dst.is_file() or dst.read_bytes() != src.read_bytes()):
+                    dst.parent.mkdir(parents=True, exist_ok=True)
+                    atomic_copy(src, dst)
+                    synced.append(rel)
+            if synced:
+                print(f"已更新 Wiki 前端（{'、'.join(synced)}）：{target}")
+            return
+        shutil.copytree(
+            source,
+            target,
+            ignore=shutil.ignore_patterns("data", "__pycache__", "__init__.py"),
+        )
+    print(f"已初始化 Wiki 前端目录：{target}")
+
+
+def build_refresh_command(kb_root: Path, data_dir: Path) -> list[str]:
+    command = [sys.executable, str(BUILDER), "build-wiki", "--output", str(data_dir)]
+    if (kb_root / CATALOG_RELPATH).is_file():
+        command += ["--kb-root", str(kb_root)]
+    return command
+
+
+def stop_current_chat(key: str | None = None) -> bool:
+    """Stop the in-flight conversation(s). ``key`` addresses one conversation
+    (the registry key the turn was started under: topic id, ``ws-*``,
+    ``paper-*``) so a topic-chat stop can never kill a running workflow turn;
+    ``None`` stops every in-flight turn and driver (legacy callers and tests
+    that do not model a conversation). Returns True when something was running
+    and got the signal."""
+
+    with CHAT_GUARD:
+        drivers = (
+            dict(IN_FLIGHT_DRIVERS)
+            if key is None
+            else ({key: IN_FLIGHT_DRIVERS[key]} if key in IN_FLIGHT_DRIVERS else {})
+        )
+        turns = (
+            dict(IN_FLIGHT_TURNS)
+            if key is None
+            else ({key: IN_FLIGHT_TURNS[key]} if key in IN_FLIGHT_TURNS else {})
+        )
+    stopped = False
+    for driver in drivers.values():
+        if driver.poll() is None:
+            driver.kill()
+            stopped = True
+    for turn in turns.values():
+        turn.stop()
+        stopped = True
+    return stopped
+
+
+class WikiHandler(SimpleHTTPRequestHandler):
+    server_version = "ResearchWiki/1.1"
+    # Workflow dialog journal for the request in flight; None outside
+    # _handle_workflow (topic/paper chat never journals).
+    _dialog_journal: wiki_chat.DialogJournal | None = None
+
+    def __init__(
+        self,
+        *args,
+        knowledge_map: Path | None = None,
+        kb_root: Path,
+        wiki_root: Path,
+        data_dir: Path,
+        chat: wiki_chat.ChatConfig | None = None,
+        workflow_model: str | None = None,
+        workflow_effort: str | None = None,
+        **kwargs,
+    ):
+        self.knowledge_map = knowledge_map
+        self.kb_root = kb_root
+        self.data_dir = data_dir
+        self.workflow_model = workflow_model
+        self.workflow_effort = workflow_effort
+        self.refresh_command = build_refresh_command(kb_root, data_dir)
+        self.chat = chat or wiki_chat.ChatConfig()
+        # Chat history is machine-local cache (highest-frequency writes in the
+        # system; belongs to this server, not the shared KB). One-time
+        # migration keeps histories written by older versions at the shared
+        # location. Same KB on this machine (different ports) still shares
+        # one file, so the registry keeps its machine-local kb_lock.
+        registry_path = wiki_chat.local_registry_path(kb_root)
+        legacy_path = data_dir / "chat-sessions.json"
+        if legacy_path.is_file() and not registry_path.is_file():
+            registry_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(legacy_path, registry_path)
+        self.chat_sessions = wiki_chat.ChatSessionRegistry(
+            registry_path, lock_root=registry_path.parent
+        )
+        super().__init__(*args, directory=str(wiki_root), **kwargs)
+
+    def end_headers(self) -> None:
+        if self.path.startswith("/data/"):
+            self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
+        super().end_headers()
+
+    def log_message(self, format: str, *args: object) -> None:
+        print(f"[Wiki] {format % args}")
+
+    def do_GET(self) -> None:  # noqa: N802
+        path = urlparse(self.path).path
+        if path in {"/knowledge-map", "/knowledge-map/", "/knowledge-map/index.html"}:
+            self._serve_knowledge_map()
+            return
+        if path in {"/research", "/research/", "/research/index.html"}:
+            self._serve_research_directory()
+            return
+        if path.startswith("/api/reader/"):
+            self._handle_reader()
+            return
+        if path == "/api/chat/state":
+            self._handle_chat_state()
+            return
+        if path == "/api/kb":
+            self._handle_kb_identity()
+            return
+        if path == "/api/paper/chat/state":
+            self._handle_paper_chat_state()
+            return
+        if path == "/api/paper/quickread/state":
+            self._handle_quick_read_state()
+            return
+        if path == "/api/paper/slidedeck/state":
+            self._handle_slide_deck_state()
+            return
+        if path == "/api/paper/slidedeck/file":
+            self._handle_slide_deck_file()
+            return
+        if path == "/api/deck":
+            self._handle_run_deck()
+            return
+        if path == "/api/deck/state":
+            self._handle_run_deck_state()
+            return
+        if path == "/api/workflow/state":
+            self._handle_workflow_state()
+            return
+        super().do_GET()
+
+    def _handle_reader(self) -> None:
+        """Inline arXiv paper reader: /api/reader/<arxiv-id> serves the
+        paper's (cleaned, cached) HTML rendering. GET only, no params — the
+        paper id is the whole request; bad ids get a friendly page."""
+
+        paper_id = arxiv_reader.parse_arxiv_id(urlparse(self.path).path.removeprefix("/api/reader/"))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        payload = ""
+        # Pool first: papers already extracted by any review run carry a
+        # cleaned copy in the shared pool — zero network, zero re-parse.
+        pooled = pool_root(self.kb_root) / f"arxiv-{paper_id}" / "paper.html"
+        if pooled.is_file() and pooled.stat().st_size > 0:
+            try:
+                payload = pooled.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                payload = ""
+        if not payload.strip():
+            cache_dir = self.kb_root / "work" / "reader-cache"
+            result = arxiv_reader.fetch_paper(paper_id, cache_dir)
+            payload = result["html"] if result["ok"] else arxiv_reader.unavailable_page(paper_id, result["error"])
+        body = payload.encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_POST(self) -> None:  # noqa: N802
+        path = urlparse(self.path).path
+        if path == "/api/refresh":
+            self._handle_refresh()
+            return
+        if path == "/api/chat":
+            self._handle_chat()
+            return
+        if path == "/api/topic/revise":
+            self._handle_topic_revise()
+            return
+        if path == "/api/chat/stop":
+            self._handle_chat_stop()
+            return
+        if path == "/api/chat/reset":
+            self._handle_chat_reset()
+            return
+        if path == "/api/paper/chat":
+            self._handle_paper_chat()
+            return
+        if path == "/api/paper/quickread":
+            self._handle_quick_read_generate()
+            return
+        if path == "/api/paper/slidedeck":
+            self._handle_slide_deck_generate()
+            return
+        if path == "/api/deck/generate":
+            self._handle_run_deck_generate()
+            return
+        if path == "/api/paper/chat/reset":
+            self._handle_paper_chat_reset()
+            return
+        if path == "/api/workflow":
+            self._handle_workflow()
+            return
+        if path == "/api/workflow/stop":
+            self._handle_workflow_stop()
+            return
+        if path == "/api/workflow/reset":
+            self._handle_workflow_reset()
+            return
+        self.send_error(HTTPStatus.NOT_FOUND)
+
+    def _handle_refresh(self) -> None:
+        if not REFRESH_LOCK.acquire(blocking=False):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "已有刷新正在进行，请稍候。"})
+            return
+        try:
+            result = subprocess.run(
+                self.refresh_command,
+                cwd=str(self.kb_root),
+                capture_output=True,
+                text=True,
+                timeout=REFRESH_TIMEOUT_S,
+                check=False,
+            )
+            if result.returncode:
+                message = (result.stderr or result.stdout or "刷新脚本执行失败").strip()
+                self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": message})
+                return
+            snapshot_dir = resolve_snapshot_directory(self.data_dir)
+            manifest = json.loads((snapshot_dir / "manifest.json").read_text(encoding="utf-8"))
+            self._send_json(
+                HTTPStatus.OK,
+                {
+                    "ok": True,
+                    "topics": len(manifest["topics"]),
+                    "generated_at": manifest["generated_at"],
+                    "message": result.stdout.strip(),
+                },
+            )
+        except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+            if isinstance(exc, subprocess.TimeoutExpired):
+                self.log_message(
+                    "refresh timed out after %s s; rebuild the snapshot manually",
+                    f"{REFRESH_TIMEOUT_S:.0f}",
+                )
+            self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": str(exc)})
+        finally:
+            REFRESH_LOCK.release()
+
+    # ---- chat ------------------------------------------------------------
+
+    def _read_json_body(self) -> dict:
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        if length <= 0 or length > 1_000_000:
+            raise ChatBadRequest("请求体为空或过大。")
+        raw = self.rfile.read(length).decode("utf-8", errors="replace")
+        try:
+            body = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ChatBadRequest(f"请求体不是合法 JSON：{exc}") from exc
+        if not isinstance(body, dict):
+            raise ChatBadRequest("请求体必须是 JSON 对象。")
+        return body
+
+    def _chat_precheck(self) -> dict | None:
+        """Shared guard for the POST endpoints: 503 when chat is disabled, then
+        the parsed JSON body (400 on a malformed one). None = already replied."""
+
+        if not self.chat.enabled:
+            self._send_json(HTTPStatus.SERVICE_UNAVAILABLE, {"error": "聊天服务未启用（未找到 claude 或已用 --no-chat 关闭）。"})
+            return None
+        try:
+            return self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return None
+
+    def _require_topic_id(self, raw: object) -> str | None:
+        """Validate a browser-supplied topic id; 400 and return None if bad."""
+
+        topic_id = raw if isinstance(raw, str) else ""
+        if not wiki_chat.TOPIC_ID_RE.match(topic_id):
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "话题 ID 无效。"})
+            return None
+        return topic_id
+
+    def resolve_topic(self, topic_id: str) -> tuple[Path, dict]:
+        """Turn a browser-supplied topic id into (run_dir, topic). The topic
+        JSON comes from the snapshot this server built, and the run directory
+        must live inside the KB root — the browser never supplies paths."""
+
+        if not wiki_chat.TOPIC_ID_RE.match(topic_id or ""):
+            raise ChatBadRequest("话题 ID 无效。")
+        snapshot_dir = resolve_snapshot_directory(self.data_dir)
+        topic_path = snapshot_dir / "topics" / f"{topic_id}.json"
+        if not topic_path.is_file():
+            raise ChatBadRequest("话题不存在或快照已更新，请刷新页面。")
+        try:
+            topic = json.loads(topic_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ChatBadRequest(f"话题数据读取失败：{exc}") from exc
+        source = topic.get("source_directory")
+        if not isinstance(source, str) or not source:
+            raise ChatBadRequest("话题缺少运行目录信息。")
+        run_dir = Path(source).expanduser().resolve()
+        if not run_dir.is_relative_to(self.kb_root):
+            raise ChatBadRequest("话题运行目录不在知识库内。")
+        if not run_dir.is_dir():
+            raise ChatBadRequest("话题运行目录不存在。")
+        return run_dir, topic
+
+    def _handle_kb_identity(self) -> None:
+        """Which knowledge base this instance serves. A second `serve` on an
+        occupied port probes this before deciding to reuse the running Wiki:
+        same KB → reuse; different KB → refuse loudly. Read-only and
+        unauthenticated (localhost only, same as the rest of the server)."""
+
+        self._send_json(
+            HTTPStatus.OK,
+            {"kb_root": str(self.kb_root), "kind": "embodied-learning-wiki"},
+        )
+
+    def _handle_chat_state(self) -> None:
+        # Capability probe: the frontend calls this once at init to decide
+        # whether to show the chat triggers, so chat must report "disabled"
+        # as a normal state, not an error. Without ?topic= it answers the
+        # capability question only; with a topic it also returns history.
+        # "workflow" reports the homepage survey entry (needs a resolvable
+        # skills/ tree — see resolve_pipeline_root).
+        workflow_available = self.workflow_available()
+        if not self.chat.enabled:
+            self._send_json(HTTPStatus.OK, {"enabled": False, "workflow": False})
+            return
+        query = parse_qs(urlparse(self.path).query)
+        raw_topic = (query.get("topic") or [""])[0]
+        if not raw_topic:
+            self._send_json(HTTPStatus.OK, {"enabled": True, "workflow": workflow_available})
+            return
+        topic_id = self._require_topic_id(raw_topic)
+        if topic_id is None:
+            return
+        entry = self.chat_sessions.get(topic_id) or {}
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "topic_id": topic_id,
+                "session_id": entry.get("session_id"),
+                "messages": entry.get("messages", []),
+                "model": entry.get("model"),
+                "updated_at": entry.get("updated_at"),
+            },
+        )
+
+    def _stream_chat_turn(
+        self,
+        *,
+        key: str,
+        turn: wiki_chat.ChatTurn,
+        registry,
+        on_delta=None,
+        record_user_message: str | None = None,
+        require_existing: bool = False,
+    ) -> str:
+        """Shared streaming loop for every conversation surface (topic / paper
+        chat / workflow): record the user message, forward events (persisting
+        session ids and the assistant reply), stop on a closed browser pipe.
+        ``on_delta`` lets the workflow extract stage markers; returns the
+        full assistant text. ``require_existing`` keeps a post-reset cleanup
+        from resurrecting a deleted workspace entry."""
+
+        _track_turn(key, turn)
+        if record_user_message:
+            registry.append_message(
+                key, "user", record_user_message, require_existing=require_existing)
+        assistant_text: list[str] = []
+        try:
+            for event in turn.events():
+                if event["type"] == "session":
+                    registry.record_session(key, event.get("session_id"), event.get("model"))
+                elif event["type"] == "delta":
+                    text = event.get("text") or ""
+                    assistant_text.append(text)
+                    if on_delta:
+                        on_delta(text)
+                self._write_sse_event(event)
+        except (BrokenPipeError, ConnectionResetError):
+            turn.stop()  # browser tab closed / navigated away
+        full_text = "".join(assistant_text)
+        if full_text.strip():
+            registry.append_message(
+                key, "assistant", full_text, require_existing=require_existing)
+        return full_text
+
+    def _handle_chat(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        message = (body.get("message") or "").strip()
+        if not message:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "消息为空。"})
+            return
+        model = self._resolve_request_model(body.get("model"))
+        try:
+            run_dir, topic = self.resolve_topic(body.get("topic_id") or "")
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        topic_id = topic.get("id") or body["topic_id"]
+
+        if not acquire_chat_lock(topic_id):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该话题已有对话正在进行，请先停止或稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            registry = self.chat_sessions
+            resumed = (registry.get(topic_id) or {}).get("session_id")
+            prompt = wiki_chat.build_turn_prompt(
+                topic=topic, run_dir=run_dir, kb_root=self.kb_root, message=message
+            )
+            turn, session_was_reset = self._spawn_chat_turn(prompt, resumed, model)
+            if session_was_reset:
+                registry.reset(topic_id)
+                self._write_sse_event({"type": "session_reset"})
+            self._stream_chat_turn(
+                key=topic_id, turn=turn, registry=registry, record_user_message=message
+            )
+        finally:
+            _track_turn(topic_id, None)
+            release_chat_lock(topic_id)
+
+    # ---- topic revision: regenerate one deliverable as a new version ------
+
+    @staticmethod
+    def _next_revision_number(run_dir: Path, style_key: str) -> int:
+        """Next revision number; the settled base deliverable counts as v0,
+        so the first chat revision is v1."""
+        pattern = re.compile(rf"^{re.escape(style_key)}-v(\d+)$")
+        revisions_dir = run_dir / "revisions"
+        numbers = [
+            int(match.group(1))
+            for path in revisions_dir.glob(f"{style_key}-v*.md")
+            if (match := pattern.match(path.stem))
+        ]
+        return max(numbers, default=0) + 1
+
+    @staticmethod
+    def _append_revision_index(run_dir: Path, entry: dict) -> None:
+        index_path = run_dir / "revisions" / "index.json"
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            data = json.loads(index_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            data = []
+        if not isinstance(data, list):
+            data = []
+        data.append(entry)
+        atomic_write_text(index_path, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
+
+    def _handle_topic_revise(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        message = (body.get("message") or "").strip()
+        if not message:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "消息为空。"})
+            return
+        model = self._resolve_request_model(body.get("model"))
+        try:
+            run_dir, topic = self.resolve_topic(body.get("topic_id") or "")
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        topic_id = topic.get("id") or body["topic_id"]
+        # The browser sends the currently viewed version key ("keyan" or
+        # "keyan-v2"); a revision regenerates the BASE style's deliverable.
+        requested = str(body.get("version") or "").strip()
+        style_key = re.sub(r"-v\d+$", "", requested)
+        available = topic.get("available_versions") or []
+        if style_key not in wiki_chat.REVISION_STYLE_BY_KEY or style_key not in available:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": f"无效的修订风格：{requested or '未指定'}"})
+            return
+        revision_number = self._next_revision_number(run_dir, style_key)
+        base_filename = (topic.get("versions") or {}).get(style_key, {}).get("source_file") or ""
+        try:
+            system_prompt, prompt = wiki_chat.build_revision_prompts(
+                run_dir=run_dir, kb_root=self.kb_root, style_key=style_key,
+                revision_number=revision_number, topic_title=str(topic.get("title") or ""),
+                base_filename=base_filename, pipeline_root=resolve_pipeline_root(),
+                message=message,
+            )
+        except ValueError as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        version_key = f"{style_key}-v{revision_number}"
+
+        if not acquire_chat_lock(topic_id):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该话题已有对话正在进行，请先停止或稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            registry = self.chat_sessions
+            # Mirror the dialog into the run dir so a reload can replay the
+            # stage cards (same contract as _handle_workflow).
+            journal = wiki_chat.DialogJournal(run_dir)
+            journal.start()
+            journal.user(message)
+            self._dialog_journal = journal
+            self._write_sse_event({
+                "type": "status", "stage": "revision",
+                "detail": f"正在生成修订版 {version_key}",
+            })
+            # Stage-view contract: the revision agent emits [STAGE:*] markers
+            # just like the workflow agent; the cards re-activate on the topic
+            # chat's node board (plan / retrieval / writing / audit).
+            self._write_sse_event({
+                "type": "brief", "stage": "plan",
+                "title": f"修订{wiki_chat.REVISION_STYLE_LABEL.get(style_key, style_key)}",
+                "lines": [
+                    f"基底成稿：{base_filename or ''}",
+                    f"目标文件：revisions/{version_key}.md",
+                    f"修订要求：{message.strip()[:120]}",
+                ],
+            })
+            self._write_sse_event({"type": "stage", "stage": "plan", "detail": "规划修订方案"})
+            resumed = (registry.get(topic_id) or {}).get("session_id")
+            turn, session_was_reset = self._spawn_workflow_turn(
+                prompt, resumed, model, system_prompt=system_prompt)
+            if session_was_reset:
+                registry.reset(topic_id)
+                self._write_sse_event({"type": "session_reset"})
+            emitted_stages: set[str] = set()
+
+            def on_delta(text: str) -> None:
+                for stage, detail in wiki_chat.extract_stage_markers(text):
+                    if stage not in emitted_stages:
+                        emitted_stages.add(stage)
+                        self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+
+            full_text = self._stream_chat_turn(
+                key=topic_id, turn=turn, registry=registry, on_delta=on_delta,
+                record_user_message=message,
+            )
+            marker = next(
+                (match.group(1)
+                 for line in full_text.splitlines()
+                 if (match := wiki_chat.REVISION_MARKER_RE.match(line.strip()))),
+                None,
+            )
+            target = (run_dir / marker) if marker else None
+            if marker and target is not None and target.resolve() == (run_dir / f"revisions/{version_key}.md").resolve() and target.is_file():
+                self._append_revision_index(run_dir, {
+                    "version_key": version_key,
+                    "style": style_key,
+                    "request": message,
+                    "created_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+                })
+                try:
+                    refresh_snapshot(self.kb_root, self.data_dir)
+                except (EmptyCorpusError, RuntimeError) as exc:
+                    self._write_sse_event({
+                        "type": "revision_error",
+                        "message": f"修订已写入，但快照刷新失败：{exc}",
+                    })
+                    return
+                self._write_sse_event({
+                    "type": "revision_ready", "topic_id": topic_id, "version_key": version_key,
+                })
+            else:
+                self._write_sse_event({
+                    "type": "revision_error",
+                    "message": "修订未完成：agent 未通过门禁或未输出完成标记，详见上方对话内容。",
+                })
+        finally:
+            _track_turn(topic_id, None)
+            release_chat_lock(topic_id)
+
+    # ---- paper chat: per-arXiv-id conversations over the shared pool -------
+
+    @staticmethod
+    def _paper_chat_key(arxiv_id: str) -> str:
+        # Registry keys starting with "ws-" are workspaces; anything else
+        # lands in the topics namespace. "paper-" prefix keeps ids distinct.
+        return f"paper-{arxiv_id}"
+
+    def _handle_paper_chat_state(self) -> None:
+        """Capability + history probe for the paper-chat pane. With ?id= it
+        reports that paper's pooled/deep-read status and prior messages."""
+
+        if not self.chat.enabled:
+            self._send_json(HTTPStatus.OK, {"enabled": False})
+            return
+        query = parse_qs(urlparse(self.path).query)
+        raw_id = (query.get("id") or [""])[0]
+        if not raw_id:
+            self._send_json(HTTPStatus.OK, {"enabled": True})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(raw_id)
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+        entry = self.chat_sessions.get(self._paper_chat_key(paper_id)) or {}
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "arxiv_id": paper_id,
+                "pooled": (pool_dir / "extraction.json").is_file(),
+                "deep_read_status": self._pool_deep_read_status(pool_dir),
+                "session_id": entry.get("session_id"),
+                "messages": entry.get("messages", []),
+                "model": entry.get("model"),
+                "updated_at": entry.get("updated_at"),
+            },
+        )
+
+    @staticmethod
+    def _pool_deep_read_status(pool_dir: Path) -> str | None:
+        audit_path = pool_dir / "note.json.audit.json"
+        if not audit_path.is_file():
+            return None
+        try:
+            return str(json.loads(audit_path.read_text(encoding="utf-8")).get("status") or "") or None
+        except (OSError, json.JSONDecodeError):
+            return None
+
+    def _quick_read_article_path(self, paper_id: str) -> Path:
+        return pool_root(self.kb_root) / f"arxiv-{paper_id}" / "quick-read_sudu.md"
+
+    def _handle_quick_read_state(self) -> None:
+        """Capability + article probe for the reader's 速读 tab. Independent of
+        the chat config — browsing a pooled card needs no claude CLI."""
+
+        query = parse_qs(urlparse(self.path).query)
+        raw_id = (query.get("id") or [""])[0]
+        if not raw_id:
+            self._send_json(HTTPStatus.OK, {"enabled": True})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(raw_id)
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+        article_path = self._quick_read_article_path(paper_id)
+        markdown = ""
+        updated_at = None
+        if article_path.is_file():
+            try:
+                markdown = article_path.read_text(encoding="utf-8", errors="replace")
+                updated_at = dt.datetime.fromtimestamp(
+                    article_path.stat().st_mtime, tz=dt.timezone.utc
+                ).isoformat()
+            except OSError:
+                markdown = ""
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "arxiv_id": paper_id,
+                "pooled": (pool_dir / "extraction.json").is_file(),
+                "deep_read_status": self._pool_deep_read_status(pool_dir),
+                "quick_read": bool(markdown.strip()),
+                "markdown": markdown,
+                "agent_available": agent_cli_available() is not None,
+                "updated_at": updated_at,
+            },
+        )
+
+    def _handle_quick_read_generate(self) -> None:
+        """Generate (or regenerate) the single-paper quick-read card. Streams
+        [QUICK-READ]/[PAPER-CHAT] progress from scripts/quick_read_paper.py as
+        SSE; only exit 0 counts — exit 3 means deep-read unavailable."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(str(body.get("arxiv_id") or ""))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        key = f"quickread-{paper_id}"
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该论文已有速读生成正在进行，请稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            self._write_sse_event({"type": "stage", "stage": "quickread", "detail": f"开始生成速读卡 {paper_id}…"})
+            ok = self._run_quick_read_generation(paper_id)
+            if not ok:
+                self._write_sse_event(
+                    {
+                        "type": "topic_error",
+                        "message": f"速读卡生成失败：论文 {paper_id} 未通过深读审计或写作出错，请稍后重试。",
+                    }
+                )
+                return
+            article_path = self._quick_read_article_path(paper_id)
+            try:
+                markdown = article_path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                markdown = ""
+            if not markdown.strip():
+                self._write_sse_event({"type": "topic_error", "message": "速读卡写入为空，请稍后重试。"})
+                return
+            self._write_sse_event({"type": "quickread_done", "arxiv_id": paper_id, "markdown": markdown})
+        finally:
+            release_chat_lock(key)
+
+    def _run_quick_read_generation(self, paper_id: str) -> bool:
+        """Run quick_read_paper.py, forwarding both [QUICK-READ] and
+        [PAPER-CHAT] progress lines (the reused pool/deep-read stages print
+        the latter). Deep read (420s) + article (300s) + slack → 900s.
+        Unlike paper preparation, only returncode 0 is success: exit 3 means
+        no audited deep-read note, so no card may be written.
+
+        stderr is merged into the stream (a PIPE nobody reads can deadlock the
+        child once the OS buffer fills) and lock/traceback lines are surfaced
+        as stage events — previously they were swallowed and every failure
+        looked like the same generic message."""
+
+        command = [
+            sys.executable,
+            str(READ_SCRIPT), "quick-read",
+            "--arxiv-id", paper_id,
+            "--kb-root", str(self.kb_root),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                if not detail or detail.startswith("{"):
+                    continue  # final machine-readable JSON
+                for prefix in ("[QUICK-READ] ", "[PAPER-CHAT] ", "[kb-lock] "):
+                    if detail.startswith(prefix):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "quickread", "detail": detail.removeprefix(prefix)}
+                        )
+                        break
+                else:
+                    if _is_error_line(detail):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "quickread", "detail": detail}
+                        )
+            try:
+                returncode = process.wait(timeout=QUICKREAD_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": "速读卡片生成超时，已终止子进程；加大对应超时或重试"}
+                )
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return returncode == 0
+
+    # ---- slide deck (汇报) — per-paper tab + run-level file ----------------
+
+    def _slide_deck_path(self, paper_id: str) -> Path:
+        return pool_root(self.kb_root) / f"arxiv-{paper_id}" / "slide-deck_report.html"
+
+    def _serve_deck_html(self, deck_path: Path) -> None:
+        """Serve a compiled deck (self-contained reveal.js HTML) as a page."""
+        if not deck_path.is_file():
+            self._send_json(HTTPStatus.NOT_FOUND, {"error": "汇报放映件不存在，请先生成。"})
+            return
+        body = deck_path.read_bytes()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _handle_slide_deck_file(self) -> None:
+        query = parse_qs(urlparse(self.path).query)
+        paper_id = arxiv_reader.parse_arxiv_id((query.get("id") or [""])[0])
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        self._serve_deck_html(self._slide_deck_path(paper_id))
+
+    def _resolve_run_deck_dir(self, source: str) -> Path | None:
+        """The run folder behind a topic's source_directory (repo-relative or
+        absolute); only folders inside <kb-root>/evidence/ or <kb-root>/work/
+        resolve — nothing else is servable or writable."""
+
+        if not source.strip():
+            return None
+        base = Path(source)
+        if not base.is_absolute():
+            base = self.kb_root / base
+        run_dir = base.resolve()
+        kb_root = self.kb_root.resolve()
+        allowed_roots = [(kb_root / "evidence").resolve(), (kb_root / "work").resolve()]
+        if not any(run_dir.is_relative_to(root) for root in allowed_roots):
+            return None
+        return run_dir
+
+    def _handle_run_deck(self) -> None:
+        """Serve a run folder's slide-deck_report.html (run-level entry)."""
+
+        query = parse_qs(urlparse(self.path).query)
+        run_dir = self._resolve_run_deck_dir((query.get("source") or [""])[0])
+        if run_dir is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 run 来源。"})
+            return
+        self._serve_deck_html(run_dir / "slide-deck_report.html")
+
+    def _handle_run_deck_state(self) -> None:
+        """Availability probe for the topic page's 汇报放映 button: served
+        live from the filesystem, so a deck generated after the last snapshot
+        rebuild is immediately visible."""
+
+        query = parse_qs(urlparse(self.path).query)
+        run_dir = self._resolve_run_deck_dir((query.get("source") or [""])[0])
+        if run_dir is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 run 来源。"})
+            return
+        deck_path = run_dir / "slide-deck_report.html"
+        available = deck_path.is_file() and deck_path.stat().st_size > 0
+        updated_at = None
+        if available:
+            updated_at = dt.datetime.fromtimestamp(
+                deck_path.stat().st_mtime, tz=dt.timezone.utc
+            ).isoformat()
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "available": available,
+                "source": str(run_dir),
+                "agent_available": agent_cli_available() is not None,
+                "updated_at": updated_at,
+            },
+        )
+
+    def _handle_run_deck_generate(self) -> None:
+        """Generate the run-level slide deck via scripts/run_slide_deck.py.
+        Streams [SLIDE-DECK]/[PAPER-CHAT] progress as SSE; on success the deck
+        file sits in the run folder and /api/deck serves it right away."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        run_dir = self._resolve_run_deck_dir(str(body.get("source") or ""))
+        if run_dir is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 run 来源。"})
+            return
+        key = f"rundeck-{run_dir}"
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该 run 已有汇报生成正在进行，请稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            self._write_sse_event({"type": "stage", "stage": "rundeck",
+                                   "detail": f"开始生成汇报 {run_dir.name}…"})
+            ok = self._run_run_deck_generation(run_dir)
+            if not ok:
+                self._write_sse_event(
+                    {
+                        "type": "topic_error",
+                        "message": f"汇报生成失败：run {run_dir.name} 生成出错，请查看上方错误详情后重试。",
+                    }
+                )
+                return
+            self._write_sse_event({"type": "deck_done", "source": str(run_dir)})
+        finally:
+            release_chat_lock(key)
+
+    def _run_run_deck_generation(self, run_dir: Path) -> bool:
+        """Run run_slide_deck.py, forwarding [SLIDE-DECK] and [PAPER-CHAT]
+        progress lines. Slide-source (600s) + compile/audit + slack → 900s.
+
+        stderr is merged into the stream (a PIPE nobody reads can deadlock the
+        child) and lock/traceback/missing-file lines are surfaced as stage
+        events — previously they were swallowed and every failure looked like
+        the same generic message."""
+
+        command = [
+            sys.executable,
+            str(WRITE_SCRIPT), "run-deck",
+            "--run-dir", str(run_dir),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                if not detail or detail.startswith("{"):
+                    continue  # final machine-readable JSON
+                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] ", "[kb-lock] "):
+                    if detail.startswith(prefix):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "rundeck", "detail": detail.removeprefix(prefix)}
+                        )
+                        break
+                else:
+                    if _is_error_line(detail):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "rundeck", "detail": detail}
+                        )
+            try:
+                returncode = process.wait(timeout=RUN_DECK_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": "汇报文件生成超时，已终止子进程；加大对应超时或重试"}
+                )
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return returncode == 0
+
+
+    def _handle_slide_deck_state(self) -> None:
+        """Capability + deck probe for the reader's 汇报 tab. Mirrors the
+        速读 state handler; the deck itself is served as a standalone page."""
+
+        query = parse_qs(urlparse(self.path).query)
+        raw_id = (query.get("id") or [""])[0]
+        if not raw_id:
+            self._send_json(HTTPStatus.OK, {"enabled": True})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(raw_id)
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+        deck_path = self._slide_deck_path(paper_id)
+        deck_ready = deck_path.is_file() and deck_path.stat().st_size > 0
+        updated_at = None
+        if deck_ready:
+            updated_at = dt.datetime.fromtimestamp(
+                deck_path.stat().st_mtime, tz=dt.timezone.utc
+            ).isoformat()
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "arxiv_id": paper_id,
+                "pooled": (pool_dir / "extraction.json").is_file(),
+                "deep_read_status": self._pool_deep_read_status(pool_dir),
+                "slide_deck": deck_ready,
+                "deck_url": f"api/paper/slidedeck/file?id={paper_id}" if deck_ready else None,
+                "agent_available": agent_cli_available() is not None,
+                "updated_at": updated_at,
+            },
+        )
+
+    def _handle_slide_deck_generate(self) -> None:
+        """Generate (or regenerate) the single-paper slide deck. Streams
+        [SLIDE-DECK]/[PAPER-CHAT] progress from scripts/paper_slide_deck.py as
+        SSE; only exit 0 counts — exit 3 means deep-read unavailable."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest as exc:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(str(body.get("arxiv_id") or ""))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        key = f"slidedeck-{paper_id}"
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该论文已有汇报生成正在进行，请稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            self._write_sse_event({"type": "stage", "stage": "slidedeck", "detail": f"开始生成汇报 {paper_id}…"})
+            ok = self._run_slide_deck_generation(paper_id)
+            if not ok:
+                self._write_sse_event(
+                    {
+                        "type": "topic_error",
+                        "message": f"汇报生成失败：论文 {paper_id} 生成出错，请查看上方错误详情后重试。",
+                    }
+                )
+                return
+            self._write_sse_event(
+                {
+                    "type": "slidedeck_done",
+                    "arxiv_id": paper_id,
+                    "deck_url": f"api/paper/slidedeck/file?id={paper_id}",
+                }
+            )
+        finally:
+            release_chat_lock(key)
+
+    def _run_slide_deck_generation(self, paper_id: str) -> bool:
+        """Run paper_slide_deck.py, forwarding [SLIDE-DECK] and [PAPER-CHAT]
+        progress lines. Deep read (420s) + slide-source (600s) + compile/audit
+        + slack → 1500s. Only returncode 0 is success.
+
+        stderr is merged into the stream (a PIPE nobody reads can deadlock the
+        child) and lock/traceback/missing-file lines are surfaced as stage
+        events — previously they were swallowed and every failure looked like
+        the same generic message."""
+
+        command = [
+            sys.executable,
+            str(WRITE_SCRIPT), "paper-deck",
+            "--arxiv-id", paper_id,
+            "--kb-root", str(self.kb_root),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                if not detail or detail.startswith("{"):
+                    continue  # final machine-readable JSON
+                for prefix in ("[SLIDE-DECK] ", "[PAPER-CHAT] ", "[kb-lock] "):
+                    if detail.startswith(prefix):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "slidedeck", "detail": detail.removeprefix(prefix)}
+                        )
+                        break
+                else:
+                    if _is_error_line(detail):
+                        self._write_sse_event(
+                            {"type": "stage", "stage": "slidedeck", "detail": detail}
+                        )
+            try:
+                returncode = process.wait(timeout=PAPER_DECK_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": f"汇报生成超时，已终止子进程；加大对应超时或重试"}
+                )
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return returncode == 0
+
+
+    def _handle_paper_chat(self) -> None:
+        """One conversational turn about a single arXiv paper. On first contact
+        the paper is pulled into the shared pool and deep-read (cached on later
+        visits); the claude session is keyed by the paper id, so each paper
+        keeps its own conversation thread."""
+
+        body = self._chat_precheck()
+        if body is None:
+            return
+        message = (body.get("message") or "").strip()
+        if not message:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "消息为空。"})
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(str(body.get("arxiv_id") or ""))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        model = self._resolve_request_model(body.get("model"))
+        key = self._paper_chat_key(paper_id)
+
+        if not acquire_chat_lock(key):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该论文已有对话正在进行，请先停止或稍候。"})
+            return
+        try:
+            self._send_sse_headers()
+            registry = self.chat_sessions
+
+            def paper_stage(stage: str, detail: str) -> None:
+                registry.set_workflow_state(key, stage=stage, awaiting_input=False)
+                self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+
+            pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+            pooled = (pool_dir / "extraction.json").is_file()
+            deep_status = self._pool_deep_read_status(pool_dir)
+            if not pooled or deep_status not in {"pass", "needs-review"}:
+                # First contact: prepare (extraction + deep read) in code, the
+                # user watches real progress instead of a silent wait.
+                paper_stage("mining", f"准备论文 {paper_id}（{'入池' if not pooled else '深读'}中）…")
+                prepared = self._run_paper_preparation(paper_id)
+                if prepared is None:
+                    self._write_sse_event(
+                        {
+                            "type": "topic_error",
+                            "message": f"论文 {paper_id} 准备失败（抽取或深读出错），请稍后重试。",
+                        }
+                    )
+                    return
+                deep_status, pooled = prepared
+                paper_stage(
+                    "mining",
+                    f"准备完成：{'已入池' if pooled else '入池失败'}，深读 {deep_status or '未完成'}",
+                )
+            else:
+                cached = f"深读 {deep_status}" if deep_status else "已入池"
+                paper_stage("mining", f"使用缓存：{cached}")
+
+            resumed = (registry.get(key) or {}).get("session_id")
+            prompt = wiki_chat.build_paper_turn_prompt(arxiv_id=paper_id, message=message)
+            turn, session_was_reset = self._spawn_turn(self._new_paper_chat_turn, prompt, resumed, model)
+            if session_was_reset:
+                registry.reset(key)
+                self._write_sse_event({"type": "session_reset"})
+            self._stream_chat_turn(key=key, turn=turn, registry=registry, record_user_message=message)
+        finally:
+            _track_turn(key, None)
+            release_chat_lock(key)
+
+    def _run_paper_preparation(self, paper_id: str) -> tuple[str | None, bool] | None:
+        """Run prepare_paper_chat.py (extraction → pool → deep read), returning
+        (deep_read_status, pooled). Returns None on hard failure so the caller
+        can surface an error instead of starting a conversation on nothing."""
+
+        command = [
+            sys.executable,
+            str(READ_SCRIPT), "prepare-chat",
+            "--arxiv-id", paper_id,
+            "--kb-root", str(self.kb_root),
+        ]
+        try:
+            process = subprocess.Popen(
+                command, cwd=str(self.kb_root), text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+            assert process.stdout is not None
+            for line in process.stdout:
+                detail = line.strip()
+                if detail.startswith("[PAPER-CHAT] "):
+                    self._write_sse_event(
+                        {"type": "stage", "stage": "mining", "detail": detail.removeprefix("[PAPER-CHAT] ")}
+                    )
+            try:
+                returncode = process.wait(timeout=PAPER_PREP_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": f"论文对话准备（抽取/入池/深读）超时，已终止子进程；加大对应超时或重试"}
+                )
+                process.kill()
+                process.wait()
+                returncode = -1
+        except (OSError, subprocess.SubprocessError):
+            return None
+        if returncode not in (0, 3):
+            return None
+        pool_dir = pool_root(self.kb_root) / f"arxiv-{paper_id}"
+        pooled = (pool_dir / "extraction.json").is_file()
+        return self._pool_deep_read_status(pool_dir), pooled
+
+    def _new_paper_chat_turn(self, prompt: str, session_id: str | None, model: str | None) -> wiki_chat.ChatTurn:
+        return self.chat.new_turn(
+            prompt=prompt,
+            cwd=self.kb_root,
+            session_id=session_id,
+            system_prompt=wiki_chat.substitute_prompt_roots(
+                wiki_chat.PAPER_CHAT_SYSTEM_PROMPT,
+                skills_root=self._paper_chat_skills_root(),
+                scripts_root=self._paper_chat_scripts_root(),
+                pool_root=pool_root(self.kb_root),
+            ),
+            model=model or DEFAULT_CHAT_MODEL,
+        )
+
+    def _paper_chat_skills_root(self) -> Path:
+        pipeline_root = resolve_pipeline_root()
+        if pipeline_root is None:
+            return Path("skills")
+        skills_root, _ = wiki_chat.resolve_pipeline_layout(pipeline_root)
+        return skills_root
+
+    def _paper_chat_scripts_root(self) -> Path:
+        pipeline_root = resolve_pipeline_root()
+        if pipeline_root is None:
+            return Path("scripts")
+        _, scripts_root = wiki_chat.resolve_pipeline_layout(pipeline_root)
+        return scripts_root
+
+    def _handle_paper_chat_reset(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        paper_id = arxiv_reader.parse_arxiv_id(str((body or {}).get("arxiv_id") or ""))
+        if paper_id is None:
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "无效的 arXiv ID。"})
+            return
+        self.chat_sessions.reset(self._paper_chat_key(paper_id))
+        self._send_json(HTTPStatus.OK, {"ok": True})
+
+    def _spawn_turn(
+        self, new_turn, prompt: str, session_id: str | None, model: str | None = None
+    ) -> tuple[wiki_chat.ChatTurn, bool]:
+        """Spawn a turn via ``new_turn(prompt, session_id, model)``; when the
+        session id turns out to be stale (resume failure), fall back once to a
+        fresh session. Returns (turn, was_reset): ``was_reset`` tells the caller
+        to clear the registry entry and announce the reset. A None first event
+        with a live process is a first-event timeout: the turn is killed so
+        events() finishes instead of the handler blocking on a silent stream."""
+
+        turn = new_turn(prompt, session_id, model)
+        turn.start()
+        first = turn.peek_event(timeout_s=FIRST_EVENT_TIMEOUT_S)
+        if first is not None and first.get("type") == "error" and first.get("resume_failed"):
+            turn.stop()
+            turn = new_turn(prompt, None, model)
+            turn.start()
+            return turn, True
+        if first is None and turn.is_alive:
+            self.log_message(
+                "first chat event timed out after %s s; killing the turn",
+                f"{FIRST_EVENT_TIMEOUT_S:.0f}",
+            )
+            turn.stop()
+        return turn, False
+
+    def _spawn_chat_turn(
+        self, prompt: str, session_id: str | None, model: str | None = None
+    ) -> tuple[wiki_chat.ChatTurn, bool]:
+        return self._spawn_turn(self._new_chat_turn, prompt, session_id, model)
+
+    def _resolve_request_model(self, raw: object) -> str | None:
+        """Per-conversation model override from the chat composer. Free string
+        (the claude CLI decides what names it accepts); capped length."""
+
+        if not isinstance(raw, str):
+            return None
+        model = raw.strip()
+        return model[:80] or None
+
+    def _new_chat_turn(self, prompt: str, session_id: str | None, model: str | None = None) -> wiki_chat.ChatTurn:
+        return self.chat.new_turn(
+            prompt=prompt,
+            cwd=self.kb_root,
+            session_id=session_id,
+            model=model or DEFAULT_CHAT_MODEL,
+        )
+
+    def _optional_stop_key(self) -> str | None:
+        """Conversation key from an optional stop body (``{"key": "..."}``).
+        None = no key supplied, so stop falls back to every in-flight
+        conversation (legacy callers and tests). A missing or unparseable
+        body is not an error — stop must always be answerable."""
+
+        try:
+            body = self._read_json_body()
+        except ChatBadRequest:
+            return None
+        key = body.get("key") if isinstance(body, dict) else None
+        return key.strip() if isinstance(key, str) and key.strip() else None
+
+    def _handle_chat_stop(self) -> None:
+        idle = not stop_current_chat(self._optional_stop_key())
+        self._send_json(HTTPStatus.OK, {"ok": True, "idle": idle})
+
+    def _handle_chat_reset(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        topic_id = self._require_topic_id(body.get("topic_id"))
+        if topic_id is None:
+            return
+        self.chat_sessions.reset(topic_id)
+        self._send_json(HTTPStatus.OK, {"ok": True})
+
+    # ---- literature-review workflow ---------------------------------------
+
+    def workflow_available(self) -> bool:
+        return self.chat.enabled and resolve_pipeline_root() is not None
+
+    def _validate_workflow_params(self, params: object) -> dict:
+        """Normalize the interview card's answers; raise ChatBadRequest."""
+
+        if not isinstance(params, dict):
+            raise ChatBadRequest("综述参数缺失或格式无效。")
+        topic = str(params.get("topic") or "").strip()
+        if not (2 <= len(topic) <= 120):
+            raise ChatBadRequest("综述主题需要在 2-120 个字符之间。")
+        mode = str(params.get("review_mode") or "rapid")
+        if mode not in WORKFLOW_REVIEW_MODES:
+            raise ChatBadRequest("综述模式无效（rapid / scoping / systematic）。")
+        style = str(params.get("target_style") or "scientific-memo")
+        if style not in WORKFLOW_STYLES:
+            raise ChatBadRequest("目标风格无效。")
+        time_range = self._resolve_time_range(params.get("time_range") or "3y")
+        search_strategy = str(params.get("search_strategy") or "smart")
+        if search_strategy not in WORKFLOW_SEARCH_STRATEGIES:
+            raise ChatBadRequest("检索策略无效（smart / fast / seeds）。")
+        selection_strategy = str(params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY)
+        if selection_strategy not in WORKFLOW_SELECTION_STRATEGIES:
+            raise ChatBadRequest(
+                "选文策略无效（smart / smart-jev / keywords / influence / bm25）。")
+        if selection_strategy == "smart-jev" and not system_one_ready():
+            # Preflight the decision-model channel: failing here is a clear
+            # 400; failing inside the driver would waste the retrieval stage.
+            raise ChatBadRequest(
+                "决策模型（jev）未配置：请设置 EMBODIED_SYSTEM_ONE_URL"
+                "（或 ANTHROPIC_BASE_URL）与 EMBODIED_SYSTEM_ONE_API_KEY"
+                "（或 ANTHROPIC_AUTH_TOKEN），或改用「智能相关性 · 执行模型」。")
+        seed_raw = str(params.get("seed_arxiv_ids") or "").strip()
+        return {
+            "topic": topic,
+            "review_mode": mode,
+            "target_style": style,
+            "time_range": time_range,
+            "focus": str(params.get("focus") or "").strip()[:500],
+            "search_strategy": search_strategy,
+            "selection_strategy": selection_strategy,
+            "seed_arxiv_ids": seed_raw[:300],
+        }
+
+    def _resolve_time_range(self, raw: object) -> str:
+        """Accept a preset name, a ``{"range": "A..B"}`` dict (the interview
+        card's custom wire format), or an explicit ``A..B`` string; return the
+        canonical ``YYYY-MM-DD..YYYY-MM-DD`` string for the run manifest.
+
+        Presets: 1y / 3y (default) / 5y / 10y. Legacy names ("recent" =
+        6mo, "since2023" ≈ 3y, "20y") still map for old clients."""
+
+        today = dt.date.today()
+        today_s = today.strftime("%Y-%m-%d")
+
+        def years_back(n: int) -> str:
+            return f"{today.replace(year=today.year - n).strftime('%Y-%m-%d')}..{today_s}"
+
+        custom = ""
+        if isinstance(raw, dict):
+            custom = str(raw.get("range") or "")
+            preset = "custom"
+        else:
+            preset = str(raw or "")
+        if preset in ("", "recent", "6mo"):
+            start = (today - dt.timedelta(days=183)).strftime("%Y-%m-%d")
+            return f"{start}..{today_s}"
+        if preset == "1y":
+            return years_back(1)
+        if preset in ("3y", "since2023"):
+            return years_back(3)
+        if preset == "5y":
+            return years_back(5)
+        if preset == "10y":
+            return years_back(10)
+        if preset == "20y":
+            return years_back(20)
+        if preset == "custom":
+            match = re.fullmatch(r"\d{4}-\d{2}-\d{2}\.\.\d{4}-\d{2}-\d{2}", custom)
+            if not match:
+                raise ChatBadRequest("自定义时间范围格式应为 YYYY-MM-DD..YYYY-MM-DD。")
+            return custom
+        raise ChatBadRequest("时间范围无效。")
+
+    def _prepare_workflow_run(self, params: dict) -> Path:
+        """Create (or find) the in-progress run dir under <kb-root>/work/ via
+        run.py init conventions, so the run dir is known deterministically for
+        resume and topic matching. Raises ChatBadRequest on conflict.
+
+        Resume first matches any existing in-progress run with the same topic
+        slug regardless of date — a kickoff after midnight must not fork a
+        second run dir for a topic already in progress under yesterday's
+        date."""
+
+        work_dir = self.kb_root / "work"
+        # init_run slug: literature-review-<slug>-<date>; match on the slug part.
+        prefix = "literature-review-" + slugify_topic(params["topic"])
+        inputs_payload = {
+            "source": "wiki-interview",
+            "requested_review_mode": params["review_mode"],
+            "target_style": params.get("target_style") or "",
+            "focus": params.get("focus") or "",
+            "search_strategy": params.get("search_strategy") or "",
+            "selection_strategy": params.get("selection_strategy") or "",
+            "selection_model": params.get("selection_model") or "",
+            "seed_arxiv_ids": params.get("seed_arxiv_ids") or "",
+        }
+        for candidate in sorted(work_dir.glob(f"{prefix}-*")):
+            if not candidate.is_dir() or candidate.name == prefix:
+                continue
+            candidate_manifest = candidate / "run.json"
+            if not candidate_manifest.is_file():
+                continue
+            try:
+                manifest = json.loads(candidate_manifest.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if isinstance(manifest, dict) and manifest.get("status") == "in-progress":
+                # Resume-from-disk: same topic, any date. The interview card's
+                # mode is the user's explicit choice for THIS kickoff — when it
+                # differs from what the folder was born with, the manifest must
+                # follow, or the floors silently run at the old depth
+                # (2026-10-09: a rapid request kept running as scoping).
+                self._apply_resume_inputs(candidate_manifest, manifest, params, inputs_payload)
+                return candidate
+        run_dir = work_dir / run_folder_name(params["topic"], dt.date.today().strftime("%Y%m%d"))
+        manifest_path = run_dir / "run.json"
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                manifest = None
+            if isinstance(manifest, dict) and manifest.get("status") == "in-progress":
+                self._apply_resume_inputs(manifest_path, manifest, params, inputs_payload)
+                return run_dir  # resume-from-disk: same topic retried today
+            raise ChatBadRequest("同名运行目录已存在且已结束，请换一个主题表述或明天再试。")
+        command = [
+            sys.executable,
+            str(SCRIPT_DIR / "run.py"), "init",
+            "--topic",
+            params["topic"],
+            "--review-mode",
+            params["review_mode"],
+            "--work-dir",
+            str(work_dir),
+            "--inputs-json",
+            json.dumps(inputs_payload, ensure_ascii=False),
+            "--force",
+        ]
+        if params["time_range"]:
+            command += ["--time-range", params["time_range"]]
+        try:
+            result = subprocess.run(
+                command, capture_output=True, text=True,
+                timeout=INIT_RUN_TIMEOUT_S, check=False,
+            )
+        except subprocess.TimeoutExpired:
+            self.log_message(
+                "run init timed out after %s s; the run dir may be half-written",
+                f"{INIT_RUN_TIMEOUT_S:.0f}",
+            )
+            raise
+        if result.returncode or not manifest_path.is_file():
+            detail = (result.stderr or result.stdout or "").strip()
+            raise ChatBadRequest(f"初始化运行目录失败：{detail[:300]}")
+        return run_dir
+
+    def _apply_resume_inputs(
+        self, manifest_path: Path, manifest: dict, params: dict, inputs_payload: dict
+    ) -> None:
+        """On resume, keep run.json in step with this kickoff's interview answers.
+        The effective ``review_mode`` must match the request (the floors are
+        computed from it); ``inputs`` always records what the user picked."""
+
+        changed = False
+        requested = str(params.get("review_mode") or "")
+        if requested and manifest.get("review_mode") != requested:
+            manifest.setdefault("notes", [])
+            if isinstance(manifest["notes"], str):
+                manifest["notes"] = [manifest["notes"]]
+            manifest["notes"].append(
+                f"{dt.date.today().isoformat()}: review_mode "
+                f"{manifest.get('review_mode')!r} → {requested!r} on resume "
+                f"(interview card choice for this kickoff)."
+            )
+            manifest["review_mode"] = requested
+            changed = True
+        if manifest.get("inputs") != inputs_payload:
+            manifest["inputs"] = inputs_payload
+            changed = True
+        if changed:
+            atomic_write_json(manifest_path, manifest)
+
+    def _snapshot_topic_items(self) -> list[dict]:
+        """The published topics of the current snapshot with their
+        ``source_directory`` (only present in topics/<id>.json, not in the
+        manifest's summary entries)."""
+
+        try:
+            snapshot_dir = resolve_snapshot_directory(self.data_dir)
+            topics_dir = snapshot_dir / "topics"
+            items = []
+            for topic_path in sorted(topics_dir.glob("topic-*.json")):
+                try:
+                    item = json.loads(topic_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if isinstance(item, dict) and item.get("source_directory"):
+                    items.append(item)
+            return items
+        except (OSError, RuntimeError):
+            return []
+
+    def _manifest_source_dirs(self) -> set[str]:
+        """Source dirs of every topic in the current snapshot — the baseline
+        for the topic_ready fallback match after the settle refresh."""
+
+        return {
+            item["source_directory"]
+            for item in self._snapshot_topic_items()
+            if isinstance(item.get("source_directory"), str)
+        }
+
+    def _run_is_settled(self, run_dir: Path) -> bool:
+        """True when the run manifest already says settled.
+
+        The writer's closing message is prose that does not always carry the
+        ``[TOPIC:...]`` marker, so a finished run used to be auto-continued
+        one extra round (2026-10-21 深度图补全: "上一段未完成，自动继续（第 1/2
+        轮）" fired after finalize had already published). run.json is the
+        machine truth; the marker is only the courtesy signal. The work copy
+        is stamped by finalize and the published copy is its twin — accept
+        either, so the check survives a settle that only reached evidence/."""
+
+        candidates = [run_dir]
+        if run_dir.parent.name == "work":
+            candidates.append(run_dir.parent.parent / "evidence" / run_dir.name)
+        for candidate in candidates:
+            try:
+                manifest = json.loads((candidate / "run.json").read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if isinstance(manifest, dict) and manifest.get("status") == "settled":
+                return True
+        return False
+
+    def _find_topic_for_run_dir(self, run_dir: Path, before_dirs: set[str], marker_run: str | None) -> dict | None:
+        """After the settle refresh, find the published topic the workflow
+        produced. The settled run lands in evidence/ under the same folder
+        name as the work/ run dir; match that first, then the claude marker's
+        own path, then — fallback, when the marker is missing — the single
+        evidence topic absent from the pre-run baseline.
+
+        source_directory in topic JSON is repo-relative for runs inside the
+        repo and absolute otherwise (builder _relative()), so match on the
+        folder name and the resolved path."""
+
+        expected_name = run_dir.name
+        marker_name = Path(marker_run.strip("/")).name if marker_run else None
+        fresh: list[dict] = []
+        for item in self._snapshot_topic_items():
+            source = item.get("source_directory")
+            if not isinstance(source, str) or not source:
+                continue
+            source_dir = (self.kb_root / source).resolve() if not Path(source).is_absolute() else Path(source)
+            if source_dir.name == expected_name or (marker_name and source_dir.name == marker_name):
+                return item
+            if source.startswith("evidence/") and source not in before_dirs:
+                fresh.append(item)
+        return fresh[0] if len(fresh) == 1 else None
+
+    def _latest_workspace_id(self) -> str | None:
+        """Most recently updated workspace that still points at a live run dir.
+        Recovery for a cleared localStorage ``wiki.workflow.ws`` — the journal
+        under the run dir outlives the browser-side id. Recency is the whole
+        ranking (2026-10-14): the pane has no workspace switcher, so this
+        default is the only reachable conversation and must be the one the
+        user touched last. The 2026-10-09 rank (awaiting_input above
+        in-progress, settled last) made a week-old parked checkpoint outrank
+        the run in progress this morning. Settled-ness survives only as a
+        same-second tiebreak."""
+
+        best_id = None
+        best_key = None
+        data = self.chat_sessions.load()
+        for ws_id, entry in (data.get("workspaces") or {}).items():
+            if not isinstance(entry, dict):
+                continue
+            workflow = entry.get("workflow") or {}
+            run_rel = workflow.get("run_dir") or ""
+            if not run_rel:
+                continue
+            if not (self.kb_root / run_rel / "dialog" / "journal.jsonl").is_file():
+                continue
+            settled = workflow.get("stage") == "settle" and entry.get("topic_id")
+            key = (str(entry.get("updated_at") or ""), 0 if settled else 1)
+            if best_key is None or key > best_key:
+                best_key, best_id = key, ws_id
+        return best_id
+
+    def _handle_workflow_state(self) -> None:
+        if not self.chat.enabled:
+            self._send_json(HTTPStatus.OK, {"enabled": False, "workflow": False})
+            return
+        query = parse_qs(urlparse(self.path).query)
+        raw_ws = (query.get("ws_id") or [""])[0]
+        if not raw_ws and (query.get("latest") or [""])[0] == "1":
+            raw_ws = self._latest_workspace_id() or ""
+        if not raw_ws:
+            self._send_json(HTTPStatus.OK, {"enabled": True, "workflow": self.workflow_available()})
+            return
+        if not wiki_chat.WS_ID_RE.match(raw_ws):
+            self._send_json(HTTPStatus.OK, {"enabled": True, "workflow": self.workflow_available(), "ws_id": None})
+            return
+        entry = self.chat_sessions.get_workspace(raw_ws) or {}
+        workflow = entry.get("workflow") or {}
+        # The dialog transcript mirrored to the run dir (see DialogJournal):
+        # lets a refreshed page rebuild the claude dialog from disk.
+        journal: list[dict] = []
+        run_rel = workflow.get("run_dir") or ""
+        if run_rel:
+            journal = wiki_chat.read_dialog_journal(self.kb_root / run_rel / "dialog" / "journal.jsonl")
+        self._send_json(
+            HTTPStatus.OK,
+            {
+                "enabled": True,
+                "workflow": self.workflow_available(),
+                "ws_id": raw_ws,
+                "stage": workflow.get("stage"),
+                "awaiting_input": bool(workflow.get("awaiting_input")),
+                "run_dir": workflow.get("run_dir"),
+                "params": workflow.get("params"),
+                "topic_id": entry.get("topic_id"),
+                "session_id": entry.get("session_id"),
+                "messages": entry.get("messages", []),
+                "journal": journal,
+            },
+        )
+
+    def _handle_workflow(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        pipeline_root = resolve_pipeline_root()
+        if pipeline_root is None:
+            self._send_json(
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                {"error": "综述工作流需要包含 skills/ 的仓库检出（可用 --pipeline-root 指定）。"},
+            )
+            return
+        message = (body.get("message") or "").strip()
+        ws_id = body.get("ws_id") if isinstance(body.get("ws_id"), str) else ""
+        entry = self.chat_sessions.get_workspace(ws_id) if ws_id else None
+        # True only for a turn that follows an already-published run (a free
+        # question after settle). Such a turn must not publish or park again.
+        already_settled = False
+        # The model is chosen at kickoff and sticks for the whole workflow
+        # (switching models mid-session is incoherent).
+        ws_model = self._resolve_request_model(body.get("model")) if entry is None else (entry.get("model") or None)
+
+        if entry is not None:
+            # Continuation (or a free question) on an existing workspace.
+            workflow = entry.get("workflow") or {}
+            awaiting = bool(workflow.get("awaiting_input"))
+            settled = workflow.get("stage") == "settle" and entry.get("topic_id")
+            run_rel = workflow.get("run_dir") or ""
+            run_dir = (self.kb_root / run_rel).resolve() if run_rel else None
+            if run_dir is None or not run_dir.is_dir():
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "工作流的运行目录已丢失，请重置后重试。"})
+                return
+            if not message:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "消息为空。"})
+                return
+            ws_style = str((workflow.get("params") or {}).get("target_style") or "all")
+            ws_stage = str(workflow.get("stage") or "")
+            already_settled = bool(settled)
+            if settled:
+                # The survey already published; treat the message as ordinary
+                # follow-up on the same session, not pipeline continuation.
+                prompt = f"综述已完成并发布。用户说：{message}\n如需修改成稿，直接编辑运行目录中的文件。"
+            elif message.strip().lower() in {"继续", "continue"}:
+                # An explicit 继续 is always a continuation instruction, even
+                # when a previous segment died mid-stage (awaiting=False).
+                prompt = wiki_chat.build_continuation_prompt(feedback="", target_style=ws_style, stage=ws_stage, publisher="agent")
+            else:
+                prompt = wiki_chat.build_continuation_prompt(feedback=message, target_style=ws_style, stage=ws_stage, publisher="agent")
+            # Continuation turns run on the same workflow persona as kickoff.
+            system_prompt = wiki_chat.workflow_turn_system_prompt(
+                pipeline_root, self.kb_root, publisher="agent")
+        else:
+            # Kickoff: validate interview answers and prepare the run dir.
+            try:
+                params = self._validate_workflow_params(body.get("params"))
+            except ChatBadRequest as exc:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+                return
+            try:
+                run_dir = self._prepare_workflow_run(params)
+            except ChatBadRequest as exc:
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": str(exc)})
+                return
+            except (OSError, subprocess.SubprocessError) as exc:
+                self._send_json(HTTPStatus.INTERNAL_SERVER_ERROR, {"error": f"初始化运行目录失败：{exc}"})
+                return
+            ws_id = f"ws-{secrets.token_hex(4)}"
+            ws_style = str(params.get("target_style") or "all")
+            # The card's 执行模型 is the run's execution model: the writing
+            # session uses it AND the smart selection stage must use it too
+            # (otherwise "智能相关性·执行模型" would silently mean the driver's
+            # pinned default). smart-jev ignores it (decision model instead).
+            params["selection_model"] = ws_model or ""
+            system_prompt, prompt = wiki_chat.workflow_turn_prompts(
+                params=params,
+                run_dir=run_dir,
+                kb_root=self.kb_root,
+                pipeline_root=pipeline_root,
+                publisher="agent",
+            )
+            self.chat_sessions.record_session(ws_id, None, ws_model)
+            self.chat_sessions.set_workflow_state(
+                ws_id,
+                stage="init",
+                awaiting_input=False,
+                run_dir=run_dir.relative_to(self.kb_root).as_posix(),
+                params=params,
+            )
+            self.chat_sessions.append_message(ws_id, "user", params["topic"])
+
+        before_dirs = self._manifest_source_dirs() if entry is not None else set()
+        if not acquire_chat_lock(ws_id):
+            self._send_json(HTTPStatus.CONFLICT, {"error": "该工作流已有阶段正在执行，请先停止或稍候。"})
+            return
+        try:
+            # Mirror the dialog into the run dir (journal.jsonl) while it
+            # streams: the SSE conversation lives only in the browser
+            # connection, so a page refresh would otherwise lose it. A kickoff
+            # starts a fresh conversation — truncate any journal left in the
+            # (possibly reused) in-progress run dir.
+            journal = wiki_chat.DialogJournal(run_dir)
+            if entry is None:
+                journal.start()
+                journal.user(params["topic"])
+            else:
+                journal.user(message)
+            self._dialog_journal = journal
+            self._send_sse_headers(workflow_id=ws_id)
+            registry = self.chat_sessions
+            if entry is None:
+                # Kickoff: run the mechanical stages in code first. claude only
+                # starts when the driver completed; a failed driver leaves the
+                # run in-progress so a retry resumes idempotently.
+                if not self._run_pipeline_driver(ws_id, params, run_dir, registry):
+                    return
+            self._write_sse_event({"type": "status", "stage": "starting", "detail": "正在启动 claude 会话"})
+            resumed = (entry or {}).get("session_id")
+            turn, session_was_reset = self._spawn_workflow_turn(
+                prompt, resumed, ws_model, system_prompt)
+            if session_was_reset:
+                registry.record_session(ws_id, None)
+                self._write_sse_event({"type": "session_reset"})
+            emitted_stages: set[str] = set()
+            # Highest pipeline node this conversation has reached. A marker
+            # for an EARLIER node is the writer recapping the chain in its
+            # closing message, not a transition: acting on it moved the
+            # workflow back to a finished node (2026-10-21 自动化标注:
+            # [STAGE:writing] 22s after finalize had published).
+            stage_high_water = str(
+                ((registry.get_workspace(ws_id) or {}).get("workflow") or {}).get("stage") or ""
+            )
+
+            def on_delta(text: str) -> None:
+                nonlocal stage_high_water
+                for stage, detail in wiki_chat.extract_stage_markers(text):
+                    if stage in emitted_stages:
+                        continue
+                    if wiki_chat.stage_is_regression(stage_high_water, stage):
+                        continue
+                    emitted_stages.add(stage)
+                    stage_high_water = stage
+                    registry.set_workflow_state(
+                        ws_id, stage=stage, awaiting_input=False, require_existing=True)
+                    self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+
+            full_text = self._stream_chat_turn(
+                key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
+                record_user_message=message if entry is not None else None,
+                require_existing=True,
+            )
+
+            marker_run = wiki_chat.extract_topic_marker(full_text)
+            stop_reason = wiki_chat.extract_stop_marker(full_text)
+            # A settled run needs no continuation even when the closing prose
+            # forgot the marker: finalize already published it (2026-10-21
+            # 深度图补全 spawned a pointless 1/2 round). The run dir is the
+            # settle marker's fallback source.
+            settled_on_disk = self._run_is_settled(run_dir)
+            if marker_run is None and settled_on_disk:
+                try:
+                    marker_run = run_dir.relative_to(self.kb_root).as_posix()
+                except ValueError:
+                    marker_run = str(run_dir)
+            # One-shot contract: no outline stop-and-wait. A segment that ends
+            # without settling is auto-continued in the same session until it
+            # publishes or the round budget runs out — EXCEPT a deliberate
+            # [STOP:<reason>] decision point (e.g. 精读数量不够): that parks for
+            # the user and must never be auto-continued (2026-09-30 定案).
+            # A run settled on disk (or one already published before this
+            # turn) has no work left, so it never enters the loop.
+            auto_rounds = 0
+            while (
+                marker_run is None
+                and not settled_on_disk
+                and stop_reason is None
+                and full_text.strip()
+                and not turn.stop_requested
+                and auto_rounds < WORKFLOW_AUTO_CONTINUE_ROUNDS
+            ):
+                auto_rounds += 1
+                stage_now = (registry.get_workspace(ws_id) or {}).get("workflow", {}).get("stage")
+                resume_stage = str(stage_now or WORKFLOW_CHECKPOINT_STAGE)
+                self._write_sse_event(
+                    {"type": "stage", "stage": resume_stage,
+                     "detail": f"上一段未完成，自动继续（第 {auto_rounds}/{WORKFLOW_AUTO_CONTINUE_ROUNDS} 轮）"}
+                )
+                session_id = (registry.get_workspace(ws_id) or {}).get("session_id")
+                continuation = wiki_chat.build_continuation_prompt(
+                    feedback="", target_style=ws_style, stage=resume_stage, publisher="agent"
+                )
+                turn, _ = self._spawn_workflow_turn(continuation, session_id, ws_model)
+                full_text = self._stream_chat_turn(
+                    key=ws_id, turn=turn, registry=registry, on_delta=on_delta,
+                    require_existing=True,
+                )
+                marker_run = wiki_chat.extract_topic_marker(full_text)
+                stop_reason = wiki_chat.extract_stop_marker(full_text)
+
+            if already_settled:
+                # A follow-up question on a published run (the prompt told the
+                # model the survey is done). Nothing to settle and nothing to
+                # park: re-emitting topic_ready or an awaiting_input marker
+                # would restart a pipeline that has no work left.
+                pass
+            elif marker_run:
+                # Settle finished: publish and hand the topic back.
+                registry.set_workflow_state(
+                    ws_id, stage="settle", awaiting_input=False, require_existing=True)
+                self._write_sse_event({"type": "stage", "stage": "settle", "detail": "已落盘"})
+                try:
+                    refresh_snapshot(self.kb_root, self.data_dir)
+                except (EmptyCorpusError, RuntimeError) as exc:
+                    self._write_sse_event({"type": "topic_error", "message": f"快照刷新失败：{exc}"})
+                    return
+                topic_item = self._find_topic_for_run_dir(run_dir, before_dirs, marker_run)
+                if topic_item:
+                    registry.link_topic(ws_id, topic_item["id"])
+                    self._write_sse_event(
+                        {
+                            "type": "topic_ready",
+                            "topic_id": topic_item["id"],
+                            "title": topic_item.get("title", ""),
+                        }
+                    )
+                else:
+                    self._write_sse_event(
+                        {"type": "topic_error", "message": "综述已落盘，但快照中尚未找到新话题；请稍后手动刷新。"}
+                    )
+            else:
+                # Not settled, and auto-continuation either exhausted its round
+                # budget or was cut short by a manual stop: park the workspace
+                # so an explicit 继续 resumes from disk state. This is a
+                # recovery path, not a routine outline checkpoint.
+                current_stage = (self.chat_sessions.get_workspace(ws_id) or {}).get("workflow", {}).get("stage")
+                registry.set_workflow_state(
+                    ws_id, stage=current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                    awaiting_input=True, require_existing=True,
+                )
+                if stop_reason:
+                    # Designed user decision point: the writer reported and
+                    # stopped on purpose (e.g. 精读数量不够). Park for the user's
+                    # call — 补充信息 or 扩大综述范围 — never auto-continue.
+                    self._write_sse_event(
+                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                         "detail": "已停在用户决策点（"
+                         + stop_reason
+                         + "）：见上方精读论文列表。请决策——补充信息（种子论文/关注重点）"
+                           "或扩大综述范围（review-mode/时间范围），然后回复「继续」或直接说明。"}
+                    )
+                elif turn.stop_requested:
+                    self._write_sse_event(
+                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                         "detail": "已手动停止。回复「继续」从中断处继续。"}
+                    )
+                elif not full_text.strip():
+                    # Segment produced nothing and wasn't user-stopped (claude
+                    # died silently / first-event timeout). Say so — a silent
+                    # empty stream is what looked like "继续没有反应".
+                    self._write_sse_event(
+                        {
+                            "type": "topic_error",
+                            "message": "本段没有产生任何输出（claude 可能无响应或会话已失效）。"
+                            "请点击 ⟳ 新对话后重新发起，或稍后重试。",
+                        }
+                    )
+                else:
+                    self._write_sse_event(
+                        {"type": "awaiting_input", "stage": current_stage or WORKFLOW_CHECKPOINT_STAGE,
+                         "detail": f"自动续跑 {WORKFLOW_AUTO_CONTINUE_ROUNDS} 轮仍未落盘，已暂停。"
+                                   "回复「继续」从中断处继续，或检查运行目录排查问题。"}
+                    )
+        finally:
+            if self._dialog_journal is not None:
+                self._dialog_journal.flush_deltas()
+            self._dialog_journal = None
+            _track_turn(ws_id, None)
+            release_chat_lock(ws_id)
+
+    def _start_pipeline_driver(self, params: dict, run_dir: Path) -> subprocess.Popen:
+        """Launch the mechanical-stage driver subprocess. Split from the
+        streaming loop so tests can patch it with a fake Popen."""
+
+        # Prefer the repo checkout's driver: the driver derives the pipeline
+        # script paths from its own __file__, so a site-packages copy would
+        # point at a nonexistent skills/ tree. (Workflow requires a repo
+        # checkout anyway.)
+        pipeline_root = resolve_pipeline_root()
+        driver = PIPELINE_DRIVER
+        if pipeline_root is not None and pipeline_root.name != "skills":
+            repo_driver = pipeline_root / "scripts" / "run.py"
+            if repo_driver.is_file():
+                driver = repo_driver
+        command = [
+            sys.executable,
+            str(driver),
+            "pipeline",
+            "--run-dir", str(run_dir),
+            "--topic", str(params.get("topic") or ""),
+            "--review-mode", str(params.get("review_mode") or "rapid"),
+            "--time-range", str(params.get("time_range") or ""),
+            "--kb-root", str(self.kb_root),
+            "--search-strategy", str(params.get("search_strategy") or "smart"),
+            "--selection-strategy", str(params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY),
+        ]
+        selection_model = str(params.get("selection_model") or "")
+        if selection_model and str(
+            params.get("selection_strategy") or DEFAULT_SELECTION_STRATEGY
+        ) == "smart":
+            command += ["--selection-model", selection_model]
+        focus = str(params.get("focus") or "")
+        if focus:
+            command += ["--focus", focus]
+        seed_ids = str(params.get("seed_arxiv_ids") or "")
+        if seed_ids:
+            command += ["--seed-arxiv-ids", seed_ids]
+        return subprocess.Popen(
+            command,
+            cwd=str(self.kb_root),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    def _run_pipeline_driver(
+        self, ws_id: str, params: dict, run_dir: Path, registry
+    ) -> bool:
+        """Run the mechanical pipeline stages before claude starts, forwarding
+        each [DRIVER-STAGE:*] line as a timeline event. Returns True when the
+        driver completed; on failure emits an SSE error and returns False (the
+        run dir stays in-progress, so a retry resumes idempotently)."""
+
+        driver = self._start_pipeline_driver(params, run_dir)
+        _track_driver(ws_id, driver)
+        try:
+            self._write_sse_event(
+                {"type": "status", "stage": "driver", "detail": "正在运行固定流程（检索/抽取/深读）"}
+            )
+            assert driver.stdout is not None
+            current_stage = "plan"  # free-form lines attribute to the latest phase
+            for line in driver.stdout:
+                mapped = wiki_chat.extract_driver_stage(line)
+                if mapped:
+                    stage, detail = mapped
+                    current_stage = stage
+                    registry.set_workflow_state(
+                        ws_id, stage=stage, awaiting_input=False, require_existing=True)
+                    self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+                    continue
+                phase = wiki_chat.extract_driver_phase(line)
+                if phase:
+                    stage, detail = phase
+                    current_stage = stage
+                    registry.set_workflow_state(
+                        ws_id, stage=stage, awaiting_input=False, require_existing=True)
+                    self._write_sse_event({"type": "stage", "stage": stage, "detail": detail})
+                    continue
+                progress = wiki_chat.extract_driver_progress(line)
+                if progress:
+                    name, done, total, detail = progress
+                    self._write_sse_event(
+                        {"type": "progress", "stage": current_stage, "name": name,
+                         "done": done, "total": total, "detail": detail}
+                    )
+                    continue
+                brief = wiki_chat.extract_driver_brief(line)
+                if brief:
+                    brief_stage, title, lines = brief
+                    # The brief is tagged with its own stage — use it (mapped to
+                    # a workflow section) so a retrieval brief emitted after the
+                    # mining banner still lands under arXiv 检索 (2026-10-16).
+                    node = wiki_chat.DRIVER_STAGE_TO_WORKFLOW.get(brief_stage, current_stage)
+                    self._write_sse_event(
+                        {"type": "brief", "stage": node, "brief_stage": brief_stage,
+                         "title": title, "lines": lines}
+                    )
+                    continue
+                detail = wiki_chat.extract_driver_detail(line)
+                if detail:
+                    # Free-form progress lines land in the dialog so the user
+                    # sees movement — attributed to the phase they belong to.
+                    self._write_sse_event({"type": "stage", "stage": current_stage, "detail": detail})
+            try:
+                returncode = driver.wait(timeout=WORKFLOW_DRIVER_TIMEOUT_S)
+            except subprocess.TimeoutExpired:
+                self._write_sse_event(
+                    {"type": "status", "stage": "timeout",
+                     "detail": f"固定流程（检索/抽取/深读）超时，已终止子进程；加大对应超时或重试"}
+                )
+                driver.kill()
+                driver.wait()
+                returncode = -1
+        finally:
+            _track_driver(ws_id, None)
+        if returncode != 0:
+            stderr_tail = ""
+            if driver.stderr is not None:
+                stderr_tail = (driver.stderr.read() or "")[-300:]
+            self._write_sse_event(
+                {
+                    "type": "topic_error",
+                    "message": f"固定流程执行失败（exit {returncode}），可重试续跑：{stderr_tail}",
+                }
+            )
+            return False
+        return True
+
+    def _spawn_workflow_turn(
+        self, prompt: str, session_id: str | None, model: str | None = None,
+        system_prompt: str | None = None,
+    ) -> tuple[wiki_chat.ChatTurn, bool]:
+        if system_prompt is None:  # 续轮：与 kickoff 用同一工厂
+            system_prompt = wiki_chat.workflow_turn_system_prompt(
+                resolve_pipeline_root(), self.kb_root, publisher="agent")
+
+        def new_turn(turn_prompt, sid, turn_model):
+            return self._new_workflow_turn(
+                turn_prompt, sid, turn_model, system_prompt=system_prompt)
+
+        return self._spawn_turn(new_turn, prompt, session_id, model)
+
+    def _new_workflow_turn(
+        self, prompt: str, session_id: str | None, model: str | None = None, *,
+        system_prompt: str,
+    ) -> wiki_chat.ChatTurn:
+        # STORM-style tiering: the workflow session gets the (usually lighter)
+        # workflow model for its mechanical loop, and its system prompt tells
+        # subagents to use fast models too. The main thread's deep-reading
+        # synthesis and final prose still happen inside this session. The
+        # browser may pick the model per conversation (default glm-5.3-flash);
+        # --workflow-model keeps the highest precedence for CLI-driven setups.
+        # The system prompt is composed by wiki_chat.workflow_turn_prompts (the
+        # single assembly point shared with the headless launcher); passing it
+        # explicitly here blocks ChatConfig.new_turn's silent fall back to the
+        # generic topic-chat persona.
+        assert system_prompt is not None, "workflow turn 必须显式传 system_prompt"
+        return self.chat.new_turn(
+            prompt=prompt,
+            cwd=self.kb_root,
+            session_id=session_id,
+            system_prompt=system_prompt,
+            timeout_s=max(self.chat.timeout_s, WORKFLOW_MIN_TIMEOUT_S),
+            model=self.workflow_model or model or DEFAULT_CHAT_MODEL,
+            effort=self.workflow_effort,
+        )
+
+    def _handle_workflow_stop(self) -> None:
+        idle = not stop_current_chat(self._optional_stop_key())
+        self._send_json(HTTPStatus.OK, {"ok": True, "idle": idle})
+
+    def _handle_workflow_reset(self) -> None:
+        body = self._chat_precheck()
+        if body is None:
+            return
+        raw = body.get("ws_id")
+        ws_id = raw if isinstance(raw, str) else ""
+        if not wiki_chat.WS_ID_RE.match(ws_id):
+            self._send_json(HTTPStatus.BAD_REQUEST, {"error": "工作流 ID 无效。"})
+            return
+        self.chat_sessions.reset(ws_id)
+        self._send_json(HTTPStatus.OK, {"ok": True})
+
+    def _send_sse_headers(self, workflow_id: str | None = None) -> None:
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Accel-Buffering", "no")
+        if workflow_id:
+            self.send_header("X-Workflow-Id", workflow_id)
+        self.end_headers()
+        self.close_connection = True
+
+    def _write_sse_event(self, event: dict) -> None:
+        # Timestamp every dialog-bearing event at the emission point: the
+        # journal replay and the live pane both render the same clock, so a
+        # workflow log says WHEN each stage ran (2026-09-30 debugging ask).
+        event.setdefault("ts", dt.datetime.now().isoformat(timespec="seconds"))
+        journal = self._dialog_journal
+        if journal is not None and wiki_chat.journalable_event(event):
+            journal.event(event)
+        payload = json.dumps(event, ensure_ascii=False)
+        self.wfile.write(f"data: {payload}\n\n".encode("utf-8"))
+        self.wfile.flush()
+
+    def _serve_knowledge_map(self) -> None:
+        if not self.knowledge_map or not self.knowledge_map.is_file():
+            self.send_error(HTTPStatus.NOT_FOUND, explain="知识图谱尚未生成")
+            return
+        payload = self.knowledge_map.read_bytes()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _serve_research_directory(self) -> None:
+        """``/research/``: the topic directory for the local Wiki.
+
+        The crawlable static site (``wiki.py build-site``) owns this path on
+        GitHub Pages, but the local server serves the interactive snapshot,
+        which on a local KB is schema v1 and carries no slugs. Render the
+        directory straight from the active manifest and link each card into
+        the in-wiki topic route, so the topbar 专题目录 entry is never dead.
+        """
+
+        try:
+            snapshot_dir = resolve_snapshot_directory(self.data_dir)
+        except RuntimeError as exc:
+            self.send_error(HTTPStatus.NOT_FOUND, explain=str(exc))
+            return
+        manifest_path = snapshot_dir / "manifest.json"
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            topics = [item for item in manifest.get("topics") or [] if isinstance(item, dict)]
+            fields = manifest.get("fields") or []
+        except (OSError, json.JSONDecodeError):
+            # A snapshot without a manifest is still readable topic-by-topic;
+            # degrade to the topic files rather than failing the nav entry.
+            topics, fields = [], []
+            for path in sorted((snapshot_dir / "topics").glob("topic-*.json")):
+                try:
+                    item = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError):
+                    continue
+                if isinstance(item, dict):
+                    topics.append(item)
+        topics.sort(key=lambda item: (str(item.get("date") or ""), str(item.get("title") or "")), reverse=True)
+        cards = []
+        for topic in topics:
+            identifier = str(topic.get("id") or "")
+            if not identifier:
+                continue
+            version = str(topic.get("latest_version") or topic.get("default_version") or "zhihu")
+            href = f"../#/topic/{quote(identifier)}?version={quote(version)}"
+            cards.append(
+                '<article class="research-card">'
+                f'<p>{html.escape(str(topic.get("field") or "研究领域"))}</p>'
+                f'<h2><a href="{html.escape(href, quote=True)}">{html.escape(str(topic.get("title") or identifier))}</a></h2>'
+                f'<small>{html.escape(str(topic.get("date") or ""))}</small>'
+                "</article>"
+            )
+        directory = "\n".join(cards) or '<p class="lede">还没有可发布的完整成果。</p>'
+        payload = f"""<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>研究专题目录｜Embodied AI Evidence Hub</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+  :root {{ --paper:#f5f4f0; --ink:#222421; --muted:#686c65; --line:#d7d8d1; --panel:#fffef9; --green:#1f5b4d; --amber:#b9662d; }}
+  * {{ box-sizing:border-box; }}
+  body {{ margin:0; background:var(--paper); color:var(--ink); line-height:1.75; font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }}
+  a {{ color:var(--green); text-underline-offset:3px; }}
+  .site-header {{ min-height:72px; padding:14px clamp(20px,5vw,72px); border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:24px; }}
+  .site-brand {{ color:var(--ink); text-decoration:none; display:grid; line-height:1.25; }}
+  .site-brand strong {{ font-size:16px; }}
+  .site-brand span {{ color:var(--muted); font-size:12px; }}
+  .site-header nav {{ display:flex; gap:20px; font-size:14px; }}
+  .site-header nav a {{ color:var(--ink); text-decoration:none; }}
+  main {{ width:min(1160px,calc(100% - 40px)); margin:0 auto; padding:72px 0 96px; }}
+  .eyebrow {{ margin:0 0 10px; color:var(--amber); font-size:12px; font-weight:750; letter-spacing:.12em; text-transform:uppercase; }}
+  h1 {{ margin:0 0 18px; font-family:Georgia,"Noto Serif SC",serif; font-size:clamp(34px,6vw,62px); line-height:1.12; }}
+  .lede {{ max-width:760px; color:var(--muted); }}
+  .research-directory {{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-top:48px; }}
+  .research-card {{ padding:22px; border:1px solid var(--line); border-radius:14px; background:var(--panel); }}
+  .research-card > p {{ margin:0 0 10px; color:var(--amber); font-size:12px; }}
+  .research-card h2 {{ margin:0; font-size:18px; line-height:1.45; }}
+  .research-card h2 a {{ color:var(--ink); text-decoration:none; }}
+  .research-card small {{ display:block; margin-top:10px; color:var(--muted); font-size:13px; }}
+  footer {{ padding:28px 20px; border-top:1px solid var(--line); color:var(--muted); text-align:center; font-size:13px; }}
+  @media (max-width:800px) {{ .research-directory {{ grid-template-columns:repeat(2,1fr); }} }}
+  @media (max-width:520px) {{ .research-directory {{ grid-template-columns:1fr; }} }}
+</style>
+</head><body>
+<header class="site-header"><a class="site-brand" href="../"><strong>Embodied AI Evidence Hub</strong><span>具身智能证据知识库</span></a>
+<nav aria-label="全站导航"><a href="../knowledge-map/">知识图谱</a><a href="../">交互阅读</a></nav></header>
+<main class="directory-page"><p class="eyebrow">Research directory</p><h1>研究专题目录</h1>
+<p class="lede">共 {len(topics)} 个专题，覆盖 {len(fields)} 个研究领域。每个专题连接完整正文、精读论文与正式证据事件。</p>
+<div class="research-directory">{directory}</div></main>
+<footer><p>Research → Audit → Evidence</p></footer></body></html>
+""".encode("utf-8")
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def _send_json(self, status: HTTPStatus, value: object) -> None:
+        payload = json.dumps(value, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+
+class EmptyCorpusError(RuntimeError):
+    """The knowledge base has no publishable topics yet (first-run shape)."""
+
+
+def refresh_snapshot(kb_root: Path, data_dir: Path) -> None:
+    """Rebuild the snapshot. Raises EmptyCorpusError for the "nothing
+    publishable yet" builder exit (kept distinct from real failures)."""
+
+    result = subprocess.run(
+        build_refresh_command(kb_root, data_dir),
+        cwd=str(kb_root),
+        text=True,
+        check=False,
+    )
+    if result.returncode == 3:
+        raise EmptyCorpusError("没有发现同时包含三种成稿的完整话题。")
+    if result.returncode:
+        raise RuntimeError("初始成果快照构建失败。")
+
+
+def build_knowledge_map(output: Path, kb_root: Path) -> None:
+    command = [sys.executable, str(GRAPH_BUILDER), "build-knowledge-map", "--no-open", "--output", str(output)]
+    index_path = kb_root / "knowledge" / "index.md"
+    if index_path.is_file():
+        command += ["--root", str(kb_root)]
+    elif (kb_root / CATALOG_RELPATH).is_file():
+        # Local KBs that only route runs through the catalog have no
+        # knowledge/index.md. Without --root the builder falls back to its own
+        # install root and exits "start file not found", so the graph silently
+        # never renders (the /knowledge-map/ nav entry stays 404). Anchor the
+        # graph on the catalog instead — it is this KB's routing entry point.
+        command += ["--root", str(kb_root), "--start", CATALOG_RELPATH.as_posix()]
+    result = subprocess.run(
+        command,
+        cwd=str(kb_root),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode:
+        print("知识图谱本地预览生成失败，Wiki 阅读功能仍可正常使用。", file=sys.stderr)
+
+
+def _kb_root_from_listener_cmdline(port: int) -> Path | None:
+    """Fallback identity for a Wiki built before /api/kb existed: read the
+    listener's own argv and pull out --kb-root. Local-only (the KB may be on a
+    shared mount, but the process is not), same mechanism --close already
+    relies on. None when the process is not ours or the flag is absent."""
+
+    pid = find_listener_pid(port)
+    if pid is None:
+        return None
+    try:
+        raw = Path(f"/proc/{pid}/cmdline").read_bytes()
+    except OSError:
+        return None
+    args = [part.decode("utf-8", "replace") for part in raw.split(b"\0") if part]
+    for index, arg in enumerate(args):
+        if arg == "--kb-root" and index + 1 < len(args):
+            return Path(args[index + 1]).expanduser().resolve()
+        if arg.startswith("--kb-root="):
+            return Path(arg.split("=", 1)[1]).expanduser().resolve()
+    return None
+
+
+def probe_running_kb(port: int) -> Path | None:
+    """Ask the Wiki already listening on 127.0.0.1:<port> which KB it serves.
+    None = nothing there, something else holds the port, or the identity could
+    not be read. A same-build instance answers /api/kb; an older build is read
+    off its own command line."""
+
+    connection = http.client.HTTPConnection(
+        "127.0.0.1", port, timeout=PORT_PROBE_TIMEOUT_S
+    )
+    try:
+        connection.request("GET", "/api/kb")
+        response = connection.getresponse()
+        body = response.read()
+        if response.status == HTTPStatus.OK:
+            payload = json.loads(body.decode("utf-8"))
+            raw = payload.get("kb_root")
+            if payload.get("kind") == "embodied-learning-wiki" and raw:
+                return Path(raw).expanduser().resolve()
+        elif response.status != HTTPStatus.NOT_FOUND:
+            return None
+    except (OSError, ValueError, http.client.HTTPException):
+        pass
+    finally:
+        connection.close()
+    return _kb_root_from_listener_cmdline(port)
+
+
+def refuse_different_kb(port: int, owning_kb: Path, requested_kb: Path) -> int:
+    """A second `serve` asked for a KB the running instance does not serve.
+    Silently reusing the port served the *old* KB while the operator believed
+    their --kb-root had taken effect, so this is a hard error with the two
+    ways out spelled out."""
+
+    print(
+        f"端口 {port} 已被另一个 Wiki 实例占用，它服务的是：{owning_kb}\n"
+        f"本次 --kb-root 指定的是：{requested_kb}\n"
+        "两者不同，继续启动不会切换知识库。请二选一：\n"
+        f"  1) 先关闭占用者再启动：serve_research_wiki --close --port {port}\n"
+        f"  2) 换一个端口启动：serve_research_wiki --port <其他端口> --kb-root {requested_kb}",
+        file=sys.stderr,
+    )
+    return 2
+
+
+def port_in_use(port: int) -> bool:
+    """True when something already accepts connections on 127.0.0.1:<port>.
+    Port 0 is 'pick one for me', so it is never in use."""
+
+    if port == 0:
+        return False
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=PORT_PROBE_TIMEOUT_S):
+            return True
+    except OSError:
+        return False
+
+
+def port_conflict_action(port: int, kb_root: Path) -> int | None:
+    """Decide what an occupied port means before doing any work.
+    None = free, start normally. 0 = same KB already serving, reuse it.
+    2 = a different KB holds the port, refuse (see refuse_different_kb).
+    Checked *before* the snapshot rebuild: an aborted start must not spend
+    minutes rebuilding the shared KB's snapshot on CIFS for nothing."""
+
+    if not port_in_use(port):
+        return None
+    url = f"http://127.0.0.1:{port}/"
+    owning_kb = probe_running_kb(port)
+    if owning_kb is None:
+        # Older build (no /api/kb) or a foreign listener: identity unknown.
+        # Keep the historical reuse behaviour rather than breaking a plain
+        # second `serve --open`, but say that the KB was not verified.
+        print(f"已有实例正在运行：{url}（无法确认它服务哪个知识库）")
+        return 0
+    if owning_kb == kb_root:
+        print(
+            f"已有实例正在运行：{url}（同一知识库：{owning_kb}）\n"
+            "未重启它；需要重建快照就在页面点「刷新」。"
+        )
+        return 0
+    return refuse_different_kb(port, owning_kb, kb_root)
+
+
+def find_listener_pid(port: int) -> int | None:
+    """Return the pid of the process listening on 127.0.0.1:<port>, or None.
+    Used by --close; on this machine that can only be another Wiki instance."""
+
+    try:
+        output = subprocess.run(
+            ["ss", "-tlnp", "-o", "sport", "=", f":{port}"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        ).stdout
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        if isinstance(exc, subprocess.TimeoutExpired):
+            print(f"[WARN] timeout: ss port probe exceeded 10s (port {port})", file=sys.stderr, flush=True)
+        return None
+    for line in output.splitlines():
+        if "127.0.0.1" not in line and "::1" not in line:
+            continue
+        match = re.search(r"pid=(\d+)", line)
+        if match:
+            return int(match.group(1))
+    return None
+
+
+def close_running_instance(port: int) -> int:
+    """--close: stop an already-running Wiki on this port. SIGTERM lets it run
+    its finally block (stopping any in-flight claude chat) before exiting."""
+
+    pid = find_listener_pid(port)
+    if pid is None:
+        print(f"端口 {port} 上没有正在运行的 Wiki 实例。")
+        return 0
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError as exc:
+        print(f"无法停止进程 {pid}：{exc}", file=sys.stderr)
+        return 1
+    for _ in range(50):  # up to 5 s for a graceful exit
+        if not Path(f"/proc/{pid}").exists():
+            print(f"已关闭 Wiki 实例（pid {pid}，端口 {port}）。")
+            return 0
+        time.sleep(0.1)
+    print(f"实例（pid {pid}）未在 5 秒内退出，已发送强制终止。")
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+    return 0
+
+
+def run(args: argparse.Namespace) -> int:
+    """Business entry — ``args`` comes from the CLI parser in the dispatcher."""
+    if args.close:
+        return close_running_instance(args.port)
+    if args.pipeline_root is not None:
+        global PIPELINE_ROOT_OVERRIDE
+        PIPELINE_ROOT_OVERRIDE = args.pipeline_root.expanduser().resolve()
+    if args.kb_root is not None:
+        # An explicit --kb-root is authoritative: never fall back to defaults.
+        # Cold start is supported: an empty/new directory gets the same
+        # skeleton a first-run default KB gets (knowledge/ + starter catalog
+        # + evidence/), so the wiki serves its empty-library state instead of
+        # refusing to start.
+        kb_root = args.kb_root.expanduser().resolve()
+        if not (kb_root / CATALOG_RELPATH).is_file():
+            ensure_default_kb(kb_root)
+    else:
+        # No explicit --kb-root and the default location has no catalog:
+        # a brand-new user gets a skeleton knowledge base created in place.
+        kb_root = resolve_kb_root(None)
+        if kb_root is None:
+            kb_root = ensure_default_kb(DEFAULT_KB_ROOT)
+    if kb_root is None:
+        print(
+            f"未找到本地知识库（默认查找 {DEFAULT_KB_ROOT}）。"
+            "请用 --kb-root 指定包含 knowledge/literature-review-catalog.md 的目录。",
+            file=sys.stderr,
+        )
+        return 1
+    wiki_root = resolve_wiki_root(kb_root)
+    data_dir = wiki_root / "data"
+    # Occupied port: decide reuse-vs-refuse before the snapshot rebuild, so a
+    # start that cannot bind does not rebuild a shared KB's snapshot for
+    # nothing (CIFS makes that minutes) and never silently serves another KB.
+    conflict = port_conflict_action(args.port, kb_root)
+    if conflict is not None:
+        # Only reuse opens the browser; a refused start must not point the
+        # operator at the other KB's instance.
+        if conflict == 0 and args.open:
+            threading.Timer(0.45, lambda: webbrowser.open(f"http://127.0.0.1:{args.port}/")).start()
+        return conflict
+    if not args.no_refresh:
+        try:
+            refresh_snapshot(kb_root, data_dir)
+        except EmptyCorpusError as exc:
+            # A first-run KB has nothing publishable yet; that must not block
+            # serving — the frontend shows its empty-library state.
+            print(f"{exc}\nWiki 将以空状态启动；完成第一次综述后重新启动即可。", file=sys.stderr)
+        except RuntimeError as exc:
+            # A real build failure keeps the last valid snapshot serving
+            # (atomic publish never replaces a good snapshot with a bad one).
+            print(f"{exc}", file=sys.stderr)
+
+    chat: wiki_chat.ChatConfig | None = None
+    if not args.no_chat:
+        try:
+            chat = wiki_chat.ChatConfig(
+                cli=wiki_chat.resolve_cli(args.chat_cli),
+                model=args.chat_model,
+                permission_mode=args.chat_permission_mode,
+                allowed_tools=args.chat_allowed_tools,
+                timeout_s=args.chat_timeout_s,
+            )
+        except wiki_chat.ChatUnavailableError as exc:
+            print(f"研究助手对话未启用：{exc}", file=sys.stderr)
+
+    with tempfile.TemporaryDirectory(prefix="research-wiki-map-") as temp_dir:
+        knowledge_map = Path(temp_dir) / "index.html"
+        build_knowledge_map(knowledge_map, kb_root)
+        handler = partial(
+            WikiHandler,
+            knowledge_map=knowledge_map,
+            kb_root=kb_root,
+            wiki_root=wiki_root,
+            data_dir=data_dir,
+            chat=chat,
+            workflow_model=args.workflow_model,
+            workflow_effort=args.workflow_effort,
+        )
+        url = f"http://127.0.0.1:{args.port}/"
+        server: ThreadingHTTPServer | None = None
+        for _ in (1, 2):
+            try:
+                server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
+                break
+            except OSError as exc:
+                if exc.errno != errno.EADDRINUSE:
+                    raise
+                # Lost the race since the pre-check (or port 0 impossible).
+                # Ask the winner who it is; None = it just exited, retry once.
+                conflict = port_conflict_action(args.port, kb_root)
+                if conflict is not None:
+                    if conflict == 0 and args.open:
+                        threading.Timer(0.45, lambda: webbrowser.open(url)).start()
+                    return conflict
+        if server is None:
+            print(f"无法绑定端口 {args.port}。", file=sys.stderr)
+            return 2
+        print(f"空间智能研究 Wiki 已准备好：{url}")
+        if chat is not None and chat.enabled:
+            model_label = args.chat_model or "默认模型"
+            print(f"研究助手对话已启用（{args.chat_permission_mode} / {model_label}）。")
+        print("保持此窗口打开即可阅读；按 Control-C 关闭。")
+        if args.open:
+            threading.Timer(0.45, lambda: webbrowser.open(url)).start()
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("\nWiki 已关闭。")
+        finally:
+            stop_current_chat()  # don't orphan a running claude child
+            server.server_close()
+    return 0

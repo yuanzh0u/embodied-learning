@@ -9,11 +9,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "check_run_bundle.py"
-SPEC = importlib.util.spec_from_file_location("check_run_bundle", SCRIPT)
-check_run_bundle = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(check_run_bundle)
+SCRIPT = "embodied_learning.wiki.run.bundle"  # implementation module (old scripts/check_run_bundle.py deleted)
+check_run_bundle = importlib.import_module(SCRIPT)
 
 DELIVERABLES = [
     "scientific-memo_keyan.md",
@@ -43,6 +40,7 @@ def make_run(
     manifest = {
         "run": run_dir.name,
         "topic": "test",
+        "status": "settled",  # a complete bundle by default; in-progress/unknown override it
         "time_range": "2026-01-01..2026-07-08",
         "event_count": len(event_ids),
         "files": {
@@ -76,6 +74,32 @@ class CheckRunBundleTest(unittest.TestCase):
         problems = check_run_bundle.check_run_bundle(run_dir)
         self.assertTrue(any("zhihu-explainer_zhihu.md" in p for p in problems))
         self.assertTrue(any("xiaohongshu-post_xiaohongshu.md" in p for p in problems))
+        self.assertTrue(any("three styles are the default" in p for p in problems))
+
+    def test_birth_input_declares_reduced_scope_before_settle(self) -> None:
+        """The writer's --pre-settle gate runs before finalize stamps style +
+        scope_note; the interview answer recorded at run birth is the scope
+        declaration until then. Without the fallback a single-style run was
+        told to ship two deliverables the user never asked for (2026-10-21
+        点云匹配)."""
+        run_dir = make_run(
+            self.tmp,
+            deliverables=["scientific-memo_keyan.md"],
+            manifest_extra={
+                "status": "in-progress",
+                "inputs": {"source": "wiki-interview", "target_style": "scientific-memo"},
+            },
+        )
+        self.assertEqual(check_run_bundle.check_run_bundle(run_dir, pre_settle=True), [])
+
+    def test_birth_input_all_keeps_the_three_style_default(self) -> None:
+        run_dir = make_run(
+            self.tmp,
+            deliverables=["scientific-memo_keyan.md"],
+            manifest_extra={"status": "in-progress", "inputs": {"target_style": "all"}},
+        )
+        problems = check_run_bundle.check_run_bundle(run_dir, pre_settle=True)
+        self.assertTrue(any("zhihu-explainer_zhihu.md" in p for p in problems))
         self.assertTrue(any("three styles are the default" in p for p in problems))
 
     def test_declared_reduced_scope_passes(self) -> None:
@@ -143,6 +167,21 @@ class CheckRunBundleTest(unittest.TestCase):
         problems = check_run_bundle.check_run_bundle(run_dir)
         self.assertTrue(any("run not settled" in p for p in problems))
 
+    def test_pre_settle_skips_lifecycle_but_keeps_real_problems(self) -> None:
+        """The writer stage runs this gate while the run is still in-progress;
+        finalize owns the status flip. Without --pre-settle the command can
+        never pass, and its message told the writer to flip run.json by hand
+        (2026-10-21 点云表面重建)."""
+
+        run_dir = make_run(self.tmp, manifest_extra={"status": "in-progress"})
+        self.assertEqual(check_run_bundle.check_run_bundle(run_dir, pre_settle=True), [])
+        manifest = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
+        del manifest["event_count"]
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        problems = check_run_bundle.check_run_bundle(run_dir, pre_settle=True)
+        self.assertFalse(any("run not settled" in p for p in problems))
+        self.assertTrue(any("missing required field `event_count`" in p for p in problems))
+
     def test_settled_status_passes(self) -> None:
         run_dir = make_run(self.tmp, manifest_extra={"status": "settled"})
         self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])
@@ -166,6 +205,19 @@ class CheckRunBundleTest(unittest.TestCase):
             json.dumps({"stop_assessment": {"ready_to_stop": False, "unresolved": ["saturation"]}}),
             encoding="utf-8",
         )
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        problems = check_run_bundle.check_run_bundle(run_dir)
+        self.assertTrue(any("coverage/saturation gate not passed" in item for item in problems))
+
+        # Declared escape: gate_exceptions lists the gate names the run is
+        # settling past (justification lives in run.json notes).
+        manifest["gate_exceptions"] = ["saturation"]
+        (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], check_run_bundle.check_run_bundle(run_dir))
+
+        # Declared exceptions only cover what they name — other unresolved
+        # gates stay hard failures.
+        manifest["gate_exceptions"] = ["something-else"]
         (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
         problems = check_run_bundle.check_run_bundle(run_dir)
         self.assertTrue(any("coverage/saturation gate not passed" in item for item in problems))
@@ -198,6 +250,27 @@ class CheckRunBundleTest(unittest.TestCase):
         manifest["event_count"] = 1
         (run_dir / "run.json").write_text(json.dumps(manifest), encoding="utf-8")
         self.assertEqual(check_run_bundle.check_run_bundle(run_dir), [])
+
+    def test_in_progress_run_is_exempt_from_self_containment(self) -> None:
+        """files.* / files.evidence are stamped by run.py finalize, which runs
+        AFTER the launcher's gate loop. Enforcing them on an in-progress run is
+        a chicken-and-egg the loop can never clear — it only passed because a
+        writer agent violated its instructions and ran finalize first
+        (2026-10-13, run 08 died here while run 01 survived on that violation)."""
+        run_dir = make_run(
+            self.tmp,
+            manifest_extra={
+                "status": "in-progress",
+                "workflow_version": 2,
+                "review_mode": "scoping",
+                "files": {},
+            },
+        )
+        problems = check_run_bundle.check_run_bundle(run_dir)
+        self.assertFalse(any("workflow_version 2 requires files." in p for p in problems), problems)
+        self.assertFalse(any("self-contained" in p for p in problems), problems)
+        # the lifecycle reminder is still reported (and the launcher filters it)
+        self.assertTrue(any("run not settled" in p for p in problems))
 
 
 if __name__ == "__main__":

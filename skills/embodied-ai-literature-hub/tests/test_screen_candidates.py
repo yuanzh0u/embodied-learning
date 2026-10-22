@@ -6,8 +6,8 @@ import importlib.util
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("screen_candidates", ROOT / "scripts" / "screen_candidates.py")
+ROOT = Path(__file__).resolve().parents[3]
+SPEC = importlib.util.spec_from_file_location("screen_candidates", ROOT / "embodied_learning" / "search" / "screening.py")
 screen_candidates = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(screen_candidates)
@@ -40,6 +40,22 @@ class ScreenCandidatesTest(unittest.TestCase):
             registry, ["tactile"], [], {"1", "2", "3", "4"}, 4
         )
         self.assertEqual(1, sum(bool(item["seeded"]) for item in selected))
+
+    def test_discovery_context_matches_when_title_and_summary_are_empty(self) -> None:
+        # Curated-list entries can arrive with junk titles and no abstract;
+        # their mined list block (discovery_context) must still score so the
+        # channel never screens to an empty queue.
+        registry = {
+            "candidates": [
+                {"arxiv_id": "1", "title": "`arXiv 2017`", "summary": "",
+                 "discovery_context": "- **`arXiv 2017`** Proximal Policy Optimization Algorithms",
+                 "discoveries": []},
+                {"arxiv_id": "2", "title": "Unrelated", "summary": "", "discoveries": []},
+            ]
+        }
+        selected = screen_candidates.select_candidates(registry, ["policy optimization"], [], set(), 2)
+        self.assertEqual(["1"], [item["candidate"]["arxiv_id"] for item in selected])
+        self.assertIn("policy optimization", selected[0]["matched_context_terms"])
 
 
 if __name__ == "__main__":

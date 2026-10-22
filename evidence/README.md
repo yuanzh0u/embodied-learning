@@ -12,7 +12,7 @@
 | 文件 | 必备 | 说明 |
 |---|---|---|
 | `run.json` | 是 | run manifest,字段见下 |
-| `evidence.jsonl` | 是 | accepted 证据事件(经 `write_lit_outputs.py --validate-only` 校验) |
+| `evidence.jsonl` | 是 | accepted 证据事件(经 `fetch.py write-lit-outputs --validate-only` 校验) |
 | `scientific-memo_keyan.md` 等三风格成品 | 正式 run | `evidence-appendix.md` 属于 bundle 的第 4 个文件 |
 | `source-entry-draft.md` | 有则收 | 待结算入 `knowledge/sources.md` 的来源草稿 |
 | `query-plan.json` / `query-plan.md` | 有则收 | 本次 run 的检索策略(可复现性) |
@@ -57,15 +57,15 @@
 
 跨 run 证据规则:综述可以组合历史 run 的证据(这是证据层积累的意义),但必须满足:
 
-- run 用 `python3 scripts/init_run.py` 创建,出生即带 `status: in-progress` 的 run.json;结算时翻为 `settled`。`in-progress` 的 run 是未完成品,不得当作交付物展示,也不得迁入 `evidence/`。
+- run 用 `python3 scripts/run.py init` 创建,出生即带 `status: in-progress` 的 run.json;结算时翻为 `settled`。`in-progress` 的 run 是未完成品,不得当作交付物展示,也不得迁入 `evidence/`。
 
 - `source_runs` 列出全部被复用的历史 run;本 run 只新挖证据时省略该字段。
 - 新版本必须创建新的 append-only run 目录；旧版本继续保留。知识卡和 [文献综述成果目录](../knowledge/literature-review-catalog.md) 负责声明当前有效版本。
 - `event_count` = 文章**实际可引用**的去重后事件总数(新挖 + 复用),不是只数新挖的。
 - 复用的 evidence.jsonl 一并拷入 run 文件夹(如 `reused/` 子目录)或在 `files.reused_evidence` 中登记相对路径,保证 run 文件夹自含可审计。
 - 结算前两道闸门都必须通过:
-  - `python3 scripts/check_run_bundle.py <run-dir>`:bundle 完整性(默认三风格 + appendix,或已声明 `style`+`scope_note` 的缩减交付)、证据自含、run.json 标准字段(`selected_event_count`、`files.memo` 等自创字段会被拒)。
-  - `python3 scripts/audit_citations.py --article <各成稿> --appendix evidence-appendix.md --evidence-jsonl <各证据文件> --run-json run.json`:无死锚、无越界引用、manifest 一致。
+  - `python3 scripts/run.py check-bundle <run-dir> --pre-settle`:bundle 完整性(默认三风格 + appendix,或已声明 `style`+`scope_note` 的缩减交付)、证据自含、run.json 标准字段(`selected_event_count`、`files.memo` 等自创字段会被拒)。成稿阶段 run 仍是 `in-progress`,必须带 `--pre-settle`(跳过生命周期行;翻转 settled 是 `run.py finalize` 的职责,不要手改 run.json)。
+  - `python3 scripts/run.py audit-citations --article <各成稿> --appendix evidence-appendix.md --evidence-jsonl <各证据文件> --run-json run.json`:无死锚、无越界引用、manifest 一致。
 
 ## Agent 加载方式
 
@@ -78,4 +78,4 @@
 
 ## 事件 ID
 
-事件 ID 在当前有效 run 集合中必须全局唯一。paper-reader 批量迁移应为每个 run 分配独立 `event_id_prefix` 并写入 `run.json`；分配前可用 `python3 scripts/next_event_id.py --prefix <topic_id_prefix>-<year>` 查询下一可用序号，避免跨 run 碰撞。
+事件 ID 在当前有效 run 集合中必须全局唯一。paper-reader 批量迁移应为每个 run 分配独立 `event_id_prefix` 并写入 `run.json`；分配前可用 `python3 scripts/run.py next-event-id --prefix <topic_id_prefix>-<year>` 查询下一可用序号，避免跨 run 碰撞。

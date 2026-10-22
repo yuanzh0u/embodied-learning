@@ -1,6 +1,6 @@
 # Browser Candidate Fallback
 
-Use this after `search_arxiv.py` has exhausted its API retries, or when API search produces too small a candidate pool for a named method family. The search script waits and retries transient API failures, including HTTP `429`, up to 3 times per query before this fallback is needed.
+Use this after `search.py search-arxiv` has exhausted its API retries, or when API search produces too small a candidate pool for a named method family. The search script waits and retries transient API failures, including HTTP `429`, up to 3 times per query before this fallback is needed.
 
 ## Principle
 
@@ -28,7 +28,7 @@ Use this after `search_arxiv.py` has exhausted its API retries, or when API sear
    - visible text or DOM snapshot
    - links whose `href` contains `/abs/`, `/html/`, or `/pdf/`
 5. Normalize candidates:
-   - Run `scripts/parse_browser_candidates.py` on the browser export.
+   - Run `scripts/search.py parse-browser-candidates` on the browser export.
    - Filter to the explicit date range using submitted dates when available.
    - If only the arXiv ID month is known, treat it as a candidate needing abs-page validation.
 6. Validate candidates:

@@ -6,7 +6,7 @@ Minimal instrumentation from the token-optimization audit (§6.1). **Default off
 
 ```bash
 export EMBODIED_TOKEN_METER=1
-python3 scripts/token_meter.py \
+python3 scripts/run.py token-meter \
   --output work/<run>/token-meter.jsonl \
   --run-id literature-review-demo-20260928 \
   --stage reader.deep \

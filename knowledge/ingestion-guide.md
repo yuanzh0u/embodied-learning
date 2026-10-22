@@ -55,6 +55,19 @@ tags: [ingestion, workflow, agent-process]
 
 论文级材料优先结算到 `evidence/literature-review-<topic>-<date>/`；主题卡的 `source` 可直接登记 run 路径与 event locator，不在 `sources.md` 重复登记论文。
 
+单篇论文的全文与阅读笔记可归档到本地公共论文池（默认 `~/Documents/arxiv/pool`，仓库之外，每篇一目录、按 arXiv id/DOI 唯一命名），跨主题复用时不再随 run 重复存档：
+
+- 池子登记：`python3 skills/embodied-ai-paper-reader/scripts/read.py pool-add-paper add --extraction <extraction.json> --note <note.md>`
+- 主题卡引用池子论文时，`source` 用 `POOL-*` 前缀 + 语义锚 locator，不做 `sources.md` 登记：
+
+  ```yaml
+  - id: POOL-arxiv-2403.12550
+    file: /home/<user>/Documents/arxiv/pool/arxiv-2403.12550/paper.md
+    locator: §3 Method ¶ Keyframe Selection
+  ```
+
+- run 级证据（evidence.jsonl 事件）仍归 run 文件夹；池子只解决"同一篇论文的全文/笔记被多个 run 重复保存"的问题。
+
 ## 3.1 论文综述的四层证据漏斗
 
 文献综述不得把“最终精读/引用论文数”当作“相关论文总数”。每个正式 run 至少区分：
@@ -80,7 +93,7 @@ tags: [ingestion, workflow, agent-process]
 - 正式结算前检查科研备忘录、知乎解释稿、小红书稿、evidence appendix 和 trace map。
 - 新版本使用新的 append-only run 目录；旧 run 保留，不原地覆盖。
 - 主题卡 `source.file` 指向当前有效 run，并用实际存在的 event ID 或区间作为 locator。
-- 更新 [literature-review-catalog.md](literature-review-catalog.md)，登记综述范围、候选池、全文数、精读数、知识卡映射和审计入口。
+- 用 `python3 scripts/run.py register --run-dir <run-dir> --kb-root <kb-root>` 登记 [literature-review-catalog.md](literature-review-catalog.md)（幂等、带共享锁；并发 settle 不会丢行，不要手改表格）。登记后可补充综述范围、候选池、全文数、精读数等规模信息。
 - 文章是面向读者的表达层，不是独立证据源；知识卡主张最终仍应回到 paper note、audit 和 evidence event。
 
 ## 4. 更新索引

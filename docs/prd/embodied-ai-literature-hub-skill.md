@@ -7,6 +7,12 @@ tags: [prd, skill, embodied-ai, arxiv, literature-mining]
 
 # 具身智能 arXiv 文献汇聚 Skill PRD
 
+> **历史文档（部分取代）**：本文描述的检索与正文挖掘职责保留至今（现为
+> `embodied-ai-literature-hub`，入口 `search.py` / `fetch.py`），但上游 `$embodied-ai-query-planner`
+> 已并入本 Skill 的 planning stage，下游综述编排已移交给 `embodied-ai-review-writer`
+> （见 [ADR 0003](../adr/0003-consolidate-to-three-skills.md)）。命令与 Skill 边界以
+> 当前 `SKILL.md` 为准。
+
 ## Problem Statement
 
 研究者需要围绕具身智能主题持续汇聚 arXiv 文献，但“相关论文”常常不只出现在显性主题里。例如研究数据质量时，仿真数据、VLA 微调、评测失败、跨本体迁移论文里也会出现更真实的正反讨论。现有知识库有主题卡、source 登记和术语表，但缺少一个可复用 Skill，把话题扩展检索、HTML正文讨论挖掘、引用链追踪、作者观点事件和知识库入库组织成稳定流程。

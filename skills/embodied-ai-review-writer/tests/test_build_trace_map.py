@@ -11,9 +11,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "build_trace_map.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-review-writer/scripts/write.py"  # subcommand: (in argv)
 class BuildTraceMapTests(unittest.TestCase):
     def test_maps_article_papers_to_events(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -36,7 +34,7 @@ class BuildTraceMapTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "build-trace-map",
                     "--evidence-jsonl",
                     str(evidence),
                     "--article",
@@ -69,7 +67,7 @@ class BuildTraceMapTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "build-trace-map",
                     "--evidence-jsonl",
                     str(evidence),
                     "--article",

@@ -9,11 +9,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "audit_citations.py"
-SPEC = importlib.util.spec_from_file_location("audit_citations", SCRIPT)
-audit_citations = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(audit_citations)
+SCRIPT = "embodied_learning.wiki.run.citations"  # implementation module (old scripts/audit_citations.py deleted)
+audit_citations = importlib.import_module(SCRIPT)
 
 
 def write_evidence(path: Path, event_ids: list[str], arxiv_by_event: dict[str, str] | None = None) -> None:
@@ -149,6 +146,67 @@ class AuditCitationsTest(unittest.TestCase):
         )
         problems = audit_citations.audit_run_json(run_json, set())
         self.assertTrue(any("missing-memo.md" in p for p in problems))
+
+    def test_review_packet_inventory_ids_are_exempt(self) -> None:
+        """The mechanical briefing lists event IDs as an inventory by design,
+        and it IS the survey style's deliverable — auditing it as prose produced
+        500+ unsolvable "bare event ID" lines (2026-10-13, run 04)."""
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"])
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        packet = self.tmp / "review-packet.md"
+        packet.write_text("事件清单：EA-DATA-2026-0001。\n", encoding="utf-8")
+        ids, paper_ids, problems = audit_citations.load_event_ids([self.evidence])
+        anchors, appendix_problems = audit_citations.appendix_anchors(self.appendix)
+        problems.extend(appendix_problems)
+        problems.extend(audit_citations.audit_article(packet, self.appendix, anchors, ids, paper_ids))
+        self.assertFalse(any("bare event ID" in p for p in problems), problems)
+
+    def _run_cli(self, **overrides) -> tuple[int, list[str]]:
+        """Drive the real run() entry (the gate the writer agent calls)."""
+        import argparse
+        import contextlib
+        import io
+
+        args = argparse.Namespace(
+            article=[str(self.article)] if self.article.is_file() else [],
+            appendix=str(self.appendix) if overrides.get("with_appendix", True) else None,
+            evidence_jsonl=[str(self.evidence)],
+            run_json=None,
+        )
+        for key, value in overrides.items():
+            if key != "with_appendix":
+                setattr(args, key, value)
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            code = audit_citations.run(args)
+        return code, buffer.getvalue().splitlines()
+
+    def test_article_without_appendix_fails_loudly(self) -> None:
+        """2026-10-15: the writer agent omitted --appendix on all three
+        audit-citations calls; dead-anchor checks were silently skipped and
+        the gate printed a hollow "OK". A missing appendix must fail."""
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"])
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        self.article.write_text(f"论点({linked('EA-DATA-2026-0001')})。\n", encoding="utf-8")
+        code, lines = self._run_cli(with_appendix=False)
+        self.assertEqual(code, 1)
+        self.assertTrue(any("--appendix" in line and "skipped" in line for line in lines), lines)
+        self.assertFalse(any(line == "citation audit OK" for line in lines), lines)
+
+    def test_article_with_appendix_still_passes(self) -> None:
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"])
+        write_appendix(self.appendix, ["EA-DATA-2026-0001"])
+        self.article.write_text(f"论点({linked('EA-DATA-2026-0001')})。\n", encoding="utf-8")
+        code, lines = self._run_cli()
+        self.assertEqual(code, 0, lines)
+        self.assertIn("citation audit OK", lines)
+
+    def test_no_article_and_no_appendix_is_ok(self) -> None:
+        """Evidence/run.json-only audits (no prose in scope) don't need anchors."""
+        write_evidence(self.evidence, ["EA-DATA-2026-0001"])
+        code, lines = self._run_cli(with_appendix=False, article=[])
+        self.assertEqual(code, 0, lines)
+        self.assertIn("citation audit OK", lines)
 
 
 if __name__ == "__main__":

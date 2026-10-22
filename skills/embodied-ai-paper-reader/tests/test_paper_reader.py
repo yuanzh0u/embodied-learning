@@ -12,10 +12,24 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))  # src/ modules import embodied_learning.* at load time
+
+# Scripts that stayed in the skill: validate_paper_note / audit_claim_support /
+# validate/audit/project moved to note_tools.py (impl loaded via package import
+# below); build_reading_packet and update_reading_ledger remain skill entries.
+_SCRIPTS_DIR = ROOT / "scripts"
 
 
 def load_script(name: str):  # type: ignore[no-untyped-def]
-    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    mapping = {"build_reading_packet": "embodied_learning.parse.reading_packet",
+               "update_reading_ledger": "embodied_learning.knowledge.reading_ledger"}
+    return importlib.import_module(mapping[name])
+
+
+def _unused_load_script(name: str):
+    spec = importlib.util.spec_from_file_location(name, _SCRIPTS_DIR / f"{name}.py")
     module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
     spec.loader.exec_module(module)
@@ -23,10 +37,11 @@ def load_script(name: str):  # type: ignore[no-untyped-def]
 
 
 build_packet = load_script("build_reading_packet")
-validator = load_script("validate_paper_note")
-audit_support = load_script("audit_claim_support")
-projector = load_script("project_evidence_events")
 ledger = load_script("update_reading_ledger")
+
+from embodied_learning.knowledge import claim_support as audit_support
+from embodied_learning.knowledge import evidence_projection as projector
+from embodied_learning.knowledge import paper_note as validator
 
 
 FULL_CONTEXT = (
@@ -148,6 +163,50 @@ def valid_note(card_count: int = 1, status: str = "accepted") -> dict:
     }
 
 
+class CardVisualsTest(unittest.TestCase):
+    """Evidence cards may carry figures/tables joined at note assembly; the
+    projection must copy them onto the event's evidence (the writer's packet
+    renders them into the brief/appendix)."""
+
+    def test_projection_passes_card_visuals_through(self) -> None:
+        figure = {
+            "figure_id": "S3.F3",
+            "caption": "The Aria device used for egocentric recordings.",
+            "image_url": "https://arxiv.org/html/2311.18259v4/figs/aria/aria.png",
+            "section": "3 Ego-Exo4D dataset",
+            "usage": "作者用该图展示采集 rig。",
+        }
+        table = {
+            "table_id": "S1.T1",
+            "caption": "Dataset comparison.",
+            "section": "3 Ego-Exo4D dataset",
+            "rows": [["Dataset", "Year"], ["Ego-Exo4D", "2023"]],
+            "usage": "作者用该表对比数据集。",
+        }
+        note = valid_note()
+        note["evidence_cards"][0]["figures"] = [figure]
+        note["evidence_cards"][0]["tables"] = [table]
+        audit = audit_support.audit(note, extraction())
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual(1, len(events))
+        self.assertEqual([figure], events[0]["evidence"]["figures"])
+        self.assertEqual([table], events[0]["evidence"]["tables"])
+
+    def test_projection_without_visuals_keeps_evidence_shape(self) -> None:
+        note = valid_note()
+        audit = audit_support.audit(note, extraction())
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertNotIn("figures", events[0]["evidence"])
+        self.assertNotIn("tables", events[0]["evidence"])
+
+    def test_card_visuals_ignores_empty_lists(self) -> None:
+        self.assertEqual({}, projector.card_visuals({"figures": [], "tables": []}))
+        self.assertEqual(
+            {"figures": [{"figure_id": "S1.F1"}]},
+            projector.card_visuals({"figures": [{"figure_id": "S1.F1"}], "tables": []}),
+        )
+
+
 class PaperReaderTest(unittest.TestCase):
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -193,6 +252,66 @@ class PaperReaderTest(unittest.TestCase):
         result = audit_support.audit(note, extraction())
         self.assertEqual("reject", result["status"])
 
+    def test_audit_counts_table_numbers_as_locator_evidence(self) -> None:
+        """Quantitative results canonically live in tables; the extractor keeps
+        them out of section prose. A card whose measurement tokens appear only
+        in extraction.tables must pass the quant gate (2026-10-15 纹理映射:
+        5/12 papers lost every card because the numbers only existed in
+        tables)."""
+        note = valid_note()
+        note["evidence_cards"][0]["quantitative"] = {
+            "metric": "PSNR",
+            "value_or_direction": "29.03 vs 21.27",
+            "comparator": "Baseline X",
+            "task_or_sample": "the benchmark split",
+            "locator": "4 Experiments",
+        }
+        # Without tables the same card must still trip the quant gate.
+        result = audit_support.audit(note, extraction())
+        self.assertEqual("needs-review", result["status"])
+        self.assertEqual(["needs-review"], [card["status"] for card in result["cards"]])
+        self.assertIn("tables", result["cards"][0]["reasons"][0])
+        # With the numbers present in a table (caption or cells), it passes.
+        ext = extraction()
+        ext["tables"] = [
+            {
+                "id": "S4.T1",
+                "caption": "Table 1: Comparison on the benchmark.",
+                "section_index": None,
+                "section": "",
+                "rows": [["Method", "PSNR"], ["Ours", "29.03"], ["Baseline X", "21.27"]],
+            }
+        ]
+        result = audit_support.audit(note, ext)
+        self.assertEqual("pass", result["status"])
+        self.assertEqual(["pass"], [card["status"] for card in result["cards"]])
+
+    def test_projection_skips_unaudited_cards_without_zeroing_the_paper(self) -> None:
+        """One needs-review card must not discard the paper's passing cards
+        (2026-10-15 纹理映射: each of 5 papers lost 3-4 passing cards to one
+        table-number card). Reject a card, not the paper."""
+        note = valid_note(card_count=2)
+        audit = audit_support.audit(note, extraction())
+        audit["status"] = "needs-review"
+        audit["cards"][1]["status"] = "needs-review"
+        audit["cards"][1]["reasons"] = ["fewer than one third of quantitative metric/value/comparator tokens occur at the locator or in the paper's tables"]
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual(1, len(events))
+        self.assertEqual("2402.10329-C01", events[0]["paper_reading"]["card_id"])
+        # IDs stay contiguous from start_seq even when a card is skipped.
+        self.assertEqual("EA-DATA-2026-0001", events[0]["event_id"])
+
+    def test_projection_without_any_passing_card_returns_empty(self) -> None:
+        """Every card needs-review: the paper contributes nothing, but it is a
+        zero-event outcome rather than a projection error."""
+        note = valid_note(card_count=2)
+        audit = audit_support.audit(note, extraction())
+        audit["status"] = "needs-review"
+        for card in audit["cards"]:
+            card["status"] = "needs-review"
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual([], events)
+
     def test_projection_emits_one_event_per_verified_card(self) -> None:
         note = valid_note(card_count=2)
         audit = audit_support.audit(note, extraction())
@@ -216,6 +335,42 @@ class PaperReaderTest(unittest.TestCase):
         self.assertEqual(1, report["accepted_evidence_paper_count"])
         self.assertEqual(1, report["unavailable_count"])
 
+    def test_tex_source_extraction_builds_packet_and_passes_pipeline(self) -> None:
+        """TeX-source (tex-pandoc) extraction rides the html contract end to end."""
+        tex_extraction = extraction()
+        tex_extraction["source_format"] = "tex"
+        tex_extraction["extraction_method"] = "tex-pandoc"
+        source_format, text = build_packet.complete_text(tex_extraction)
+        self.assertEqual("tex", source_format)
+        self.assertIn("4 Experiments", text)
+
+        note = valid_note()
+        note["extraction"].update({"source_format": "tex", "method": "tex-pandoc", "visual_validation": "not-required"})
+        errors, warnings = validator.validate_note(note)
+        self.assertEqual([], errors)
+        self.assertEqual([], warnings)
+        audit = audit_support.audit(note, tex_extraction)
+        self.assertEqual("pass", audit["status"])
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual("tex-pandoc", events[0]["evidence"]["extraction"]["method"])
+
+    def test_arxiv2md_method_rides_the_same_contract(self) -> None:
+        """arxiv2md markdown is authoritative text like tex-pandoc."""
+        md_extraction = extraction()
+        md_extraction["source_format"] = "tex"
+        md_extraction["extraction_method"] = "arxiv2md"
+        source_format, text = build_packet.complete_text(md_extraction)
+        self.assertEqual("tex", source_format)
+
+        note = valid_note()
+        note["extraction"].update({"source_format": "tex", "method": "arxiv2md", "visual_validation": "not-required"})
+        errors, _ = validator.validate_note(note)
+        self.assertEqual([], errors)
+        audit = audit_support.audit(note, md_extraction)
+        self.assertEqual("pass", audit["status"])
+        events = projector.project(note, audit, "EA-DATA-2026", 1)
+        self.assertEqual("arxiv2md", events[0]["evidence"]["extraction"]["method"])
+
     def test_cli_end_to_end_projection_passes_hub_validator(self) -> None:
         note_path = self.tmp / "paper-note.json"
         extraction_path = self.tmp / "extraction.json"
@@ -227,7 +382,7 @@ class PaperReaderTest(unittest.TestCase):
         audit_path.write_text(json.dumps(audit_result, ensure_ascii=False), encoding="utf-8")
         completed = subprocess.run(
             [
-                sys.executable, str(ROOT / "scripts" / "project_evidence_events.py"),
+                sys.executable, str(ROOT / "scripts" / "read.py") if False else str(ROOT.parents[1] / "skills" / "embodied-ai-paper-reader" / "scripts" / "read.py"), "project-evidence-events",
                 "--paper-note", str(note_path), "--audit", str(audit_path),
                 "--id-prefix", "EA-DATA-2026", "--output", str(events_path),
             ],
@@ -236,9 +391,10 @@ class PaperReaderTest(unittest.TestCase):
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
-        hub_validator = ROOT.parent / "embodied-ai-literature-hub" / "scripts" / "write_lit_outputs.py"
+        hub_validator = ROOT.parent / "embodied-ai-literature-hub" / "scripts" / "fetch.py"
+        hub_validator_argv = ["write-lit-outputs"]
         completed = subprocess.run(
-            [sys.executable, str(hub_validator), "--evidence-jsonl", str(events_path), "--validate-only"],
+            [sys.executable, str(hub_validator), *hub_validator_argv, "--evidence-jsonl", str(events_path), "--validate-only"],
             capture_output=True,
             text=True,
             check=False,
@@ -254,7 +410,7 @@ class PaperReaderTest(unittest.TestCase):
         completed = subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "scripts" / "build_reading_packet.py"),
+                str(ROOT / "scripts" / "read.py") if False else str(ROOT.parents[1] / "skills" / "embodied-ai-paper-reader" / "scripts" / "read.py"), "build-reading-packet",
                 "--extraction",
                 str(extraction_path),
                 "--review-question",
@@ -287,7 +443,7 @@ class PaperReaderTest(unittest.TestCase):
         completed = subprocess.run(
             [
                 sys.executable,
-                str(ROOT / "scripts" / "build_reading_packet.py"),
+                str(ROOT / "scripts" / "read.py") if False else str(ROOT.parents[1] / "skills" / "embodied-ai-paper-reader" / "scripts" / "read.py"), "build-reading-packet",
                 "--extraction",
                 str(extraction_path),
                 "--review-question",

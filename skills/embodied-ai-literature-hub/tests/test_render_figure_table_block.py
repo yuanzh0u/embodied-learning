@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-import contextlib
 import importlib.util
-import io
 import json
 import tempfile
 import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "render_figure_table_block.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "parse" / "figure_table.py"
 SPEC = importlib.util.spec_from_file_location("render_figure_table_block", SCRIPT_PATH)
 render_figure_table_block = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -82,24 +80,32 @@ class RenderFigureTableBlockTest(unittest.TestCase):
         self.assertEqual([f["figure_id"] for f in figures], ["S3.F3"])
         self.assertEqual([t["table_id"] for t in tables], ["S1.T1"])
 
-    def test_cli_renders_requested_ids_to_stdout(self) -> None:
+    def test_load_events_reads_jsonl_and_blocks_render_to_markdown(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             evidence_path = Path(tmp) / "evidence.jsonl"
             evidence_path.write_text(json.dumps(EVENT, ensure_ascii=False) + "\n", encoding="utf-8")
-            stream = io.StringIO()
-            with contextlib.redirect_stdout(stream):
-                code = render_figure_table_block.main(
-                    [
-                        "--evidence-jsonl",
-                        str(evidence_path),
-                        "--paper-id",
-                        "2311.18259",
-                    ]
-                )
-            self.assertEqual(code, 0)
-            self.assertIn("S3.F3", stream.getvalue())
-            self.assertIn("S1.T1", stream.getvalue())
+            events = render_figure_table_block.load_events(str(evidence_path))
+        figures, tables = render_figure_table_block.find_event_figures(events, "2311.18259")
+        label = render_figure_table_block.paper_label(events[0])
+        figure_block = render_figure_table_block.render_figure(figures[0], label)
+        table_block = render_figure_table_block.render_table_block(tables[0], label)
+        self.assertIn("S3.F3", figure_block)
+        self.assertIn("Ego-Exo4D: Understanding Skilled Human Activity（arXiv 2311.18259）", figure_block)
+        self.assertIn("S1.T1", table_block)
+        self.assertIn("| Dataset | Year |", table_block)
 
+
+    def test_caption_citation_remnants_are_stripped(self) -> None:
+        """laTeXML captions keep bracketed citations ("[ 28 ]"); a stray ]
+        in the alt breaks the wiki's markdown image renderer."""
+        self.assertEqual(
+            render_figure_table_block._caption_text("Overview of the head [ 28 ] ."),
+            "Overview of the head .",
+        )
+        self.assertEqual(
+            render_figure_table_block._caption_text("Ablation of modules [12, 30] on DTU"),
+            "Ablation of modules on DTU",
+        )
 
 if __name__ == "__main__":
     unittest.main()

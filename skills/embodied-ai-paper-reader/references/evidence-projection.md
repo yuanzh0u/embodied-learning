@@ -14,7 +14,7 @@ Project evidence events from a validated `paper-note.json`; never edit projected
 
 ## Compatibility
 
-Projected events use the existing `$embodied-ai-literature-hub` evidence schema so `$embodied-ai-literature-review` and `$embodied-ai-review-writer` can consume them. Extra `paper_reading` metadata records paper-note schema, card ID, review mode, and reading status.
+Projected events use the existing `$embodied-ai-literature-hub` evidence schema so `$embodied-ai-review-writer` can consume them. Extra `paper_reading` metadata records paper-note schema, card ID, review mode, and reading status.
 
 ## Admission gate
 
@@ -29,6 +29,6 @@ Projection requires:
 After projection, run the Hub's compatibility validator:
 
 ```bash
-python3 skills/embodied-ai-literature-hub/scripts/write_lit_outputs.py \
+python3 skills/embodied-ai-literature-hub/scripts/fetch.py write-lit-outputs \
   --evidence-jsonl <projected.jsonl> --validate-only
 ```

@@ -37,19 +37,15 @@ jobs:
           set -euo pipefail
           for suite in \
             tests \
-            skills/embodied-ai-query-planner/tests \
             skills/embodied-ai-literature-hub/tests \
             skills/embodied-ai-paper-reader/tests \
-            skills/embodied-ai-literature-review/tests \
-            skills/embodied-ai-review-writer/tests \
-            skills/embodied-ai-influence-ranking/tests \
-            skills/embodied-ai-problem-relevance-ranking/tests
+            skills/embodied-ai-review-writer/tests
           do
             python3 -m unittest discover -s "$suite" -v
           done
 
       - name: Validate current research knowledge
-        run: python3 scripts/validate_current_reviews.py --root .
+        run: python3 scripts/run.py validate-reviews --root .
 
       - name: Check changed-file hygiene
         env:

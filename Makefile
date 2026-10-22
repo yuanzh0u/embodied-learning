@@ -3,15 +3,12 @@
 
 PYTHON ?= python3
 
+# Mirrors the research-validation.yml suite list (tests + the three ADR-0003 skills).
 TEST_SUITES := \
 	tests \
-	skills/embodied-ai-query-planner/tests \
 	skills/embodied-ai-literature-hub/tests \
 	skills/embodied-ai-paper-reader/tests \
-	skills/embodied-ai-literature-review/tests \
-	skills/embodied-ai-review-writer/tests \
-	skills/embodied-ai-influence-ranking/tests \
-	skills/embodied-ai-problem-relevance-ranking/tests
+	skills/embodied-ai-review-writer/tests
 
 .PHONY: help test test-knowledge validate
 
@@ -19,10 +16,10 @@ help:
 	@echo "Targets:"
 	@echo "  make test           - run the same unittest suites as research-validation CI"
 	@echo "  make test-knowledge - run top-level tests/ only"
-	@echo "  make validate       - run scripts/validate_current_reviews.py (needs full git history)"
+	@echo "  make validate       - run scripts/run.py validate-reviews (needs full git history)"
 
 test:
-	@set -euo pipefail; \
+	@set -eu; \
 	for suite in $(TEST_SUITES); do \
 		echo "==> $(PYTHON) -m unittest discover -s $$suite -v"; \
 		$(PYTHON) -m unittest discover -s $$suite -v; \
@@ -32,4 +29,4 @@ test-knowledge:
 	$(PYTHON) -m unittest discover -s tests -v
 
 validate:
-	$(PYTHON) scripts/validate_current_reviews.py --root .
+	$(PYTHON) scripts/run.py validate-reviews --root .

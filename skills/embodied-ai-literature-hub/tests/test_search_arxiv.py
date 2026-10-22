@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import email.message
+import importlib
 import importlib.util
 import io
 import json
@@ -13,14 +14,16 @@ import tempfile
 import unittest
 import urllib.error
 from pathlib import Path
+from contextlib import nullcontext
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "search_arxiv.py"
-SPEC = importlib.util.spec_from_file_location("search_arxiv", SCRIPT_PATH)
-search_arxiv = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(search_arxiv)
+# Package import: search/arxiv.py does `from .. import ratelimit`, which needs
+# package context (a bare spec_from_file_location load breaks).
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+search_arxiv = importlib.import_module("embodied_learning.search.arxiv")
 
 
 class DummyResponse:
@@ -37,8 +40,10 @@ class DummyResponse:
         return self.payload
 
 
-def args_with_retries(retries: int) -> argparse.Namespace:
-    return argparse.Namespace(
+def args_with_retries(retries: int) -> search_arxiv.ArxivSearch:
+    return search_arxiv.ArxivSearch(
+        start_date="2024-01-01",
+        end_date="2024-12-31",
         max_results=1,
         sort_by="submittedDate",
         sort_order="descending",
@@ -50,11 +55,11 @@ def args_with_retries(retries: int) -> argparse.Namespace:
     )
 
 
-def args_with_retry_waits(base_seconds: float, max_seconds: float) -> argparse.Namespace:
-    args = args_with_retries(3)
-    args.retry_base_seconds = base_seconds
-    args.retry_max_seconds = max_seconds
-    return args
+def args_with_retry_waits(base_seconds: float, max_seconds: float) -> search_arxiv.ArxivSearch:
+    searcher = args_with_retries(3)
+    searcher.retry_base_seconds = base_seconds
+    searcher.retry_max_seconds = max_seconds
+    return searcher
 
 
 def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPError:
@@ -65,12 +70,21 @@ def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPEr
 
 
 class SearchArxivRetryTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # These tests exercise the module's own retry/backoff (with time.sleep
+        # mocked). Bypass the machine-wide rate-limit gate — its behavior is
+        # covered separately in tests/test_ratelimit.py — otherwise the gate's
+        # real sleeps pollute the sleep-call assertions.
+        patcher = mock.patch.object(search_arxiv.ratelimit, "gate", lambda *a, **k: nullcontext())
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_fetch_retries_429_with_retry_after_and_caps_at_three_retries(self) -> None:
         error = http_error(429, retry_after="7")
         with mock.patch.object(search_arxiv.urllib.request, "urlopen", side_effect=[error, error, error, error]) as urlopen:
             with mock.patch.object(search_arxiv.time, "sleep") as sleep:
                 with self.assertRaises(RuntimeError):
-                    search_arxiv.fetch("all:robot", args_with_retries(99))
+                    args_with_retries(99).fetch("all:robot")
 
         self.assertEqual(urlopen.call_count, 4)
         self.assertEqual([call.args[0] for call in sleep.call_args_list], [7.0, 7.0, 7.0])
@@ -82,7 +96,7 @@ class SearchArxivRetryTest(unittest.TestCase):
             side_effect=[http_error(429, retry_after="2"), DummyResponse(b"<feed />")],
         ) as urlopen:
             with mock.patch.object(search_arxiv.time, "sleep") as sleep:
-                payload = search_arxiv.fetch("all:robot", args_with_retries(3))
+                payload = args_with_retries(3).fetch("all:robot")
 
         self.assertEqual(payload, b"<feed />")
         self.assertEqual(urlopen.call_count, 2)
@@ -92,55 +106,45 @@ class SearchArxivRetryTest(unittest.TestCase):
         with mock.patch.object(search_arxiv.urllib.request, "urlopen", side_effect=http_error(400)) as urlopen:
             with mock.patch.object(search_arxiv.time, "sleep") as sleep:
                 with self.assertRaisesRegex(RuntimeError, "after 1 attempt"):
-                    search_arxiv.fetch("bad-query", args_with_retries(3))
+                    args_with_retries(3).fetch("bad-query")
 
         self.assertEqual(urlopen.call_count, 1)
         sleep.assert_not_called()
 
     def test_retry_wait_is_never_negative(self) -> None:
         self.assertEqual(
-            search_arxiv.retry_wait_seconds(http_error(429, retry_after="7"), 0, args_with_retry_waits(5, -1)),
+            args_with_retry_waits(5, -1).retry_wait_seconds(http_error(429, retry_after="7"), 0),
             0.0,
         )
         self.assertEqual(
-            search_arxiv.retry_wait_seconds(TimeoutError("timeout"), 0, args_with_retry_waits(-5, 60)),
+            args_with_retry_waits(-5, 60).retry_wait_seconds(TimeoutError("timeout"), 0),
             0.0,
         )
 
 
 class SearchArxivExitCodeTest(unittest.TestCase):
+    """Partial-batch exit contract of ArxivSearch.run (shared by all searchers
+    via report_partial_batch): failed queries are recorded, hits are kept, and
+    the caller sees a non-zero exit plus a stderr WARNING."""
+
     def run_main(self, fetch_side_effect: list[object]) -> tuple[int, str, dict]:
+        queries = [
+            {"label": "q-one", "query": "all:alpha"},
+            {"label": "q-two", "query": "all:beta"},
+        ]
         with tempfile.TemporaryDirectory() as tmp:
-            query_file = Path(tmp) / "queries.json"
-            query_file.write_text(
-                json.dumps(
-                    {
-                        "queries": [
-                            {"label": "q-one", "query": "all:alpha"},
-                            {"label": "q-two", "query": "all:beta"},
-                        ]
-                    }
-                ),
-                encoding="utf-8",
-            )
             output_file = Path(tmp) / "out.json"
-            argv = [
-                "search_arxiv.py",
-                "--query-file",
-                str(query_file),
-                "--start-date",
-                "2026-01-01",
-                "--end-date",
-                "2026-06-30",
-                "--output",
-                str(output_file),
-            ]
+            searcher = search_arxiv.ArxivSearch(
+                start_date="2026-01-01",
+                end_date="2026-06-30",
+                output=str(output_file),
+            )
             stderr = io.StringIO()
-            with mock.patch.object(sys, "argv", argv):
+            with mock.patch.object(search_arxiv.ratelimit, "gate", lambda *a, **k: nullcontext()):
                 with mock.patch.object(search_arxiv.time, "sleep"):
-                    with mock.patch.object(search_arxiv, "fetch", side_effect=fetch_side_effect):
+                    with mock.patch.object(search_arxiv.ArxivSearch, "fetch", side_effect=fetch_side_effect):
                         with contextlib.redirect_stderr(stderr):
-                            code = search_arxiv.main()
+                            code = searcher.run(queries)
             return code, stderr.getvalue(), json.loads(output_file.read_text(encoding="utf-8"))
 
     def test_partial_failure_exits_nonzero_and_warns(self) -> None:

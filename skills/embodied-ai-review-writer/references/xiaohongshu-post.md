@@ -44,6 +44,11 @@ Use this style for a broad but intelligent audience. Deliver one evidence-ground
 - Do not print event IDs, confidence labels, or a full bibliography.
 - Keep complete provenance in `trace-map.json` and `evidence-appendix.md`.
 
+## Figures
+
+- 配额：≤1 图。只从 writing-brief「可用图表」段取（URL/题注照抄，禁止自造图片 URL）。
+- 格式：`![题注](image_url)` + `> 用法：<一句话>（论文短名）`，放在最强的一个洞察段之后。
+
 ## Reject the draft when
 
 - The hook is “这个话题不能只看一个结论” or another topic-agnostic sentence.

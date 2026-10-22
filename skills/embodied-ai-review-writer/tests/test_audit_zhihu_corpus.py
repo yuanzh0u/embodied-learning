@@ -11,9 +11,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "audit_zhihu_corpus.py"
-
-
+SCRIPT = Path(__file__).resolve().parents[3] / "skills/embodied-ai-review-writer/scripts/write.py"  # subcommand: (in argv)
 class AuditZhihuCorpusTests(unittest.TestCase):
     def write_good_bundle(self, root: Path) -> None:
         fixture_path = Path(__file__).with_name("test_audit_article_quality.py")
@@ -43,7 +41,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",
@@ -73,7 +71,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",
@@ -107,7 +105,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",
@@ -136,7 +134,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",
@@ -168,7 +166,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",
@@ -199,7 +197,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",
@@ -240,7 +238,7 @@ class AuditZhihuCorpusTests(unittest.TestCase):
             completed = subprocess.run(
                 [
                     sys.executable,
-                    str(SCRIPT),
+                    str(SCRIPT), "audit-zhihu-corpus",
                     "--topics-dir",
                     str(topics_dir),
                     "--project-root",

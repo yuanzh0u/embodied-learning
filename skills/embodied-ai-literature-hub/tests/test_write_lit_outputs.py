@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "write_lit_outputs.py"
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "parse" / "brief.py"
 SPEC = importlib.util.spec_from_file_location("write_lit_outputs", SCRIPT_PATH)
 write_lit_outputs = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
@@ -131,6 +131,22 @@ class WriteLitOutputsTest(unittest.TestCase):
             path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
             events = write_lit_outputs.load_events(path)
         self.assertEqual("pdf-ocr", events[0]["evidence"]["extraction"]["method"])
+
+    def test_accepts_tex_pandoc_extraction_provenance(self) -> None:
+        event = event_with_authors(
+            [{"name": "TeX Author", "author_key": "tex-author", "role": "paper-author"}]
+        )
+        event["evidence"]["extraction"] = {  # type: ignore[index]
+            "source_format": "tex",
+            "method": "tex-pandoc",
+            "quality": "high",
+            "visual_validation": "not-required",
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "evidence.jsonl"
+            path.write_text(json.dumps(event, ensure_ascii=False) + "\n", encoding="utf-8")
+            events = write_lit_outputs.load_events(path)
+        self.assertEqual("tex-pandoc", events[0]["evidence"]["extraction"]["method"])
 
 
 if __name__ == "__main__":

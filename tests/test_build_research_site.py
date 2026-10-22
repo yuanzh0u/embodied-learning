@@ -11,12 +11,23 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from xml.etree import ElementTree
 
-from scripts import build_research_site as site
-from scripts import build_research_wiki as wiki
+import sys
+from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+# Implementation modules (not the scripts/ forwarders) so underscore helpers
+# and mock.patch on module attributes resolve against the live namespace.
+from embodied_learning.wiki.publish import site
+from embodied_learning.wiki.publish import snapshot as wiki
 
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_URL = "https://yuanzh0u.github.io/embodied-learning"
+# site-config.json maps the REPO catalog topic keys; wiki.DEFAULT_SOURCE
+# points at the local KB and is the wrong corpus for this suite.
+REPO_CATALOG = ROOT / "knowledge" / "literature-review-catalog.md"
 
 
 class BuildResearchSiteTest(unittest.TestCase):
@@ -27,7 +38,7 @@ class BuildResearchSiteTest(unittest.TestCase):
         cls.snapshot_root = cls.temp_root / "wiki-data"
         cls.site_root = cls.temp_root / "site"
         wiki.publish_snapshot(
-            wiki.DEFAULT_SOURCE,
+            REPO_CATALOG,
             cls.snapshot_root,
             site_config=wiki.DEFAULT_SITE_CONFIG,
         )
@@ -48,7 +59,7 @@ class BuildResearchSiteTest(unittest.TestCase):
         cls._tmp.cleanup()
 
     def test_publication_config_covers_all_current_topics(self) -> None:
-        selected, _stats = wiki.discover_topics(wiki.DEFAULT_SOURCE)
+        selected, _stats = wiki.discover_topics(REPO_CATALOG)
         config = wiki.load_site_config(
             wiki.DEFAULT_SITE_CONFIG,
             {candidate.topic_key for candidate in selected},

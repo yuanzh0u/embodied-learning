@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+"""Prioritize a large candidate registry for full-text recovery without accepting evidence.
+
+Library API: the module-level :func:`select_candidates` function (pure ranking
+and quota selection) plus ``score_candidate``/``render_markdown``. The CLI
+surface owns argument parsing and file writing and lives in the skill entry
+``skills/embodied-ai-literature-hub/scripts/screen_candidates.py``.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+
+def load_seed_ids(paths: list[str]) -> set[str]:
+    result: set[str] = set()
+    for filename in paths:
+        for line in Path(filename).read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            event = json.loads(line)
+            paper = event.get("paper") or {}
+            if isinstance(paper, dict) and paper.get("arxiv_id"):
+                result.add(str(paper["arxiv_id"]).split("v", 1)[0])
+    return result
+
+
+def discovery_labels(candidate: dict[str, Any]) -> set[str]:
+    labels: set[str] = set()
+    for discovery in candidate.get("discoveries", []):
+        if isinstance(discovery, dict):
+            labels.update(str(value) for value in discovery.get("query_labels", []) if value)
+    return labels
+
+
+def score_candidate(candidate: dict[str, Any], terms: list[str], prefixes: list[str], seed_ids: set[str]) -> dict[str, Any]:
+    arxiv_id = str(candidate.get("arxiv_id") or "")
+    title = str(candidate.get("title") or "").lower()
+    summary = str(candidate.get("summary") or "").lower()
+    # Curated-list candidates may carry their discovery context (the list
+    # block they were mined from) even when title/summary stayed empty —
+    # match it at a low weight so a curated channel never silently screens
+    # to an empty queue.
+    context = str(candidate.get("discovery_context") or "").lower()
+    labels = discovery_labels(candidate)
+    matched_title = [term for term in terms if term in title]
+    matched_summary = [term for term in terms if term in summary and term not in matched_title]
+    matched_context = [
+        term for term in terms
+        if term in context and term not in matched_title and term not in matched_summary
+    ]
+    matched_labels = sorted(label for label in labels if any(label.startswith(prefix) for prefix in prefixes))
+    seeded = arxiv_id in seed_ids
+    # Prior evidence is a small continuity signal, not an automatic win. The
+    # former +100 bonus could crowd new, limiting, or contradictory papers out
+    # of the recovery queue before their full text was inspected.
+    score = (
+        (4 if seeded else 0)
+        + 10 * len(matched_title)
+        + 2 * len(matched_summary)
+        + len(matched_context)
+        + 6 * len(matched_labels)
+    )
+    return {
+        "candidate": candidate,
+        "score": score,
+        "seeded": seeded,
+        "matched_title_terms": matched_title,
+        "matched_summary_terms": matched_summary,
+        "matched_context_terms": matched_context,
+        "matched_query_labels": matched_labels,
+    }
+
+
+def select_candidates(
+    registry: dict[str, Any],
+    terms: list[str],
+    prefixes: list[str],
+    seed_ids: set[str],
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
+    """Term-match priority order. ``limit=None`` (the driver's path) queues
+    every candidate that matched — screening selects, it does not truncate;
+    deep reading owns the funnel's only cut."""
+    ranked = [score_candidate(item, terms, prefixes, seed_ids) for item in registry.get("candidates", []) if isinstance(item, dict)]
+    ranked = [item for item in ranked if item["score"] > 0]
+    ranked.sort(
+        key=lambda item: (
+            -int(item["score"]),
+            -int(bool(item["seeded"])),
+            str((item["candidate"].get("published") or "")),
+            str(item["candidate"].get("arxiv_id") or ""),
+        )
+    )
+    if limit is None:
+        return ranked
+    limit = max(0, limit)
+    if not limit:
+        return []
+    seeded = [item for item in ranked if item["seeded"]]
+    new = [item for item in ranked if not item["seeded"]]
+    # Reserve at most 25% of a normal queue for prior accepted papers while
+    # allowing unused capacity to be filled from either stratum.
+    seed_quota = min(len(seeded), max(1, limit // 4))
+    selected = seeded[:seed_quota] + new[: max(0, limit - seed_quota)]
+    selected_ids = {str(item["candidate"].get("arxiv_id") or "") for item in selected}
+    if len(selected) < limit:
+        selected.extend(
+            item
+            for item in ranked
+            if str(item["candidate"].get("arxiv_id") or "") not in selected_ids
+        )
+    selected = selected[:limit]
+    selected.sort(
+        key=lambda item: (
+            -int(item["score"]),
+            str((item["candidate"].get("published") or "")),
+            str(item["candidate"].get("arxiv_id") or ""),
+        )
+    )
+    return selected
+
+
+def render_markdown(selected: list[dict[str, Any]], registry_count: int) -> str:
+    lines = [
+        "# Full-text screening queue",
+        "",
+        f"- Candidate registry: {registry_count} papers",
+        f"- Queued for full text: {len(selected)} papers",
+        "- This is priority screening only; queued papers are not accepted evidence.",
+        "",
+        "| Rank | arXiv | Score | Seed | Title | Matches |",
+        "|---:|---|---:|---|---|---|",
+    ]
+    for rank, item in enumerate(selected, start=1):
+        candidate = item["candidate"]
+        matches = (
+            item["matched_title_terms"] + item["matched_summary_terms"]
+            + item["matched_context_terms"] + item["matched_query_labels"]
+        )
+        title = str(candidate.get("title") or "").replace("|", "\\|")
+        lines.append(
+            f"| {rank} | [{candidate.get('arxiv_id')}]({candidate.get('abs_url')}) | {item['score']} | "
+            f"{'yes' if item['seeded'] else 'no'} | {title} | {', '.join(matches[:8])} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def run(
+    candidate_registry: str,
+    terms_raw: str,
+    query_label_prefixes: list[str],
+    seed_evidence_jsonl: list[str],
+    output_screening: str,
+    output_ids: str,
+    output_markdown: str | None = None,
+    limit: int | None = None,
+) -> int:
+    """CLI-side orchestration: load the registry, select, and write all outputs.
+
+    No count cap by default (``limit=None``): every candidate that matched the
+    terms is queued for full-text recovery.
+
+    Returns the process exit code (0 when candidates were queued, 2 otherwise).
+    """
+    registry = json.loads(Path(candidate_registry).read_text(encoding="utf-8"))
+    terms = [value.strip().lower() for value in terms_raw.split(",") if value.strip()]
+    selected = select_candidates(registry, terms, query_label_prefixes, load_seed_ids(seed_evidence_jsonl), limit)
+    screening = {
+        "version": 1,
+        "candidate_registry": candidate_registry,
+        "selection_rule": {
+            "terms": terms,
+            "query_label_prefixes": query_label_prefixes,
+            "seed_evidence_jsonl": seed_evidence_jsonl,
+            "limit": limit,
+            "prior_seed_bonus": 4,
+            "prior_seed_queue_cap": "25% when enough non-seed candidates match; unused capacity is backfilled",
+            "note": "Priority queue only. Complete full-text recovery and paper-reader verification remain mandatory.",
+        },
+        "candidates": [
+            {
+                "arxiv_id": item["candidate"].get("arxiv_id"),
+                "status": "full-text-queued",
+                "exclusion_reason": "",
+                "screening_score": item["score"],
+                "seeded_from_prior_evidence": item["seeded"],
+                "matched_title_terms": item["matched_title_terms"],
+                "matched_summary_terms": item["matched_summary_terms"],
+                "matched_query_labels": item["matched_query_labels"],
+            }
+            for item in selected
+        ],
+    }
+    Path(output_screening).write_text(json.dumps(screening, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    Path(output_ids).write_text("\n".join(str(item["candidate"].get("arxiv_id")) for item in selected) + "\n", encoding="utf-8")
+    if output_markdown:
+        Path(output_markdown).write_text(render_markdown(selected, int(registry.get("candidate_count") or 0)), encoding="utf-8")
+    print(f"Queued {len(selected)} of {registry.get('candidate_count', 0)} candidates for full-text recovery.")
+    return 0 if selected else 2

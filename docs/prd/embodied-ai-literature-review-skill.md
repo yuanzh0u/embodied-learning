@@ -7,6 +7,11 @@ tags: [prd, skill, embodied-ai, literature-review, synthesis, style-adapter]
 
 # 具身智能文献综述 Skill PRD
 
+> **历史文档（已被取代）**：本 PRD 描述的 `embodied-ai-literature-review` 编排职责已在
+> [ADR 0003](../adr/0003-consolidate-to-three-skills.md) 中并入 `embodied-ai-review-writer`
+> （run 生命周期与 settle 门禁则由 `scripts/run.py` 承担）。保留本文作为设计背景，
+> 命令与 Skill 边界以当前 `SKILL.md` 为准。
+
 ## Problem Statement
 
 现有 `$embodied-ai-query-planner` 已经能把具身智能话题拆成可审查的 query plan，`$embodied-ai-literature-hub` 已经能执行 arXiv 检索、候选管理、HTML正文挖掘和 evidence JSONL/brief 输出。但研究者真正写综述时，还缺少一个稳定桥梁：把 claim map、stance events、topic cards 和 source entries 组织成可审计、可阅读、可转换风格的综述。

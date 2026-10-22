@@ -2,21 +2,28 @@
 
 from __future__ import annotations
 
-import argparse
-import email.message
+import importlib
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
-import urllib.error
 from pathlib import Path
+from contextlib import nullcontext
 from unittest import mock
 
-SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "expand_via_citations.py"
-SPEC = importlib.util.spec_from_file_location("expand_via_citations", SCRIPT_PATH)
-mod = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(mod)
+ROOT = Path(__file__).resolve().parents[3]
+# Package import: search/citation_expansion.py does `from .. import ratelimit`,
+# which needs package context (a bare spec_from_file_location load breaks).
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+mod = importlib.import_module("embodied_learning.search.citation_expansion")
+
+ENTRY_PATH = ROOT / "skills" / "embodied-ai-literature-hub" / "scripts" / "search.py"
+ENTRY_SPEC = importlib.util.spec_from_file_location("expand_via_citations_entry", ENTRY_PATH)
+entry = importlib.util.module_from_spec(ENTRY_SPEC)
+assert ENTRY_SPEC and ENTRY_SPEC.loader
+ENTRY_SPEC.loader.exec_module(entry)
 
 
 # ---------------------------------------------------------------------------
@@ -38,19 +45,24 @@ class DummyResponse:
         return self.payload
 
 
-def args_with_retries(retries: int) -> argparse.Namespace:
-    return argparse.Namespace(
-        max_per_seed_per_direction=50,
-        timeout=1.0,
-        user_agent="test-agent",
-        api_key=None,
-        retries=retries,
-        retry_base_seconds=5.0,
-        retry_max_seconds=60.0,
-    )
+def expansion_with_retries(retries: int, **overrides: object) -> mod.CitationExpansion:
+    values: dict[str, object] = {
+        "max_per_seed_per_direction": 50,
+        "timeout": 1.0,
+        "user_agent": "test-agent",
+        "api_key": None,
+        "retries": retries,
+        "retry_base_seconds": 5.0,
+        "retry_max_seconds": 60.0,
+    }
+    values.update(overrides)
+    return mod.CitationExpansion(**values)
 
 
 def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPError:
+    import email.message
+    import urllib.error
+
     headers = email.message.Message()
     if retry_after is not None:
         headers["Retry-After"] = retry_after
@@ -58,41 +70,70 @@ def http_error(code: int, retry_after: str | None = None) -> urllib.error.HTTPEr
 
 
 class FetchRetryTest(unittest.TestCase):
+    def setUp(self) -> None:
+        # These tests exercise the module's own retry/backoff (with time.sleep
+        # mocked). Bypass the machine-wide rate-limit gate — its behavior is
+        # covered separately in tests/test_ratelimit.py — otherwise the gate's
+        # real sleeps pollute the sleep-call assertions.
+        patcher = mock.patch.object(mod.ratelimit, "gate", lambda *a, **k: nullcontext())
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_fetch_cached_hit_skips_network_and_no_cache_bypasses(self) -> None:
+        url = mod.build_neighbor_url("2403.12550", "references", 50)
+        with tempfile.TemporaryDirectory() as tmp:
+            cached = expansion_with_retries(3, cache_dir=tmp, no_cache=False)
+            with mock.patch.object(mod.urllib.request, "urlopen", return_value=DummyResponse(b'{"data": []}')) as urlopen:
+                payload = cached.fetch_cached("2403.12550", "references")
+            self.assertEqual(payload, b'{"data": []}')
+            self.assertEqual(urlopen.call_count, 1)
+            with mock.patch.object(mod.urllib.request, "urlopen") as urlopen_again:
+                payload_again = cached.fetch_cached("2403.12550", "references")
+            self.assertEqual(payload_again, b'{"data": []}')
+            urlopen_again.assert_not_called()
+
+            bypass = expansion_with_retries(3, cache_dir=tmp, no_cache=True)
+            with mock.patch.object(mod.urllib.request, "urlopen", return_value=DummyResponse(b'{"data": []}')) as urlopen_third:
+                bypass.fetch_cached("2403.12550", "references")
+            urlopen_third.assert_called_once()
+
     def test_fetch_retries_429_with_retry_after_and_caps_at_three_retries(self) -> None:
         error = http_error(429, retry_after="7")
+        worker = expansion_with_retries(99)
         with mock.patch.object(mod.urllib.request, "urlopen", side_effect=[error, error, error, error]) as urlopen:
             with mock.patch.object(mod.time, "sleep") as sleep:
                 with self.assertRaises(RuntimeError):
-                    mod.fetch("2401.01339", "references", args_with_retries(99))
+                    worker.fetch("2401.01339", "references")
 
         self.assertEqual(urlopen.call_count, 4)
         self.assertEqual([call.args[0] for call in sleep.call_args_list], [7.0, 7.0, 7.0])
 
     def test_fetch_succeeds_after_429_retry(self) -> None:
+        worker = expansion_with_retries(3)
         with mock.patch.object(
             mod.urllib.request,
             "urlopen",
             side_effect=[http_error(429, retry_after="2"), DummyResponse(b'{"data": []}')],
         ) as urlopen:
             with mock.patch.object(mod.time, "sleep") as sleep:
-                payload = mod.fetch("2401.01339", "citations", args_with_retries(3))
+                payload = worker.fetch("2401.01339", "citations")
 
         self.assertEqual(payload, b'{"data": []}')
         self.assertEqual(urlopen.call_count, 2)
         sleep.assert_called_once_with(2.0)
 
     def test_fetch_does_not_retry_non_transient_http_errors(self) -> None:
+        worker = expansion_with_retries(3)
         with mock.patch.object(mod.urllib.request, "urlopen", side_effect=http_error(400)) as urlopen:
             with mock.patch.object(mod.time, "sleep") as sleep:
                 with self.assertRaisesRegex(RuntimeError, "after 1 attempt"):
-                    mod.fetch("2401.01339", "references", args_with_retries(3))
+                    worker.fetch("2401.01339", "references")
 
         self.assertEqual(urlopen.call_count, 1)
         sleep.assert_not_called()
 
     def test_fetch_sends_api_key_header_when_present(self) -> None:
-        args = args_with_retries(3)
-        args.api_key = "secret-key"
+        worker = expansion_with_retries(3, api_key="secret-key")
         captured = {}
 
         def fake_urlopen(request, timeout):
@@ -100,7 +141,7 @@ class FetchRetryTest(unittest.TestCase):
             return DummyResponse(b'{"data": []}')
 
         with mock.patch.object(mod.urllib.request, "urlopen", side_effect=fake_urlopen):
-            mod.fetch("2401.01339", "references", args)
+            worker.fetch("2401.01339", "references")
 
         self.assertEqual(captured["headers"].get("X-api-key"), "secret-key")
 
@@ -307,13 +348,13 @@ class SeedCollectionTest(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            args = argparse.Namespace(
+            worker = mod.CitationExpansion(
                 seed_id=["2401.00001"],
                 seed_id_file=str(seed_file),
                 seed_registry=str(registry),
                 seed_status=[],
             )
-            ids = mod.collect_seed_ids(args)
+            ids = worker.collect_seed_ids()
 
         self.assertEqual(ids, ["2401.00001", "2401.00002", "2401.00003"])
 
@@ -365,7 +406,6 @@ class EndToEndTest(unittest.TestCase):
                 return DummyResponse(payload)
 
             argv = [
-                "expand_via_citations.py",
                 "--seed-id",
                 "2401.00001",
                 "--seed-id",
@@ -383,9 +423,8 @@ class EndToEndTest(unittest.TestCase):
                 "--min-doc-frequency",
                 "1",
             ]
-            with mock.patch.object(mod.sys, "argv", argv):
-                with mock.patch.object(mod.urllib.request, "urlopen", side_effect=fake_urlopen):
-                    exit_code = mod.main()
+            with mock.patch.object(mod.urllib.request, "urlopen", side_effect=fake_urlopen):
+                exit_code = entry.main(["expand-via-citations", *argv])
 
             self.assertEqual(exit_code, 0)
             candidate_data = json.loads(output.read_text(encoding="utf-8"))

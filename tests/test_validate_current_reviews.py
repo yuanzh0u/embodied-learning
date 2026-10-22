@@ -8,11 +8,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "validate_current_reviews.py"
-SPEC = importlib.util.spec_from_file_location("validate_current_reviews", SCRIPT)
-validator = importlib.util.module_from_spec(SPEC)
-assert SPEC.loader is not None
-SPEC.loader.exec_module(validator)
+SCRIPT = "embodied_learning.wiki.run.validate"  # implementation module
+validator = importlib.import_module("embodied_learning.wiki.run.validate")
 
 
 class ValidateCurrentReviewsTests(unittest.TestCase):

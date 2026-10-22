@@ -1,0 +1,111 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+SCRIPT = ROOT / "skills" / "embodied-ai-review-writer" / "scripts" / "write.py"
+
+
+def run(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "check-deep-read-budget", *args],
+        check=check,
+        text=True,
+        capture_output=True,
+        cwd=ROOT,
+    )
+
+
+class DeepReadBudgetTests(unittest.TestCase):
+    def _summary(self, deep: int, accepted: int = 15) -> Path:
+        path = Path(self._tmp.name) / f"summary-{deep}.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "deep_read_count": deep,
+                    "map_read_count": deep,
+                    "accepted_evidence_paper_count": accepted,
+                }
+            ),
+            encoding="utf-8",
+        )
+        return path
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_within_budget_ok(self) -> None:
+        # scoping floor 15 + 10 = 25
+        summary = self._summary(20)
+        completed = run(
+            "--reading-summary",
+            str(summary),
+            "--review-mode",
+            "scoping",
+            "--json",
+        )
+        report = json.loads(completed.stdout)
+        self.assertTrue(report["within_budget"])
+        self.assertEqual(report["llm_deep_read_budget"], 25)
+        self.assertEqual(report["accepted_paper_floor"], 15)
+
+    def test_over_budget_warns_but_exits_zero(self) -> None:
+        summary = self._summary(40)
+        completed = run(
+            "--reading-summary",
+            str(summary),
+            "--review-mode",
+            "scoping",
+            "--json",
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 0)
+        report = json.loads(completed.stdout)
+        self.assertFalse(report["within_budget"])
+        self.assertIn("exceeds", report["warning"])
+
+    def test_text_output_preserves_budget_exit_contract(self) -> None:
+        for deep, strict, expected_code in ((20, False, 0), (20, True, 0),
+                                            (40, False, 0), (40, True, 1)):
+            with self.subTest(deep=deep, strict=strict):
+                args = ["--reading-summary", str(self._summary(deep)),
+                        "--review-mode", "scoping"]
+                if strict:
+                    args.append("--strict")
+                completed = run(*args, check=False)
+                self.assertEqual(completed.returncode, expected_code)
+                self.assertIn("Evidence floor is a minimum", completed.stdout)
+                self.assertIn("[WARN]" if deep > 25 else "[OK]", completed.stdout)
+                self.assertNotIn("Traceback", completed.stderr)
+                if deep > 25:
+                    self.assertIn("exceeds", completed.stderr)
+
+    def test_strict_over_budget_exits_one(self) -> None:
+        summary = self._summary(40)
+        completed = run(
+            "--reading-summary",
+            str(summary),
+            "--review-mode",
+            "scoping",
+            "--strict",
+            check=False,
+        )
+        self.assertEqual(completed.returncode, 1)
+        self.assertIn("exceeds", completed.stderr)
+        self.assertNotIn("Traceback", completed.stderr)
+
+
+if __name__ == "__main__":
+    unittest.main()

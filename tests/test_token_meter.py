@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from _entry import invoke, parse
+
 import importlib.util
 import json
 import os
@@ -11,11 +13,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "scripts" / "token_meter.py"
-SPEC = importlib.util.spec_from_file_location("token_meter", SCRIPT)
-mod = importlib.util.module_from_spec(SPEC)
-assert SPEC and SPEC.loader
-SPEC.loader.exec_module(mod)
+SCRIPT = "embodied_learning.wiki.run.meter"  # implementation module (old scripts/token_meter.py deleted)
+mod = importlib.import_module(SCRIPT)
 
 
 class TokenMeterTests(unittest.TestCase):
@@ -24,7 +23,7 @@ class TokenMeterTests(unittest.TestCase):
             out = Path(tmp) / "token-meter.jsonl"
             sample = Path(tmp) / "brief.md"
             sample.write_text("hello", encoding="utf-8")
-            code = mod.main(
+            code = invoke("run.py", "token-meter",
                 [
                     "--output",
                     str(out),
@@ -52,7 +51,7 @@ class TokenMeterTests(unittest.TestCase):
             out = Path(tmp) / "token-meter.jsonl"
             old = os.environ.pop(mod.ENV_FLAG, None)
             try:
-                code = mod.main(["--output", str(out), "--stage", "hub.coverage_decide"])
+                code = invoke("run.py", "token-meter", ["--output", str(out), "--stage", "hub.coverage_decide"])
             finally:
                 if old is not None:
                     os.environ[mod.ENV_FLAG] = old

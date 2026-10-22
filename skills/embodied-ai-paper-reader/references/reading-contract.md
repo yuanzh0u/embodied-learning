@@ -15,12 +15,12 @@ Workflow:
 1. Build the reading packet (complete extraction remains on disk; use a summary-first packet when available).
 2. **One LLM call** → complete paper-note JSON (including `verification` on every card).
 3. Local gates only:
-   - `validate_paper_note.py`
-   - `audit_claim_support.py`
+   - `read.py validate-paper-note`
+   - `read.py audit-claim-support`
 4. On failure, **retry only failing cards** with a locator window — never a full re-read:
 
 ```bash
-python3 skills/embodied-ai-paper-reader/scripts/extract_failed_card_window.py \
+python3 skills/embodied-ai-paper-reader/scripts/read.py extract-failed-card-window \
   --audit work/<run>/paper-notes/<id>.audit.json \
   --extraction work/<run>/extractions/<id>.json \
   --paper-note work/<run>/paper-notes/<id>.json \
@@ -44,7 +44,7 @@ Decide `include`, `background-only`, or `exclude` from title/abstract and the re
 
 ### Pass 1: structure map
 
-Prefer a **summary-first reading packet** (`build_reading_packet.py --summary-first`): structure outline + truncated section windows. Selected passages alone still cannot *accept* a paper, but they are valid navigation. Keep the complete extraction JSON on disk; do not paste Complete extracted text into every pass.
+Prefer a **summary-first reading packet** (`read.py build-reading-packet --summary-first`): structure outline + truncated section windows. Selected passages alone still cannot *accept* a paper, but they are valid navigation. Keep the complete extraction JSON on disk; do not paste Complete extracted text into every pass.
 
 
 Locate:

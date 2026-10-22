@@ -2,22 +2,33 @@
 
 from __future__ import annotations
 
-import importlib.util
+import importlib
+import sys
 import unittest
+import os
+import tempfile
+# Keep the machine-wide rate-limit gate off the real shared state: tests
+# here mock urlopen but still pass through the gate, so redirect its state
+# dir before any gated module is exercised.
+os.environ.setdefault("EMBODIED_RATELIMIT_DIR", tempfile.mkdtemp(prefix="ratelimit-test-"))
 from pathlib import Path
 from unittest import mock
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[3]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 def load_script(name: str):
-    path = ROOT / "scripts" / f"{name}.py"
-    spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
-    spec.loader.exec_module(module)
-    return module
+    # Package imports: fetch/*.py do `from .. import ratelimit`, which needs
+    # package context (a bare spec_from_file_location load breaks).
+    MODNAMES = {
+        "extract_arxiv_content": "embodied_learning.fetch.chain",
+        "extract_arxiv_html": "embodied_learning.fetch.html",
+        "extract_arxiv_pdf": "embodied_learning.fetch.pdf",
+    }
+    return importlib.import_module(MODNAMES[name])
 
 
 pdf = load_script("extract_arxiv_pdf")
@@ -116,7 +127,7 @@ class ContentFallbackTest(unittest.TestCase):
         self.assertIn("pages", result)
         args.include_full_text = False
         with mock.patch.object(content.extract_arxiv_pdf, "extract_pdf_document", return_value=dict(extracted)):
-            result = content.try_pdf(args, ["robot"])
+            result = content.try_pdf(args, ["robot"], want_full_text=False)
         self.assertNotIn("pages", result)
 
 

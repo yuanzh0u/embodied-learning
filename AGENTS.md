@@ -20,9 +20,9 @@ This repository is a research knowledge base. Optimize for context efficiency an
 
 ## Token / context soft guards
 
-- **NEVER** `Read` full `candidate-registry.json` into LLM context (often 2–5 MB). Use `coverage-report.json`, `screening-*.md`, `status_counts`, or `skills/embodied-ai-literature-hub/scripts/print_registry_titles.py` (title-only top-N).
+- **NEVER** `Read` full `candidate-registry.json` into LLM context (often 2–5 MB). Use `coverage-report.json`, `screening-*.md`, `status_counts`, or `skills/embodied-ai-literature-hub/scripts/search.py registry-titles` (title-only top-N).
 - Coverage decisions: read the coverage report only — **do not** paste search-round JSON (`openalex-candidates-round*.json`, raw arXiv batch files) into the conversation.
-- Paper reading: prefer `build_reading_packet.py --summary-first` (structure map + section windows). Keep full extraction on disk; open locator windows for claim cards. Do not re-paste Complete extracted text every pass.
+- Paper reading: prefer `read.py build-reading-packet --summary-first` (structure map + section windows). Keep full extraction on disk; open locator windows for claim cards. Do not re-paste Complete extracted text every pass.
 - Writer inputs: `writing-brief.md` / `evidence-appendix.md` are stance-capped; complete events stay in `evidence.jsonl` for audits.
 
 ## Context Rules
@@ -35,6 +35,8 @@ This repository is a research knowledge base. Optimize for context efficiency an
 
 ## Research Workflow
 
+- When researching a topic, first use the project skill `embodied-ai-review-writer`; it owns the review end to end, orchestrating `embodied-ai-literature-hub` (query planning, search, extraction) and `embodied-ai-paper-reader` (deep reading) before writing the final reviews.
+
 Choose the smallest workflow that answers the user's actual question:
 
 | Request | Start here | Do not start automatically |
@@ -42,7 +44,7 @@ Choose the smallest workflow that answers the user's actual question:
 | Explain a concept, continue a discussion, or compare existing findings | Relevant topic card and selected existing paper notes; inspect source windows when a claim needs checking | New candidate search, review run, or three-style publication bundle |
 | Understand a named paper in depth | Reuse a valid note for that paper/version when it covers the question; otherwise use `embodied-ai-paper-reader` for that paper | An 8/15/30-paper review merely to explain one paper |
 | Answer a bounded new technical question | Check existing evidence first; fill the specific evidence gap and state remaining uncertainty | Broad search to meet a literature-review paper quota |
-| Produce an explicitly requested literature review or survey | Use `embodied-ai-literature-review`, which orchestrates planning, discovery, paper reading, and writing | Treating a partial search as a completed review |
+| Produce an explicitly requested literature review or survey | Use `embodied-ai-review-writer`, which orchestrates planning, discovery, paper reading, and writing | Treating a partial search as a completed review |
 
 The review's coverage and accepted-paper floors apply to formal reviews, not ordinary discussion or a standalone paper explanation. Standalone reading still follows the paper-reader's evidence and audit requirements before promoting claims. Keep informal explanations distinct from accepted evidence; do not create a `literature-review-*` folder unless that bundle is actually intended. Reuse existing evidence without claiming it was newly read; a new question or paper version can require targeted rechecking.
 
@@ -52,7 +54,7 @@ For formal reviews, check the deep-read budget before planning another reading b
 ## Source Of Truth
 
 - `evidence/` is the source of truth for paper-level evidence and finished literature reviews (versioned, append-only per run).
-- Settled runs sink into `evidence/` via `scripts/sink_run.py` (idempotent; stamps a `sink_checklist` into run.json; refuses gate-failed bundles unless `--allow-gate-fail`). Run `scripts/check_sink_integrity.py` after any sink or cleanup — it reconciles `work/`, `evidence/`, and the catalog, and exits non-zero on drift.
+- Settled runs sink into `evidence/` via `scripts/run.py finalize` (idempotent; stamps the manifest; refuses gate-failed bundles unless declared). Run `scripts/run.py check-sink-integrity` after any sink or cleanup — it reconciles `work/`, `evidence/`, and the catalog, and exits non-zero on drift.
 - Retired raw documents remain traceable through their registered git archives in [knowledge/sources.md](knowledge/sources.md) (`git show 081e898:<file>`).
 - Topic cards are compressed working memory for agents.
 - The master index is the topic routing layer; [knowledge/literature-review-catalog.md](knowledge/literature-review-catalog.md) declares current literature-review versions — load topic-filtered rows only, never the whole file by default.

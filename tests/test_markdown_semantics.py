@@ -2,9 +2,15 @@ from __future__ import annotations
 
 import unittest
 
-from scripts import build_research_wiki as wiki
-from scripts import visualize_kb_index as viz
-from scripts.lib.markdown_semantics import render_markdown
+import sys
+from pathlib import Path as _P
+
+_REPO_ROOT = _P(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+from embodied_learning.wiki.publish import snapshot as wiki
+from embodied_learning.wiki.publish import knowledge_map as viz
+from embodied_learning.wiki.publish.markdown import render_markdown
 
 
 class MarkdownSemanticsTest(unittest.TestCase):
@@ -43,6 +49,52 @@ class MarkdownSemanticsTest(unittest.TestCase):
         self.assertNotIn('href="javascript:', wiki_html)
         self.assertNotIn('href="javascript:', viz_html)
 
+    def test_superscript_citations_render_as_sup(self) -> None:
+        # Scientific-memo citation markers: one bracketed marker per number.
+        wiki_html, _toc = wiki.markdown_to_html("受排序影响^[1]^，随时间漂移^[2]^。\n")
+        self.assertIn("受排序影响<sup>[1]</sup>", wiki_html)
+        self.assertIn("随时间漂移<sup>[2]</sup>", wiki_html)
+        self.assertNotIn("^[1]^", wiki_html)
+
+    def test_blank_lines_inside_reference_list_keep_one_ol(self) -> None:
+        """2026-09-11 固化 workflow 回归：成稿作者用空行分隔参考文献条目，
+        渲染器把每条拆成独立 <ol>，页面显示编号全是 1。空行+同类列表项
+        必须延续同一个列表。"""
+        markdown = (
+            "## 参考文献\n\n"
+            "1. First paper 2026. [arXiv:2609.06165](https://arxiv.org/abs/2609.06165)\n\n"
+            "2. Second paper 2026. [arXiv:2609.10789](https://arxiv.org/abs/2609.10789)\n\n"
+            "3. Third paper 2026. [arXiv:2609.11472](https://arxiv.org/abs/2609.11472)\n"
+        )
+        html_out, _toc = wiki.markdown_to_html(markdown)
+        self.assertEqual(html_out.count("<ol>"), 1, html_out)
+        self.assertEqual(html_out.count("<li>"), 3)
+        # and an interrupting paragraph still closes the list
+        markdown_break = "1. one\n\nmiddle text\n\n2. two\n"
+        html_break, _ = wiki.markdown_to_html(markdown_break)
+        self.assertEqual(html_break.count("<ol>"), 2, html_break)
+        self.assertIn("<p>middle text</p>", html_break)
+
+
+    def test_image_alt_with_bracketed_citation_renders_as_img(self) -> None:
+        """arXiv captions keep citation remnants ("DPT head [ 28 ]"); the flat
+        [^]]* alt group used to fail the whole image and leak raw markdown
+        into the wiki page (20260928 时序深度估计 run, VDA figure)."""
+        result = render_markdown(
+            "![Overview of the spatio-temporal head, extending the DPT head [ 28 ] .]"
+            "(https://arxiv.org/html/2501.12375v3/overview_head_fix.png)\n"
+        )
+        self.assertNotIn("![", result.html)
+        self.assertIn('<img src="https://arxiv.org/html/2501.12375v3/overview_head_fix.png"', result.html)
+        self.assertIn("DPT head [ 28 ] .", result.html)
+
+    def test_plain_links_and_bold_unaffected_by_bracket_alt(self) -> None:
+        result = render_markdown(
+            "![alt [1] text](https://x.io/a.png) plus [link](https://x.io/b) and **bold**\n"
+        )
+        self.assertIn('<img src="https://x.io/a.png"', result.html)
+        self.assertIn('href="https://x.io/b"', result.html)
+        self.assertIn("<strong>bold</strong>", result.html)
 
 if __name__ == "__main__":
     unittest.main()

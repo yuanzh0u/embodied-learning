@@ -12,6 +12,6 @@
 
 ## 本地生成
 
-在仓库根目录执行 `python3 scripts/build_mind_omni_reader.py`，会从固定归档版本生成主站子页。正常发布由 `scripts/build_research_site.py` 统一调用，无运行时依赖。
+在仓库根目录执行 `python3 scripts/wiki.py build-mind-omni-reader`，会从固定归档版本生成主站子页。正常发布由 `scripts/wiki.py build-site` 统一调用，无运行时依赖。
 
 检查 JavaScript 语法：`node --check wiki/guides/mind-omni/reader.js`。本次未运行模型复现实验；未进行未被请求的浏览器视觉测试。

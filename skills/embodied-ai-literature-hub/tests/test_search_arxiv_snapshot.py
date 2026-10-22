@@ -1,0 +1,310 @@
+#!/usr/bin/env python3
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+
+SCRIPT_PATH = Path(__file__).resolve().parents[3] / "embodied_learning" / "search" / "arxiv_snapshot.py"
+SPEC = importlib.util.spec_from_file_location("search_arxiv_snapshot", SCRIPT_PATH)
+snap = importlib.util.module_from_spec(SPEC)
+assert SPEC and SPEC.loader
+SPEC.loader.exec_module(snap)
+
+
+def make_record(
+    arxiv_id: str = "2311.18259",
+    title: str = "Ego-Exo4D",
+    abstract: str = "A dataset of egocentric and exocentric videos.",
+    authors: str = "A. Author, B. Author",
+    categories: str = "cs.CV",
+    v1_created: str = "Mon, 27 Nov 2023 18:00:00 GMT",
+    update_date: str = "2024-01-02",
+    comments: str = "",
+    journal_ref: str = "",
+    **extra: object,
+) -> dict:
+    record = {
+        "id": arxiv_id,
+        "title": title,
+        "abstract": abstract,
+        "authors": authors,
+        "categories": categories,
+        "versions": [{"version": "v1", "created": v1_created}],
+        "update_date": update_date,
+        "comments": comments,
+        "journal-ref": journal_ref,
+    }
+    record.update(extra)
+    return record
+
+
+def write_snapshot(records: list[dict]) -> str:
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        for record in records:
+            handle.write(json.dumps(record) + "\n")
+        return handle.name
+
+
+def run_search(records: list[dict], query: str, **overrides) -> dict:
+    path = write_snapshot(records)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        output = handle.name
+    search = snap.SnapshotArxivSearch(
+        snapshot_path=path,
+        start_date="2016-09-17",
+        end_date="2026-09-17",
+        output=output,
+        **overrides,
+    )
+    code = search.run([{"label": "q1", "query": query}])
+    assert code == 0
+    with open(output) as handle:
+        return json.load(handle)
+
+
+def run_query_batch(queries: list[dict[str, str]]) -> tuple[int, dict]:
+    """Returns (exit_code, batch). Exit 1 = partial batch (a query failed, hits
+    saved) — the run() contract shared by all searchers (report_partial_batch)."""
+    records = [make_record(title="Egocentric Activity Understanding")]
+    path = write_snapshot(records)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+        output = handle.name
+    search = snap.SnapshotArxivSearch(
+        snapshot_path=path,
+        start_date="2016-09-17",
+        end_date="2026-09-17",
+        output=output,
+    )
+    code = search.run(queries)
+    assert code in (0, 1), code
+    with open(output) as handle:
+        return code, json.load(handle)
+
+
+class QueryParserTest(unittest.TestCase):
+    def test_term_and_phrase(self) -> None:
+        node = snap.parse_query('all:"ego-exo" AND abs:egocentric')
+        self.assertIsInstance(node, snap.BinaryNode)
+        self.assertEqual(node.op, "AND")
+
+    def test_date_range(self) -> None:
+        node = snap.parse_query("submittedDate:[202001010000 TO 202312312359]")
+        self.assertIsInstance(node, snap.DateRangeNode)
+
+    def test_malformed_range_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            snap.parse_query("submittedDate:[bogus TO 202312312359]")
+
+    def test_andnot(self) -> None:
+        node = snap.parse_query("all:ego ANDNOT all:cat")
+        self.assertEqual(node.op, "ANDNOT")
+
+    def test_andnot(self) -> None:
+        node = snap.parse_query("all:ego ANDNOT all:cat")
+        self.assertEqual(node.op, "ANDNOT")
+
+    def test_field_scoped_group(self) -> None:
+        # Dynamic-query agents emit `all:(a OR b)` — valid arXiv API syntax;
+        # the field scopes over every leaf of the group.
+        node = snap.parse_query('all:(point AND "surface reconstruction")')
+        self.assertIsInstance(node, snap.BinaryNode)
+        self.assertEqual(node.op, "AND")
+        self.assertEqual(node.left.field, "all")
+        self.assertEqual(node.right.field, "all")
+
+    def test_field_scoped_group_non_all_field(self) -> None:
+        node = snap.parse_query("ti:(mesh OR atlas) AND abs:lidar")
+        self.assertEqual(node.op, "AND")
+        self.assertEqual(node.left.left.field, "ti")
+        self.assertEqual(node.left.right.field, "ti")
+        self.assertEqual(node.right.field, "abs")
+
+    def test_unknown_field_is_term(self) -> None:
+        # "foo:" is not a known field, tokenizes as a bare term.
+        node = snap.parse_query("foo:bar")
+        self.assertIsInstance(node, snap.TermNode)
+        self.assertEqual(node.term, "foo:bar")
+
+    def test_malformed_group_query_degrades_to_error_meta(self) -> None:
+        # A single malformed query must not kill the batch: it becomes an
+        # errored per-query entry while the other queries still return hits.
+        code, result = run_query_batch([
+            {"label": "bad", "query": "ti:(unbalanced"},
+            {"label": "good", "query": "all:egocentric"},
+        ])
+        # Non-zero exit flags the hole WITHOUT discarding the good query's hits.
+        self.assertEqual(1, code)
+        metas = {q["label"]: q for q in result["queries"]}
+        self.assertIn("error", metas["bad"])
+        self.assertEqual(metas["bad"]["result_count"], 0)
+        self.assertEqual(metas["good"]["result_count"], 1)
+
+
+class RecordTest(unittest.TestCase):
+    def test_submitted_date_from_v1(self) -> None:
+        record = make_record()
+        self.assertEqual(
+            snap.submitted_date(record).strftime("%Y-%m-%d"), "2023-11-27"
+        )
+
+    def test_submitted_date_fallback_update_date(self) -> None:
+        record = make_record(versions=[])
+        self.assertEqual(
+            snap.submitted_date(record).strftime("%Y-%m-%d"), "2024-01-02"
+        )
+
+    def test_record_to_paper_shape(self) -> None:
+        paper = snap.record_to_paper(make_record(), "q1", "effective")
+        self.assertEqual(paper["arxiv_id"], "2311.18259")
+        self.assertEqual(paper["query_label"], "q1")
+        self.assertEqual(paper["abs_url"], "https://arxiv.org/abs/2311.18259")
+        self.assertTrue(paper["title"])
+        self.assertTrue(paper["published"].startswith("2023-11-27"))
+
+    def test_authors_parsed_preferred(self) -> None:
+        # Kaggle authors_parsed layout: [Last, First, Middle, Suffix]
+        record = make_record(
+            authors_parsed=[["Author", "A.", "", ""], ["Writer", "B.", "", "Jr."]]
+        )
+        paper = snap.record_to_paper(record, "q1", "effective")
+        self.assertEqual(paper["authors"], ["A. Author", "B. Writer Jr."])
+
+class SnapshotSearchTest(unittest.TestCase):
+    def test_matches_title_and_respects_date_range(self) -> None:
+        records = [
+            make_record(arxiv_id="2311.18259", title="Ego-Exo4D dataset"),
+            make_record(
+                arxiv_id="9999.99999",
+                title="Ego-Exo4D too old",
+                v1_created="Mon, 27 Nov 2000 18:00:00 GMT",
+            ),
+        ]
+        result = run_search(records, 'ti:"Ego-Exo4D"')
+        self.assertEqual(result["paper_count"], 1)
+        self.assertEqual(result["papers"][0]["arxiv_id"], "2311.18259")
+
+    def test_prefix_match_on_all(self) -> None:
+        records = [make_record(title="Unrelated", abstract="We study egocentric video.")]
+        result = run_search(records, "all:ego")
+        self.assertEqual(result["paper_count"], 1)
+
+    def test_andnot_excludes(self) -> None:
+        records = [
+            make_record(arxiv_id="1", title="Egocentric cooking"),
+            make_record(arxiv_id="2", title="Egocentric driving"),
+        ]
+        result = run_search(records, "all:egocentric ANDNOT ti:driving")
+        self.assertEqual(result["paper_count"], 1)
+        self.assertEqual(result["papers"][0]["arxiv_id"], "1")
+
+    def test_max_results_truncates(self) -> None:
+        records = [
+            make_record(arxiv_id=str(index), title="Egocentric video", v1_created=f"Mon, 0{(index % 9) + 1} Nov 2023 10:00:00 GMT")
+            for index in range(1, 12)
+        ]
+        result = run_search(records, "all:egocentric", max_results=3)
+        self.assertEqual(result["paper_count"], 3)
+
+    def test_relevance_ranks_by_term_density(self) -> None:
+        """Discovery is relevance-ranked, not newest-first (2026-10-16: date
+        ordering collapsed a 10-year window to its latest submissions). A
+        dense multi-hit match must outrank a marginal one even when the
+        marginal one is newer."""
+        records = [
+            make_record(
+                arxiv_id="2601.0001", title="A general robotics paper",
+                abstract="we study machines and control theory " * 5,
+                v1_created="Fri, 1 Jan 2026 10:00:00 GMT",
+            ),
+            make_record(
+                arxiv_id="1804.0001", title="Egocentric video benchmark",
+                abstract="egocentric video benchmark egocentric video " * 3,
+                v1_created="Sun, 8 Apr 2018 12:00:00 GMT",
+            ),
+            make_record(
+                arxiv_id="2301.0001", title="Egocentric vision",
+                abstract="egocentric",
+                v1_created="Sun, 1 Jan 2023 12:00:00 GMT",
+            ),
+        ]
+        # `all:egocentric` matches both the dense 2018 paper and the marginal
+        # 2023 one (but not the 2026 paper). max_results=2 keeps both; the
+        # densest must rank first regardless of the newer date.
+        result = run_search(records, "all:egocentric", max_results=2)
+        self.assertEqual(result["sort_by"], "relevance")
+        ids = [paper["arxiv_id"] for paper in result["papers"]]
+        self.assertEqual(ids[0], "1804.0001", "densest match must rank first")
+        self.assertIn("2301.0001", ids, "marginal match is kept at max_results=2")
+        self.assertNotIn("2601.0001", ids, "non-matching paper is not a hit")
+
+    def test_date_sort_when_requested(self) -> None:
+        records = [
+            make_record(arxiv_id="1804.0001", title="Egocentric video",
+                        v1_created="Sun, 8 Apr 2018 12:00:00 GMT"),
+            make_record(arxiv_id="2301.0001", title="Egocentric video",
+                        v1_created="Sun, 1 Jan 2023 12:00:00 GMT"),
+        ]
+        result = run_search(records, "all:egocentric", sort_by="submittedDate")
+        self.assertEqual(
+            [p["arxiv_id"] for p in result["papers"]], ["2301.0001", "1804.0001"]
+        )
+
+    def test_relevance_score_prefers_title_hits(self) -> None:
+        paper_title = {"title": "Egocentric video", "summary": "unrelated text"}
+        paper_abstract = {"title": "Unrelated", "summary": "egocentric video"}
+        literals = ["egocentric video"]
+        self.assertGreater(
+            snap.relevance_score(paper_title, literals),
+            snap.relevance_score(paper_abstract, literals),
+        )
+
+    def test_heap_replace_with_identical_sort_keys(self) -> None:
+        # >slack matches sharing one sort key: heap tuples must stay comparable
+        # via the sequence tiebreaker, never fall through to dict comparison.
+        records = [
+            make_record(arxiv_id=str(index), title="Egocentric video", v1_created="Mon, 6 Nov 2023 10:00:00 GMT")
+            for index in range(150)
+        ]
+        result = run_search(records, "all:egocentric", max_results=1)
+        self.assertEqual(result["paper_count"], 1)
+        self.assertIn(result["papers"][0]["arxiv_id"], {str(i) for i in range(150)})
+
+    def test_query_label_merge_on_dedupe(self) -> None:
+        records = [make_record(title="Ego-Exo4D")]
+        path = write_snapshot(records)
+        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as handle:
+            output = handle.name
+        search = snap.SnapshotArxivSearch(
+            snapshot_path=path, start_date="2016-09-17", end_date="2026-09-17", output=output
+        )
+        code = search.run(
+            [{"label": "a", "query": 'ti:"Ego-Exo4D"'}, {"label": "b", "query": "all:dataset"}]
+        )
+        self.assertEqual(code, 0)
+        with open(output) as handle:
+            data = json.load(handle)
+        self.assertEqual(data["paper_count"], 1)
+        self.assertEqual(set(data["papers"][0]["query_label"].split(",")), {"a", "b"})
+
+    def test_no_prefilter_when_query_has_no_literal(self) -> None:
+        # A pure submittedDate range query has no text literals; prefilter
+        # must disable itself instead of skipping every line.
+        records = [make_record(title="Whatever")]
+        result = run_search(records, "submittedDate:[202001010000 TO 202612312359]")
+        self.assertEqual(result["paper_count"], 1)
+        self.assertFalse(result["snapshot_prefilter"])
+
+    def test_batch_shape_mirrors_api_backend(self) -> None:
+        result = run_search([make_record()], 'all:"ego"')
+        for key in ("generated_at", "batch", "api", "start_date", "end_date", "queries", "paper_count", "papers"):
+            self.assertIn(key, result)
+        self.assertTrue(str(result["api"]).startswith("snapshot:"))
+
+
+if __name__ == "__main__":
+    unittest.main()
